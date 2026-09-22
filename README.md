@@ -39,45 +39,73 @@ A API estará acessível em `http://localhost:8080/ping`.
 
 ---
 
-## 🐳 Guia de Deploy no Dokploy (via GitHub)
+## 🐳 Guia de Deploy no Dokploy
 
-Este projeto está pronto para ser implantado no **Dokploy** diretamente a partir do seu repositório no GitHub, sem a necessidade de publicar previamente imagens no Docker Hub.
+O deploy no **Dokploy** pode ser feito de duas formas: usando a opção **Raw** (copiando o YAML direto no painel) ou conectando o **GitHub**.
 
-### Passo 1: Criar a aplicação no Dokploy
-1. Acesse o seu painel do **Dokploy**.
-2. Vá em **Projects** e selecione (ou crie) o seu projeto.
-3. Clique em **Create Service** e selecione a opção **Compose**.
+---
 
-### Passo 2: Conectar o Repositório GitHub
-1. Na aba **Source**, selecione o provedor **GitHub**.
-2. Conecte sua conta do GitHub caso ainda não esteja conectada.
-3. Selecione o repositório `pocketrun` e a branch desejada (ex: `main` ou `master`).
+### Opção 1: Deploy via Provider `Raw` (Recomendado / Rápido)
 
-### Passo 3: Configurar o Docker Compose
-1. No campo **Compose Path**, informe:
+Nesta opção, você cola o conteúdo do Docker Compose diretamente no editor do Dokploy. O Docker Compose irá clonar o repositório do GitHub e fazer o build da pasta `/api` automaticamente.
+
+#### Passo a Passo:
+1. No Dokploy, vá em **Projects** e crie um novo **Service** do tipo **Compose**.
+2. Na aba **Source / Provider**, selecione a opção **`Raw`**.
+3. No campo de texto **Compose File**, cole o trecho de código abaixo:
+
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: https://github.com/odutradev/pocketrun.git#master:api
+      dockerfile: Dockerfile
+    container_name: pocketrun-api
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENV=production
+      - CORS_ALLOWED_ORIGINS=*
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+```
+
+4. Clique em **Save** e em seguida **Deploy**.
+5. Na aba **Domains**, mapeie o seu domínio apontando para a porta `8080`.
+
+---
+
+### Opção 2: Deploy via Provider `GitHub`
+
+Se você preferir integrar sua conta do GitHub para deploys automáticos em cada push:
+
+1. No Dokploy, crie um **Service** do tipo **Compose**.
+2. Na aba **Source / Provider**, selecione **GitHub**.
+3. Selecione o repositório `odutradev/pocketrun` e a branch `master`.
+4. No campo **Compose Path**, informe:
    ```text
    ./docker-compose.yml
    ```
-2. O Dokploy utilizará este arquivo para ler as instruções de `build` a partir da pasta `./api`.
+5. Clique em **Deploy**.
 
-### Passo 4: Configurar Variáveis de Ambiente (Opcional)
-Na aba **Environment** do Dokploy, defina as variáveis necessárias para a API:
-```env
-PORT=8080
-ENV=production
-CORS_ALLOWED_ORIGINS=*
-```
+---
 
-### Passo 5: Implantar (Deploy)
-1. Clique no botão **Deploy**.
-2. O Dokploy fará o clone do repositório, executará o build multi-stage do Docker e iniciará o container.
-3. Na aba **Domains**, adicione o seu domínio ou subdomínio apontando para a porta `8080`.
+## 🔍 Validação da API
 
-### Passo 6: Verificar a Saúde da Aplicação
-Após o término do deploy, acesse o endpoint de validação:
+Após o deploy ser concluído, valide o status da API chamando a rota de ping:
+
 ```http
 GET https://seu-dominio.com/ping
 ```
+
 Resposta esperada:
 ```json
 {"status":"ok"}
