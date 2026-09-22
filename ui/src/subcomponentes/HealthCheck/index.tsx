@@ -3,7 +3,7 @@ import { dotStyle, cardStyle, buttonStyle, infoTextStyle, getBadgeStyle, cardTit
 import type { HealthCheckProps } from './types'
 
 export const HealthCheck = ({ status, loading, error, onCheck }: HealthCheckProps) => {
-  const isOk = status === 'ok'
+  const isOk = status === 'success' || status === 'ok'
 
   return (
     <section style={cardStyle}>
