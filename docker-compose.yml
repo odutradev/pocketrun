@@ -1,12 +1,17 @@
+version: '3.8'
+
 services:
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
+    image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
     ports:
       - "${PORT:-8080}:8080"
+    expose:
+      - "8080"
     environment:
       - PORT=8080
       - ENV=${ENV:-production}
@@ -22,10 +27,14 @@ services:
     build:
       context: ./ui
       dockerfile: Dockerfile
+    image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
     ports:
       - "${UI_PORT:-3001}:80"
+    expose:
+      - "80"
     depends_on:
       api:
         condition: service_healthy
+

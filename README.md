@@ -53,29 +53,28 @@ go run ./cmd/server
 cd ui
 npm run dev
 ```
-A UI estará acessível em `http://localhost:3000` e a API em `http://localhost:8080/ping`.
+A UI estará acessível em `http://localhost:5173` (ou porta configurada pelo Vite) e a API em `http://localhost:8080/ping`.
 
 ### Rodando via Docker Compose localmente
 ```bash
 docker compose up -d --build
 ```
-- Frontend UI: `http://localhost:3000`
+- Frontend UI: `http://localhost:3001`
 - Backend API: `http://localhost:8080/ping`
 
 ---
 
-## 🐳 Guia de Deploy no Dokploy (via Docker Hub)
+## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
 
-Com as imagens publicadas no Docker Hub, o deploy no **Dokploy** fica muito mais rápido, pois o servidor não precisa compilar o código-fonte, apenas baixar as imagens prontas.
+Com o `docker-compose.yml` ajustado e as imagens no Docker Hub, o deploy no **Dokploy** é direto e simples.
 
 ---
 
-### Deploy via Provider `Raw` (Recomendado / Mais Rápido)
+### Passo 1: Configuração do Compose no Dokploy
 
-#### Passo a Passo:
-1. No Dokploy, vá em **Projects** e crie um novo **Service** do tipo **Compose**.
-2. Na aba **Source / Provider**, selecione a opção **`Raw`**.
-3. No campo de texto **Compose File**, cole o trecho de código abaixo:
+1. No Dokploy, vá em **Projects** e crie/abra um **Service** do tipo **Compose**.
+2. Na aba **Source**, escolha **`Git`** (conectado ao repositório) ou **`Raw`**.
+3. Se usar **`Raw`**, cole o conteúdo do `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -109,8 +108,51 @@ services:
         condition: service_healthy
 ```
 
-4. Clique em **Save** e em seguida **Deploy**.
-5. Na aba **Domains**, adicione os domínios desejados informando a porta interna de cada container (`80` para a UI e `8080` para a API).
+4. Clique em **Save** e **Deploy**.
+
+---
+
+### Passo 2: Configuração de Domínios na Hostinger
+
+No painel de DNS da **Hostinger**, adicione os registros Tipo **A** apontando para o IP da sua VPS:
+
+* `pocketrun.odutra.com` -> `IP_DA_SUA_VPS`
+* *(Opcional)* `api.pocketrun.odutra.com` -> `IP_DA_SUA_VPS`
+
+---
+
+### Passo 3: Configuração de Domínio no Dokploy (Aba Domains)
+
+Na aba **Domains** do serviço Compose no Dokploy:
+
+1. **Frontend (`ui`):**
+   * **Service Name:** `ui`
+   * **Host:** `pocketrun.odutra.com`
+   * **Container Port:** `80`
+   * **HTTPS:** Ativado (o Traefik emitirá o certificado Let's Encrypt automaticamente).
+
+2. **Backend (`api`):**
+   * Se for expor a API diretamente em um subdomínio:
+     * **Service Name:** `api`
+     * **Host:** `api.pocketrun.odutra.com`
+     * **Container Port:** `8080`
+     * **HTTPS:** Ativado.
+   * *Nota:* Se não desejar subdomínio para a API, você não precisa adicionar domínio para o serviço `api` no Dokploy, pois a `ui` já faz o proxy interno de `/ping` diretamente para `http://api:8080`.
+
+3. Clique em **Save** e em seguida faça o **Deploy / Redeploy** da aplicação.
+
+---
+
+### 🚨 Cuidados Importantes (Evitando o `ERR_TUNNEL_CONNECTION_FAILED`)
+
+1. **Não use `:80` na URL:**
+   Acesse sempre via `https://pocketrun.odutra.com` diretamente no navegador. O ícone de atalho `↗` no painel do Dokploy pode tentar abrir com `:80` no final, gerando erro de túnel.
+2. **Portas no Firewall da VPS:**
+   Certifique-se de ter as portas `80` e `443` abertas no firewall da sua VPS:
+   ```bash
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   ```
 
 ---
 
@@ -118,11 +160,12 @@ services:
 
 Após o deploy ser concluído, valide o status da aplicação:
 
-1. Interface Web: `http://localhost:3000` (ou seu domínio configurado)
-2. Status da API: `http://localhost:8080/ping`
+1. Interface Web: `https://pocketrun.odutra.com`
+2. Status da API: `http://localhost:8080/ping` (ou `https://pocketrun.odutra.com/ping`)
 
 Resposta esperada no ping da API:
 ```json
 {"status":"ok"}
 ```
+
 
