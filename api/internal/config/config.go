@@ -43,12 +43,16 @@ func loadEnvFile(filename string) {
 		parts := strings.SplitN(line, "=", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
-			val := strings.TrimSpace(parts[1])
-			val = strings.Trim(val, `"'`)
+			value := strings.TrimSpace(parts[1])
+			value = strings.Trim(value, `"'`)
 			if os.Getenv(key) == "" {
-				os.Setenv(key, val)
+				os.Setenv(key, value)
 			}
 		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return
 	}
 }
 
