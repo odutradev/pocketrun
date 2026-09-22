@@ -85,8 +85,8 @@ services:
     image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - PORT=8080
       - ENV=production
@@ -102,15 +102,15 @@ services:
     image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
-    ports:
-      - "3001:80"
+    expose:
+      - "80"
     depends_on:
       api:
         condition: service_healthy
 ```
 
 4. Clique em **Save** e em seguida **Deploy**.
-5. Na aba **Domains**, mapeie os domínios desejados apontando para as portas correspondentes (`8080` para API e `3000` para UI).
+5. Na aba **Domains**, adicione os domínios desejados informando a porta interna de cada container (`80` para a UI e `8080` para a API).
 
 ---
 
