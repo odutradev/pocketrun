@@ -1,0 +1,13 @@
+# Environment variables
+.env
+
+# Go binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+
+# Test output
+*.out
