@@ -1,6 +1,15 @@
 # PocketRun
 
-Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em React/Vite e as configurações para deploy contínuo.
+Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em React/Vite, esteira CI/CD via GitHub Actions e configurações para deploy.
+
+---
+
+## 🐳 Imagens Docker Hub
+
+As imagens Docker deste projeto são automaticamente compiladas e publicadas no **Docker Hub** através do GitHub Actions a cada push na branch `master`:
+
+- **API Backend:** `odutradev/pocketrun-api:latest`
+- **UI Frontend:** `odutradev/pocketrun-ui:latest`
 
 ---
 
@@ -8,6 +17,7 @@ Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em
 
 ```text
 .
+├── .github/workflows/   # CI/CD - Build e push automático para o Docker Hub
 ├── api/                  # Código-fonte da API Go (pocketrun-api)
 │   ├── cmd/server/       # Ponto de entrada da aplicação (main.go)
 │   ├── internal/         # Regras de negócio, handlers, middlewares e configs
@@ -18,7 +28,7 @@ Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em
 │   ├── Dockerfile        # Build multi-stage com Nginx para o frontend
 │   ├── nginx.conf        # Configuração do Nginx e proxy de API
 │   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
-├── docker-compose.yml    # Orquestração dos serviços (API + UI) para deploy no Dokploy
+├── docker-compose.yml    # Orquestração dos serviços (API + UI) para deploy local ou Dokploy
 └── README.md             # Instruções de uso e implantação
 ```
 
@@ -54,15 +64,13 @@ docker compose up -d --build
 
 ---
 
-## 🐳 Guia de Deploy no Dokploy
+## 🐳 Guia de Deploy no Dokploy (via Docker Hub)
 
-O deploy no **Dokploy** pode ser feito de duas formas: usando a opção **Raw** (copiando o YAML direto no painel) ou conectando o **GitHub**.
+Com as imagens publicadas no Docker Hub, o deploy no **Dokploy** fica muito mais rápido, pois o servidor não precisa compilar o código-fonte, apenas baixar as imagens prontas.
 
 ---
 
-### Opção 1: Deploy via Provider `Raw` (Recomendado / Rápido)
-
-Nesta opção, você cola o conteúdo do Docker Compose diretamente no editor do Dokploy. O Docker Compose irá clonar o repositório do GitHub e fazer o build das pastas `/api` e `/ui` automaticamente.
+### Deploy via Provider `Raw` (Recomendado / Mais Rápido)
 
 #### Passo a Passo:
 1. No Dokploy, vá em **Projects** e crie um novo **Service** do tipo **Compose**.
@@ -74,9 +82,7 @@ version: '3.8'
 
 services:
   api:
-    build:
-      context: https://github.com/odutradev/pocketrun.git#master:api
-      dockerfile: Dockerfile
+    image: odutradev/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
     ports:
@@ -93,9 +99,7 @@ services:
       start_period: 5s
 
   ui:
-    build:
-      context: https://github.com/odutradev/pocketrun.git#master:ui
-      dockerfile: Dockerfile
+    image: odutradev/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
     ports:
@@ -110,21 +114,6 @@ services:
 
 ---
 
-### Opção 2: Deploy via Provider `GitHub`
-
-Se você preferir integrar sua conta do GitHub para deploys automáticos em cada push:
-
-1. No Dokploy, crie um **Service** do tipo **Compose**.
-2. Na aba **Source / Provider**, selecione **GitHub**.
-3. Selecione o repositório `odutradev/pocketrun` e a branch `master`.
-4. No campo **Compose Path**, informe:
-   ```text
-   ./docker-compose.yml
-   ```
-5. Clique em **Deploy**.
-
----
-
 ## 🔍 Validação da Aplicação
 
 Após o deploy ser concluído, valide o status da aplicação:
@@ -136,3 +125,4 @@ Resposta esperada no ping da API:
 ```json
 {"status":"ok"}
 ```
+
