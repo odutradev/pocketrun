@@ -103,7 +103,7 @@ services:
     container_name: pocketrun-ui
     restart: always
     ports:
-      - "3000:80"
+      - "3001:80"
     depends_on:
       api:
         condition: service_healthy
