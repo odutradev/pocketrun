@@ -8,8 +8,8 @@ Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em
 
 As imagens Docker deste projeto são automaticamente compiladas e publicadas no **Docker Hub** através do GitHub Actions a cada push na branch `master`:
 
-- **API Backend:** `odutradev/pocketrun-api:latest`
-- **UI Frontend:** `odutradev/pocketrun-ui:latest`
+- **API Backend:** `darknx/pocketrun-api:latest`
+- **UI Frontend:** `darknx/pocketrun-ui:latest`
 
 ---
 
@@ -82,7 +82,7 @@ version: '3.8'
 
 services:
   api:
-    image: odutradev/pocketrun-api:latest
+    image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
     ports:
@@ -99,7 +99,7 @@ services:
       start_period: 5s
 
   ui:
-    image: odutradev/pocketrun-ui:latest
+    image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
     ports:
