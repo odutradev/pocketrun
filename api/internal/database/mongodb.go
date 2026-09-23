@@ -23,14 +23,14 @@ func ConnectMongoDB(uri, dbName string) (*MongoDB, error) {
 	clientOpts := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(clientOpts)
 	if err != nil {
-		return nil, fmt.Errorf("falha ao criar cliente MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
 	}
 
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		return nil, fmt.Errorf("falha ao conectar (ping) ao MongoDB: %w", err)
+		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
 	}
 
-	log.Printf("[MongoDB] Conexão estabelecida com sucesso! (Banco: %s)", dbName)
+	log.Printf("[MongoDB] Connection established successfully! (Database: %s)", dbName)
 
 	db := client.Database(dbName)
 	return &MongoDB{
