@@ -13,6 +13,27 @@ As imagens Docker deste projeto são automaticamente compiladas e publicadas no 
 
 ---
 
+## 🍃 Opções de Banco de Dados MongoDB
+
+A API do PocketRun oferece suporte nativo a duas formas de conexão com o MongoDB, alternáveis apenas pela variável de ambiente `MONGODB_URI`:
+
+### 🍃 Opção 1: Container MongoDB Local (Docker Compose)
+Ideal para desenvolvimento local ou quando você quer rodar o banco de dados no próprio servidor via container:
+- **`MONGODB_URI` (no Docker Compose):** `mongodb://mongodb:27017`
+- **`MONGODB_URI` (sem Docker / Go direto):** `mongodb://localhost:27017`
+- **`MONGODB_NAME`:** `pocketrun`
+
+---
+
+### ☁️ Opção 2: MongoDB Externo / Nuvem (ex: MongoDB Atlas)
+Ideal para produção ou quando você utiliza um cluster gerenciado na nuvem (como MongoDB Atlas, DigitalOcean, AWS DocumentDB):
+- **`MONGODB_URI`:** `mongodb+srv://<usuario>:<senha>@cluster0.mongodb.net/?retryWrites=true&w=majority`
+- **`MONGODB_NAME`:** `pocketrun`
+
+> 💡 **Nota:** Ao utilizar uma URI externa, você pode remover ou comentar o serviço `mongodb` no `docker-compose.yml` para economizar recursos de RAM/CPU na VPS.
+
+---
+
 ## 📁 Estrutura do Repositório
 
 ```text
@@ -53,7 +74,7 @@ go run ./cmd/server
 cd ui
 npm run dev
 ```
-A UI estará acessível em `http://localhost:5173` (ou porta configurada pelo Vite) e a API em `http://localhost:8080/ping`.
+A UI estará acessível em `http://localhost:5173` e a API em `http://localhost:8080/ping`.
 
 ### Rodando via Docker Compose localmente
 ```bash
@@ -67,7 +88,7 @@ docker compose up -d --build
 
 ## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
 
-Com o `docker-compose.yml` parametrizado, você pode separar completamente as variáveis de ambiente das definições dos containers no Dokploy.
+Com o `docker-compose.yml` parametrizado, você pode escolher se deseja subir o MongoDB no próprio servidor ou conectar a uma URI externa no Dokploy.
 
 ---
 
@@ -81,6 +102,7 @@ Com o `docker-compose.yml` parametrizado, você pode separar completamente as va
 version: '3.8'
 
 services:
+  # Container do MongoDB Local (Opcional - pode ser removido se usar MongoDB Atlas)
   mongodb:
     image: mongo:latest
     container_name: pocketrun-mongodb
@@ -106,8 +128,6 @@ services:
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
       - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
-    depends_on:
-      - mongodb
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
       interval: 30s
@@ -133,10 +153,11 @@ volumes:
 
 ---
 
-### Passo 2: Configuração das Variáveis de Ambiente no Dokploy (Aba Environment)
+### Passo 2: Configuração das Variáveis na Aba Environment no Dokploy
 
-No Dokploy, acesse a aba **Environment** (ou **Environment Variables**) do seu serviço Compose e adicione as variáveis separadamente:
+Escolha uma das opções e cole na aba **Environment** do Dokploy:
 
+#### 🔹 Para usar o Container MongoDB Local:
 ```env
 PORT=8080
 ENV=production
@@ -146,7 +167,15 @@ MONGODB_NAME=pocketrun
 UI_PORT=3001
 ```
 
-> 💡 **Nota:** Ao utilizar o formato `${VARIAVEL:-valor_padrao}` no `docker-compose.yml`, se uma variável for definida no Dokploy, o valor do Dokploy será utilizado. Caso contrário, o Compose utilizará o valor padrão definido após o `:-`.
+#### ☁️ Para usar o MongoDB Atlas / Remoto:
+```env
+PORT=8080
+ENV=production
+CORS_ALLOWED_ORIGINS=*
+MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
+MONGODB_NAME=pocketrun
+UI_PORT=3001
+```
 
 ---
 
@@ -175,16 +204,15 @@ Na aba **Domains** do serviço Compose no Dokploy:
      * **Host:** `api.pocketrun.odutra.com`
      * **Container Port:** `8080`
      * **HTTPS:** Ativado.
-   * *Nota:* Se não desejar subdomínio para a API, você não precisa adicionar domínio para o serviço `api` no Dokploy, pois a `ui` já faz o proxy interno de `/ping` diretamente para `http://api:8080`.
 
-3. Clique em **Save** e em seguida faça o **Deploy / Redeploy** da aplicação.
+3. Clique em **Save** e faça o **Deploy / Redeploy**.
 
 ---
 
 ### 🚨 Cuidados Importantes (Evitando o `ERR_TUNNEL_CONNECTION_FAILED`)
 
 1. **Não use `:80` na URL:**
-   Acesse sempre via `https://pocketrun.odutra.com` diretamente no navegador. O ícone de atalho `↗` no painel do Dokploy pode tentar abrir com `:80` no final, gerando erro de túnel.
+   Acesse sempre via `https://pocketrun.odutra.com` diretamente no navegador.
 2. **Portas no Firewall da VPS:**
    Certifique-se de ter as portas `80` e `443` abertas no firewall da sua VPS:
    ```bash
