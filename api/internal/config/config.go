@@ -10,6 +10,8 @@ type Config struct {
 	Port           string
 	Env            string
 	AllowedOrigins string
+	MongoURI       string
+	MongoDBName    string
 }
 
 func Load() *Config {
@@ -18,11 +20,15 @@ func Load() *Config {
 	port := getEnv("PORT", "8080")
 	env := getEnv("ENV", "development")
 	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "*")
+	mongoURI := getEnv("MONGODB_URI", "mongodb://localhost:27017")
+	mongoDBName := getEnv("MONGODB_NAME", "pocketrun")
 
 	return &Config{
 		Port:           port,
 		Env:            env,
 		AllowedOrigins: allowedOrigins,
+		MongoURI:       mongoURI,
+		MongoDBName:    mongoDBName,
 	}
 }
 
