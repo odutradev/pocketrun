@@ -6,7 +6,27 @@ on:
       - master
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      has_version: ${{ steps.check.outputs.has_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check commit message for semantic version
+        id: check
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if [[ "$COMMIT_MSG" =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "has_version=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_version=false" >> $GITHUB_OUTPUT
+          fi
+
   build-and-push:
+    needs: check-version
+    if: needs.check-version.outputs.has_version == 'true'
     runs-on: ubuntu-latest
 
     steps:
