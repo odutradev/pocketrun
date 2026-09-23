@@ -88,7 +88,7 @@ docker compose up -d --build
 
 ## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
 
-Com o `docker-compose.yml` parametrizado, você pode escolher se deseja subir o MongoDB no próprio servidor ou conectar a uma URI externa no Dokploy.
+No Dokploy, o proxy reverso (Traefik) gerencia as conexões utilizando as portas expostas (`expose`), dispensando o mapeamento direto de portas no host (`ports`), o que evita conflitos de portas na VPS.
 
 ---
 
@@ -96,19 +96,15 @@ Com o `docker-compose.yml` parametrizado, você pode escolher se deseja subir o 
 
 1. No Dokploy, vá em **Projects** e crie/abra um **Service** do tipo **Compose**.
 2. Na aba **Source**, escolha **`Git`** (conectado ao repositório) ou **`Raw`**.
-3. Se usar **`Raw`**, cole o conteúdo do `docker-compose.yml`:
+3. Se usar **`Raw`**, cole o conteúdo atualizado do `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
-
 services:
   # Container do MongoDB Local (Opcional - pode ser removido se usar MongoDB Atlas)
   mongodb:
     image: mongo:latest
     container_name: pocketrun-mongodb
     restart: always
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_DATABASE=${MONGODB_NAME:-pocketrun}
     volumes:
@@ -118,8 +114,6 @@ services:
     image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
-    ports:
-      - "${PORT:-8080}:8080"
     expose:
       - "8080"
     environment:
@@ -139,8 +133,6 @@ services:
     image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
-    ports:
-      - "${UI_PORT:-3001}:80"
     expose:
       - "80"
     depends_on:
@@ -164,7 +156,6 @@ ENV=production
 CORS_ALLOWED_ORIGINS=*
 MONGODB_URI=mongodb://mongodb:27017
 MONGODB_NAME=pocketrun
-UI_PORT=3001
 ```
 
 #### ☁️ Para usar o MongoDB Atlas / Remoto:
@@ -174,7 +165,6 @@ ENV=production
 CORS_ALLOWED_ORIGINS=*
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
-UI_PORT=3001
 ```
 
 ---

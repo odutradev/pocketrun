@@ -1,14 +1,10 @@
-version: '3.8'
-
 services:
   # --- Opção A: Container MongoDB Local ---
-  # Se for utilizar MongoDB Atlas / URI externo no Dokploy, este container pode ser desativado ou mantido para dev local.
+  # Se for utilizar MongoDB Atlas / URI externo no Dokploy, este container pode ser desativado ou removido.
   mongodb:
     image: mongo:latest
     container_name: pocketrun-mongodb
     restart: always
-    ports:
-      - "27017:27017"
     environment:
       - MONGO_INITDB_DATABASE=${MONGODB_NAME:-pocketrun}
     volumes:
@@ -18,8 +14,6 @@ services:
     image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
-    ports:
-      - "${PORT:-8080}:8080"
     expose:
       - "8080"
     environment:
@@ -41,8 +35,6 @@ services:
     image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
-    ports:
-      - "${UI_PORT:-3001}:80"
     expose:
       - "80"
     depends_on:
