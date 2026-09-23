@@ -20,7 +20,7 @@ As imagens Docker deste projeto são automaticamente compiladas e publicadas no 
 ├── .github/workflows/   # CI/CD - Build e push automático para o Docker Hub
 ├── api/                  # Código-fonte da API Go (pocketrun-api)
 │   ├── cmd/server/       # Ponto de entrada da aplicação (main.go)
-│   ├── internal/         # Regras de negócio, handlers, middlewares e configs
+│   ├── internal/         # Regras de negócio, handlers, middlewares, configs e DB (MongoDB)
 │   ├── Dockerfile        # Build multi-stage para gerar a imagem minimalista da API
 │   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
 ├── ui/                   # Aplicação Frontend React + Vite (pocketrun-ui)
@@ -28,7 +28,7 @@ As imagens Docker deste projeto são automaticamente compiladas e publicadas no 
 │   ├── Dockerfile        # Build multi-stage com Nginx para o frontend
 │   ├── nginx.conf        # Configuração do Nginx e proxy de API
 │   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
-├── docker-compose.yml    # Orquestração dos serviços (API + UI) para deploy local ou Dokploy
+├── docker-compose.yml    # Orquestração dos serviços (MongoDB + API + UI) para deploy local ou Dokploy
 └── README.md             # Instruções de uso e implantação
 ```
 
@@ -61,12 +61,13 @@ docker compose up -d --build
 ```
 - Frontend UI: `http://localhost:3001`
 - Backend API: `http://localhost:8080/ping`
+- MongoDB: `localhost:27017`
 
 ---
 
 ## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
 
-Com o `docker-compose.yml` ajustado e as imagens no Docker Hub, o deploy no **Dokploy** é direto e simples.
+Com o `docker-compose.yml` parametrizado, você pode separar completamente as variáveis de ambiente das definições dos containers no Dokploy.
 
 ---
 
@@ -80,16 +81,33 @@ Com o `docker-compose.yml` ajustado e as imagens no Docker Hub, o deploy no **Do
 version: '3.8'
 
 services:
+  mongodb:
+    image: mongo:latest
+    container_name: pocketrun-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGODB_NAME:-pocketrun}
+    volumes:
+      - mongodb_data:/data/db
+
   api:
     image: darknx/pocketrun-api:latest
     container_name: pocketrun-api
     restart: always
+    ports:
+      - "${PORT:-8080}:8080"
     expose:
       - "8080"
     environment:
-      - PORT=8080
-      - ENV=production
-      - CORS_ALLOWED_ORIGINS=*
+      - PORT=${PORT:-8080}
+      - ENV=${ENV:-production}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongodb:27017}
+      - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
+    depends_on:
+      - mongodb
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
       interval: 30s
@@ -101,18 +119,38 @@ services:
     image: darknx/pocketrun-ui:latest
     container_name: pocketrun-ui
     restart: always
+    ports:
+      - "${UI_PORT:-3001}:80"
     expose:
       - "80"
     depends_on:
       api:
         condition: service_healthy
-```
 
-4. Clique em **Save** e **Deploy**.
+volumes:
+  mongodb_data:
+```
 
 ---
 
-### Passo 2: Configuração de Domínios na Hostinger
+### Passo 2: Configuração das Variáveis de Ambiente no Dokploy (Aba Environment)
+
+No Dokploy, acesse a aba **Environment** (ou **Environment Variables**) do seu serviço Compose e adicione as variáveis separadamente:
+
+```env
+PORT=8080
+ENV=production
+CORS_ALLOWED_ORIGINS=*
+MONGODB_URI=mongodb://mongodb:27017
+MONGODB_NAME=pocketrun
+UI_PORT=3001
+```
+
+> 💡 **Nota:** Ao utilizar o formato `${VARIAVEL:-valor_padrao}` no `docker-compose.yml`, se uma variável for definida no Dokploy, o valor do Dokploy será utilizado. Caso contrário, o Compose utilizará o valor padrão definido após o `:-`.
+
+---
+
+### Passo 3: Configuração de Domínios na Hostinger
 
 No painel de DNS da **Hostinger**, adicione os registros Tipo **A** apontando para o IP da sua VPS:
 
@@ -121,7 +159,7 @@ No painel de DNS da **Hostinger**, adicione os registros Tipo **A** apontando pa
 
 ---
 
-### Passo 3: Configuração de Domínio no Dokploy (Aba Domains)
+### Passo 4: Configuração de Domínio no Dokploy (Aba Domains)
 
 Na aba **Domains** do serviço Compose no Dokploy:
 
@@ -165,7 +203,5 @@ Após o deploy ser concluído, valide o status da aplicação:
 
 Resposta esperada no ping da API:
 ```json
-{"status":"ok"}
+{"status":"success","message":"pong"}
 ```
-
-
