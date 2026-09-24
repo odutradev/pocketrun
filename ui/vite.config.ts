@@ -9,6 +9,18 @@ export default defineConfig({
       '/ping': {
         target: 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/kv': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      },
+      '/validate': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
       }
     }
   }

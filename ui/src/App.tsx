@@ -1,64 +1,54 @@
 import { useState, useEffect } from 'react'
-
-import { footerStyle, mainContentStyle, appContainerStyle } from './styles'
-import { HealthCheck } from './subcomponentes/HealthCheck'
-import { Overview } from './subcomponentes/Overview'
-import { Header } from './subcomponentes/Header'
+import { AuthProvider } from './context/AuthContext'
+import { Navbar } from './components/Navbar'
+import { Dashboard } from './components/Dashboard'
+import { AuthModal } from './components/AuthModal'
 import { fetchHealthPing } from './services/api'
 
-export function App() {
-  const [status, setStatus] = useState<string>('unknown')
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
+export function AppContent() {
+  const [apiStatus, setApiStatus] = useState<string>('checking...')
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false)
 
-  const handlePing = () => {
-    setLoading(true)
-    setError(null)
+  const checkHealth = () => {
     fetchHealthPing()
-      .then((data) => {
-        setStatus(data?.status ?? 'unknown')
-      })
-      .catch((err) => {
-        setStatus('offline')
-        setError(err instanceof Error ? err.message : 'Failed to reach API')
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+      .then(() => setApiStatus('online'))
+      .catch(() => setApiStatus('offline'))
   }
 
   useEffect(() => {
-    let isMounted = true
-    fetchHealthPing()
-      .then((data) => {
-        if (isMounted) setStatus(data?.status ?? 'unknown')
-      })
-      .catch((err) => {
-        if (isMounted) {
-          setStatus('offline')
-          setError(err instanceof Error ? err.message : 'Failed to reach API')
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false)
-      })
-
-    return () => {
-      isMounted = false
-    }
+    checkHealth()
+    const interval = setInterval(checkHealth, 15000)
+    return () => clearInterval(interval)
   }, [])
 
   return (
-    <div style={appContainerStyle}>
-      <Header title="PocketRun" subtitle="Modern Micro-service Platform" />
-      <main style={mainContentStyle}>
-        <HealthCheck status={status} loading={loading} error={error} onCheck={handlePing} />
-        <Overview />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Navbar apiStatus={apiStatus} onOpenAuth={() => setIsAuthModalOpen(true)} />
+
+      <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '0 32px 48px' }}>
+        <Dashboard onOpenAuth={() => setIsAuthModalOpen(true)} />
       </main>
-      <footer style={footerStyle}>
-        <span>PocketRun &copy; 2026</span>
+
+      <footer style={{
+        borderTop: '1px solid var(--border-color)',
+        padding: '24px 32px',
+        textAlign: 'center',
+        fontSize: '0.85rem',
+        color: 'var(--text-muted)'
+      }}>
+        <span>PocketRun &copy; 2026 — Pluggable Multi-Tenant Key-Value BaaS Platform</span>
       </footer>
+
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </div>
+  )
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

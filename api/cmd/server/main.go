@@ -28,7 +28,7 @@ func main() {
 		}()
 	}
 
-	router := handler.NewRouter(cfg.AllowedOrigins)
+	router := handler.NewRouter(mongoDB, cfg.AllowedOrigins, cfg.JWTSecret)
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	log.Printf("Server initializing in %s mode on http://localhost:%s", cfg.Env, cfg.Port)

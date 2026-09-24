@@ -12,6 +12,7 @@ type Config struct {
 	AllowedOrigins string
 	MongoURI       string
 	MongoDBName    string
+	JWTSecret      string
 }
 
 func Load() *Config {
@@ -22,6 +23,7 @@ func Load() *Config {
 	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "*")
 	mongoURI := getEnv("MONGODB_URI", "mongodb://localhost:27017")
 	mongoDBName := getEnv("MONGODB_NAME", "pocketrun")
+	jwtSecret := getEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
 
 	return &Config{
 		Port:           port,
@@ -29,6 +31,7 @@ func Load() *Config {
 		AllowedOrigins: allowedOrigins,
 		MongoURI:       mongoURI,
 		MongoDBName:    mongoDBName,
+		JWTSecret:      jwtSecret,
 	}
 }
 
