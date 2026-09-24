@@ -93,7 +93,6 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({ appId, projectName }
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '20px' }}>
-          {/* Sidebar Collections List */}
           <div className="glass-panel" style={{ padding: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               <Layers size={16} color="var(--primary)" />
@@ -129,7 +128,6 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({ appId, projectName }
             </div>
           </div>
 
-          {/* Main Documents Table / View */}
           <div className="glass-panel" style={{ padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '12px' }}>
               <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
@@ -186,7 +184,6 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({ appId, projectName }
                   </div>
                 ))}
 
-                {/* Pagination Controls */}
                 {documentsData && documentsData.total_pages > 1 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
                     <button

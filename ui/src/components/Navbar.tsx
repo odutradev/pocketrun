@@ -13,7 +13,6 @@ export const Navbar: React.FC<NavbarProps> = ({ apiStatus, onOpenAuth }) => {
   return (
     <header className="glass-panel" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, padding: '16px 32px', marginBottom: '24px' }}>
       <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Brand Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
             width: '40px',
@@ -35,9 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({ apiStatus, onOpenAuth }) => {
           </div>
         </div>
 
-        {/* Right Section: API Status & User Auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          {/* Health Status Badge */}
           <div className={`badge ${apiStatus === 'online' ? 'badge-emerald' : apiStatus === 'offline' ? 'badge-amber' : 'badge-indigo'}`} style={{ gap: '6px' }}>
             <Server size={12} />
             <span>API {apiStatus}</span>

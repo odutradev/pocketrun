@@ -63,7 +63,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <X size={20} />
         </button>
 
-        {/* Tab Switcher */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'var(--bg-input)', padding: '4px', borderRadius: 'var(--radius-md)' }}>
           <button
             onClick={() => { setIsRegister(false); setError(null); }}

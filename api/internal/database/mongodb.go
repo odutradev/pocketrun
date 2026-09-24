@@ -47,7 +47,6 @@ func ConnectMongoDB(uri, dbName string) (*MongoDB, error) {
 }
 
 func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
-	// 1. Users Collection: Unique Index on Email
 	usersCol := m.Database.Collection("users")
 	_, err := usersCol.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys:    bson.D{{Key: "email", Value: 1}},
@@ -57,7 +56,6 @@ func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
 		log.Printf("[MongoDB] Index users.email: %v", err)
 	}
 
-	// 2. Applications Collection: Index on manager_id, project_id, tokens.token_hash
 	appsCol := m.Database.Collection("applications")
 	_, _ = appsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{{Key: "manager_id", Value: 1}},
@@ -70,7 +68,6 @@ func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
 		Keys: bson.D{{Key: "tokens.token_hash", Value: 1}},
 	})
 
-	// 3. KV Documents Collection: Compound Index on app_id + collection_name, and TTL index on expires_at
 	kvCol := m.Database.Collection("kv_documents")
 	_, _ = kvCol.Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{

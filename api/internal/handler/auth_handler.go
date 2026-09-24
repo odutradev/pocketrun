@@ -76,7 +76,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Check if user exists
 	count, err := h.DB.Database.Collection("users").CountDocuments(ctx, bson.M{"email": req.Email})
 	if err == nil && count > 0 {
 		w.Header().Set("Content-Type", "application/json")

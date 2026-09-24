@@ -53,7 +53,6 @@ code, pre {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -69,7 +68,6 @@ code, pre {
   background: rgba(99, 102, 241, 0.6);
 }
 
-/* Glassmorphism utility */
 .glass-panel {
   background: var(--bg-card);
   backdrop-filter: blur(16px);
@@ -89,7 +87,6 @@ code, pre {
   box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.15);
 }
 
-/* Buttons */
 .btn-primary {
   background: linear-gradient(135deg, var(--primary) 0%, #4338CA 100%);
   color: #FFFFFF;
@@ -154,7 +151,6 @@ code, pre {
   border-color: var(--accent-rose);
 }
 
-/* Inputs */
 .input-field {
   width: 100%;
   background: var(--bg-input);
@@ -171,7 +167,6 @@ code, pre {
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -198,7 +193,6 @@ code, pre {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-/* Modal Overlay */
 .modal-overlay {
   position: fixed;
   inset: 0;

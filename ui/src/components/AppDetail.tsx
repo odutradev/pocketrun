@@ -96,11 +96,9 @@ export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp 
     setTimeout(() => setCopiedSnippet(null), 2000)
   }
 
-  const sampleFetchCode = `// Exemplo no Frontend (React/Vue/Flutter)
-const API_URL = "${window.location.origin}"
+  const sampleFetchCode = `const API_URL = "${window.location.origin}"
 const TOKEN = "seu-token-aqui"
 
-// Criar Registro na coleção "tarefas"
 fetch(\`\${API_URL}/kv/tarefas/create\`, {
   method: 'POST',
   headers: {
@@ -109,18 +107,16 @@ fetch(\`\${API_URL}/kv/tarefas/create\`, {
   },
   body: JSON.stringify({
     data: { titulo: "Comprar Leite", concluida: false, prioridade: "alta" },
-    expiresInDays: 30 // Opcional: auto-deletar após 30 dias
+    expiresInDays: 30
   })
 })
 
-// Buscar Registros com Filtro
 fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
   headers: { 'controlAccess': TOKEN }
 })`
 
   return (
     <div>
-      {/* Top Header Navigation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <button onClick={onBack} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
           <ArrowLeft size={16} />
@@ -132,7 +128,6 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
         </div>
       </div>
 
-      {/* Main App Title Banner */}
       <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{
@@ -158,7 +153,6 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
       <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '24px' }}>
         <button
           onClick={() => setActiveTab('security')}
@@ -218,7 +212,6 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
         </button>
       </div>
 
-      {/* Tab 1: Security & CORS Settings */}
       {activeTab === 'security' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           <form onSubmit={handleSaveSettings} className="glass-panel" style={{ padding: '24px' }}>
@@ -274,7 +267,6 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
             </button>
           </form>
 
-          {/* Quick Integration Code Snippet */}
           <div className="glass-panel" style={{ padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -298,7 +290,6 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
         </div>
       )}
 
-      {/* Tab 2: Tokens Management */}
       {activeTab === 'tokens' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
@@ -374,12 +365,10 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
         </div>
       )}
 
-      {/* Tab 3: Data Explorer */}
       {activeTab === 'explorer' && (
         <DataExplorer appId={app.id} projectName={app.name} />
       )}
 
-      {/* Tab 4: Danger Zone */}
       {activeTab === 'danger' && (
         <div className="glass-panel" style={{ padding: '32px', borderColor: 'rgba(244, 63, 94, 0.3)', background: 'rgba(244, 63, 94, 0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--accent-rose)', marginBottom: '16px' }}>

@@ -1,4 +1,4 @@
-export const API_BASE_URL = '' // Uses relative path (proxied by Vite or Nginx)
+export const API_BASE_URL = ''
 
 export interface ManagerUser {
   id: string
@@ -65,7 +65,6 @@ export interface ExplorerDocumentsResponse {
   total_pages: number
 }
 
-// Helper to construct headers with JWT
 const getAuthHeaders = () => {
   const token = localStorage.getItem('pocketrun_manager_token')
   return {
@@ -74,7 +73,6 @@ const getAuthHeaders = () => {
   }
 }
 
-// Auth API Calls
 export async function registerManager(name: string, email: string, password: string): Promise<AuthResponse> {
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
     method: 'POST',
@@ -106,7 +104,6 @@ export async function fetchManagerMe(): Promise<ManagerUser> {
   return data
 }
 
-// Applications API Calls
 export async function fetchApplications(): Promise<Application[]> {
   const res = await fetch(`${API_BASE_URL}/api/v1/apps`, {
     headers: getAuthHeaders(),
@@ -146,7 +143,6 @@ export async function deleteApplication(appId: string): Promise<void> {
   if (!res.ok) throw new Error(data.error || 'Failed to delete application')
 }
 
-// Token Management API Calls
 export async function createAPIToken(appId: string, payload: CreateTokenPayload): Promise<CreateTokenResponse> {
   const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/tokens`, {
     method: 'POST',
@@ -167,7 +163,6 @@ export async function deleteAPIToken(appId: string, tokenId: string): Promise<vo
   if (!res.ok) throw new Error(data.error || 'Failed to revoke token')
 }
 
-// Data Explorer API Calls
 export async function fetchExplorerCollections(appId: string): Promise<string[]> {
   const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/explorer/collections`, {
     headers: getAuthHeaders(),
@@ -186,7 +181,6 @@ export async function fetchExplorerDocuments(appId: string, collection: string, 
   return data
 }
 
-// Health Check API
 export async function fetchHealthPing(): Promise<{ status: string }> {
   const res = await fetch(`${API_BASE_URL}/ping`)
   if (!res.ok) throw new Error('API offline')

@@ -115,7 +115,6 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Check unique project_id
 	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"project_id": req.ProjectID})
 	if count > 0 {
 		w.Header().Set("Content-Type", "application/json")
@@ -259,7 +258,6 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request, appIDHex 
 		return
 	}
 
-	// Purge all KV documents for this app_id
 	_, _ = h.DB.Database.Collection("kv_documents").DeleteMany(ctx, bson.M{"app_id": appID})
 
 	w.Header().Set("Content-Type", "application/json")
@@ -352,8 +350,6 @@ func (h *AppHandler) DeleteToken(w http.ResponseWriter, r *http.Request, appIDHe
 	json.NewEncoder(w).Encode(map[string]string{"message": "Token revoked successfully"})
 }
 
-// Data Explorer Endpoints for Manager Dashboard
-
 func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Request, appIDHex string) {
 	managerIDStr := middleware.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
@@ -368,7 +364,6 @@ func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Reque
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Ensure application belongs to manager
 	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"_id": appID, "manager_id": managerID})
 	if count == 0 {
 		w.Header().Set("Content-Type", "application/json")
@@ -408,7 +403,6 @@ func (h *AppHandler) GetExplorerDocuments(w http.ResponseWriter, r *http.Request
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Verify manager ownership
 	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"_id": appID, "manager_id": managerID})
 	if count == 0 {
 		w.Header().Set("Content-Type", "application/json")

@@ -34,7 +34,6 @@ type Application struct {
 	UpdatedAt               time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-// GenerateAPIToken creates a new API token with prefix pk_live_, computes its SHA-256 hash
 func GenerateAPIToken(name string, validityDays int) (string, Token, error) {
 	bytes := make([]byte, 24)
 	if _, err := rand.Read(bytes); err != nil {
@@ -67,22 +66,18 @@ func GenerateAPIToken(name string, validityDays int) (string, Token, error) {
 	return rawToken, tokenStruct, nil
 }
 
-// HashAPIToken returns SHA-256 hex hash of plaintext token
 func HashAPIToken(rawToken string) string {
 	h := sha256.Sum256([]byte(strings.TrimSpace(rawToken)))
 	return hex.EncodeToString(h[:])
 }
 
-// IsOriginAllowed checks if request origin is authorized by application settings
 func IsOriginAllowed(allowedOrigins []string, originHeader string, allowNonBrowser bool) bool {
 	originHeader = strings.TrimSpace(originHeader)
 
-	// If no Origin header (e.g. mobile app, curl, server-to-server)
 	if originHeader == "" {
 		return allowNonBrowser
 	}
 
-	// Normalize trailing slashes
 	originHeader = strings.TrimSuffix(originHeader, "/")
 
 	for _, allowed := range allowedOrigins {

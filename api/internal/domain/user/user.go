@@ -32,7 +32,6 @@ type JWTClaims struct {
 	Iat    int64  `json:"iat"`
 }
 
-// HashPassword hashes a password using SHA-512 with a random 16-byte salt
 func HashPassword(password string) (string, error) {
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {
@@ -47,7 +46,6 @@ func HashPassword(password string) (string, error) {
 	return fmt.Sprintf("%s:%s", hex.EncodeToString(salt), hex.EncodeToString(hash)), nil
 }
 
-// CheckPassword verifies a plaintext password against the stored salt:hash string
 func CheckPassword(password, storedHash string) bool {
 	parts := strings.SplitN(storedHash, ":", 2)
 	if len(parts) != 2 {
@@ -72,7 +70,6 @@ func CheckPassword(password, storedHash string) bool {
 	return hmac.Equal(actualHash, expectedHash)
 }
 
-// GenerateJWT creates a signed JWT token string (HMAC-SHA256) valid for 7 days
 func GenerateJWT(userID, email, secret string) (string, error) {
 	header := map[string]string{
 		"alg": "HS256",
@@ -107,7 +104,6 @@ func GenerateJWT(userID, email, secret string) (string, error) {
 	return unsignedToken + "." + signature, nil
 }
 
-// ValidateJWT verifies signature and expiration of a JWT token string
 func ValidateJWT(tokenStr, secret string) (*JWTClaims, error) {
 	parts := strings.Split(tokenStr, ".")
 	if len(parts) != 3 {

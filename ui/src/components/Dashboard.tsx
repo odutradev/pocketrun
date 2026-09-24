@@ -23,7 +23,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
     try {
       const data = await fetchApplications()
       setApps(data)
-      // If an app is selected, refresh its object
       if (selectedApp) {
         const updated = data.find((a) => a.id === selectedApp.id)
         if (updated) setSelectedApp(updated)
@@ -88,7 +87,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
 
   return (
     <div>
-      {/* Top Banner & Quick Actions */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
         <div>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
@@ -111,7 +109,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
         </div>
       </div>
 
-      {/* Metrics Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '36px' }}>
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', marginBottom: '12px' }}>
@@ -144,7 +141,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
         </div>
       </div>
 
-      {/* Applications Grid Header */}
       <div style={{ marginBottom: '20px' }}>
         <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
           Suas Aplicações ({apps.length})
@@ -213,7 +209,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
         </div>
       )}
 
-      {/* Create Application Modal */}
       <CreateAppModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}

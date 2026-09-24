@@ -21,7 +21,6 @@ const (
 func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Extract token from controlAccess, X-Pocket-Token, or Authorization
 			rawToken := r.Header.Get("controlAccess")
 			if rawToken == "" {
 				rawToken = r.Header.Get("X-Pocket-Token")
@@ -57,7 +56,6 @@ func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Validate token expiration
 			var matchedToken *application.Token
 			for i, t := range app.Tokens {
 				if t.TokenHash == tokenHash {
@@ -73,7 +71,6 @@ func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Validate Origin
 			originHeader := r.Header.Get("Origin")
 			if !application.IsOriginAllowed(app.AllowedOrigins, originHeader, app.AllowNonBrowserRequests) {
 				w.Header().Set("Content-Type", "application/json")
@@ -85,7 +82,6 @@ func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Set CORS headers dynamically based on origin
 			if originHeader != "" {
 				w.Header().Set("Access-Control-Allow-Origin", originHeader)
 			} else {
@@ -95,13 +91,11 @@ func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, controlAccess, X-Pocket-Token, Authorization")
 			w.Header().Set("projectID", app.ProjectID)
 
-			// Handle CORS Preflight OPTIONS
 			if r.Method == http.MethodOptions {
 				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 
-			// Update last_used_at asynchronously
 			go func(appID bson.ObjectID, tokHash string) {
 				updateCtx, updateCancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer updateCancel()

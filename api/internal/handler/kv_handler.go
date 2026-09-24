@@ -111,13 +111,11 @@ func (h *KVHandler) GetAll(w http.ResponseWriter, r *http.Request, collectionNam
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	// Base filter by app_id and collection_name
 	filter := bson.M{
 		"app_id":          app.ID,
 		"collection_name": collectionName,
 	}
 
-	// Dynamic filters from query params
 	queryParams := r.URL.Query()
 	for key, values := range queryParams {
 		if key == "page" || key == "limit" || key == "pagination" {
@@ -125,7 +123,6 @@ func (h *KVHandler) GetAll(w http.ResponseWriter, r *http.Request, collectionNam
 		}
 		if len(values) > 0 {
 			val := values[0]
-			// Try parsing boolean or numbers for strict types
 			if boolVal, err := strconv.ParseBool(val); err == nil {
 				filter["data."+key] = boolVal
 			} else if floatVal, err := strconv.ParseFloat(val, 64); err == nil {

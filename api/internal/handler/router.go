@@ -19,19 +19,15 @@ func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Hand
 	managerAuthMW := middleware.ManagerAuth(jwtSecret)
 	appAuthMW := middleware.AppAuth(db)
 
-	// Health Check
 	mux.HandleFunc("GET /ping", health.Ping)
 
-	// Manager Auth Public Routes
 	mux.HandleFunc("POST /api/v1/auth/register", authHandler.Register)
 	mux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
 	mux.Handle("GET /api/v1/auth/me", managerAuthMW(http.HandlerFunc(authHandler.Me)))
 
-	// Manager Apps Routes
 	mux.Handle("GET /api/v1/apps", managerAuthMW(http.HandlerFunc(appHandler.ListApps)))
 	mux.Handle("POST /api/v1/apps", managerAuthMW(http.HandlerFunc(appHandler.CreateApp)))
 
-	// Dynamic Manager App Sub-routes
 	mux.Handle("/api/v1/apps/", managerAuthMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/api/v1/apps/")
 		parts := strings.Split(path, "/")
@@ -74,7 +70,6 @@ func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Hand
 		http.Error(w, "Endpoint not found", http.StatusNotFound)
 	})))
 
-	// KV Public Client App Storage Routes (Protected by appAuthMW)
 	mux.Handle("/validate/control-access", appAuthMW(http.HandlerFunc(kvHandler.ValidateControlAccess)))
 
 	mux.Handle("/kv/", appAuthMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +125,6 @@ func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Hand
 		http.Error(w, "Endpoint not found or method not allowed", http.StatusNotFound)
 	})))
 
-	// Global CORS middleware fallback
 	corsMiddleware := middleware.CORS(allowedOrigins)
 	return corsMiddleware(mux)
 }
