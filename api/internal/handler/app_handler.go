@@ -377,8 +377,9 @@ func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	cols, err := h.DB.Database.Collection("kv_documents").Distinct(ctx, "collection_name", bson.M{"app_id": appID})
-	if err != nil {
+	var cols []string
+	res := h.DB.Database.Collection("kv_documents").Distinct(ctx, "collection_name", bson.M{"app_id": appID})
+	if err := res.Decode(&cols); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch collections"})
@@ -386,7 +387,7 @@ func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Reque
 	}
 
 	if cols == nil {
-		cols = []interface{}{}
+		cols = []string{}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
