@@ -5,20 +5,23 @@ import (
 	"strings"
 
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/health"
-	"pocketrun-api/internal/middleware"
-	"pocketrun-api/internal/middleware/auth"
+	"pocketrun-api/internal/handler/app"
+	"pocketrun-api/internal/handler/auth"
+	"pocketrun-api/internal/handler/health"
+	"pocketrun-api/internal/handler/kv"
+	authMW "pocketrun-api/internal/middleware/auth"
+	"pocketrun-api/internal/middleware/cors"
 )
 
 func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Handler {
 	mux := http.NewServeMux()
 
-	authHandler := NewAuthHandler(db, jwtSecret)
-	appHandler := NewAppHandler(db)
-	kvHandler := NewKVHandler(db)
+	authHandler := auth.NewAuthHandler(db, jwtSecret)
+	appHandler := app.NewAppHandler(db)
+	kvHandler := kv.NewKVHandler(db)
 
-	managerAuthMW := auth.ManagerAuth(jwtSecret)
-	appAuthMW := auth.AppAuth(db)
+	managerAuthMW := authMW.ManagerAuth(jwtSecret)
+	appAuthMW := authMW.AppAuth(db)
 
 	mux.HandleFunc("GET /ping", health.Ping)
 
@@ -126,6 +129,6 @@ func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Hand
 		http.Error(w, "Endpoint not found or method not allowed", http.StatusNotFound)
 	})))
 
-	corsMiddleware := middleware.CORS(allowedOrigins)
+	corsMiddleware := cors.CORS(allowedOrigins)
 	return corsMiddleware(mux)
 }
