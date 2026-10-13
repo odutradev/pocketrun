@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 import (
 	"context"
@@ -12,6 +12,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
+
+type contextKey string
 
 const (
 	AppKey       contextKey = "appKey"

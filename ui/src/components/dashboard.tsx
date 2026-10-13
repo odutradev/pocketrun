@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
-import type { Application } from '../services/api'
-import { fetchApplications } from '../services/api'
-import { CreateAppModal } from './CreateAppModal'
-import { AppDetail } from './AppDetail'
 import { Plus, Database, Key, Shield, Layers, ArrowRight, RefreshCw, Sparkles } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
+import { fetchApplications } from '../services/api'
+import { CreateAppModal } from './createAppModal'
+import { useAuth } from '../context/authContext'
+import { AppDetail } from './appDetail'
+
+import type { Application } from '../services/api'
 
 interface DashboardProps {
   onOpenAuth: () => void
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onOpenAuth }) => {
+export const Dashboard = ({ onOpenAuth }: DashboardProps) => {
   const { user } = useAuth()
   const [apps, setApps] = useState<Application[]>([])
   const [loading, setLoading] = useState<boolean>(true)

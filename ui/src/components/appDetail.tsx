@@ -1,22 +1,12 @@
-import React, { useState } from 'react'
-import type { Application } from '../services/api'
+import { ArrowLeft, Globe, Key, Database, Trash2, Plus, Shield, Save, Check, Code, Copy, AlertTriangle } from 'lucide-react'
+import { useState } from 'react'
+
 import { updateApplication, deleteApplication, deleteAPIToken } from '../services/api'
-import { CreateTokenModal } from './CreateTokenModal'
-import { DataExplorer } from './DataExplorer'
-import {
-  ArrowLeft,
-  Globe,
-  Key,
-  Database,
-  Trash2,
-  Plus,
-  Shield,
-  Save,
-  Check,
-  Code,
-  Copy,
-  AlertTriangle
-} from 'lucide-react'
+import { CreateTokenModal } from './createTokenModal'
+import { DataExplorer } from './dataExplorer'
+
+import type { Application } from '../services/api'
+import type { FormEvent } from 'react'
 
 interface AppDetailProps {
   app: Application
@@ -24,7 +14,7 @@ interface AppDetailProps {
   onRefreshApp: () => void
 }
 
-export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp }) => {
+export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
   const [activeTab, setActiveTab] = useState<'security' | 'tokens' | 'explorer' | 'danger'>('security')
   const [originsInput, setOriginsInput] = useState<string>(app.allowed_origins.join(', '))
   const [allowNonBrowser, setAllowNonBrowser] = useState<boolean>(app.allow_non_browser_requests)
@@ -35,7 +25,7 @@ export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp 
   const [deletingApp, setDeletingApp] = useState<boolean>(false)
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null)
 
-  const handleSaveSettings = async (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: FormEvent) => {
     e.preventDefault()
     setSavingSettings(true)
     setSaveSuccess(false)
@@ -56,8 +46,8 @@ export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp 
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
       onRefreshApp()
-    } catch (err: any) {
-      alert(err.message || 'Erro ao salvar configurações')
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro ao salvar configurações')
     } finally {
       setSavingSettings(false)
     }
@@ -68,8 +58,8 @@ export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp 
       try {
         await deleteAPIToken(app.id, tokenId)
         onRefreshApp()
-      } catch (err: any) {
-        alert(err.message || 'Erro ao revogar token')
+      } catch (err: unknown) {
+        alert(err instanceof Error ? err.message : 'Erro ao revogar token')
       }
     }
   }
@@ -84,8 +74,8 @@ export const AppDetail: React.FC<AppDetailProps> = ({ app, onBack, onRefreshApp 
     try {
       await deleteApplication(app.id)
       onBack()
-    } catch (err: any) {
-      alert(err.message || 'Erro ao excluir aplicação')
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro ao excluir aplicação')
       setDeletingApp(false)
     }
   }

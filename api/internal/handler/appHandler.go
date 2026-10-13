@@ -10,7 +10,7 @@ import (
 
 	"pocketrun-api/internal/database"
 	"pocketrun-api/internal/domain/application"
-	"pocketrun-api/internal/middleware"
+	"pocketrun-api/internal/middleware/auth"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -48,7 +48,7 @@ type CreateTokenResponse struct {
 }
 
 func (h *AppHandler) ListApps(w http.ResponseWriter, r *http.Request) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, err := bson.ObjectIDFromHex(managerIDStr)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -86,7 +86,7 @@ func (h *AppHandler) ListApps(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, err := bson.ObjectIDFromHex(managerIDStr)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -166,7 +166,7 @@ func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AppHandler) GetApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -193,7 +193,7 @@ func (h *AppHandler) GetApp(w http.ResponseWriter, r *http.Request, appIDHex str
 }
 
 func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -237,7 +237,7 @@ func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request, appIDHex 
 }
 
 func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -265,7 +265,7 @@ func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request, appIDHex 
 }
 
 func (h *AppHandler) CreateToken(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -320,7 +320,7 @@ func (h *AppHandler) CreateToken(w http.ResponseWriter, r *http.Request, appIDHe
 }
 
 func (h *AppHandler) DeleteToken(w http.ResponseWriter, r *http.Request, appIDHex, tokenID string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -351,7 +351,7 @@ func (h *AppHandler) DeleteToken(w http.ResponseWriter, r *http.Request, appIDHe
 }
 
 func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {
@@ -390,7 +390,7 @@ func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Reque
 }
 
 func (h *AppHandler) GetExplorerDocuments(w http.ResponseWriter, r *http.Request, appIDHex, colName string) {
-	managerIDStr := middleware.GetManagerID(r.Context())
+	managerIDStr := auth.GetManagerID(r.Context())
 	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
 	appID, err := bson.ObjectIDFromHex(appIDHex)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 
 	"pocketrun-api/internal/database"
 	"pocketrun-api/internal/domain/user"
-	"pocketrun-api/internal/middleware"
+	"pocketrun-api/internal/middleware/auth"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -176,7 +176,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
-	userIDStr := middleware.GetManagerID(r.Context())
+	userIDStr := auth.GetManagerID(r.Context())
 	if userIDStr == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)

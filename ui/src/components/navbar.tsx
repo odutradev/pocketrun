@@ -1,13 +1,13 @@
-import React from 'react'
-import { useAuth } from '../context/AuthContext'
 import { Server, User, LogOut, ShieldCheck, Database } from 'lucide-react'
+
+import { useAuth } from '../context/authContext'
 
 interface NavbarProps {
   apiStatus: string
   onOpenAuth: () => void
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ apiStatus, onOpenAuth }) => {
+export const Navbar = ({ apiStatus, onOpenAuth }: NavbarProps) => {
   const { user, logout } = useAuth()
 
   return (

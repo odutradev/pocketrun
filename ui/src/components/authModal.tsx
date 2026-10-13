@@ -1,14 +1,17 @@
-import React, { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import { loginManager, registerManager } from '../services/api'
 import { X, Lock, Mail, User as UserIcon, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+
+import { loginManager, registerManager } from '../services/api'
+import { useAuth } from '../context/authContext'
+
+import type { FormEvent } from 'react'
 
 interface AuthModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const { login } = useAuth()
   const [isRegister, setIsRegister] = useState<boolean>(false)
   const [name, setName] = useState<string>('')
@@ -19,7 +22,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -34,8 +37,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         login(res.token, res.user)
       }
       onClose()
-    } catch (err: any) {
-      setError(err.message || 'Ocorreu um erro')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Ocorreu um erro')
     } finally {
       setLoading(false)
     }

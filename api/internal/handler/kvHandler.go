@@ -9,7 +9,7 @@ import (
 
 	"pocketrun-api/internal/database"
 	"pocketrun-api/internal/domain/kv"
-	"pocketrun-api/internal/middleware"
+	"pocketrun-api/internal/middleware/auth"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -24,7 +24,7 @@ func NewKVHandler(db *database.MongoDB) *KVHandler {
 }
 
 func (h *KVHandler) ValidateControlAccess(w http.ResponseWriter, r *http.Request) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -42,7 +42,7 @@ func (h *KVHandler) ValidateControlAccess(w http.ResponseWriter, r *http.Request
 }
 
 func (h *KVHandler) Create(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -100,7 +100,7 @@ func (h *KVHandler) Create(w http.ResponseWriter, r *http.Request, collectionNam
 }
 
 func (h *KVHandler) GetAll(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -189,7 +189,7 @@ func (h *KVHandler) GetAll(w http.ResponseWriter, r *http.Request, collectionNam
 }
 
 func (h *KVHandler) GetByID(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -227,7 +227,7 @@ func (h *KVHandler) GetByID(w http.ResponseWriter, r *http.Request, collectionNa
 }
 
 func (h *KVHandler) Update(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -279,7 +279,7 @@ func (h *KVHandler) Update(w http.ResponseWriter, r *http.Request, collectionNam
 }
 
 func (h *KVHandler) Delete(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -316,7 +316,7 @@ func (h *KVHandler) Delete(w http.ResponseWriter, r *http.Request, collectionNam
 }
 
 func (h *KVHandler) DeleteAllCollection(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
@@ -347,7 +347,7 @@ func (h *KVHandler) DeleteAllCollection(w http.ResponseWriter, r *http.Request, 
 }
 
 func (h *KVHandler) DeleteAllProject(w http.ResponseWriter, r *http.Request) {
-	app := middleware.GetAppFromContext(r.Context())
+	app := auth.GetAppFromContext(r.Context())
 	if app == nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)

@@ -7,6 +7,7 @@ import (
 	"pocketrun-api/internal/database"
 	"pocketrun-api/internal/domain/health"
 	"pocketrun-api/internal/middleware"
+	"pocketrun-api/internal/middleware/auth"
 )
 
 func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Handler {
@@ -16,8 +17,8 @@ func NewRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Hand
 	appHandler := NewAppHandler(db)
 	kvHandler := NewKVHandler(db)
 
-	managerAuthMW := middleware.ManagerAuth(jwtSecret)
-	appAuthMW := middleware.AppAuth(db)
+	managerAuthMW := auth.ManagerAuth(jwtSecret)
+	appAuthMW := auth.AppAuth(db)
 
 	mux.HandleFunc("GET /ping", health.Ping)
 

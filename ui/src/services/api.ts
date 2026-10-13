@@ -57,8 +57,17 @@ export interface CreateTokenResponse {
   raw_token: string
 }
 
+export interface ExplorerDocument {
+  _id: string
+  collection?: string
+  project_id?: string
+  data: Record<string, unknown>
+  created_at: string
+  updated_at?: string
+}
+
 export interface ExplorerDocumentsResponse {
-  data: any[]
+  data: ExplorerDocument[]
   total: number
   page: number
   limit: number

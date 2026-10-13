@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
-import { createAPIToken } from '../services/api'
 import { X, Copy, Check, Key, AlertCircle } from 'lucide-react'
+import { useState } from 'react'
+
+import { createAPIToken } from '../services/api'
+
+import type { FormEvent } from 'react'
 
 interface CreateTokenModalProps {
   appId: string
@@ -9,7 +12,7 @@ interface CreateTokenModalProps {
   onSuccess: () => void
 }
 
-export const CreateTokenModal: React.FC<CreateTokenModalProps> = ({ appId, isOpen, onClose, onSuccess }) => {
+export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTokenModalProps) => {
   const [name, setName] = useState<string>('')
   const [validityDays, setValidityDays] = useState<number>(365)
   const [error, setError] = useState<string | null>(null)
@@ -19,7 +22,7 @@ export const CreateTokenModal: React.FC<CreateTokenModalProps> = ({ appId, isOpe
 
   if (!isOpen) return null
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -31,8 +34,8 @@ export const CreateTokenModal: React.FC<CreateTokenModalProps> = ({ appId, isOpe
       })
       setCreatedToken(res.raw_token)
       onSuccess()
-    } catch (err: any) {
-      setError(err.message || 'Erro ao gerar token')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao gerar token')
     } finally {
       setLoading(false)
     }

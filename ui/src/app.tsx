@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { AuthProvider } from './context/AuthContext'
-import { Navbar } from './components/Navbar'
-import { Dashboard } from './components/Dashboard'
-import { AuthModal } from './components/AuthModal'
-import { fetchHealthPing } from './services/api'
 
-export function AppContent() {
+import { AuthProvider } from './context/authContext'
+import { Dashboard } from './components/dashboard'
+import { AuthModal } from './components/authModal'
+import { fetchHealthPing } from './services/api'
+import { Navbar } from './components/navbar'
+
+export const AppContent = () => {
   const [apiStatus, setApiStatus] = useState<string>('checking...')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false)
 
@@ -44,12 +45,10 @@ export function AppContent() {
   )
 }
 
-export function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  )
-}
+export const App = () => (
+  <AuthProvider>
+    <AppContent />
+  </AuthProvider>
+)
 
 export default App

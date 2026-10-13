@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
-import { createApplication } from '../services/api'
 import { X, Copy, Check, AlertCircle, Plus, Shield, Globe } from 'lucide-react'
+import { useState } from 'react'
+
+import { createApplication } from '../services/api'
+
+import type { FormEvent } from 'react'
 
 interface CreateAppModalProps {
   isOpen: boolean
@@ -8,7 +11,7 @@ interface CreateAppModalProps {
   onSuccess: () => void
 }
 
-export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalProps) => {
   const [name, setName] = useState<string>('')
   const [projectId, setProjectId] = useState<string>('')
   const [description, setDescription] = useState<string>('')
@@ -27,7 +30,7 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -48,8 +51,8 @@ export const CreateAppModal: React.FC<CreateAppModalProps> = ({ isOpen, onClose,
 
       setCreatedToken(res.raw_token)
       onSuccess()
-    } catch (err: any) {
-      setError(err.message || 'Erro ao criar aplicação')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar aplicação')
     } finally {
       setLoading(false)
     }

@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 import (
 	"context"
@@ -8,8 +8,6 @@ import (
 
 	"pocketrun-api/internal/domain/user"
 )
-
-type contextKey string
 
 const (
 	UserIDKey    contextKey = "userID"

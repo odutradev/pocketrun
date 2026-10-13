@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
-import type { ExplorerDocumentsResponse } from '../services/api'
-import { fetchExplorerCollections, fetchExplorerDocuments } from '../services/api'
 import { Database, RefreshCw, Layers, ChevronLeft, ChevronRight, FileText, Search } from 'lucide-react'
+import { useState, useEffect } from 'react'
+
+import { fetchExplorerCollections, fetchExplorerDocuments } from '../services/api'
+
+import type { ExplorerDocumentsResponse, ExplorerDocument } from '../services/api'
 
 interface DataExplorerProps {
   appId: string
   projectName: string
 }
 
-export const DataExplorer: React.FC<DataExplorerProps> = ({ appId, projectName }) => {
+export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
   const [collections, setCollections] = useState<string[]>([])
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
   const [documentsData, setDocumentsData] = useState<ExplorerDocumentsResponse | null>(null)
@@ -159,7 +161,7 @@ export const DataExplorer: React.FC<DataExplorerProps> = ({ appId, projectName }
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {filteredDocs.map((doc: any, index: number) => (
+                {filteredDocs.map((doc: ExplorerDocument, index: number) => (
                   <div
                     key={doc._id || index}
                     style={{
