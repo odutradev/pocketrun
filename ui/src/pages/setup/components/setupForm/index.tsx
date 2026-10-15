@@ -2,10 +2,10 @@ import { ShieldCheck, Lock, Mail, User, CheckCircle2, ArrowRight, AlertCircle } 
 import { Flex, Box, Grid, Text, Callout } from '@radix-ui/themes'
 import { useState } from 'react'
 
-import { setupSuperadminAction } from '@actions/setup'
+import { setupSuperadminAction } from '@api/actions/setup'
 import Button from '@components/ui/button'
-import Input from '@components/ui/input'
 import useAuthStore from '@stores/auth'
+import Input from '@components/ui/input'
 import useForm from '@hooks/useForm'
 
 import type { SetupFormProps } from './types'

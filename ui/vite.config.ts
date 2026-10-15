@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@actions': path.resolve(import.meta.dirname, './src/actions'),
+      '@actions': path.resolve(import.meta.dirname, './src/api/actions'),
       '@components': path.resolve(import.meta.dirname, './src/components'),
       '@hooks': path.resolve(import.meta.dirname, './src/hooks'),
       '@stores': path.resolve(import.meta.dirname, './src/stores'),

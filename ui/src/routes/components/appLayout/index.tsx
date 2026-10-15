@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Box, Text } from '@radix-ui/themes'
 
-import { getSetupStatusAction } from '@actions/setup'
-import { healthPingAction } from '@actions/health'
+import { getSetupStatusAction } from '@api/actions/setup'
+import { healthPingAction } from '@api/actions/health'
 import Navbar from '@components/layout/navbar'
 
 import type { CSSProperties } from 'react'

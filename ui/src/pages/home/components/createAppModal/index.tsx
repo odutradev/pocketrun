@@ -2,7 +2,7 @@ import { Dialog, TextArea, Flex, Box, Text, IconButton, Code, Callout } from '@r
 import { X, Copy, Check, Plus, Shield, Globe, AlertCircle } from 'lucide-react'
 import { useState, useCallback } from 'react'
 
-import { createApplicationAction } from '@actions/apps'
+import { createApplicationAction } from '@api/actions/apps'
 import Button from '@components/ui/button'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'

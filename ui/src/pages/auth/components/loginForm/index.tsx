@@ -2,10 +2,10 @@ import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
 import { Flex, Callout } from '@radix-ui/themes'
 import { useState } from 'react'
 
-import { signInAction } from '@actions/users/auth'
+import { signInAction } from '@api/actions/users/auth'
 import Button from '@components/ui/button'
-import Input from '@components/ui/input'
 import useAuthStore from '@stores/auth'
+import Input from '@components/ui/input'
 import useForm from '@hooks/useForm'
 
 import type { LoginFormProps } from './types'

@@ -2,7 +2,7 @@ import { Box, Flex, Grid, Heading, Text, Table, Dialog, Code, Spinner } from '@r
 import { Folder, RefreshCw, Eye, Search } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 
-import { getExplorerCollectionsAction, getExplorerDocumentsAction } from '@actions/explorer'
+import { getExplorerCollectionsAction, getExplorerDocumentsAction } from '@api/actions/explorer'
 import Button from '@components/ui/button'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'

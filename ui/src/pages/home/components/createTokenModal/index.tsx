@@ -2,7 +2,7 @@ import { Dialog, Select, Flex, Box, Text, IconButton, Code, Callout } from '@rad
 import { X, Copy, Check, Key, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
-import { createAPITokenAction } from '@actions/tokens'
+import { createAPITokenAction } from '@api/actions/tokens'
 import Button from '@components/ui/button'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'

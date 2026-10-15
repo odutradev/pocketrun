@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { getApplicationsAction } from '@actions/apps'
+import { getApplicationsAction } from '@api/actions/apps'
 import useAuthStore from '@stores/auth'
 
 import type { Application } from '@projectTypes/application'

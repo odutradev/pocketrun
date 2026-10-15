@@ -2,8 +2,8 @@ import { ArrowLeft, Globe, Key, Database, Trash2, Plus, Save, Check, Code as Cod
 import { Box, Flex, Heading, Text, Tabs, TextArea, Checkbox, AlertDialog, Table, Code, Callout } from '@radix-ui/themes'
 import { useState, useCallback } from 'react'
 
-import { updateApplicationAction, deleteApplicationAction } from '@actions/apps'
-import { deleteAPITokenAction } from '@actions/tokens'
+import { updateApplicationAction, deleteApplicationAction } from '@api/actions/apps'
+import { deleteAPITokenAction } from '@api/actions/tokens'
 import CreateTokenModal from '../createTokenModal'
 import { API_BASE_URL } from '@api/config'
 import Button from '@components/ui/button'

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { getProfileAction } from '@actions/users/profile'
+import { getProfileAction } from '@api/actions/users/profile'
 import { STORAGE_KEYS } from '@api/config'
 
 import type { ManagerUser } from '@projectTypes/user'
