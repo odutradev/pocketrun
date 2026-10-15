@@ -97,6 +97,7 @@ services:
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
       - MONGODB_URI=${MONGODB_URI}
       - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
+      - JWT_SECRET=${JWT_SECRET:-pocketrun-secret-key-change-in-production}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
       interval: 30s
@@ -119,7 +120,7 @@ services:
 
 ### Passo 2: Configuração das Variáveis na Aba Environment no Dokploy
 
-Na aba **Environment** do Dokploy, informe sua URI externa do MongoDB e a URL pública da API:
+Na aba **Environment** do Dokploy, informe sua URI externa do MongoDB e o segredo JWT:
 
 ```env
 PORT=8080
@@ -127,7 +128,7 @@ ENV=production
 CORS_ALLOWED_ORIGINS=*
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
-VITE_API_URL=https://api.pocketrun.odutra.com
+JWT_SECRET=gere_uma_chave_secreta_forte_aqui
 ```
 
 ---
