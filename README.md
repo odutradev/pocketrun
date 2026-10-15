@@ -66,6 +66,13 @@ npm run dev
 ```
 A UI estará acessível em `http://localhost:5173` e a API em `http://localhost:8080/ping`.
 
+### Rodando com Docker Compose (Local)
+
+```bash
+docker compose up --build
+```
+A UI estará acessível em `http://localhost:3000` e a API em `http://localhost:8080/ping`.
+
 ---
 
 ## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
@@ -74,21 +81,16 @@ A UI estará acessível em `http://localhost:5173` e a API em `http://localhost:
 
 ### Passo 1: Configuração do Compose no Dokploy
 
-No Dokploy, cole o arquivo `docker-compose.yml` sem o container local de banco de dados:
+No Dokploy, crie uma aplicação Compose utilizando as imagens oficiais do Docker Hub:
 
 ```yaml
 services:
   api:
     image: darknx/pocketrun-api:latest
-    build:
-      context: ./api
-      dockerfile: Dockerfile
     container_name: pocketrun-api
     restart: always
     expose:
       - "8080"
-    ports:
-      - "${PORT:-8080}:8080"
     environment:
       - PORT=${PORT:-8080}
       - ENV=${ENV:-production}
@@ -104,17 +106,10 @@ services:
 
   ui:
     image: darknx/pocketrun-ui:latest
-    build:
-      context: ./ui
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=${VITE_API_URL}
     container_name: pocketrun-ui
     restart: always
     expose:
       - "80"
-    environment:
-      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       api:
         condition: service_healthy
