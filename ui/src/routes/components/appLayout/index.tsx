@@ -1,32 +1,17 @@
-import { useState, useEffect } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { Box, Text } from '@radix-ui/themes'
 
+import { backgroundStyle, mainContentStyle, footerStyle } from './styles'
 import { getSetupStatusAction } from '@api/actions/setup'
 import { healthPingAction } from '@api/actions/health'
 import Navbar from '@components/layout/navbar'
 
-import type { CSSProperties } from 'react'
-
-const backgroundStyle: CSSProperties = {
-  minHeight: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  backgroundColor: '#0c101c',
-  backgroundImage:
-    'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))'
-}
-
-const footerStyle: CSSProperties = {
-  borderTop: '1px solid var(--gray-a4)',
-  padding: '24px',
-  textAlign: 'center',
-  backgroundColor: 'rgba(11, 13, 19, 0.5)'
-}
+import type { ApiHealthStatus } from './types'
 
 export const AppLayout = () => {
   const navigate = useNavigate()
-  const [apiStatus, setApiStatus] = useState<string>('online')
+  const [apiStatus, setApiStatus] = useState<ApiHealthStatus>('online')
   const [setupRequired, setSetupRequired] = useState<boolean>(false)
 
   useEffect(() => {
@@ -66,7 +51,7 @@ export const AppLayout = () => {
         onOpenAuth={() => navigate('/auth')}
       />
 
-      <Box asChild style={{ flex: 1 }}>
+      <Box asChild style={mainContentStyle}>
         <main>
           <Outlet />
         </main>
