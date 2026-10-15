@@ -87,33 +87,42 @@ No Dokploy, crie uma aplicação Compose utilizando as imagens oficiais do Docke
 services:
   api:
     image: darknx/pocketrun-api:latest
-    container_name: pocketrun-api
-    restart: always
+    restart: unless-stopped
     expose:
       - "8080"
     environment:
-      - PORT=${PORT:-8080}
+      - PORT=8080
       - ENV=${ENV:-production}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
-      - MONGODB_URI=${MONGODB_URI}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-${CORS_ORIGIN:-*}}
+      - MONGODB_URI=${MONGODB_URI:-${MONGO_URI:-${MONGOURI}}}
       - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
-      - JWT_SECRET=${JWT_SECRET:-pocketrun-secret-key-change-in-production}
+      - JWT_SECRET=${JWT_SECRET:-${JWT:-pocketrun-secret-key-change-in-production}}
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 5s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - pocketrun-network
 
   ui:
     image: darknx/pocketrun-ui:latest
-    container_name: pocketrun-ui
-    restart: always
+    restart: unless-stopped
     expose:
       - "80"
     depends_on:
       api:
         condition: service_healthy
+    networks:
+      - pocketrun-network
+
+networks:
+  pocketrun-network:
+    driver: bridge
 ```
 
 ---
