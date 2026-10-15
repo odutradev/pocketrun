@@ -4,6 +4,7 @@ export interface ManagerUser {
   id: string
   name: string
   email: string
+  role?: string
   created_at: string
 }
 
@@ -195,3 +196,33 @@ export async function fetchHealthPing(): Promise<{ status: string }> {
   if (!res.ok) throw new Error('API offline')
   return res.json()
 }
+
+export interface SetupStatusResponse {
+  setup_required: boolean
+  has_users: boolean
+}
+
+export interface SetupAdminPayload {
+  name: string
+  email: string
+  password: string
+}
+
+export async function fetchSetupStatus(): Promise<SetupStatusResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/setup/status`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to check setup status')
+  return data
+}
+
+export async function setupSuperadmin(payload: SetupAdminPayload): Promise<AuthResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/setup/admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Failed to initialize superadmin')
+  return data
+}
+
