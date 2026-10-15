@@ -20,6 +20,7 @@ type User struct {
 	ID           bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name         string        `bson:"name" json:"name"`
 	Email        string        `bson:"email" json:"email"`
+	Role         string        `bson:"role" json:"role"`
 	PasswordHash string        `bson:"password_hash" json:"-"`
 	CreatedAt    time.Time     `bson:"created_at" json:"created_at"`
 	UpdatedAt    time.Time     `bson:"updated_at" json:"updated_at"`
@@ -28,6 +29,7 @@ type User struct {
 type JWTClaims struct {
 	UserID string `json:"user_id"`
 	Email  string `json:"email"`
+	Role   string `json:"role,omitempty"`
 	Exp    int64  `json:"exp"`
 	Iat    int64  `json:"iat"`
 }
@@ -70,7 +72,7 @@ func CheckPassword(password, storedHash string) bool {
 	return hmac.Equal(actualHash, expectedHash)
 }
 
-func GenerateJWT(userID, email, secret string) (string, error) {
+func GenerateJWT(userID, email, role, secret string) (string, error) {
 	header := map[string]string{
 		"alg": "HS256",
 		"typ": "JWT",
@@ -84,6 +86,7 @@ func GenerateJWT(userID, email, secret string) (string, error) {
 	claims := JWTClaims{
 		UserID: userID,
 		Email:  email,
+		Role:   role,
 		Iat:    now.Unix(),
 		Exp:    now.Add(7 * 24 * time.Hour).Unix(),
 	}

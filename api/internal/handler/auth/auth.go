@@ -76,54 +76,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	count, err := h.DB.Database.Collection("users").CountDocuments(ctx, bson.M{"email": req.Email})
-	if err == nil && count > 0 {
+	totalUsers, err := h.DB.Database.Collection("users").CountDocuments(ctx, bson.M{})
+	if err == nil && totalUsers > 0 {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(map[string]string{"error": "User with this email already exists"})
-		return
-	}
-
-	passwordHash, err := user.HashPassword(req.Password)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to hash password"})
-		return
-	}
-
-	now := time.Now()
-	newUser := user.User{
-		ID:           bson.NewObjectID(),
-		Name:         req.Name,
-		Email:        req.Email,
-		PasswordHash: passwordHash,
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}
-
-	_, err = h.DB.Database.Collection("users").InsertOne(ctx, newUser)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
-		return
-	}
-
-	tokenStr, err := user.GenerateJWT(newUser.ID.Hex(), newUser.Email, h.JWTSecret)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate authentication token"})
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Public registration is disabled. Please contact your administrator."})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(AuthResponse{
-		Token: tokenStr,
-		User:  newUser,
-	})
+	w.WriteHeader(http.StatusBadRequest)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Initial setup required. Please use the initial setup wizard."})
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +123,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenStr, err := user.GenerateJWT(u.ID.Hex(), u.Email, h.JWTSecret)
+	role := u.Role
+	if role == "" {
+		role = "admin"
+	}
+
+	tokenStr, err := user.GenerateJWT(u.ID.Hex(), u.Email, role, h.JWTSecret)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
