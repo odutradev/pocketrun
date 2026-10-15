@@ -1,3 +1,4 @@
+import { Box, Flex, Grid, Card, Heading, Text, Badge, Button, Spinner } from '@radix-ui/themes'
 import { Plus, Database, Key, Shield, Layers, ArrowRight, RefreshCw, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -42,36 +43,46 @@ export const Dashboard = ({ onOpenAuth }: DashboardProps) => {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: '960px', margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
-        <div className="glass-panel" style={{ padding: '64px 32px' }}>
-          <div style={{
-            width: '72px',
-            height: '72px',
-            borderRadius: '24px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 24px',
-            boxShadow: '0 8px 32px var(--primary-glow)'
-          }}>
-            <Sparkles size={36} color="#FFF" />
-          </div>
+      <Box style={{ maxWidth: 860, margin: '48px auto', padding: '0 16px', textAlign: 'center' }}>
+        <Card size="4" style={{ padding: '56px 32px', border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex direction="column" align="center">
+            <Box
+              mb="4"
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 'var(--radius-4)',
+                background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 8px 28px var(--iris-a6)',
+              }}
+            >
+              <Sparkles size={32} color="#FFF" />
+            </Box>
 
-          <h2 style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif', marginBottom: '16px' }}>
-            PocketRun v2 — O Backend Genérico Multi-Tenant
-          </h2>
+            <Heading size="7" weight="bold" mb="3" style={{ letterSpacing: '-0.03em' }}>
+              PocketRun v2 — O Backend Genérico Multi-Tenant
+            </Heading>
 
-          <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', maxWidth: '640px', margin: '0 auto 32px', lineHeight: 1.6 }}>
-            Crie e gerencie aplicações, configure tokens de acesso com isolamento completo e controle os domínios de origem autorizados (CORS) para todos os seus projetos pessoais e protótipos.
-          </p>
+            <Text size="3" color="gray" mb="5" style={{ maxWidth: 580, lineHeight: 1.6 }}>
+              Crie e gerencie aplicações, configure tokens de acesso com isolamento completo e controle os domínios de origem autorizados (CORS) para todos os seus projetos pessoais e protótipos.
+            </Text>
 
-          <button onClick={onOpenAuth} className="btn-primary" style={{ padding: '14px 32px', fontSize: '1.05rem' }}>
-            <Shield size={20} />
-            <span>Entrar / Cadastrar como Gestor</span>
-          </button>
-        </div>
-      </div>
+            <Button
+              size="3"
+              color="iris"
+              variant="solid"
+              onClick={onOpenAuth}
+              style={{ cursor: 'pointer', padding: '0 24px' }}
+            >
+              <Shield size={18} />
+              Entrar / Cadastrar como Gestor
+            </Button>
+          </Flex>
+        </Card>
+      </Box>
     )
   }
 
@@ -88,127 +99,180 @@ export const Dashboard = ({ onOpenAuth }: DashboardProps) => {
   const totalTokens = apps.reduce((acc, app) => acc + (app.tokens?.length || 0), 0)
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-        <div>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <Box>
+      {/* Header section */}
+      <Flex justify="between" align={{ initial: 'start', sm: 'center' }} direction={{ initial: 'column', sm: 'row' }} gap="3" mb="5">
+        <Box>
+          <Heading size="6" weight="bold" style={{ letterSpacing: '-0.02em' }}>
             Painel do Gestor
-          </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-            Bem-vindo de volta, <strong>{user.name}</strong> ({user.email})
-          </p>
-        </div>
+          </Heading>
+          <Text size="2" color="gray">
+            Bem-vindo de volta, <strong style={{ color: 'var(--gray-12)' }}>{user.name}</strong> ({user.email})
+          </Text>
+        </Box>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={loadApps} className="btn-secondary" style={{ padding: '10px 16px' }}>
-            <RefreshCw size={16} />
-            <span>Atualizar</span>
-          </button>
-          <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary">
-            <Plus size={18} />
-            <span>Nova Aplicação</span>
-          </button>
-        </div>
-      </div>
+        <Flex gap="2">
+          <Button
+            variant="soft"
+            color="gray"
+            size="2"
+            onClick={loadApps}
+            style={{ cursor: 'pointer' }}
+          >
+            <RefreshCw size={15} />
+            Atualizar
+          </Button>
+          <Button
+            variant="solid"
+            color="iris"
+            size="2"
+            onClick={() => setIsCreateModalOpen(true)}
+            style={{ cursor: 'pointer' }}
+          >
+            <Plus size={16} />
+            Nova Aplicação
+          </Button>
+        </Flex>
+      </Flex>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Aplicações Ativas</span>
-            <Layers size={20} color="var(--primary)" />
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      {/* Metrics Cards */}
+      <Grid columns={{ initial: '1', sm: '3' }} gap="3" mb="6">
+        <Card size="2" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex justify="between" align="center" mb="2">
+            <Text size="2" weight="medium" color="gray">
+              Aplicações Ativas
+            </Text>
+            <Layers size={18} color="var(--iris-9)" />
+          </Flex>
+          <Heading size="7" weight="bold">
             {apps.length}
-          </div>
-        </div>
+          </Heading>
+        </Card>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tokens de Acesso Gerados</span>
-            <Key size={20} color="var(--secondary)" />
-          </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+        <Card size="2" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex justify="between" align="center" mb="2">
+            <Text size="2" weight="medium" color="gray">
+              Tokens de Acesso
+            </Text>
+            <Key size={18} color="var(--cyan-9)" />
+          </Flex>
+          <Heading size="7" weight="bold">
             {totalTokens}
-          </div>
-        </div>
+          </Heading>
+        </Card>
 
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Isolamento por Projeto</span>
-            <Shield size={20} color="var(--accent-emerald)" />
-          </div>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-emerald)', marginTop: '8px' }}>
+        <Card size="2" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex justify="between" align="center" mb="2">
+            <Text size="2" weight="medium" color="gray">
+              Isolamento por Projeto
+            </Text>
+            <Shield size={18} color="var(--grass-9)" />
+          </Flex>
+          <Badge size="2" color="grass" variant="surface" radius="full" mt="1">
             Ativo & Seguro
-          </div>
-        </div>
-      </div>
+          </Badge>
+        </Card>
+      </Grid>
 
-      <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      {/* Applications Section */}
+      <Box mb="3">
+        <Heading size="4" weight="bold">
           Suas Aplicações ({apps.length})
-        </h3>
-      </div>
+        </Heading>
+      </Box>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
-          Carregando aplicações...
-        </div>
+        <Flex justify="center" align="center" gap="2" py="8">
+          <Spinner size="3" />
+          <Text size="2" color="gray">Carregando aplicações...</Text>
+        </Flex>
       ) : apps.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '56px 24px' }}>
-          <Database size={48} color="var(--text-muted)" style={{ marginBottom: '16px' }} />
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '8px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Nenhuma aplicação criada ainda
-          </h3>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', maxWidth: '440px', margin: '0 auto 24px' }}>
-            Crie sua primeira aplicação para receber um Project ID e Token de Acesso exclusivo com isolamento no banco de dados.
-          </p>
-          <button onClick={() => setIsCreateModalOpen(true)} className="btn-primary">
-            <Plus size={18} />
-            <span>Criar Primeira Aplicação</span>
-          </button>
-        </div>
+        <Card size="3" style={{ textAlign: 'center', padding: '48px 20px', border: '1px dashed var(--gray-a5)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex direction="column" align="center">
+            <Database size={40} color="var(--gray-8)" style={{ marginBottom: 12 }} />
+            <Heading size="4" weight="bold" mb="1">
+              Nenhuma aplicação criada ainda
+            </Heading>
+            <Text size="2" color="gray" mb="4" style={{ maxWidth: 420 }}>
+              Crie sua primeira aplicação para receber um Project ID e Token de Acesso exclusivo com isolamento no banco de dados.
+            </Text>
+            <Button
+              variant="solid"
+              color="iris"
+              size="2"
+              onClick={() => setIsCreateModalOpen(true)}
+              style={{ cursor: 'pointer' }}
+            >
+              <Plus size={16} />
+              Criar Primeira Aplicação
+            </Button>
+          </Flex>
+        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
+        <Grid columns={{ initial: '1', sm: '2', md: '3' }} gap="4">
           {apps.map((app) => (
-            <div
+            <Card
               key={app.id}
-              className="glass-panel glass-panel-hover"
-              style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer' }}
+              size="2"
+              style={{
+                cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                border: '1px solid var(--gray-a4)',
+                backgroundColor: 'var(--gray-a2)',
+                transition: 'border-color 0.15s ease, transform 0.15s ease',
+              }}
               onClick={() => setSelectedApp(app)}
             >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <div className="badge badge-indigo">
-                    <span>{app.project_id}</span>
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <Box mb="4">
+                <Flex justify="between" align="center" mb="2">
+                  <Badge size="1" variant="surface" color="iris" radius="full">
+                    {app.project_id}
+                  </Badge>
+                  <Text size="1" color="gray">
                     {new Date(app.created_at).toLocaleDateString()}
-                  </span>
-                </div>
+                  </Text>
+                </Flex>
 
-                <h4 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <Heading size="3" weight="bold" mb="1">
                   {app.name}
-                </h4>
+                </Heading>
 
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <Text
+                  size="2"
+                  color="gray"
+                  as="p"
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
                   {app.description || 'Sem descrição.'}
-                </p>
-              </div>
+                </Text>
+              </Box>
 
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  <span>🔑 {app.tokens?.length || 0} Tokens</span>
-                  <span>🌐 {app.allowed_origins.includes('*') ? 'Qualquer Origem' : `${app.allowed_origins.length} Origens`}</span>
-                </div>
-
-                <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-                  <span>Gerenciar</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
+              <Box style={{ borderTop: '1px solid var(--gray-a4)', paddingTop: '12px' }}>
+                <Flex justify="between" align="center">
+                  <Flex gap="3">
+                    <Text size="1" color="gray">
+                      🔑 {app.tokens?.length || 0} Tokens
+                    </Text>
+                    <Text size="1" color="gray">
+                      🌐 {app.allowed_origins.includes('*') ? 'Qualquer Origem' : `${app.allowed_origins.length} Origens`}
+                    </Text>
+                  </Flex>
+                  <Button variant="ghost" color="iris" size="1" style={{ cursor: 'pointer' }}>
+                    <span>Gerenciar</span>
+                    <ArrowRight size={13} />
+                  </Button>
+                </Flex>
+              </Box>
+            </Card>
           ))}
-        </div>
+        </Grid>
       )}
 
       <CreateAppModal
@@ -219,6 +283,7 @@ export const Dashboard = ({ onOpenAuth }: DashboardProps) => {
           loadApps()
         }}
       />
-    </div>
+    </Box>
   )
 }
+
