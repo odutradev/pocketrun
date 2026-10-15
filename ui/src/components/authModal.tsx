@@ -1,7 +1,7 @@
-import { X, Lock, Mail, User as UserIcon, AlertCircle } from 'lucide-react'
+import { X, Lock, Mail, AlertCircle, Shield } from 'lucide-react'
 import { useState } from 'react'
 
-import { loginManager, registerManager } from '../services/api'
+import { loginManager } from '../services/api'
 import { useAuth } from '../context/authContext'
 
 import type { FormEvent } from 'react'
@@ -13,8 +13,6 @@ interface AuthModalProps {
 
 export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const { login } = useAuth()
-  const [isRegister, setIsRegister] = useState<boolean>(false)
-  const [name, setName] = useState<string>('')
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
@@ -28,17 +26,11 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     setLoading(true)
 
     try {
-      if (isRegister) {
-        if (!name.trim()) throw new Error('Nome é obrigatório')
-        const res = await registerManager(name, email, password)
-        login(res.token, res.user)
-      } else {
-        const res = await loginManager(email, password)
-        login(res.token, res.user)
-      }
+      const res = await loginManager(email, password)
+      login(res.token, res.user)
       onClose()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ocorreu um erro')
+      setError(err instanceof Error ? err.message : 'Credenciais inválidas')
     } finally {
       setLoading(false)
     }
@@ -66,50 +58,16 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           <X size={20} />
         </button>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'var(--bg-input)', padding: '4px', borderRadius: 'var(--radius-md)' }}>
-          <button
-            onClick={() => { setIsRegister(false); setError(null); }}
-            style={{
-              flex: 1,
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: !isRegister ? 'var(--primary)' : 'transparent',
-              color: !isRegister ? '#FFF' : 'var(--text-muted)',
-              transition: 'all 0.2s',
-            }}
-          >
-            Entrar
-          </button>
-          <button
-            onClick={() => { setIsRegister(true); setError(null); }}
-            style={{
-              flex: 1,
-              padding: '8px',
-              borderRadius: 'var(--radius-sm)',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              background: isRegister ? 'var(--primary)' : 'transparent',
-              color: isRegister ? '#FFF' : 'var(--text-muted)',
-              transition: 'all 0.2s',
-            }}
-          >
-            Cadastrar Gestor
-          </button>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', padding: '4px 10px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '16px' }}>
+          <Shield size={14} />
+          <span>Acesso Administrativo</span>
         </div>
 
         <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-          {isRegister ? 'Criar Conta de Gestor' : 'Acessar Painel'}
+          Acessar Painel
         </h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-          {isRegister
-            ? 'Crie sua conta para gerenciar aplicações e tokens de acesso.'
-            : 'Entre com suas credenciais de gestor.'}
+          Entre com suas credenciais de gestor ou superadministrador.
         </p>
 
         {error && (
@@ -131,26 +89,6 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {isRegister && (
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Nome Completo
-              </label>
-              <div style={{ position: 'relative' }}>
-                <UserIcon size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  placeholder="Seu nome"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="input-field"
-                  style={{ paddingLeft: '42px' }}
-                  required
-                />
-              </div>
-            </div>
-          )}
-
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
               E-mail do Gestor
@@ -159,11 +97,11 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 type="email"
-                placeholder="gestor@email.com"
+                placeholder="admin@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-field"
-                style={{ paddingLeft: '42px' }}
+                style={{ paddingLeft: '42px', width: '100%' }}
                 required
               />
             </div>
@@ -181,14 +119,14 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field"
-                style={{ paddingLeft: '42px' }}
+                style={{ paddingLeft: '42px', width: '100%' }}
                 required
               />
             </div>
           </div>
 
           <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', marginTop: '8px', padding: '12px' }}>
-            {loading ? 'Processando...' : isRegister ? 'Cadastrar e Acessar' : 'Entrar no Painel'}
+            {loading ? 'Autenticando...' : 'Entrar no Painel'}
           </button>
         </form>
       </div>

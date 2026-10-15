@@ -4,10 +4,11 @@ import { useAuth } from '../context/authContext'
 
 interface NavbarProps {
   apiStatus: string
+  setupRequired?: boolean
   onOpenAuth: () => void
 }
 
-export const Navbar = ({ apiStatus, onOpenAuth }: NavbarProps) => {
+export const Navbar = ({ apiStatus, setupRequired = false, onOpenAuth }: NavbarProps) => {
   const { user, logout } = useAuth()
 
   return (
@@ -40,6 +41,12 @@ export const Navbar = ({ apiStatus, onOpenAuth }: NavbarProps) => {
             <span>API {apiStatus}</span>
           </div>
 
+          {setupRequired && (
+            <div className="badge badge-amber" style={{ gap: '6px' }}>
+              <span>Setup Inicial</span>
+            </div>
+          )}
+
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
@@ -54,18 +61,23 @@ export const Navbar = ({ apiStatus, onOpenAuth }: NavbarProps) => {
               }}>
                 <ShieldCheck size={16} color="var(--primary)" />
                 <span style={{ fontWeight: 600 }}>{user.name}</span>
+                {user.role === 'superadmin' && (
+                  <span style={{ fontSize: '0.7rem', background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                    SUPERADMIN
+                  </span>
+                )}
               </div>
               <button onClick={logout} className="btn-secondary" style={{ padding: '8px 12px', fontSize: '0.85rem' }} title="Logout">
                 <LogOut size={16} />
                 <span>Sair</span>
               </button>
             </div>
-          ) : (
+          ) : !setupRequired ? (
             <button onClick={onOpenAuth} className="btn-primary">
               <User size={16} />
               <span>Entrar como Gestor</span>
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </header>
