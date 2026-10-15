@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Box, Flex, Text } from '@radix-ui/themes'
 
 import { AuthProvider, useAuth } from './context/authContext'
 import { Dashboard } from './components/dashboard'
@@ -33,39 +34,47 @@ export const AppContent = () => {
   }, [])
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Flex direction="column" style={{ minHeight: '100vh' }}>
       <Navbar
         apiStatus={apiStatus}
         setupRequired={setupRequired === true}
         onOpenAuth={() => setIsAuthModalOpen(true)}
       />
 
-      <main style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '0 32px 48px' }}>
-        {setupRequired === true && !user ? (
-          <SetupWizard
-            onSuccess={() => {
-              setSetupRequired(false)
-            }}
-          />
-        ) : (
-          <Dashboard onOpenAuth={() => setIsAuthModalOpen(true)} />
-        )}
-      </main>
+      <Box asChild style={{ flex: 1, maxWidth: '1280px', width: '100%', margin: '0 auto', padding: '0 24px 48px' }}>
+        <main>
+          {setupRequired === true && !user ? (
+            <SetupWizard
+              onSuccess={() => {
+                setSetupRequired(false)
+              }}
+            />
+          ) : (
+            <Dashboard onOpenAuth={() => setIsAuthModalOpen(true)} />
+          )}
+        </main>
+      </Box>
 
-      <footer style={{
-        borderTop: '1px solid var(--border-color)',
-        padding: '24px 32px',
-        textAlign: 'center',
-        fontSize: '0.85rem',
-        color: 'var(--text-muted)'
-      }}>
-        <span>PocketRun &copy; 2026 — Pluggable Multi-Tenant Key-Value BaaS Platform</span>
-      </footer>
+      <Box
+        asChild
+        style={{
+          borderTop: '1px solid var(--gray-a4)',
+          padding: '24px',
+          textAlign: 'center',
+          backgroundColor: 'rgba(11, 13, 19, 0.5)',
+        }}
+      >
+        <footer>
+          <Text size="1" color="gray">
+            PocketRun &copy; 2026 — Pluggable Multi-Tenant Key-Value BaaS Platform
+          </Text>
+        </footer>
+      </Box>
 
       {!setupRequired && (
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       )}
-    </div>
+    </Flex>
   )
 }
 

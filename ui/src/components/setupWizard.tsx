@@ -1,4 +1,5 @@
 import { useState, useId } from 'react'
+import { Card, Heading, Text, Badge, Callout, TextField, Button, Flex, Box, Grid } from '@radix-ui/themes'
 import { ShieldCheck, Lock, Mail, User as UserIcon, CheckCircle2, AlertCircle, Sparkles, ArrowRight } from 'lucide-react'
 
 import { setupSuperadmin } from '../services/api'
@@ -63,264 +64,199 @@ export const SetupWizard = ({ onSuccess }: SetupWizardProps) => {
   }
 
   return (
-    <div style={{
-      minHeight: '80vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 16px',
-    }}>
-      <div
-        className="glass-panel"
-        style={{
-          width: '100%',
-          maxWidth: '560px',
-          padding: '40px',
-          borderRadius: 'var(--radius-xl)',
-          position: 'relative',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.15)',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '14px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 8px 16px var(--primary-glow)',
-          }}>
-            <ShieldCheck size={28} color="#FFF" />
-          </div>
-          <div>
-            <span style={{
-              display: 'inline-flex',
+    <Box style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px' }}>
+      <Card size="4" style={{ width: '100%', maxWidth: '560px', padding: '36px', border: '1px solid var(--iris-a5)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px var(--iris-a3)' }}>
+        <Flex align="center" gap="3" mb="3">
+          <Box
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 'var(--radius-3)',
+              background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
+              display: 'flex',
               alignItems: 'center',
-              gap: '4px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              color: 'var(--secondary)',
-              background: 'rgba(6, 182, 212, 0.1)',
-              padding: '2px 8px',
-              borderRadius: '999px',
-              marginBottom: '4px',
-            }}>
-              <Sparkles size={12} /> Primeiro Acesso • Modo Setup
-            </span>
-            <h1 style={{
-              fontSize: '1.5rem',
-              fontWeight: 800,
-              fontFamily: 'Plus Jakarta Sans, sans-serif',
-              letterSpacing: '-0.02em',
-            }}>
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px var(--iris-a6)',
+            }}
+          >
+            <ShieldCheck size={24} color="#FFF" />
+          </Box>
+          <Box>
+            <Badge size="1" variant="surface" color="cyan" radius="full" mb="1">
+              <Flex align="center" gap="1">
+                <Sparkles size={11} />
+                Primeiro Acesso • Modo Setup
+              </Flex>
+            </Badge>
+            <Heading size="5" weight="bold" style={{ letterSpacing: '-0.02em' }}>
               Configuração Inicial do PocketRun
-            </h1>
-          </div>
-        </div>
+            </Heading>
+          </Box>
+        </Flex>
 
-        <p style={{
-          fontSize: '0.9rem',
-          color: 'var(--text-secondary)',
-          marginBottom: '20px',
-          lineHeight: 1.5,
-        }}>
+        <Text size="2" color="gray" mb="4" as="p" style={{ lineHeight: 1.6 }}>
           Nenhum administrador detectado no banco de dados. Defina as credenciais do <strong>Super Administrador</strong> para ativar a segurança do sistema.
-        </p>
+        </Text>
 
-        <div style={{
-          background: 'rgba(99, 102, 241, 0.08)',
-          border: '1px solid rgba(99, 102, 241, 0.2)',
-          borderRadius: 'var(--radius-md)',
-          padding: '12px 16px',
-          marginBottom: '24px',
-          fontSize: '0.82rem',
-          color: 'var(--text-secondary)',
-          display: 'flex',
-          gap: '10px',
-          alignItems: 'flex-start',
-        }}>
-          <ShieldCheck size={18} style={{ color: 'var(--primary)', flexShrink: 0, marginTop: '2px' }} />
-          <span>
-            <strong>Proteção ativa:</strong> Após esta etapa, o modo de configuração será permanentemente desativado e o registro público ficará bloqueado.
-          </span>
-        </div>
+        <Box mb="4">
+          <Callout.Root color="iris" size="1" variant="surface">
+            <Callout.Icon>
+              <ShieldCheck size={16} />
+            </Callout.Icon>
+            <Callout.Text>
+              <strong>Proteção ativa:</strong> Após esta etapa, o modo de configuração será permanentemente desativado e o registro público ficará bloqueado.
+            </Callout.Text>
+          </Callout.Root>
+        </Box>
 
         {error && (
-          <div style={{
-            background: 'rgba(244, 63, 94, 0.1)',
-            border: '1px solid rgba(244, 63, 94, 0.3)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px 16px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            color: 'var(--accent-rose)',
-            fontSize: '0.85rem',
-          }}>
-            <AlertCircle size={18} style={{ flexShrink: 0 }} />
-            <span>{error}</span>
-          </div>
+          <Box mb="4">
+            <Callout.Root color="ruby" size="1" variant="surface">
+              <Callout.Icon>
+                <AlertCircle size={16} />
+              </Callout.Icon>
+              <Callout.Text>{error}</Callout.Text>
+            </Callout.Root>
+          </Box>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label htmlFor={nameId} style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Nome do Super Administrador
-            </label>
-            <div style={{ position: 'relative' }}>
-              <UserIcon size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+        <form onSubmit={handleSubmit}>
+          <Flex direction="column" gap="3">
+            <Box>
+              <Text as="label" htmlFor={nameId} size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                Nome do Super Administrador
+              </Text>
+              <TextField.Root
                 id={nameId}
+                size="3"
                 type="text"
                 placeholder="Ex: Administrador PocketRun"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <UserIcon size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          <div>
-            <label htmlFor={emailId} style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              E-mail Principal
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+            <Box>
+              <Text as="label" htmlFor={emailId} size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                E-mail Principal
+              </Text>
+              <TextField.Root
                 id={emailId}
+                size="3"
                 type="email"
                 placeholder="admin@seudominio.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <Mail size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          <div>
-            <label htmlFor={passwordId} style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Senha Mestra (Mínimo 8 caracteres)
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+            <Box>
+              <Text as="label" htmlFor={passwordId} size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                Senha Mestra (Mínimo 8 caracteres)
+              </Text>
+              <TextField.Root
                 id={passwordId}
+                size="3"
                 type="password"
                 placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <Lock size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          <div>
-            <label htmlFor={confirmPasswordId} style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Confirmar Senha Mestra
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+            <Box>
+              <Text as="label" htmlFor={confirmPasswordId} size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                Confirmar Senha Mestra
+              </Text>
+              <TextField.Root
                 id={confirmPasswordId}
+                size="3"
                 type="password"
                 placeholder="••••••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <Lock size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          {/* Password requirements indicators */}
-          <div style={{
-            background: 'var(--bg-input)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px 14px',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '8px',
-            fontSize: '0.78rem',
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: isMinLength ? 'var(--accent-emerald)' : 'var(--text-muted)',
-            }}>
-              <CheckCircle2 size={14} />
-              <span>8+ caracteres</span>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: hasLetter ? 'var(--accent-emerald)' : 'var(--text-muted)',
-            }}>
-              <CheckCircle2 size={14} />
-              <span>Contém letras</span>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: hasNumberOrSymbol ? 'var(--accent-emerald)' : 'var(--text-muted)',
-            }}>
-              <CheckCircle2 size={14} />
-              <span>Número ou símbolo</span>
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              color: passwordsMatch ? 'var(--accent-emerald)' : 'var(--text-muted)',
-            }}>
-              <CheckCircle2 size={14} />
-              <span>Senhas conferem</span>
-            </div>
-          </div>
+            {/* Checklist de requisitos de senha */}
+            <Box
+              p="3"
+              style={{
+                backgroundColor: 'var(--gray-a3)',
+                borderRadius: 'var(--radius-3)',
+                border: '1px solid var(--gray-a4)',
+              }}
+            >
+              <Grid columns="2" gap="2">
+                <Flex align="center" gap="2">
+                  <CheckCircle2 size={14} color={isMinLength ? 'var(--grass-9)' : 'var(--gray-8)'} />
+                  <Text size="1" color={isMinLength ? 'grass' : 'gray'}>
+                    8+ caracteres
+                  </Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <CheckCircle2 size={14} color={hasLetter ? 'var(--grass-9)' : 'var(--gray-8)'} />
+                  <Text size="1" color={hasLetter ? 'grass' : 'gray'}>
+                    Contém letras
+                  </Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <CheckCircle2 size={14} color={hasNumberOrSymbol ? 'var(--grass-9)' : 'var(--gray-8)'} />
+                  <Text size="1" color={hasNumberOrSymbol ? 'grass' : 'gray'}>
+                    Número ou símbolo
+                  </Text>
+                </Flex>
+                <Flex align="center" gap="2">
+                  <CheckCircle2 size={14} color={passwordsMatch ? 'var(--grass-9)' : 'var(--gray-8)'} />
+                  <Text size="1" color={passwordsMatch ? 'grass' : 'gray'}>
+                    Senhas conferem
+                  </Text>
+                </Flex>
+              </Grid>
+            </Box>
 
-          <button
-            type="submit"
-            disabled={loading || !isFormValid}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              marginTop: '10px',
-              padding: '14px',
-              fontSize: '0.95rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: !isFormValid ? 0.6 : 1,
-              cursor: !isFormValid ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {loading ? (
-              'Inicializando Superadmin...'
-            ) : (
-              <>
-                Concluir Configuração e Entrar
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
+            <Button
+              type="submit"
+              size="3"
+              color="iris"
+              variant="solid"
+              disabled={loading || !isFormValid}
+              mt="2"
+              style={{ width: '100%', cursor: !isFormValid ? 'not-allowed' : 'pointer' }}
+            >
+              {loading ? (
+                'Inicializando Superadmin...'
+              ) : (
+                <Flex align="center" justify="center" gap="2">
+                  <span>Concluir Configuração e Entrar</span>
+                  <ArrowRight size={16} />
+                </Flex>
+              )}
+            </Button>
+          </Flex>
         </form>
-      </div>
-    </div>
+      </Card>
+    </Box>
   )
 }
+

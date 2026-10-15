@@ -1,3 +1,4 @@
+import { Flex, Box, Badge, Button, Heading, Text } from '@radix-ui/themes'
 import { Server, User, LogOut, ShieldCheck, Database } from 'lucide-react'
 
 import { useAuth } from '../context/authContext'
@@ -11,75 +12,130 @@ interface NavbarProps {
 export const Navbar = ({ apiStatus, setupRequired = false, onOpenAuth }: NavbarProps) => {
   const { user, logout } = useAuth()
 
+  const getStatusColor = () => {
+    if (apiStatus === 'online') return 'grass'
+    if (apiStatus === 'offline') return 'amber'
+    return 'iris'
+  }
+
   return (
-    <header className="glass-panel" style={{ borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0, padding: '16px 32px', marginBottom: '24px' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 16px var(--primary-glow)'
-          }}>
-            <Database size={22} color="#FFFFFF" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif', letterSpacing: '-0.5px' }}>
-              PocketRun <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', border: '1px solid var(--border-color-glow)' }}>v2.0</span>
-            </h1>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Multi-Tenant Key-Value Platform</p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div className={`badge ${apiStatus === 'online' ? 'badge-emerald' : apiStatus === 'offline' ? 'badge-amber' : 'badge-indigo'}`} style={{ gap: '6px' }}>
-            <Server size={12} />
-            <span>API {apiStatus}</span>
-          </div>
-
-          {setupRequired && (
-            <div className="badge badge-amber" style={{ gap: '6px' }}>
-              <span>Setup Inicial</span>
-            </div>
-          )}
-
-          {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid var(--border-color)',
-                padding: '6px 14px',
-                borderRadius: '9999px',
+    <Box
+      style={{
+        borderBottom: '1px solid var(--gray-a4)',
+        backgroundColor: 'rgba(11, 13, 19, 0.75)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50,
+        marginBottom: '28px',
+      }}
+    >
+      <Box style={{ maxWidth: '1280px', margin: '0 auto', padding: '14px 24px' }}>
+        <Flex justify="between" align="center" wrap="wrap" gap="3">
+          {/* Logo & Platform Info */}
+          <Flex align="center" gap="3">
+            <Box
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 'var(--radius-3)',
+                background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                fontSize: '0.85rem'
-              }}>
-                <ShieldCheck size={16} color="var(--primary)" />
-                <span style={{ fontWeight: 600 }}>{user.name}</span>
-                {user.role === 'superadmin' && (
-                  <span style={{ fontSize: '0.7rem', background: 'rgba(99, 102, 241, 0.2)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                    SUPERADMIN
-                  </span>
-                )}
-              </div>
-              <button onClick={logout} className="btn-secondary" style={{ padding: '8px 12px', fontSize: '0.85rem' }} title="Logout">
-                <LogOut size={16} />
-                <span>Sair</span>
-              </button>
-            </div>
-          ) : !setupRequired ? (
-            <button onClick={onOpenAuth} className="btn-primary">
-              <User size={16} />
-              <span>Entrar como Gestor</span>
-            </button>
-          ) : null}
-        </div>
-      </div>
-    </header>
+                justifyContent: 'center',
+                boxShadow: '0 4px 14px var(--iris-a5)',
+              }}
+            >
+              <Database size={18} color="#FFFFFF" />
+            </Box>
+            <Box>
+              <Flex align="center" gap="2">
+                <Heading size="3" weight="bold" style={{ letterSpacing: '-0.02em' }}>
+                  PocketRun
+                </Heading>
+                <Badge size="1" variant="surface" color="iris" radius="full">
+                  v2.0
+                </Badge>
+              </Flex>
+              <Text size="1" color="gray">
+                Pluggable Multi-Tenant Key-Value BaaS
+              </Text>
+            </Box>
+          </Flex>
+
+          {/* Status & Auth Actions */}
+          <Flex align="center" gap="3">
+            <Badge
+              size="2"
+              variant="surface"
+              color={getStatusColor()}
+              radius="full"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px' }}
+            >
+              <Server size={12} />
+              <Text size="1" weight="medium">
+                API {apiStatus}
+              </Text>
+            </Badge>
+
+            {setupRequired && (
+              <Badge size="2" variant="solid" color="amber" radius="full">
+                Setup Inicial
+              </Badge>
+            )}
+
+            {user ? (
+              <Flex align="center" gap="2">
+                <Box
+                  style={{
+                    backgroundColor: 'var(--gray-a3)',
+                    border: '1px solid var(--gray-a5)',
+                    padding: '4px 12px',
+                    borderRadius: 'var(--radius-full)',
+                  }}
+                >
+                  <Flex align="center" gap="2">
+                    <ShieldCheck size={15} color="var(--iris-9)" />
+                    <Text size="2" weight="medium">
+                      {user.name}
+                    </Text>
+                    {user.role === 'superadmin' && (
+                      <Badge size="1" variant="solid" color="iris">
+                        SUPERADMIN
+                      </Badge>
+                    )}
+                  </Flex>
+                </Box>
+
+                <Button
+                  variant="soft"
+                  color="gray"
+                  size="2"
+                  onClick={logout}
+                  title="Encerrar sessão"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <LogOut size={15} />
+                  Sair
+                </Button>
+              </Flex>
+            ) : !setupRequired ? (
+              <Button
+                variant="solid"
+                color="iris"
+                size="2"
+                onClick={onOpenAuth}
+                style={{ cursor: 'pointer' }}
+              >
+                <User size={15} />
+                Entrar como Gestor
+              </Button>
+            ) : null}
+          </Flex>
+        </Flex>
+      </Box>
+    </Box>
   )
 }
+

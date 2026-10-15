@@ -1,4 +1,5 @@
-import { X, Lock, Mail, AlertCircle, Shield } from 'lucide-react'
+import { Dialog, Button, TextField, Callout, Flex, Box, Text, Badge, IconButton } from '@radix-ui/themes'
+import { Lock, Mail, AlertCircle, Shield, X } from 'lucide-react'
 import { useState } from 'react'
 
 import { loginManager } from '../services/api'
@@ -18,8 +19,6 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
-  if (!isOpen) return null
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -37,99 +36,93 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div
-        className="glass-panel"
-        style={{ width: '100%', maxWidth: '440px', padding: '32px', position: 'relative' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-          }}
-        >
-          <X size={20} />
-        </button>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Content maxWidth="440px" style={{ padding: '28px' }}>
+        <Flex justify="between" align="start" mb="3">
+          <Badge size="1" variant="surface" color="iris" radius="full">
+            <Flex align="center" gap="1">
+              <Shield size={13} />
+              Acesso Administrativo
+            </Flex>
+          </Badge>
+          <Dialog.Close>
+            <IconButton variant="ghost" color="gray" size="1" style={{ cursor: 'pointer' }}>
+              <X size={16} />
+            </IconButton>
+          </Dialog.Close>
+        </Flex>
 
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', padding: '4px 10px', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600, marginBottom: '16px' }}>
-          <Shield size={14} />
-          <span>Acesso Administrativo</span>
-        </div>
-
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '8px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+        <Dialog.Title size="5" weight="bold" mb="1">
           Acessar Painel
-        </h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        </Dialog.Title>
+        <Dialog.Description size="2" color="gray" mb="4">
           Entre com suas credenciais de gestor ou superadministrador.
-        </p>
+        </Dialog.Description>
 
         {error && (
-          <div style={{
-            background: 'rgba(244, 63, 94, 0.1)',
-            border: '1px solid rgba(244, 63, 94, 0.3)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            color: 'var(--accent-rose)',
-            fontSize: '0.85rem'
-          }}>
-            <AlertCircle size={18} />
-            <span>{error}</span>
-          </div>
+          <Box mb="4">
+            <Callout.Root color="ruby" size="1" variant="surface">
+              <Callout.Icon>
+                <AlertCircle size={16} />
+              </Callout.Icon>
+              <Callout.Text>{error}</Callout.Text>
+            </Callout.Root>
+          </Box>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              E-mail do Gestor
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+        <form onSubmit={handleSubmit}>
+          <Flex direction="column" gap="3">
+            <Box>
+              <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                E-mail do Gestor
+              </Text>
+              <TextField.Root
+                size="3"
                 type="email"
                 placeholder="admin@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <Mail size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-              Senha
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input
+            <Box>
+              <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                Senha
+              </Text>
+              <TextField.Root
+                size="3"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field"
-                style={{ paddingLeft: '42px', width: '100%' }}
                 required
-              />
-            </div>
-          </div>
+              >
+                <TextField.Slot>
+                  <Lock size={16} color="var(--gray-9)" />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
 
-          <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', marginTop: '8px', padding: '12px' }}>
-            {loading ? 'Autenticando...' : 'Entrar no Painel'}
-          </button>
+            <Button
+              type="submit"
+              size="3"
+              color="iris"
+              variant="solid"
+              disabled={loading}
+              mt="2"
+              style={{ width: '100%', cursor: 'pointer' }}
+            >
+              {loading ? 'Autenticando...' : 'Entrar no Painel'}
+            </Button>
+          </Flex>
         </form>
-      </div>
-    </div>
+      </Dialog.Content>
+    </Dialog.Root>
   )
 }
+
