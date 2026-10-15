@@ -4,8 +4,8 @@ services:
       context: ./api
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${PORT:-5002}:80"
+    expose:
+      - "80"
     environment:
       - PORT=80
       - ENV=${ENV:-production}
@@ -30,10 +30,10 @@ services:
       context: ./ui
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:5002}
+        - VITE_API_URL=${VITE_API_URL:-https://api.pocketrun.odutra.com}
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-${UI_PORT:-3000}}:80"
+    expose:
+      - "80"
     depends_on:
       api:
         condition: service_healthy
