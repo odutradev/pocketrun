@@ -1,3 +1,4 @@
+import { Box, Flex, Grid, Card, Heading, Text, Badge, Button, TextField, Spinner, ScrollArea, Code } from '@radix-ui/themes'
 import { Database, RefreshCw, Layers, ChevronLeft, ChevronRight, FileText, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -65,159 +66,191 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
   }) ?? []
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+    <Box>
+      <Flex justify="between" align={{ initial: 'start', sm: 'center' }} direction={{ initial: 'column', sm: 'row' }} gap="2" mb="4">
+        <Box>
+          <Heading size="4" weight="bold">
             Data Explorer — {projectName}
-          </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          </Heading>
+          <Text size="2" color="gray">
             Navegue e inspecione os dados gravados pelas aplicações nas coleções.
-          </p>
-        </div>
-        <button onClick={loadCollections} className="btn-secondary" style={{ padding: '8px 12px', fontSize: '0.8rem' }}>
+          </Text>
+        </Box>
+        <Button
+          variant="soft"
+          color="gray"
+          size="2"
+          onClick={loadCollections}
+          style={{ cursor: 'pointer' }}
+        >
           <RefreshCw size={14} />
-          <span>Atualizar</span>
-        </button>
-      </div>
+          Atualizar
+        </Button>
+      </Flex>
 
       {loadingCols ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-          Carregando coleções do projeto...
-        </div>
+        <Flex justify="center" align="center" gap="2" py="8">
+          <Spinner size="3" />
+          <Text size="2" color="gray">Carregando coleções do projeto...</Text>
+        </Flex>
       ) : collections.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <Database size={40} color="var(--text-muted)" style={{ marginBottom: '12px' }} />
-          <h4 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '8px' }}>Nenhuma Coleção Encontrada</h4>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 16px' }}>
-            Esta aplicação ainda não enviou dados para o PocketRun. Quando seu frontend fizer requisições para <code>POST /kv/:collection/create</code>, as coleções aparecerão aqui automaticamente!
-          </p>
-        </div>
+        <Card size="3" style={{ textAlign: 'center', padding: '48px 24px', border: '1px dashed var(--gray-a5)', backgroundColor: 'var(--gray-a2)' }}>
+          <Flex direction="column" align="center">
+            <Database size={40} color="var(--gray-8)" style={{ marginBottom: 12 }} />
+            <Heading size="4" weight="bold" mb="1">
+              Nenhuma Coleção Encontrada
+            </Heading>
+            <Text size="2" color="gray" style={{ maxWidth: 460 }}>
+              Esta aplicação ainda não enviou dados para o PocketRun. Quando seu frontend fizer requisições para <code>POST /kv/:collection/create</code>, as coleções aparecerão aqui automaticamente!
+            </Text>
+          </Flex>
+        </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '20px' }}>
-          <div className="glass-panel" style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              <Layers size={16} color="var(--primary)" />
-              <span>Coleções ({collections.length})</span>
-            </div>
+        <Grid columns={{ initial: '1', md: '240px 1fr' }} gap="4">
+          {/* Collections List */}
+          <Card size="2" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+            <Flex align="center" gap="2" mb="3">
+              <Layers size={16} color="var(--iris-9)" />
+              <Text size="2" weight="bold" color="gray" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Coleções ({collections.length})
+              </Text>
+            </Flex>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {collections.map((col) => (
-                <button
-                  key={col}
-                  onClick={() => setSelectedCollection(col)}
-                  style={{
-                    padding: '10px 12px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid',
-                    borderColor: selectedCollection === col ? 'var(--primary-glow)' : 'transparent',
-                    background: selectedCollection === col ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                    color: selectedCollection === col ? '#818CF8' : 'var(--text-primary)',
-                    textAlign: 'left',
-                    fontSize: '0.85rem',
-                    fontWeight: selectedCollection === col ? 600 : 400,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <FileText size={16} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{col}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+            <Flex direction="column" gap="1">
+              {collections.map((col) => {
+                const isSelected = selectedCollection === col
+                return (
+                  <Button
+                    key={col}
+                    variant={isSelected ? 'soft' : 'ghost'}
+                    color={isSelected ? 'iris' : 'gray'}
+                    size="2"
+                    onClick={() => setSelectedCollection(col)}
+                    style={{
+                      justifyContent: 'flex-start',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontWeight: isSelected ? 600 : 400,
+                    }}
+                  >
+                    <FileText size={15} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {col}
+                    </span>
+                  </Button>
+                )
+              })}
+            </Flex>
+          </Card>
 
-          <div className="glass-panel" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', gap: '12px' }}>
-              <div style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
+          {/* Documents Content */}
+          <Card size="2" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+            <Flex justify="between" align="center" gap="3" mb="4" wrap="wrap">
+              <Box style={{ flex: 1, maxWidth: 320 }}>
+                <TextField.Root
+                  size="2"
                   placeholder="Filtrar registros JSON..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="input-field"
-                  style={{ paddingLeft: '36px', padding: '8px 12px 8px 36px', fontSize: '0.85rem' }}
-                />
-              </div>
+                >
+                  <TextField.Slot>
+                    <Search size={14} color="var(--gray-9)" />
+                  </TextField.Slot>
+                </TextField.Root>
+              </Box>
 
               {documentsData && (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Total: <strong>{documentsData.total}</strong> registros
-                </div>
+                <Badge size="1" variant="surface" color="gray" radius="full">
+                  Total: {documentsData.total} registros
+                </Badge>
               )}
-            </div>
+            </Flex>
 
             {loadingDocs ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                Carregando documentos da coleção <code>{selectedCollection}</code>...
-              </div>
+              <Flex justify="center" align="center" gap="2" py="8">
+                <Spinner size="3" />
+                <Text size="2" color="gray">
+                  Carregando documentos da coleção <code>{selectedCollection}</code>...
+                </Text>
+              </Flex>
             ) : filteredDocs.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                Nenhum documento encontrado na coleção <strong>{selectedCollection}</strong>.
-              </div>
+              <Box py="8" style={{ textAlign: 'center' }}>
+                <Text size="2" color="gray">
+                  Nenhum documento encontrado na coleção <strong>{selectedCollection}</strong>.
+                </Text>
+              </Box>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Flex direction="column" gap="3">
                 {filteredDocs.map((doc: ExplorerDocument, index: number) => (
-                  <div
+                  <Card
                     key={doc._id || index}
+                    size="1"
                     style={{
-                      background: 'var(--bg-input)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 'var(--radius-md)',
-                      padding: '14px',
-                      fontSize: '0.85rem',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      overflowX: 'auto'
+                      backgroundColor: 'var(--gray-a3)',
+                      border: '1px solid var(--gray-a4)',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
-                      <span style={{ color: 'var(--secondary)', fontSize: '0.75rem' }}>ID: {doc._id}</span>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                        Criado em: {new Date(doc.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <pre style={{ margin: 0, color: '#E2E8F0', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                      {JSON.stringify(doc.data, null, 2)}
-                    </pre>
-                  </div>
+                    <Flex justify="between" align="center" pb="2" mb="2" style={{ borderBottom: '1px solid var(--gray-a4)' }}>
+                      <Code size="1" color="cyan">
+                        ID: {doc._id}
+                      </Code>
+                      <Text size="1" color="gray">
+                        {new Date(doc.created_at).toLocaleString()}
+                      </Text>
+                    </Flex>
+                    <ScrollArea type="auto" scrollbars="horizontal">
+                      <pre
+                        style={{
+                          margin: 0,
+                          fontSize: '0.8rem',
+                          color: 'var(--gray-12)',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-all',
+                        }}
+                      >
+                        {JSON.stringify(doc.data, null, 2)}
+                      </pre>
+                    </ScrollArea>
+                  </Card>
                 ))}
 
                 {documentsData && documentsData.total_pages > 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginTop: '16px' }}>
-                    <button
+                  <Flex justify="center" align="center" gap="3" mt="3">
+                    <Button
+                      size="1"
+                      variant="soft"
+                      color="gray"
                       disabled={page <= 1}
                       onClick={() => selectedCollection && loadDocuments(selectedCollection, page - 1)}
-                      className="btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                      style={{ cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
                     >
-                      <ChevronLeft size={16} />
-                      <span>Anterior</span>
-                    </button>
+                      <ChevronLeft size={14} />
+                      Anterior
+                    </Button>
 
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    <Text size="1" color="gray">
                       Página {page} de {documentsData.total_pages}
-                    </span>
+                    </Text>
 
-                    <button
+                    <Button
+                      size="1"
+                      variant="soft"
+                      color="gray"
                       disabled={page >= documentsData.total_pages}
                       onClick={() => selectedCollection && loadDocuments(selectedCollection, page + 1)}
-                      className="btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                      style={{ cursor: page >= documentsData.total_pages ? 'not-allowed' : 'pointer' }}
                     >
-                      <span>Próxima</span>
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
+                      Próxima
+                      <ChevronRight size={14} />
+                    </Button>
+                  </Flex>
                 )}
-              </div>
+              </Flex>
             )}
-          </div>
-        </div>
+          </Card>
+        </Grid>
       )}
-    </div>
+    </Box>
   )
 }
+

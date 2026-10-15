@@ -1,4 +1,33 @@
-import { ArrowLeft, Globe, Key, Database, Trash2, Plus, Shield, Save, Check, Code, Copy, AlertTriangle } from 'lucide-react'
+import {
+  Box,
+  Flex,
+  Grid,
+  Card,
+  Heading,
+  Text,
+  Badge,
+  Button,
+  Tabs,
+  TextArea,
+  Checkbox,
+  AlertDialog,
+  Callout,
+  TextField,
+} from '@radix-ui/themes'
+import {
+  ArrowLeft,
+  Globe,
+  Key,
+  Database,
+  Trash2,
+  Plus,
+  Shield,
+  Save,
+  Check,
+  Code as CodeIcon,
+  Copy,
+  AlertTriangle,
+} from 'lucide-react'
 import { useState } from 'react'
 
 import { API_BASE_URL, updateApplication, deleteApplication, deleteAPIToken } from '../services/api'
@@ -15,7 +44,7 @@ interface AppDetailProps {
 }
 
 export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
-  const [activeTab, setActiveTab] = useState<'security' | 'tokens' | 'explorer' | 'danger'>('security')
+  const [activeTab, setActiveTab] = useState<string>('security')
   const [originsInput, setOriginsInput] = useState<string>(app.allowed_origins.join(', '))
   const [allowNonBrowser, setAllowNonBrowser] = useState<boolean>(app.allow_non_browser_requests)
   const [isTokenModalOpen, setIsTokenModalOpen] = useState<boolean>(false)
@@ -24,6 +53,7 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
   const [deleteConfirmText, setDeleteConfirmText] = useState<string>('')
   const [deletingApp, setDeletingApp] = useState<boolean>(false)
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null)
+  const [tokenToRevoke, setTokenToRevoke] = useState<string | null>(null)
 
   const handleSaveSettings = async (e: FormEvent) => {
     e.preventDefault()
@@ -53,14 +83,14 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
     }
   }
 
-  const handleRevokeToken = async (tokenId: string) => {
-    if (window.confirm('Tem certeza que deseja revogar este token de acesso? Os clientes que utilizam este token perderão o acesso imediatamente.')) {
-      try {
-        await deleteAPIToken(app.id, tokenId)
-        onRefreshApp()
-      } catch (err: unknown) {
-        alert(err instanceof Error ? err.message : 'Erro ao revogar token')
-      }
+  const handleConfirmRevokeToken = async () => {
+    if (!tokenToRevoke) return
+    try {
+      await deleteAPIToken(app.id, tokenToRevoke)
+      setTokenToRevoke(null)
+      onRefreshApp()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Erro ao revogar token')
     }
   }
 
@@ -106,242 +136,281 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
 })`
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <button onClick={onBack} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }}>
+    <Box>
+      {/* Top action bar */}
+      <Flex justify="between" align="center" mb="4">
+        <Button variant="soft" color="gray" size="2" onClick={onBack} style={{ cursor: 'pointer' }}>
           <ArrowLeft size={16} />
-          <span>Voltar às Aplicações</span>
-        </button>
+          Voltar às Aplicações
+        </Button>
 
-        <div className="badge badge-indigo">
-          <span>Project ID: {app.project_id}</span>
-        </div>
-      </div>
+        <Badge size="2" variant="surface" color="iris" radius="full">
+          Project ID: {app.project_id}
+        </Badge>
+      </Flex>
 
-      <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 20px var(--primary-glow)'
-          }}>
-            <Shield size={26} color="#FFF" />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+      {/* App Header Banner */}
+      <Card size="3" mb="5" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+        <Flex align="center" gap="3">
+          <Box
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 'var(--radius-3)',
+              background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 16px var(--iris-a6)',
+            }}
+          >
+            <Shield size={22} color="#FFF" />
+          </Box>
+          <Box>
+            <Heading size="6" weight="bold" style={{ letterSpacing: '-0.02em' }}>
               {app.name}
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+            </Heading>
+            <Text size="2" color="gray">
               {app.description || 'Nenhuma descrição fornecida.'}
-            </p>
-          </div>
-        </div>
-      </div>
+            </Text>
+          </Box>
+        </Flex>
+      </Card>
 
-      <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '24px' }}>
-        <button
-          onClick={() => setActiveTab('security')}
-          className="btn-secondary"
-          style={{
-            background: activeTab === 'security' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-            borderColor: activeTab === 'security' ? 'var(--primary)' : 'transparent',
-            color: activeTab === 'security' ? '#FFF' : 'var(--text-muted)',
-            fontWeight: 600,
-          }}
-        >
-          <Globe size={16} />
-          <span>Segurança & CORS</span>
-        </button>
+      {/* Radix Tabs */}
+      <Tabs.Root value={activeTab} onValueChange={setActiveTab}>
+        <Tabs.List size="2" mb="5">
+          <Tabs.Trigger value="security" style={{ cursor: 'pointer' }}>
+            <Flex align="center" gap="2">
+              <Globe size={15} />
+              Segurança & CORS
+            </Flex>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="tokens" style={{ cursor: 'pointer' }}>
+            <Flex align="center" gap="2">
+              <Key size={15} />
+              Tokens ({app.tokens?.length || 0})
+            </Flex>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="explorer" style={{ cursor: 'pointer' }}>
+            <Flex align="center" gap="2">
+              <Database size={15} />
+              Data Explorer
+            </Flex>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="danger" style={{ cursor: 'pointer', color: 'var(--ruby-9)' }}>
+            <Flex align="center" gap="2">
+              <AlertTriangle size={15} />
+              Zona de Risco
+            </Flex>
+          </Tabs.Trigger>
+        </Tabs.List>
 
-        <button
-          onClick={() => setActiveTab('tokens')}
-          className="btn-secondary"
-          style={{
-            background: activeTab === 'tokens' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-            borderColor: activeTab === 'tokens' ? 'var(--primary)' : 'transparent',
-            color: activeTab === 'tokens' ? '#FFF' : 'var(--text-muted)',
-            fontWeight: 600,
-          }}
-        >
-          <Key size={16} />
-          <span>Tokens de Acesso ({app.tokens?.length || 0})</span>
-        </button>
+        {/* Tab 1: Security & CORS */}
+        <Tabs.Content value="security">
+          <Grid columns={{ initial: '1', md: '2' }} gap="4">
+            <Card size="3" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+              <Heading size="4" weight="bold" mb="1">
+                Controle de Origens Autorizadas (CORS)
+              </Heading>
+              <Text size="2" color="gray" mb="4" as="p">
+                Defina quais domínios web têm permissão para ler e gravar dados nesta aplicação.
+              </Text>
 
-        <button
-          onClick={() => setActiveTab('explorer')}
-          className="btn-secondary"
-          style={{
-            background: activeTab === 'explorer' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-            borderColor: activeTab === 'explorer' ? 'var(--primary)' : 'transparent',
-            color: activeTab === 'explorer' ? '#FFF' : 'var(--text-muted)',
-            fontWeight: 600,
-          }}
-        >
-          <Database size={16} />
-          <span>Data Explorer</span>
-        </button>
+              <form onSubmit={handleSaveSettings}>
+                <Flex direction="column" gap="4">
+                  <Box>
+                    <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                      Origens Permitidas (Separe por vírgula)
+                    </Text>
+                    <TextArea
+                      size="3"
+                      rows={4}
+                      value={originsInput}
+                      onChange={(e) => setOriginsInput(e.target.value)}
+                      placeholder="https://meusite.com.br, http://localhost:3000 ou *"
+                    />
+                    <Text size="1" color="gray" mt="1" style={{ display: 'block' }}>
+                      Use <code>*</code> para aceitar qualquer origem durante o desenvolvimento.
+                    </Text>
+                  </Box>
 
-        <button
-          onClick={() => setActiveTab('danger')}
-          className="btn-secondary"
-          style={{
-            background: activeTab === 'danger' ? 'rgba(244, 63, 94, 0.15)' : 'transparent',
-            borderColor: activeTab === 'danger' ? 'var(--accent-rose)' : 'transparent',
-            color: activeTab === 'danger' ? 'var(--accent-rose)' : 'var(--text-muted)',
-            fontWeight: 600,
-            marginLeft: 'auto'
-          }}
-        >
-          <AlertTriangle size={16} />
-          <span>Zona de Risco</span>
-        </button>
-      </div>
+                  <Flex align="center" gap="2">
+                    <Checkbox
+                      id="nonBrowser"
+                      checked={allowNonBrowser}
+                      onCheckedChange={(checked) => setAllowNonBrowser(checked === true)}
+                    />
+                    <Text as="label" htmlFor="nonBrowser" size="2" style={{ cursor: 'pointer' }}>
+                      Permitir requisições sem header <code>Origin</code> (Mobile nativo, Postman, server-to-server)
+                    </Text>
+                  </Flex>
 
-      {activeTab === 'security' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-          <form onSubmit={handleSaveSettings} className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '16px', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              Controle de Origens Autorizadas (CORS)
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Defina quais domínios web têm permissão para ler e gravar dados nesta aplicação através das chamadas de API.
-            </p>
+                  {saveSuccess && (
+                    <Callout.Root color="grass" size="1" variant="surface">
+                      <Callout.Icon>
+                        <Check size={16} />
+                      </Callout.Icon>
+                      <Callout.Text>Configurações atualizadas com sucesso!</Callout.Text>
+                    </Callout.Root>
+                  )}
 
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Origens Permitidas (Separe por vírgula)
-              </label>
-              <textarea
-                value={originsInput}
-                onChange={(e) => setOriginsInput(e.target.value)}
-                className="input-field"
-                rows={4}
-                style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.85rem' }}
-                placeholder="https://meusite.com.br, http://localhost:3000 ou *"
-              />
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                Use <code>*</code> para aceitar qualquer origem durante o desenvolvimento.
-              </p>
-            </div>
+                  <Button
+                    type="submit"
+                    size="3"
+                    color="iris"
+                    variant="solid"
+                    disabled={savingSettings}
+                    style={{ alignSelf: 'flex-start', cursor: 'pointer' }}
+                  >
+                    <Save size={16} />
+                    {savingSettings ? 'Salvando...' : 'Salvar Configurações'}
+                  </Button>
+                </Flex>
+              </form>
+            </Card>
 
-            <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <input
-                type="checkbox"
-                id="nonBrowser"
-                checked={allowNonBrowser}
-                onChange={(e) => setAllowNonBrowser(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
-              />
-              <label htmlFor="nonBrowser" style={{ fontSize: '0.85rem', color: 'var(--text-primary)', cursor: 'pointer' }}>
-                Permitir requisições sem header <code>Origin</code> (Mobile nativo, Postman, server-to-server)
-              </label>
-            </div>
+            <Card size="3" style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}>
+              <Flex justify="between" align="center" mb="3">
+                <Flex align="center" gap="2">
+                  <CodeIcon size={18} color="var(--cyan-9)" />
+                  <Heading size="4" weight="bold">
+                    Como Consumir a API
+                  </Heading>
+                </Flex>
+                <Button
+                  variant="soft"
+                  color={copiedSnippet === 'fetch' ? 'grass' : 'gray'}
+                  size="1"
+                  onClick={() => copyCodeSnippet(sampleFetchCode, 'fetch')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {copiedSnippet === 'fetch' ? <Check size={13} /> : <Copy size={13} />}
+                  {copiedSnippet === 'fetch' ? 'Copiado!' : 'Copiar'}
+                </Button>
+              </Flex>
 
-            <button type="submit" disabled={savingSettings} className="btn-primary" style={{ padding: '10px 20px' }}>
-              {saveSuccess ? (
-                <>
-                  <Check size={16} />
-                  <span>Configurações Salvas!</span>
-                </>
-              ) : (
-                <>
-                  <Save size={16} />
-                  <span>{savingSettings ? 'Salvando...' : 'Salvar Configurações'}</span>
-                </>
-              )}
-            </button>
-          </form>
+              <Box
+                p="3"
+                style={{
+                  backgroundColor: 'var(--gray-a3)',
+                  border: '1px solid var(--gray-a4)',
+                  borderRadius: 'var(--radius-3)',
+                  overflowX: 'auto',
+                }}
+              >
+                <pre
+                  style={{
+                    margin: 0,
+                    fontSize: '0.8rem',
+                    color: 'var(--iris-9)',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {sampleFetchCode}
+                </pre>
+              </Box>
+            </Card>
+          </Grid>
+        </Tabs.Content>
 
-          <div className="glass-panel" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Code size={18} color="var(--secondary)" />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  Como Consumir a API
-                </h3>
-              </div>
-              <button onClick={() => copyCodeSnippet(sampleFetchCode, 'fetch')} className="btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-                {copiedSnippet === 'fetch' ? <Check size={14} color="var(--accent-emerald)" /> : <Copy size={14} />}
-                <span>{copiedSnippet === 'fetch' ? 'Copiado!' : 'Copiar'}</span>
-              </button>
-            </div>
-
-            <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', padding: '16px', overflowX: 'auto' }}>
-              <pre style={{ margin: 0, fontSize: '0.8rem', fontFamily: 'JetBrains Mono, monospace', color: '#A5B4FC', whiteSpace: 'pre-wrap' }}>
-                {sampleFetchCode}
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'tokens' && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+        {/* Tab 2: Tokens */}
+        <Tabs.Content value="tokens">
+          <Flex justify="between" align="center" mb="4">
+            <Box>
+              <Heading size="4" weight="bold">
                 Tokens de Acesso (API Keys)
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              </Heading>
+              <Text size="2" color="gray">
                 Tokens ativos para esta aplicação. Cada cliente utiliza seu próprio token no header <code>controlAccess</code>.
-              </p>
-            </div>
+              </Text>
+            </Box>
 
-            <button onClick={() => setIsTokenModalOpen(true)} className="btn-primary">
+            <Button
+              variant="solid"
+              color="iris"
+              size="2"
+              onClick={() => setIsTokenModalOpen(true)}
+              style={{ cursor: 'pointer' }}
+            >
               <Plus size={16} />
-              <span>Gerar Novo Token</span>
-            </button>
-          </div>
+              Gerar Novo Token
+            </Button>
+          </Flex>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <Flex direction="column" gap="3">
             {app.tokens && app.tokens.length > 0 ? (
               app.tokens.map((token) => (
-                <div key={token.id} className="glass-panel" style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(6, 182, 212, 0.12)', color: 'var(--secondary)' }}>
-                      <Key size={20} />
-                    </div>
-                    <div>
-                      <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>{token.name}</h4>
-                      <p style={{ fontSize: '0.8rem', fontFamily: 'JetBrains Mono, monospace', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Prefixo: {token.token_prefix}
-                      </p>
-                    </div>
-                  </div>
+                <Card
+                  key={token.id}
+                  size="2"
+                  style={{ border: '1px solid var(--gray-a4)', backgroundColor: 'var(--gray-a2)' }}
+                >
+                  <Flex justify="between" align="center" wrap="wrap" gap="3">
+                    <Flex align="center" gap="3">
+                      <Box
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 'var(--radius-3)',
+                          backgroundColor: 'var(--cyan-a3)',
+                          color: 'var(--cyan-9)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Key size={18} />
+                      </Box>
+                      <Box>
+                        <Text size="2" weight="bold">
+                          {token.name}
+                        </Text>
+                        <Text size="1" color="gray" as="p" style={{ fontFamily: 'var(--font-mono)' }}>
+                          Prefixo: {token.token_prefix}
+                        </Text>
+                      </Box>
+                    </Flex>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                    <div style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      <div>Criado em: {new Date(token.created_at).toLocaleDateString()}</div>
-                      <div>
-                        Expira em:{' '}
-                        {token.expires_at ? (
-                          <span style={{ color: new Date(token.expires_at) < new Date() ? 'var(--accent-rose)' : 'var(--text-primary)' }}>
-                            {new Date(token.expires_at).toLocaleDateString()}
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--accent-emerald)' }}>Nunca</span>
-                        )}
-                      </div>
-                    </div>
+                    <Flex align="center" gap="4">
+                      <Box style={{ textAlign: 'right' }}>
+                        <Text size="1" color="gray" as="p">
+                          Criado: {new Date(token.created_at).toLocaleDateString()}
+                        </Text>
+                        <Text size="1" color="gray" as="p">
+                          Expira:{' '}
+                          {token.expires_at ? (
+                            <span style={{ color: new Date(token.expires_at) < new Date() ? 'var(--ruby-9)' : 'var(--gray-12)' }}>
+                              {new Date(token.expires_at).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--grass-9)' }}>Nunca</span>
+                          )}
+                        </Text>
+                      </Box>
 
-                    <button onClick={() => handleRevokeToken(token.id)} className="btn-danger">
-                      <Trash2 size={14} />
-                      <span>Revogar</span>
-                    </button>
-                  </div>
-                </div>
+                      <Button
+                        variant="soft"
+                        color="ruby"
+                        size="1"
+                        onClick={() => setTokenToRevoke(token.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <Trash2 size={13} />
+                        Revogar
+                      </Button>
+                    </Flex>
+                  </Flex>
+                </Card>
               ))
             ) : (
-              <div className="glass-panel" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
-                Nenhum token cadastrado para esta aplicação. Clique no botão acima para gerar um.
-              </div>
+              <Card size="3" style={{ textAlign: 'center', padding: '36px', border: '1px dashed var(--gray-a5)', backgroundColor: 'var(--gray-a2)' }}>
+                <Text size="2" color="gray">
+                  Nenhum token cadastrado para esta aplicação. Clique no botão acima para gerar um.
+                </Text>
+              </Card>
             )}
-          </div>
+          </Flex>
 
           <CreateTokenModal
             appId={app.id}
@@ -352,51 +421,83 @@ fetch(\`\${API_URL}/kv/tarefas/get-all?concluida=false\`, {
               onRefreshApp()
             }}
           />
-        </div>
-      )}
+        </Tabs.Content>
 
-      {activeTab === 'explorer' && (
-        <DataExplorer appId={app.id} projectName={app.name} />
-      )}
+        {/* Tab 3: Data Explorer */}
+        <Tabs.Content value="explorer">
+          <DataExplorer appId={app.id} projectName={app.name} />
+        </Tabs.Content>
 
-      {activeTab === 'danger' && (
-        <div className="glass-panel" style={{ padding: '32px', borderColor: 'rgba(244, 63, 94, 0.3)', background: 'rgba(244, 63, 94, 0.05)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--accent-rose)', marginBottom: '16px' }}>
-            <AlertTriangle size={24} />
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-              Excluir Aplicação Definitivamente
-            </h3>
-          </div>
-
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.6 }}>
-            Esta ação é <strong>irreversível</strong>. A exclusão desta aplicação apagará permanentemente todos os <strong>Tokens de Acesso</strong> e <strong>TODOS OS REGISTROS</strong> gravados em todas as coleções deste projeto no banco de dados.
-          </p>
-
-          <div style={{ marginBottom: '20px', maxWidth: '400px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-              Para confirmar, digite o Project ID (<code>{app.project_id}</code>):
-            </label>
-            <input
-              type="text"
-              placeholder={app.project_id}
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              className="input-field"
-              style={{ borderColor: 'rgba(244, 63, 94, 0.4)' }}
-            />
-          </div>
-
-          <button
-            onClick={handleDeleteApplication}
-            disabled={deletingApp || deleteConfirmText !== app.project_id}
-            className="btn-danger"
-            style={{ padding: '12px 24px', fontSize: '0.9rem' }}
+        {/* Tab 4: Danger Zone */}
+        <Tabs.Content value="danger">
+          <Card
+            size="3"
+            style={{
+              border: '1px solid var(--ruby-a5)',
+              backgroundColor: 'var(--ruby-a2)',
+              padding: '28px',
+            }}
           >
-            <Trash2 size={16} />
-            <span>{deletingApp ? 'Excluindo Aplicação...' : 'Excluir Aplicação e Dados'}</span>
-          </button>
-        </div>
-      )}
-    </div>
+            <Flex align="center" gap="2" mb="2" style={{ color: 'var(--ruby-9)' }}>
+              <AlertTriangle size={20} />
+              <Heading size="4" weight="bold">
+                Excluir Aplicação Definitivamente
+              </Heading>
+            </Flex>
+
+            <Text size="2" color="gray" mb="4" as="p" style={{ lineHeight: 1.6 }}>
+              Esta ação é <strong>irreversível</strong>. A exclusão desta aplicação apagará permanentemente todos os <strong>Tokens de Acesso</strong> e <strong>TODOS OS REGISTROS</strong> gravados em todas as coleções deste projeto no banco de dados.
+            </Text>
+
+            <Box mb="4" style={{ maxWidth: 420 }}>
+              <Text size="2" weight="medium" mb="2" as="label" style={{ display: 'block' }}>
+                Para confirmar, digite o Project ID (<code>{app.project_id}</code>):
+              </Text>
+              <TextField.Root
+                size="3"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={app.project_id}
+              />
+            </Box>
+
+            <Button
+              variant="solid"
+              color="ruby"
+              size="3"
+              disabled={deletingApp || deleteConfirmText !== app.project_id}
+              onClick={handleDeleteApplication}
+              style={{ cursor: deletingApp || deleteConfirmText !== app.project_id ? 'not-allowed' : 'pointer' }}
+            >
+              <Trash2 size={16} />
+              {deletingApp ? 'Excluindo Aplicação...' : 'Excluir Aplicação e Dados'}
+            </Button>
+          </Card>
+        </Tabs.Content>
+      </Tabs.Root>
+
+      {/* Revoke Token Alert Dialog */}
+      <AlertDialog.Root open={!!tokenToRevoke} onOpenChange={(open) => !open && setTokenToRevoke(null)}>
+        <AlertDialog.Content maxWidth="450px">
+          <AlertDialog.Title>Revogar Token de Acesso</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Tem certeza de que deseja revogar este token? Todos os clientes que o utilizam perderão o acesso imediatamente.
+          </AlertDialog.Description>
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Cancelar
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button variant="solid" color="ruby" onClick={handleConfirmRevokeToken}>
+                Sim, Revogar Token
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </Box>
   )
 }
+
