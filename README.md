@@ -155,7 +155,7 @@ Na aba **Domains** do serviço Compose no Dokploy:
 2. **Backend API (`api`):**
    * **Service Name:** `api`
    * **Host:** `api.pocketrun.odutra.com`
-   * **Container Port:** `8080`
+   * **Container Port:** `80`
    * **HTTPS:** Ativado.
 
 3. Clique em **Save** e faça o **Deploy**.
