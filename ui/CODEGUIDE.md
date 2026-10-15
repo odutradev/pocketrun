@@ -13,6 +13,7 @@ Este documento define as regras arquiteturais, estruturais e de padronização d
 - **Formatação de Pastas e Arquivos:**
   - Todas as pastas do projeto utilizam **camelCase** (ex: `button`, `input`, `card`, `pageContainer`, `auth`, `home`, `resetPassword`, `welcomeBanner`, `profileCard`, `useForm`, `authHeader`). Nenhuma pasta deve iniciar com letra maiúscula.
   - Cada pasta de componente, hook, action, store ou rota deve ser um módulo autocontido contendo seu ponto de entrada `index.ts` (ou `index.tsx`) e seu arquivo de tipagens dedicado `types.ts`.
+  - Componentes de interface e estruturais (incluindo subcomponentes de páginas e componentes em `routes/components`) com estilização devem obrigatoriamente manter seus estilos em arquivo separado `styles.ts`, isolado da lógica visual em `index.tsx`.
 - **Zero Comentários no Código:** É expressamente proibido o uso de comentários (`//`, `/* */`, JSDoc) na lógica de código. O código deve ser declarativo, semântico e autodocumentado.
 
 ### 1.2. Export Default e Exportações
@@ -34,11 +35,11 @@ Este documento define as regras arquiteturais, estruturais e de padronização d
 ### 1.4. Mapeamento de Aliases e Organização de Imports
 
 #### Aliases Configurados no Projeto (`tsconfig.app.json` e `vite.config.ts`):
-- `@actions/*`: `./src/actions/*`
+- `@api/*`: `./src/api/*` (centraliza infraestrutura HTTP, `client.ts`, `config.ts`, `api.ts` e a pasta `actions/`)
+- `@actions/*`: `./src/api/actions/*` (alias direto para as actions alocadas dentro de `api/`)
 - `@components/*`: `./src/components/*`
 - `@hooks/*`: `./src/hooks/*`
 - `@stores/*`: `./src/stores/*`
-- `@api/*`: `./src/api/*`
 - `@projectTypes/*`: `./src/types/*`
 - `@pages/*`: `./src/pages/*`
 - `@routes`: `./src/routes`
@@ -51,7 +52,7 @@ Este documento define as regras arquiteturais, estruturais e de padronização d
 A organização dos imports deve seguir exatamente **três blocos** separados por uma linha em branco, ordenados visualmente do **MAIOR** (mais caracteres) para o **MENOR** (menos caracteres) dentro de cada bloco:
 
 1. **Bibliotecas Externas:** (ex: `@radix-ui/themes`, `react-router-dom`, `zustand`, `react`)
-2. **Módulos Internos:** (ex: `@components/...`, `@stores/...`, `@actions/...`, `@api/...`, caminhos relativos `./...`)
+2. **Módulos Internos:** (ex: `@components/...`, `@stores/...`, `@api/actions/...`, `@api/...`, caminhos relativos `./...`)
 3. **Tipagens:** (ex: `import type { ... }`)
 
 **Regra de Linha Única:** É estritamente proibido quebrar linhas dentro de chaves de desestruturação nos imports.
@@ -62,7 +63,7 @@ import { Button as RadixButton, type ButtonProps as RadixButtonProps } from '@ra
 import { STORAGE_KEYS } from '@api/config'
 import apiClient from '@api/client'
 
-import type { SignInPayload, SignUpPayload } from '@actions/users/auth/types'
+import type { SignInPayload, SignUpPayload } from '@api/actions/users/auth/types'
 import type { ButtonProps, ButtonVariant } from './types'
 ```
 
@@ -81,18 +82,31 @@ A arquitetura do frontend estrutura cada elemento da aplicação em fatias modul
 
 ```text
 src/
-├── actions/                  # Actions HTTP isoladas por domínio de negócio
-│   └── users/
-│       ├── auth/             # signInAction, signUpAction, refreshTokenAction
-│       │   ├── index.ts
-│       │   └── types.ts
-│       ├── profile/          # getProfileAction, updateProfileAction, resetPasswordAction
-│       │   ├── index.ts
-│       │   └── types.ts
-│       └── validation/       # requestCodeAction, verifyCodeAction
-│           ├── index.ts
-│           └── types.ts
-├── api/                      # Infraestrutura HTTP central
+├── api/                      # Camada central de comunicação e infraestrutura HTTP
+│   ├── actions/              # Actions HTTP isoladas por domínio de negócio
+│   │   ├── apps/             # getApplicationsAction, createApplicationAction, etc.
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── explorer/         # getExplorerCollectionsAction, getExplorerDocumentsAction
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── health/           # healthPingAction
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── setup/            # getSetupStatusAction, setupSuperadminAction
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   ├── tokens/           # createAPITokenAction, deleteAPITokenAction
+│   │   │   ├── index.ts
+│   │   │   └── types.ts
+│   │   └── users/
+│   │       ├── auth/         # signInAction, signUpAction, refreshTokenAction
+│   │       │   ├── index.ts
+│   │       │   └── types.ts
+│   │       └── profile/      # getProfileAction, updateProfileAction
+│   │           ├── index.ts
+│   │           └── types.ts
+│   ├── api.ts                # Métodos de API e serviços de integração direta
 │   ├── client.ts             # Cliente HTTP e utilitários (request, get, post, put, del, apiClient)
 │   └── config.ts             # API_BASE_URL e STORAGE_KEYS
 ├── assets/                   # Recursos estáticos locais
@@ -161,12 +175,22 @@ src/
 │       ├── styles.ts         # Estilos tipados da tela (CSSProperties)
 │       └── types.ts          # Contratos e tipos locais da tela
 ├── routes/                   # Roteamento central e guards de navegação
-│   ├── components/           # Wrappers de proteção e layout
-│   │   ├── appLayout/        # Layout global (fundo gradiente, Navbar, ToastContainer)
-│   │   ├── protectedRoute/   # Guarda que redireciona não autenticados para /auth
-│   │   ├── publicRoute/      # Guarda que redireciona autenticados para /
+│   ├── components/           # Wrappers de proteção e layout modularizados
+│   │   ├── appLayout/        # Layout global com styles e types dedicados
+│   │   │   ├── index.tsx
+│   │   │   ├── styles.ts
+│   │   │   └── types.ts
+│   │   ├── protectedRoute/   # Guarda com styles e types dedicados
+│   │   │   ├── index.tsx
+│   │   │   ├── styles.ts
+│   │   │   └── types.ts
+│   │   ├── publicRoute/      # Guarda com styles e types dedicados
+│   │   │   ├── index.tsx
+│   │   │   ├── styles.ts
+│   │   │   └── types.ts
 │   │   └── index.ts
-│   ├── index.tsx             # Router e mapeamento do array RouteItem[] (export default)
+│   ├── config.ts             # Mapeamento do array RouteItem[]
+│   ├── index.tsx             # Router e orquestração de rotas (AppRouter - export default)
 │   └── types.ts              # Definição da interface RouteItem
 ├── stores/                   # Gerenciamento de estado global reativo via Zustand
 │   ├── auth/                 # useAuthStore (user, token, login, register, logout, init)
@@ -330,13 +354,22 @@ O `AppLayout` envolve todas as rotas da aplicação fornecendo:
 - Renderização condicional da `Navbar` apenas para sessões autenticadas (`isAuthenticated && <Navbar />`).
 - Container global de mensagens de feedback `<ToastContainer />`.
 
+### 5.4. Padrão de Componentes de Rotas (`styles.ts` e `types.ts` Obrigatórios)
+- Todos os componentes estruturais de rotas em `@routes/components/*` (`appLayout`, `protectedRoute`, `publicRoute`) devem ser **estritamente modulares**:
+  - `index.tsx`: Contém **exclusivamente** a lógica de montagem e renderização visual do componente. Nenhum objeto de estilo inline ou tipagem de props deve ser declarado diretamente neste arquivo.
+  - `styles.ts`: Centraliza todos os objetos de estilo CSS tipados com `CSSProperties` da React (`backgroundStyle`, `footerStyle`, `mainContentStyle`, etc.).
+  - `types.ts`: Define a tipagem estrita de props do componente (`AppLayoutProps`, `ProtectedRouteProps`, `PublicRouteProps`) e tipos de suporte internos.
+
 ---
 
-## 6. Camada de Comunicação com a API (`@actions/*` e `@api/*`)
+## 6. Camada de Comunicação com a API (`@api/*`)
 
-### 6.1. Actions por Domínio (`@actions/<domain>/<feature>`)
-- Cada pasta dentro de `@actions` corresponde a um subdomínio funcional da API (ex: `users/auth`, `users/profile`, `users/validation`).
-- **Nomenclatura Obrigatória:** Todas as funções de action devem possuir o sufixo `Action` (ex: `signInAction`, `signUpAction`, `refreshTokenAction`, `getProfileAction`, `updateProfileAction`, `resetPasswordAction`, `requestCodeAction`, `verifyCodeAction`).
+Toda a infraestrutura de rede, clientes HTTP, rotas de integração e actions por domínio funcional residem sob `@api/*` (`src/api/`).
+
+### 6.1. Actions por Domínio (`@api/actions/<domain>/<feature>` ou `@actions/*`)
+- A pasta `actions/` é centralizada diretamente sob a pasta `api/` (`src/api/actions/`), acessível via `@api/actions/<domain>/<feature>` ou pelo alias `@actions/<domain>/<feature>`.
+- Cada subpasta corresponde a um subdomínio funcional da API (ex: `apps`, `explorer`, `health`, `setup`, `tokens`, `users/auth`, `users/profile`).
+- **Nomenclatura Obrigatória:** Todas as funções de action devem possuir o sufixo `Action` (ex: `signInAction`, `signUpAction`, `refreshTokenAction`, `getApplicationsAction`, `createApplicationAction`, `getProfileAction`, `healthPingAction`, `getSetupStatusAction`).
 - **Arquivos Obrigatórios:**
   - `index.ts`: Implementa e exporta as funções assíncronas que chamam os métodos do `apiClient`.
   - `types.ts`: Define os tipos dos parâmetros de entrada (Payloads) e saídas esperadas (Responses).
@@ -354,11 +387,14 @@ export const signInAction = async (payload: SignInPayload): Promise<AuthResponse
 ### 6.2. Cliente HTTP Central (`@api/client` e `@api/config`)
 - **Utilitários Exportados:** `request<T>()`, `get<T>()`, `post<T>()`, `put<T>()`, `del<T>()`.
 - **`apiClient`:** Objeto utilitário com os métodos (`request`, `get`, `post`, `put`, `delete`) exportado como `export default`.
-- **Autenticação Automática:** Injeta o cabeçalho `Authorization: Bearer <token>` a partir do `localStorage` em todas as requisições, exceto quando `skipAuth: true` for explicitamente informado.
+- **Autenticação Automática:** Injeta o cabeçalho `Authorization: Bearer <token>` a partir do `localStorage` via `STORAGE_KEYS.TOKEN` em todas as requisições, exceto quando `skipAuth: true` for explicitamente informado.
 - **Normalização de Erros:** Qualquer resposta HTTP com status de erro é interceptada e convertida para o formato `ApiError` contendo `message`, `status` e `details`.
 - **Configurações Globais (`@api/config`):**
   - `API_BASE_URL`: URL base configurada para apontar para a API Express.
   - `STORAGE_KEYS`: Constante que centraliza as chaves do `localStorage` (`TOKEN`, `REFRESH_TOKEN`, `USER`).
+
+### 6.3. Serviços e Métodos Diretos (`@api/api.ts`)
+- O arquivo `@api/api.ts` centraliza chamadas diretas de serviços e contratos de endpoints com a API, servindo de apoio e compatibilidade com o backend.
 
 ---
 
