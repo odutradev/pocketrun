@@ -37,7 +37,7 @@ Configuração recomendada para produção no Dokploy:
 ├── ui/                   # Aplicação Frontend React + Vite (pocketrun-ui)
 │   ├── src/              # Código-fonte da interface (subcomponentes, estilos, tipos)
 │   ├── Dockerfile        # Build multi-stage com Nginx para o frontend
-│   ├── nginx.conf        # Configuração do Nginx e proxy de API
+│   ├── nginx.conf        # Configuração do Nginx para SPA (HTML5 History API)
 │   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
 ├── docker-compose.yml    # Orquestração dos serviços (API + UI) para deploy no Dokploy
 └── README.md             # Instruções de uso e implantação

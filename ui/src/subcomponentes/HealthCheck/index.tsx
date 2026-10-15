@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../../services/api'
 import { dotStyle, cardStyle, buttonStyle, infoTextStyle, getBadgeStyle, cardTitleStyle, cardHeaderStyle } from './styles'
 
 import type { HealthCheckProps } from './types'
@@ -15,7 +16,7 @@ export const HealthCheck = ({ status, loading, error, onCheck }: HealthCheckProp
         </div>
       </div>
       <p style={infoTextStyle}>
-        Endpoint: <code>GET /ping</code> {error ? `— ${error}` : `— Response: ${JSON.stringify({ status })}`}
+        Endpoint: <code>GET {API_BASE_URL}/ping</code> {error ? `— ${error}` : `— Response: ${JSON.stringify({ status })}`}
       </p>
       <div>
         <button type="button" style={buttonStyle} onClick={onCheck} disabled={loading}>

@@ -1,7 +1,7 @@
 import { ArrowLeft, Globe, Key, Database, Trash2, Plus, Shield, Save, Check, Code, Copy, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 
-import { updateApplication, deleteApplication, deleteAPIToken } from '../services/api'
+import { API_BASE_URL, updateApplication, deleteApplication, deleteAPIToken } from '../services/api'
 import { CreateTokenModal } from './createTokenModal'
 import { DataExplorer } from './dataExplorer'
 
@@ -86,7 +86,7 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
     setTimeout(() => setCopiedSnippet(null), 2000)
   }
 
-  const sampleFetchCode = `const API_URL = "${window.location.origin}"
+  const sampleFetchCode = `const API_URL = "${API_BASE_URL || window.location.origin}"
 const TOKEN = "seu-token-aqui"
 
 fetch(\`\${API_URL}/kv/tarefas/create\`, {
