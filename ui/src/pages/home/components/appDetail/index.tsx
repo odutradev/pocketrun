@@ -1,5 +1,5 @@
 import { ArrowLeft, Globe, Key, Database, Trash2, Plus, Save, Check, Code as CodeIcon, Copy, AlertTriangle } from 'lucide-react'
-import { Box, Flex, Heading, Text, Tabs, TextArea, Checkbox, AlertDialog, Table, Code } from '@radix-ui/themes'
+import { Box, Flex, Heading, Text, Tabs, TextArea, Checkbox, AlertDialog, Table, Code, Callout } from '@radix-ui/themes'
 import { useState, useCallback } from 'react'
 
 import { updateApplicationAction, deleteApplicationAction } from '@actions/apps'
@@ -7,7 +7,6 @@ import { deleteAPITokenAction } from '@actions/tokens'
 import CreateTokenModal from '../createTokenModal'
 import { API_BASE_URL } from '@api/config'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import DataExplorer from '../dataExplorer'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'
@@ -17,20 +16,24 @@ import type { AppDetailProps } from './types'
 import type { FormEvent } from 'react'
 
 export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
-  const { showToast } = useToastStore()
   const [activeTab, setActiveTab] = useState<string>('security')
   const [originsInput, setOriginsInput] = useState<string>(app.allowed_origins.join(', '))
   const [allowNonBrowser, setAllowNonBrowser] = useState<boolean>(app.allow_non_browser_requests)
   const [isTokenModalOpen, setIsTokenModalOpen] = useState<boolean>(false)
   const [savingSettings, setSavingSettings] = useState<boolean>(false)
+  const [settingsSuccess, setSettingsSuccess] = useState<boolean>(false)
+  const [settingsError, setSettingsError] = useState<string | null>(null)
   const [deleteConfirmText, setDeleteConfirmText] = useState<string>('')
   const [deletingApp, setDeletingApp] = useState<boolean>(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null)
   const [tokenToRevoke, setTokenToRevoke] = useState<string | null>(null)
 
   const handleSaveSettings = async (e: FormEvent) => {
     e.preventDefault()
     setSavingSettings(true)
+    setSettingsSuccess(false)
+    setSettingsError(null)
 
     try {
       const allowedOriginsList = originsInput
@@ -43,11 +46,11 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
         allow_non_browser_requests: allowNonBrowser
       })
 
-      showToast('Configurações atualizadas com sucesso!', 'success')
+      setSettingsSuccess(true)
       onRefreshApp()
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || 'Falha ao salvar configurações'
-      showToast(message, 'error')
+      setSettingsError(message)
     } finally {
       setSavingSettings(false)
     }
@@ -57,26 +60,25 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
     if (!tokenToRevoke) return
     try {
       await deleteAPITokenAction(app.id, tokenToRevoke)
-      showToast('Token revogado com sucesso!', 'success')
       setTokenToRevoke(null)
       onRefreshApp()
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || 'Falha ao revogar token'
-      showToast(message, 'error')
+      alert(message)
     }
   }
 
   const handleDeleteApp = async () => {
     if (deleteConfirmText !== app.project_id) return
     setDeletingApp(true)
+    setDeleteError(null)
     try {
       await deleteApplicationAction(app.id)
-      showToast('Aplicação excluída permanentemente.', 'info')
       onBack()
       onRefreshApp()
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || 'Falha ao excluir aplicação'
-      showToast(message, 'error')
+      setDeleteError(message)
     } finally {
       setDeletingApp(false)
     }
@@ -214,6 +216,24 @@ console.log(data);`
                     Permitir requisições que não venham de navegadores (ex: cURL, Insomnia, scripts backend ou mobile)
                   </Text>
                 </Flex>
+
+                {settingsSuccess && (
+                  <Callout.Root color="grass" size="1">
+                    <Callout.Icon>
+                      <Check size={14} />
+                    </Callout.Icon>
+                    <Callout.Text>Configurações atualizadas com sucesso!</Callout.Text>
+                  </Callout.Root>
+                )}
+
+                {settingsError && (
+                  <Callout.Root color="red" size="1">
+                    <Callout.Icon>
+                      <AlertTriangle size={14} />
+                    </Callout.Icon>
+                    <Callout.Text>{settingsError}</Callout.Text>
+                  </Callout.Root>
+                )}
 
                 <Box pt="2">
                   <Button
@@ -386,6 +406,17 @@ console.log(data);`
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
               />
             </Box>
+
+            {deleteError && (
+              <Box mb="4">
+                <Callout.Root color="red" size="1">
+                  <Callout.Icon>
+                    <AlertTriangle size={14} />
+                  </Callout.Icon>
+                  <Callout.Text>{deleteError}</Callout.Text>
+                </Callout.Root>
+              </Box>
+            )}
 
             <Button
               variant="solid"

@@ -4,7 +4,6 @@ import { Box, Text } from '@radix-ui/themes'
 
 import { getSetupStatusAction } from '@actions/setup'
 import { healthPingAction } from '@actions/health'
-import ToastContainer from '@components/ui/toast'
 import Navbar from '@components/layout/navbar'
 
 import type { CSSProperties } from 'react'
@@ -80,8 +79,6 @@ export const AppLayout = () => {
           </Text>
         </footer>
       </Box>
-
-      <ToastContainer />
     </Box>
   )
 }

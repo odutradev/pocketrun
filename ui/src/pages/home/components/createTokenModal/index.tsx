@@ -1,10 +1,9 @@
-import { Dialog, Select, Flex, Box, Text, IconButton, Code } from '@radix-ui/themes'
-import { X, Copy, Check, Key } from 'lucide-react'
+import { Dialog, Select, Flex, Box, Text, IconButton, Code, Callout } from '@radix-ui/themes'
+import { X, Copy, Check, Key, AlertCircle } from 'lucide-react'
 import { useState } from 'react'
 
 import { createAPITokenAction } from '@actions/tokens'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'
 
@@ -12,15 +11,16 @@ import type { CreateTokenModalProps } from './types'
 import type { FormEvent } from 'react'
 
 export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTokenModalProps) => {
-  const { showToast } = useToastStore()
   const [name, setName] = useState<string>('')
   const [validityDays, setValidityDays] = useState<number>(365)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [createdToken, setCreatedToken] = useState<string | null>(null)
   const [copied, setCopied] = useState<boolean>(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
 
     try {
@@ -29,11 +29,10 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
         validity_days: Number(validityDays)
       })
       setCreatedToken(res.raw_token)
-      showToast('Token gerado com sucesso!', 'success')
       onSuccess()
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || 'Erro ao gerar token'
-      showToast(message, 'error')
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -51,6 +50,7 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
     setCreatedToken(null)
     setName('')
     setValidityDays(365)
+    setError(null)
     onClose()
   }
 
@@ -79,6 +79,17 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
             <Dialog.Description size="2" color="gray" mb="4">
               Crie um novo token de autenticação (Bearer API Key) para conectar suas aplicações.
             </Dialog.Description>
+
+            {error && (
+              <Box mb="3">
+                <Callout.Root color="ruby" size="1" variant="surface">
+                  <Callout.Icon>
+                    <AlertCircle size={16} />
+                  </Callout.Icon>
+                  <Callout.Text>{error}</Callout.Text>
+                </Callout.Root>
+              </Box>
+            )}
 
             <form onSubmit={handleSubmit}>
               <Flex direction="column" gap="3">

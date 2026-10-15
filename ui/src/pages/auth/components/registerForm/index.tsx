@@ -1,9 +1,9 @@
-import { UserPlus, User, Mail, Lock } from 'lucide-react'
-import { Flex } from '@radix-ui/themes'
+import { UserPlus, User, Mail, Lock, AlertCircle } from 'lucide-react'
+import { Flex, Callout } from '@radix-ui/themes'
+import { useState } from 'react'
 
 import { signUpAction } from '@actions/users/auth'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Input from '@components/ui/input'
 import useAuthStore from '@stores/auth'
 import useForm from '@hooks/useForm'
@@ -12,7 +12,7 @@ import type { RegisterFormProps } from './types'
 
 export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
   const { register } = useAuthStore()
-  const { showToast } = useToastStore()
+  const [registerError, setRegisterError] = useState<string | null>(null)
 
   const { values, errors, handleChange, handleSubmit, isSubmitting } = useForm({
     initialValues: {
@@ -30,14 +30,14 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
       }
     },
     onSubmit: async (formValues) => {
+      setRegisterError(null)
       try {
         const response = await signUpAction(formValues)
         register(response.token, response.user)
-        showToast('Cadastro realizado com sucesso!', 'success')
         onSuccess?.()
       } catch (err: unknown) {
         const message = (err as { message?: string })?.message || 'Falha ao registrar'
-        showToast(message, 'error')
+        setRegisterError(message)
       }
     }
   })
@@ -45,6 +45,15 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
   return (
     <form onSubmit={handleSubmit}>
       <Flex direction="column" gap="3">
+        {registerError && (
+          <Callout.Root color="ruby" size="1" variant="surface">
+            <Callout.Icon>
+              <AlertCircle size={16} />
+            </Callout.Icon>
+            <Callout.Text>{registerError}</Callout.Text>
+          </Callout.Root>
+        )}
+
         <Input
           label="Nome completo"
           name="name"

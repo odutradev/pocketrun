@@ -1,10 +1,9 @@
-import { Dialog, TextArea, Flex, Box, Text, IconButton, Code } from '@radix-ui/themes'
-import { X, Copy, Check, Plus, Shield, Globe } from 'lucide-react'
+import { Dialog, TextArea, Flex, Box, Text, IconButton, Code, Callout } from '@radix-ui/themes'
+import { X, Copy, Check, Plus, Shield, Globe, AlertCircle } from 'lucide-react'
 import { useState, useCallback } from 'react'
 
 import { createApplicationAction } from '@actions/apps'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'
 
@@ -12,11 +11,11 @@ import type { CreateAppModalProps } from './types'
 import type { FormEvent } from 'react'
 
 export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalProps) => {
-  const { showToast } = useToastStore()
   const [name, setName] = useState<string>('')
   const [projectId, setProjectId] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [origins, setOrigins] = useState<string>('*')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
   const [createdToken, setCreatedToken] = useState<string | null>(null)
   const [copied, setCopied] = useState<boolean>(false)
@@ -28,6 +27,7 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
 
     try {
@@ -45,11 +45,10 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
       })
 
       setCreatedToken(res.raw_token)
-      showToast('Aplicação criada com sucesso!', 'success')
       onSuccess()
     } catch (err: unknown) {
       const message = (err as { message?: string })?.message || 'Erro ao criar aplicação'
-      showToast(message, 'error')
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -69,6 +68,7 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
     setProjectId('')
     setDescription('')
     setOrigins('*')
+    setError(null)
     onClose()
   }
 
@@ -97,6 +97,17 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
             <Dialog.Description size="2" color="gray" mb="4">
               Configure os detalhes e as origens de acesso autorizadas para o seu novo projeto.
             </Dialog.Description>
+
+            {error && (
+              <Box mb="3">
+                <Callout.Root color="ruby" size="1" variant="surface">
+                  <Callout.Icon>
+                    <AlertCircle size={16} />
+                  </Callout.Icon>
+                  <Callout.Text>{error}</Callout.Text>
+                </Callout.Root>
+              </Box>
+            )}
 
             <form onSubmit={handleSubmit}>
               <Flex direction="column" gap="3">

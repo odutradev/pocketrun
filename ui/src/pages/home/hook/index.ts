@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 
 import { getApplicationsAction } from '@actions/apps'
-import useToastStore from '@stores/toast'
 import useAuthStore from '@stores/auth'
 
 import type { Application } from '@projectTypes/application'
@@ -9,7 +8,6 @@ import type { UseHomePageReturn } from './types'
 
 export const useHomePage = (): UseHomePageReturn => {
   const { user } = useAuthStore()
-  const { showToast } = useToastStore()
   const [apps, setApps] = useState<Application[]>([])
   const [loading, setLoading] = useState<boolean>(Boolean(user))
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
@@ -31,12 +29,10 @@ export const useHomePage = (): UseHomePageReturn => {
         const updated = data.find((a) => a.id === selectedApp.id)
         if (updated) setSelectedApp(updated)
       }
-    } catch {
-      showToast('Falha ao carregar aplicações', 'error')
     } finally {
       setLoading(false)
     }
-  }, [user, selectedApp, showToast])
+  }, [user, selectedApp])
 
   useEffect(() => {
     if (!user) return
@@ -47,9 +43,6 @@ export const useHomePage = (): UseHomePageReturn => {
         if (!isSubscribed) return
         setApps(data)
       })
-      .catch(() => {
-        if (isSubscribed) showToast('Falha ao sincronizar aplicações', 'error')
-      })
       .finally(() => {
         if (isSubscribed) setLoading(false)
       })
@@ -57,7 +50,7 @@ export const useHomePage = (): UseHomePageReturn => {
     return () => {
       isSubscribed = false
     }
-  }, [user, showToast])
+  }, [user])
 
   const totalTokens = apps.reduce((acc, app) => acc + (app.tokens?.length || 0), 0)
 

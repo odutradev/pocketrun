@@ -1,9 +1,9 @@
-import { ShieldCheck, Lock, Mail, User, CheckCircle2, ArrowRight } from 'lucide-react'
+import { ShieldCheck, Lock, Mail, User, CheckCircle2, ArrowRight, AlertCircle } from 'lucide-react'
 import { Flex, Box, Grid, Text, Callout } from '@radix-ui/themes'
+import { useState } from 'react'
 
 import { setupSuperadminAction } from '@actions/setup'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Input from '@components/ui/input'
 import useAuthStore from '@stores/auth'
 import useForm from '@hooks/useForm'
@@ -12,7 +12,7 @@ import type { SetupFormProps } from './types'
 
 export const SetupForm = ({ onSuccess }: SetupFormProps) => {
   const { login } = useAuthStore()
-  const { showToast } = useToastStore()
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { values, errors, handleChange, handleSubmit, isSubmitting } = useForm({
     initialValues: {
@@ -33,6 +33,7 @@ export const SetupForm = ({ onSuccess }: SetupFormProps) => {
       confirmPassword: (val, allValues) => (val !== allValues.password ? 'As senhas não coincidem' : undefined)
     },
     onSubmit: async (formValues) => {
+      setSubmitError(null)
       try {
         const response = await setupSuperadminAction({
           name: formValues.name.trim(),
@@ -41,11 +42,10 @@ export const SetupForm = ({ onSuccess }: SetupFormProps) => {
         })
 
         login(response.token, response.user)
-        showToast('Super Administrador configurado com sucesso!', 'success')
         onSuccess?.()
       } catch (err: unknown) {
         const message = (err as { message?: string })?.message || 'Falha ao inicializar o superadmin'
-        showToast(message, 'error')
+        setSubmitError(message)
       }
     }
   })
@@ -58,6 +58,15 @@ export const SetupForm = ({ onSuccess }: SetupFormProps) => {
   return (
     <form onSubmit={handleSubmit}>
       <Flex direction="column" gap="3">
+        {submitError && (
+          <Callout.Root color="ruby" size="1" variant="surface" mb="1">
+            <Callout.Icon>
+              <AlertCircle size={16} />
+            </Callout.Icon>
+            <Callout.Text>{submitError}</Callout.Text>
+          </Callout.Root>
+        )}
+
         <Callout.Root color="iris" size="1" variant="surface" mb="1">
           <Callout.Icon>
             <ShieldCheck size={16} />

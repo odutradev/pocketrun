@@ -1,9 +1,9 @@
-import { LogIn, Mail, Lock } from 'lucide-react'
-import { Flex } from '@radix-ui/themes'
+import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import { Flex, Callout } from '@radix-ui/themes'
+import { useState } from 'react'
 
 import { signInAction } from '@actions/users/auth'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Input from '@components/ui/input'
 import useAuthStore from '@stores/auth'
 import useForm from '@hooks/useForm'
@@ -12,7 +12,7 @@ import type { LoginFormProps } from './types'
 
 export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const { login } = useAuthStore()
-  const { showToast } = useToastStore()
+  const [authError, setAuthError] = useState<string | null>(null)
 
   const { values, errors, handleChange, handleSubmit, isSubmitting } = useForm({
     initialValues: {
@@ -24,14 +24,14 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
       password: (val) => (!val ? 'Senha é obrigatória' : undefined)
     },
     onSubmit: async (formValues) => {
+      setAuthError(null)
       try {
         const response = await signInAction(formValues)
         login(response.token, response.user)
-        showToast('Login realizado com sucesso!', 'success')
         onSuccess?.()
       } catch (err: unknown) {
         const message = (err as { message?: string })?.message || 'Falha ao autenticar'
-        showToast(message, 'error')
+        setAuthError(message)
       }
     }
   })
@@ -39,6 +39,15 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   return (
     <form onSubmit={handleSubmit}>
       <Flex direction="column" gap="3">
+        {authError && (
+          <Callout.Root color="ruby" size="1" variant="surface">
+            <Callout.Icon>
+              <AlertCircle size={16} />
+            </Callout.Icon>
+            <Callout.Text>{authError}</Callout.Text>
+          </Callout.Root>
+        )}
+
         <Input
           label="Email"
           name="email"

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 
 import { getExplorerCollectionsAction, getExplorerDocumentsAction } from '@actions/explorer'
 import Button from '@components/ui/button'
-import useToastStore from '@stores/toast'
 import Badge from '@components/ui/badge'
 import Input from '@components/ui/input'
 import Card from '@components/ui/card'
@@ -13,7 +12,6 @@ import type { ExplorerDocumentsResponse, ExplorerDocument } from '@projectTypes/
 import type { DataExplorerProps } from './types'
 
 export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
-  const { showToast } = useToastStore()
   const [collections, setCollections] = useState<string[]>([])
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
   const [documentsData, setDocumentsData] = useState<ExplorerDocumentsResponse | null>(null)
@@ -31,12 +29,10 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
       if (data.length > 0 && !selectedCollection) {
         setSelectedCollection(data[0])
       }
-    } catch {
-      showToast('Falha ao listar coleções', 'error')
     } finally {
       setLoadingCols(false)
     }
-  }, [appId, selectedCollection, showToast])
+  }, [appId, selectedCollection])
 
   const loadDocuments = useCallback(
     async (col: string, p = 1) => {
@@ -45,13 +41,11 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
         const data = await getExplorerDocumentsAction({ appId, collection: col, page: p, limit: 15 })
         setDocumentsData(data)
         setPage(p)
-      } catch {
-        showToast('Falha ao buscar documentos', 'error')
       } finally {
         setLoadingDocs(false)
       }
     },
-    [appId, showToast]
+    [appId]
   )
 
   useEffect(() => {
@@ -64,9 +58,6 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
           setSelectedCollection((prev) => prev || data[0])
         }
       })
-      .catch(() => {
-        if (isSubscribed) showToast('Falha ao carregar coleções', 'error')
-      })
       .finally(() => {
         if (isSubscribed) setLoadingCols(false)
       })
@@ -74,7 +65,7 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
     return () => {
       isSubscribed = false
     }
-  }, [appId, showToast])
+  }, [appId])
 
   useEffect(() => {
     if (!selectedCollection) return
@@ -86,9 +77,6 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
         setDocumentsData(data)
         setPage(1)
       })
-      .catch(() => {
-        if (isSubscribed) showToast('Falha ao carregar documentos', 'error')
-      })
       .finally(() => {
         if (isSubscribed) setLoadingDocs(false)
       })
@@ -96,7 +84,7 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
     return () => {
       isSubscribed = false
     }
-  }, [appId, selectedCollection, showToast])
+  }, [appId, selectedCollection])
 
   const filteredDocs =
     documentsData?.data?.filter((doc) => {
