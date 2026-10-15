@@ -1,10 +1,15 @@
 services:
   api:
     image: darknx/pocketrun-api:latest
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     container_name: pocketrun-api
     restart: always
     expose:
       - "8080"
+    ports:
+      - "${PORT:-8080}:8080"
     environment:
       - PORT=${PORT:-8080}
       - ENV=${ENV:-production}
@@ -20,10 +25,17 @@ services:
 
   ui:
     image: darknx/pocketrun-ui:latest
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
     container_name: pocketrun-ui
     restart: always
     expose:
       - "80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       api:
         condition: service_healthy

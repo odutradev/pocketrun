@@ -80,10 +80,15 @@ No Dokploy, cole o arquivo `docker-compose.yml` sem o container local de banco d
 services:
   api:
     image: darknx/pocketrun-api:latest
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     container_name: pocketrun-api
     restart: always
     expose:
       - "8080"
+    ports:
+      - "${PORT:-8080}:8080"
     environment:
       - PORT=${PORT:-8080}
       - ENV=${ENV:-production}
@@ -99,10 +104,17 @@ services:
 
   ui:
     image: darknx/pocketrun-ui:latest
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
     container_name: pocketrun-ui
     restart: always
     expose:
       - "80"
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       api:
         condition: service_healthy
@@ -112,7 +124,7 @@ services:
 
 ### Passo 2: Configuração das Variáveis na Aba Environment no Dokploy
 
-Na aba **Environment** do Dokploy, informe sua URI externa do MongoDB (ex: MongoDB Atlas):
+Na aba **Environment** do Dokploy, informe sua URI externa do MongoDB e a URL pública da API:
 
 ```env
 PORT=8080
@@ -120,6 +132,7 @@ ENV=production
 CORS_ALLOWED_ORIGINS=*
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
+VITE_API_URL=https://api.pocketrun.odutra.com
 ```
 
 ---
@@ -134,4 +147,10 @@ Na aba **Domains** do serviço Compose no Dokploy:
    * **Container Port:** `80`
    * **HTTPS:** Ativado.
 
-2. Clique em **Save** e faça o **Deploy**.
+2. **Backend API (`api`):**
+   * **Service Name:** `api`
+   * **Host:** `api.pocketrun.odutra.com`
+   * **Container Port:** `8080`
+   * **HTTPS:** Ativado.
+
+3. Clique em **Save** e faça o **Deploy**.
