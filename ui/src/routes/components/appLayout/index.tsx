@@ -1,8 +1,8 @@
 import { Outlet, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Box, Text } from '@radix-ui/themes'
+import { Box } from '@radix-ui/themes'
 
-import { backgroundStyle, mainContentStyle, footerStyle } from './styles'
+import { backgroundStyle, mainContentStyle } from './styles'
 import { getSetupStatusAction } from '@api/actions/setup'
 import { healthPingAction } from '@api/actions/health'
 import Navbar from '@components/layout/navbar'
@@ -55,14 +55,6 @@ export const AppLayout = () => {
         <main>
           <Outlet />
         </main>
-      </Box>
-
-      <Box asChild style={footerStyle}>
-        <footer>
-          <Text size="1" color="gray">
-            PocketRun &copy; 2026 — Pluggable Multi-Tenant Key-Value BaaS Platform
-          </Text>
-        </footer>
       </Box>
     </Box>
   )

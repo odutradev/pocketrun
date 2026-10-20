@@ -10,12 +10,8 @@ export const backgroundStyle: CSSProperties = {
 }
 
 export const mainContentStyle: CSSProperties = {
-  flex: 1
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column'
 }
 
-export const footerStyle: CSSProperties = {
-  borderTop: '1px solid var(--gray-a4)',
-  padding: '24px',
-  textAlign: 'center',
-  backgroundColor: 'rgba(11, 13, 19, 0.5)'
-}

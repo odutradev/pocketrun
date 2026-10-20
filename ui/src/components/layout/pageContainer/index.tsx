@@ -21,7 +21,7 @@ export const PageContainer = ({
 
   if (center) {
     return (
-      <Flex align="center" justify="center" style={{ minHeight: 'calc(100vh - 140px)', width: '100%' }}>
+      <Flex align="center" justify="center" style={{ flex: 1, minHeight: 'calc(100vh - 80px)', width: '100%' }}>
         <Box style={containerStyle}>{children}</Box>
       </Flex>
     )
