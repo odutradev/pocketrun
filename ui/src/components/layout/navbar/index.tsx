@@ -1,6 +1,7 @@
-import { Server, User, LogOut, ShieldCheck, Database } from 'lucide-react'
 import { Flex, Box, Badge, Button, Heading, Text } from '@radix-ui/themes'
+import { User, LogOut, ShieldCheck, Database } from 'lucide-react'
 
+import { headerStyle, innerContainerStyle, logoIconStyle, statusBadgeStyle, userBadgeStyle, actionButtonStyle } from './styles'
 import useAuthStore from '@stores/auth'
 
 import type { NavbarProps } from './types'
@@ -15,83 +16,46 @@ export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth
   }
 
   return (
-    <Box
-      style={{
-        borderBottom: '1px solid var(--gray-a4)',
-        backgroundColor: 'rgba(11, 13, 19, 0.75)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        marginBottom: '28px'
-      }}
-    >
-      <Box style={{ maxWidth: '1280px', margin: '0 auto', padding: '14px 24px' }}>
+    <Box style={headerStyle}>
+      <Box style={innerContainerStyle}>
         <Flex justify="between" align="center" wrap="wrap" gap="3">
-          <Flex align="center" gap="3">
-            <Box
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 'var(--radius-3)',
-                background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px var(--iris-a5)'
-              }}
-            >
-              <Database size={18} color="#FFFFFF" />
+          <Flex align="center" gap="2">
+            <Box style={logoIconStyle}>
+              <Database size={15} color="var(--iris-9)" />
             </Box>
-            <Box>
-              <Flex align="center" gap="2">
-                <Heading size="3" weight="bold" style={{ letterSpacing: '-0.02em' }}>
-                  PocketRun
-                </Heading>
-                <Badge size="1" variant="surface" color="iris" radius="full">
-                  v2.0
-                </Badge>
-              </Flex>
-              <Text size="1" color="gray">
-                Pluggable Multi-Tenant Key-Value BaaS
-              </Text>
-            </Box>
+            <Heading size="3" weight="medium" style={{ letterSpacing: '-0.02em' }}>
+              PocketRun
+            </Heading>
+            <Badge size="1" variant="surface" color="gray" radius="full">
+              v2.0
+            </Badge>
           </Flex>
 
           <Flex align="center" gap="3">
             <Badge
-              size="2"
+              size="1"
               variant="surface"
               color={getStatusColor()}
               radius="full"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 10px' }}
+              style={statusBadgeStyle}
             >
-              <Server size={12} />
               <Text size="1" weight="medium">
                 API {apiStatus}
               </Text>
             </Badge>
 
             {setupRequired && (
-              <Badge size="2" variant="solid" color="amber" radius="full">
+              <Badge size="1" variant="outline" color="amber" radius="full">
                 Setup Inicial
               </Badge>
             )}
 
             {user ? (
               <Flex align="center" gap="2">
-                <Box
-                  style={{
-                    backgroundColor: 'var(--gray-a3)',
-                    border: '1px solid var(--gray-a5)',
-                    padding: '4px 12px',
-                    borderRadius: 'var(--radius-full)'
-                  }}
-                >
+                <Box style={userBadgeStyle}>
                   <Flex align="center" gap="2">
-                    <ShieldCheck size={15} color="var(--iris-9)" />
-                    <Text size="2" weight="medium">
+                    <ShieldCheck size={14} color="var(--iris-9)" />
+                    <Text size="1" weight="medium">
                       {user.name}
                     </Text>
                     {user.role === 'superadmin' && (
@@ -103,26 +67,26 @@ export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth
                 </Box>
 
                 <Button
-                  variant="soft"
+                  variant="ghost"
                   color="gray"
-                  size="2"
+                  size="1"
                   onClick={logout}
                   title="Encerrar sessão"
-                  style={{ cursor: 'pointer' }}
+                  style={actionButtonStyle}
                 >
-                  <LogOut size={15} />
+                  <LogOut size={14} />
                   Sair
                 </Button>
               </Flex>
             ) : !setupRequired && onOpenAuth ? (
               <Button
-                variant="solid"
+                variant="soft"
                 color="iris"
-                size="2"
+                size="1"
                 onClick={onOpenAuth}
-                style={{ cursor: 'pointer' }}
+                style={actionButtonStyle}
               >
-                <User size={15} />
+                <User size={14} />
                 Entrar como Gestor
               </Button>
             ) : null}
