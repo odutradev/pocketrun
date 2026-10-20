@@ -1,6 +1,6 @@
 import { Box } from '@radix-ui/themes'
 
-import { containerStyle, cardContentStyle } from './styles'
+import { containerStyle, cardStyle, cardContentStyle } from './styles'
 import SetupHeader from './components/setupHeader'
 import SetupForm from './components/setupForm'
 import Card from '@components/ui/card'
@@ -11,7 +11,7 @@ export const SetupPage = () => {
 
   return (
     <Box style={containerStyle}>
-      <Card>
+      <Card style={cardStyle}>
         <Card.Content style={cardContentStyle}>
           <SetupHeader title={title} subtitle={subtitle} />
           <SetupForm />

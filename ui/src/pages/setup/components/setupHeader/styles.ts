@@ -2,16 +2,21 @@ import type { CSSProperties } from 'react'
 
 export const headerContainerStyle: CSSProperties = {
   textAlign: 'center',
-  marginBottom: '24px'
+  marginBottom: '20px'
 }
 
 export const iconContainerStyle: CSSProperties = {
-  width: 48,
-  height: 48,
+  width: 40,
+  height: 40,
   borderRadius: 'var(--radius-3)',
-  background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
+  backgroundColor: 'var(--iris-a3)',
+  border: '1px solid var(--iris-a5)',
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: '0 4px 16px var(--iris-a6)'
+  justifyContent: 'center'
+}
+
+export default {
+  headerContainerStyle,
+  iconContainerStyle
 }

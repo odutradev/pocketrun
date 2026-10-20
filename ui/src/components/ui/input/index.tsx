@@ -2,6 +2,8 @@ import { TextField, Box, Text, IconButton } from '@radix-ui/themes'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState, useId } from 'react'
 
+import { containerStyle, labelStyle, errorTextStyle, toggleButtonStyle } from './styles'
+
 import type { InputProps } from './types'
 
 export const Input = ({
@@ -20,9 +22,9 @@ export const Input = ({
   const resolvedType = isPasswordField ? (showPassword ? 'text' : 'password') : type
 
   return (
-    <Box width="100%">
+    <Box style={containerStyle}>
       {label && (
-        <Text as="label" size="2" weight="medium" mb="1" htmlFor={inputId} style={{ display: 'block' }}>
+        <Text as="label" size="2" weight="medium" mb="1" htmlFor={inputId} style={labelStyle}>
           {label}
         </Text>
       )}
@@ -38,6 +40,7 @@ export const Input = ({
               color="gray"
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
+              style={toggleButtonStyle}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </IconButton>
@@ -46,7 +49,7 @@ export const Input = ({
       </TextField.Root>
 
       {error && (
-        <Text size="1" color="red" mt="1" style={{ display: 'block' }}>
+        <Text size="1" color="red" mt="1" style={errorTextStyle}>
           {error}
         </Text>
       )}

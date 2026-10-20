@@ -48,7 +48,7 @@ export const SetupForm = ({ onSuccess }: SetupFormProps) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="4">
+      <Flex direction="column" gap="3">
         {submitError && (
           <Callout.Root color="ruby" size="1" variant="surface">
             <Callout.Icon>
