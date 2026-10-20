@@ -14,7 +14,7 @@ import (
 
 	"pocketrun-api/internal/config"
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/handler"
+	"pocketrun-api/internal/router"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -53,7 +53,7 @@ func main() {
 	var servers []*http.Server
 
 	if cfg.APIMode == "all" || cfg.APIMode == "public" {
-		publicRouter := handler.NewPublicRouter(mongoDB, cfg.AllowedOrigins)
+		publicRouter := router.NewPublicRouter(mongoDB, cfg.AllowedOrigins)
 		publicAddr := fmt.Sprintf(":%s", cfg.PublicPort)
 		pubSrv := &http.Server{
 			Addr:    publicAddr,
@@ -64,7 +64,7 @@ func main() {
 	}
 
 	if cfg.APIMode == "all" || cfg.APIMode == "admin" {
-		adminRouter := handler.NewAdminRouter(mongoDB, cfg.AdminOrigins, cfg.JWTSecret)
+		adminRouter := router.NewAdminRouter(mongoDB, cfg.AdminOrigins, cfg.JWTSecret)
 		adminAddr := fmt.Sprintf(":%s", cfg.AdminPort)
 		admSrv := &http.Server{
 			Addr:    adminAddr,
