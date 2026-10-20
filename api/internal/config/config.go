@@ -7,9 +7,12 @@ import (
 )
 
 type Config struct {
-	Port           string
+	AdminPort      string
+	PublicPort     string
+	APIMode        string
 	Env            string
 	AllowedOrigins string
+	AdminOrigins   string
 	MongoURI       string
 	MongoDBName    string
 	JWTSecret      string
@@ -18,17 +21,23 @@ type Config struct {
 func Load() *Config {
 	loadEnvFile(".env")
 
-	port := getEnv("PORT", "8080")
+	adminPort := getEnv("ADMIN_PORT", "8081")
+	publicPort := getEnv("PUBLIC_PORT", getEnv("PORT", "8080"))
+	apiMode := strings.ToLower(getEnv("API_MODE", "all"))
 	env := getEnv("ENV", "development")
 	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "*")
+	adminOrigins := getEnv("ADMIN_CORS_ALLOWED_ORIGINS", allowedOrigins)
 	mongoURI := getEnv("MONGODB_URI", "mongodb://localhost:27017")
 	mongoDBName := getEnv("MONGODB_NAME", "pocketrun")
 	jwtSecret := getEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
 
 	return &Config{
-		Port:           port,
+		AdminPort:      adminPort,
+		PublicPort:     publicPort,
+		APIMode:        apiMode,
 		Env:            env,
 		AllowedOrigins: allowedOrigins,
+		AdminOrigins:   adminOrigins,
 		MongoURI:       mongoURI,
 		MongoDBName:    mongoDBName,
 		JWTSecret:      jwtSecret,
