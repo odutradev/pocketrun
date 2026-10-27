@@ -9,11 +9,6 @@ import (
 	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 )
 
-func CheckInitialStatus(mongoDatabase *database.MongoDB) {
-	usersRepository := usersRepo.NewRepository(mongoDatabase)
-	statusHandler.CheckInitialStatus(usersRepository)
-}
-
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB) {
 	usersRepository := usersRepo.NewRepository(mongoDatabase)
 	setupStatusHandler := statusHandler.NewHandler(usersRepository)

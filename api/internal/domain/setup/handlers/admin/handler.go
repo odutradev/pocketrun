@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	setupUtils "pocketrun-api/internal/domain/setup/utils"
 	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -84,7 +85,7 @@ func (handler *Handler) SetupAdmin(responseWriter http.ResponseWriter, request *
 		return
 	}
 
-	if validationError := validateStrongPassword(setupPayload.Password); validationError != nil {
+	if validationError := setupUtils.ValidateStrongPassword(setupPayload.Password); validationError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": validationError.Error()})
 		return
 	}

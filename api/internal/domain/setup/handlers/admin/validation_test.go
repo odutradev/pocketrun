@@ -2,6 +2,8 @@ package admin
 
 import (
 	"testing"
+
+	setupUtils "pocketrun-api/internal/domain/setup/utils"
 )
 
 func TestValidateStrongPassword(testingInstance *testing.T) {
@@ -20,9 +22,9 @@ func TestValidateStrongPassword(testingInstance *testing.T) {
 
 	for _, testCase := range testCases {
 		testingInstance.Run(testCase.name, func(subTest *testing.T) {
-			validationError := validateStrongPassword(testCase.password)
+			validationError := setupUtils.ValidateStrongPassword(testCase.password)
 			if (validationError != nil) != testCase.expectError {
-				subTest.Errorf("validateStrongPassword(%q) error = %v, expectError %v", testCase.password, validationError, testCase.expectError)
+				subTest.Errorf("ValidateStrongPassword(%q) error = %v, expectError %v", testCase.password, validationError, testCase.expectError)
 			}
 		})
 	}

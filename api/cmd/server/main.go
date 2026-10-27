@@ -2,7 +2,7 @@ package main
 
 import (
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/setup"
+	setupUtils "pocketrun-api/internal/domain/setup/utils"
 	"pocketrun-api/internal/router"
 )
 
@@ -10,7 +10,7 @@ func main() {
 	mongoDatabase := database.ConnectMongoDB()
 	defer mongoDatabase.Close()
 
-	setup.CheckInitialStatus(mongoDatabase)
+	setupUtils.CheckInitialStatus(mongoDatabase)
 
 	router.StartServers(mongoDatabase)
 }
