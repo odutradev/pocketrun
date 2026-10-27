@@ -125,3 +125,4 @@ func (handler *Handler) SetupAdmin(responseWriter http.ResponseWriter, request *
 		Message: "PocketRun superadmin successfully configured",
 	})
 }
+

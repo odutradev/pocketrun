@@ -110,3 +110,4 @@ func (handler *Handler) GetExplorerDocuments(responseWriter http.ResponseWriter,
 		TotalPages: (totalDocuments + int64(pageSizeLimit) - 1) / int64(pageSizeLimit),
 	})
 }
+

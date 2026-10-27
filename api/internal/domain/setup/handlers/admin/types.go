@@ -49,3 +49,4 @@ type passwordValidationError struct {
 func (validationError *passwordValidationError) Error() string {
 	return validationError.message
 }
+

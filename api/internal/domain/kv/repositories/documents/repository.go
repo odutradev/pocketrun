@@ -169,3 +169,4 @@ func (repository *Repository) FindExplorerDocuments(queryContext context.Context
 
 	return documents, totalDocuments, nil
 }
+

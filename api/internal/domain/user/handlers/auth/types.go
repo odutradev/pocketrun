@@ -19,3 +19,4 @@ type AuthResponse struct {
 	Token string         `json:"token"`
 	User  usersRepo.User `json:"user"`
 }
+

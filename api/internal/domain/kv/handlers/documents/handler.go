@@ -269,3 +269,4 @@ func (handler *Handler) DeleteAllProject(responseWriter http.ResponseWriter, req
 		"deleted_count": deletedCount,
 	})
 }
+

@@ -91,3 +91,4 @@ func (handler *Handler) DeleteToken(responseWriter http.ResponseWriter, request 
 
 	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Token revoked successfully"})
 }
+

@@ -13,3 +13,4 @@ type CreateTokenResponse struct {
 	Token    tokensRepo.Token `json:"token"`
 	RawToken string           `json:"raw_token"`
 }
+

@@ -11,3 +11,4 @@ type ExplorerDocumentsResponse struct {
 	Limit      int      `json:"limit"`
 	TotalPages int64    `json:"total_pages"`
 }
+

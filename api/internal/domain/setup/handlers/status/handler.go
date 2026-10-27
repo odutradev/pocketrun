@@ -78,3 +78,4 @@ func (handler *Handler) GetStatus(responseWriter http.ResponseWriter, request *h
 		HasUsers:      usersCount > 0,
 	})
 }
+

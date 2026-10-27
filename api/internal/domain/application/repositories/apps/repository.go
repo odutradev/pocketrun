@@ -129,3 +129,4 @@ func (repository *Repository) FindByTokenHash(queryContext context.Context, toke
 
 	return &foundApplication, nil
 }
+

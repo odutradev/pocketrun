@@ -58,3 +58,4 @@ func (repository *Repository) UpdateTokenLastUsedAt(queryContext context.Context
 	)
 	return updateError
 }
+

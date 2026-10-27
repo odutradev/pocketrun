@@ -6,3 +6,4 @@ type ValidateControlAccessResponse struct {
 	ProjectID string `json:"project_id"`
 	AppName   string `json:"app_name"`
 }
+

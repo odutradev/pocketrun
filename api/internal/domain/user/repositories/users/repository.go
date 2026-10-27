@@ -53,3 +53,4 @@ func (repository *Repository) FindByID(queryContext context.Context, userID bson
 
 	return &foundUser, nil
 }
+

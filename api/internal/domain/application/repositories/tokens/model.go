@@ -55,3 +55,4 @@ func HashAPIToken(rawToken string) string {
 	sha256Hash := sha256.Sum256([]byte(strings.TrimSpace(rawToken)))
 	return hex.EncodeToString(sha256Hash[:])
 }
+

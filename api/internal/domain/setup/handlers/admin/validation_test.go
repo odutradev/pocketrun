@@ -27,3 +27,4 @@ func TestValidateStrongPassword(testingInstance *testing.T) {
 		})
 	}
 }
+

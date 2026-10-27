@@ -133,3 +133,4 @@ func (handler *Handler) Me(responseWriter http.ResponseWriter, request *http.Req
 
 	writeJSONResponse(responseWriter, http.StatusOK, foundUser)
 }
+

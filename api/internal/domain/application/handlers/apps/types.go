@@ -16,3 +16,4 @@ type CreateAppResponse struct {
 	Application appsRepo.Application `json:"application"`
 	RawToken    string               `json:"raw_token"`
 }
+

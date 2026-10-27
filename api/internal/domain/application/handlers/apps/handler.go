@@ -199,3 +199,4 @@ func (handler *Handler) DeleteApp(responseWriter http.ResponseWriter, request *h
 
 	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Application and all associated data deleted successfully"})
 }
+

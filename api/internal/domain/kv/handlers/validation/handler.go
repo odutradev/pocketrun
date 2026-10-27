@@ -33,3 +33,4 @@ func (handler *Handler) ValidateControlAccess(responseWriter http.ResponseWriter
 		AppName:   authenticatedApplication.Name,
 	})
 }
+

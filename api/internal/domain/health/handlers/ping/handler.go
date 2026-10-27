@@ -16,3 +16,4 @@ func Ping(responseWriter http.ResponseWriter, request *http.Request) {
 
 	_ = json.NewEncoder(responseWriter).Encode(pingResponse)
 }
+

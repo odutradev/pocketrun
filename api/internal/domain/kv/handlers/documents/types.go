@@ -8,3 +8,4 @@ type CreateKVRequest struct {
 type UpdateKVRequest struct {
 	Data map[string]any `json:"data"`
 }
+
