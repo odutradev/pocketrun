@@ -8,10 +8,8 @@ import (
 	"time"
 
 	appsRepo "pocketrun-api/internal/domain/application/repositories/apps"
+	appUtils "pocketrun-api/internal/domain/application/utils"
 	kvDocumentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
-	userUtils "pocketrun-api/internal/domain/user/utils"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Handler struct {
@@ -35,15 +33,8 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func parseManagerAndApplicationIDs(request *http.Request, applicationIDHex string) (bson.ObjectID, bson.ObjectID, error) {
-	managerIDString := userUtils.GetManagerID(request.Context())
-	managerObjectID, _ := bson.ObjectIDFromHex(managerIDString)
-	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
-	return managerObjectID, applicationObjectID, parseError
-}
-
 func (handler *Handler) GetExplorerCollections(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
@@ -67,7 +58,7 @@ func (handler *Handler) GetExplorerCollections(responseWriter http.ResponseWrite
 }
 
 func (handler *Handler) GetExplorerDocuments(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex, collectionName string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return

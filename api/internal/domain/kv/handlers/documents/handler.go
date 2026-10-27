@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"pocketrun-api/internal/domain/application"
+	appUtils "pocketrun-api/internal/domain/application/utils"
 	documentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -54,7 +54,7 @@ func buildCollectionQueryFilter(applicationID bson.ObjectID, collectionName stri
 }
 
 func (handler *Handler) Create(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -101,7 +101,7 @@ func (handler *Handler) Create(responseWriter http.ResponseWriter, request *http
 }
 
 func (handler *Handler) GetAll(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -146,7 +146,7 @@ func (handler *Handler) GetAll(responseWriter http.ResponseWriter, request *http
 }
 
 func (handler *Handler) GetByID(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -171,7 +171,7 @@ func (handler *Handler) GetByID(responseWriter http.ResponseWriter, request *htt
 }
 
 func (handler *Handler) Update(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -202,7 +202,7 @@ func (handler *Handler) Update(responseWriter http.ResponseWriter, request *http
 }
 
 func (handler *Handler) Delete(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -227,7 +227,7 @@ func (handler *Handler) Delete(responseWriter http.ResponseWriter, request *http
 }
 
 func (handler *Handler) DeleteAllCollection(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -249,7 +249,7 @@ func (handler *Handler) DeleteAllCollection(responseWriter http.ResponseWriter, 
 }
 
 func (handler *Handler) DeleteAllProject(responseWriter http.ResponseWriter, request *http.Request) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return

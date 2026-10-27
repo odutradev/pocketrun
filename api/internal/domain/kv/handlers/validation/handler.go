@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"pocketrun-api/internal/domain/application"
+	appUtils "pocketrun-api/internal/domain/application/utils"
 )
 
 type Handler struct{}
@@ -20,7 +20,7 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 }
 
 func (handler *Handler) ValidateControlAccess(responseWriter http.ResponseWriter, request *http.Request) {
-	authenticatedApplication := application.GetAppFromContext(request.Context())
+	authenticatedApplication := appUtils.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return

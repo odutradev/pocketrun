@@ -9,6 +9,7 @@ import (
 
 	appsRepo "pocketrun-api/internal/domain/application/repositories/apps"
 	tokensRepo "pocketrun-api/internal/domain/application/repositories/tokens"
+	appUtils "pocketrun-api/internal/domain/application/utils"
 	kvDocumentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
 	userUtils "pocketrun-api/internal/domain/user/utils"
 
@@ -34,13 +35,6 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(statusCode)
 	_ = json.NewEncoder(responseWriter).Encode(payload)
-}
-
-func parseManagerAndApplicationIDs(request *http.Request, applicationIDHex string) (bson.ObjectID, bson.ObjectID, error) {
-	managerIDString := userUtils.GetManagerID(request.Context())
-	managerObjectID, _ := bson.ObjectIDFromHex(managerIDString)
-	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
-	return managerObjectID, applicationObjectID, parseError
 }
 
 func (handler *Handler) ListApps(responseWriter http.ResponseWriter, request *http.Request) {
@@ -96,7 +90,7 @@ func (handler *Handler) CreateApp(responseWriter http.ResponseWriter, request *h
 		createPayload.AllowedOrigins = []string{"*"}
 	}
 
-	rawToken, generatedToken, tokenError := tokensRepo.GenerateAPIToken("Default Token", 365)
+	rawToken, generatedToken, tokenError := appUtils.GenerateAPIToken("Default Token", 365)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate initial token"})
 		return
@@ -128,7 +122,7 @@ func (handler *Handler) CreateApp(responseWriter http.ResponseWriter, request *h
 }
 
 func (handler *Handler) GetApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
@@ -147,7 +141,7 @@ func (handler *Handler) GetApp(responseWriter http.ResponseWriter, request *http
 }
 
 func (handler *Handler) UpdateApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
@@ -180,7 +174,7 @@ func (handler *Handler) UpdateApp(responseWriter http.ResponseWriter, request *h
 }
 
 func (handler *Handler) DeleteApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return

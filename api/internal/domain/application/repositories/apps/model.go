@@ -1,7 +1,6 @@
 package apps
 
 import (
-	"strings"
 	"time"
 
 	"pocketrun-api/internal/domain/application/repositories/tokens"
@@ -21,27 +20,3 @@ type Application struct {
 	CreatedAt               time.Time      `bson:"created_at" json:"created_at"`
 	UpdatedAt               time.Time      `bson:"updated_at" json:"updated_at"`
 }
-
-func IsOriginAllowed(allowedOrigins []string, originHeader string, allowNonBrowserRequests bool) bool {
-	trimmedOrigin := strings.TrimSpace(originHeader)
-
-	if trimmedOrigin == "" {
-		return allowNonBrowserRequests
-	}
-
-	trimmedOrigin = strings.TrimSuffix(trimmedOrigin, "/")
-
-	for _, allowedOrigin := range allowedOrigins {
-		allowedOrigin = strings.TrimSpace(allowedOrigin)
-		if allowedOrigin == "*" {
-			return true
-		}
-		normalizedAllowedOrigin := strings.TrimSuffix(allowedOrigin, "/")
-		if strings.EqualFold(normalizedAllowedOrigin, trimmedOrigin) {
-			return true
-		}
-	}
-
-	return false
-}
-

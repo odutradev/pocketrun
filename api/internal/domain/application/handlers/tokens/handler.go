@@ -7,9 +7,7 @@ import (
 	"time"
 
 	tokensRepo "pocketrun-api/internal/domain/application/repositories/tokens"
-	userUtils "pocketrun-api/internal/domain/user/utils"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
+	appUtils "pocketrun-api/internal/domain/application/utils"
 )
 
 type Handler struct {
@@ -28,15 +26,8 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func parseManagerAndApplicationIDs(request *http.Request, applicationIDHex string) (bson.ObjectID, bson.ObjectID, error) {
-	managerIDString := userUtils.GetManagerID(request.Context())
-	managerObjectID, _ := bson.ObjectIDFromHex(managerIDString)
-	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
-	return managerObjectID, applicationObjectID, parseError
-}
-
 func (handler *Handler) CreateToken(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
@@ -52,7 +43,7 @@ func (handler *Handler) CreateToken(responseWriter http.ResponseWriter, request 
 		tokenPayload.Name = "New API Token"
 	}
 
-	rawToken, generatedToken, tokenError := tokensRepo.GenerateAPIToken(tokenPayload.Name, tokenPayload.ValidityDays)
+	rawToken, generatedToken, tokenError := appUtils.GenerateAPIToken(tokenPayload.Name, tokenPayload.ValidityDays)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 		return
@@ -74,7 +65,7 @@ func (handler *Handler) CreateToken(responseWriter http.ResponseWriter, request 
 }
 
 func (handler *Handler) DeleteToken(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex, tokenID string) {
-	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	managerObjectID, applicationObjectID, parseError := appUtils.ParseManagerAndApplicationIDs(request, applicationIDHex)
 	if parseError != nil {
 		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
