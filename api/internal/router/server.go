@@ -43,7 +43,7 @@ func buildConfiguredServers(mongoDatabase *database.MongoDB) []*http.Server {
 			Handler: NewAdminRouter(mongoDatabase),
 		}
 		activeServers = append(activeServers, adminServer)
-		log.Printf("[Admin API]  Operational on http://localhost:%s (Endpoints: /api/v1/setup/*, /api/v1/auth/*, /api/v1/apps/*, /ping)", adminPort)
+		log.Printf("[Admin API]  Operational on http://localhost:%s (Endpoints: /setup/*, /auth/*, /apps/*, /ping)", adminPort)
 	}
 
 	return activeServers

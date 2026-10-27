@@ -10,11 +10,11 @@ import (
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, managerAuthMiddleware func(http.Handler) http.Handler) {
 	applicationHandler := NewAppHandler(mongoDatabase)
 
-	routeMux.Handle("GET /api/v1/apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.ListApps)))
-	routeMux.Handle("POST /api/v1/apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.CreateApp)))
+	routeMux.Handle("GET /apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.ListApps)))
+	routeMux.Handle("POST /apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.CreateApp)))
 
-	routeMux.Handle("/api/v1/apps/", managerAuthMiddleware(http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-		relativePath := strings.TrimPrefix(request.URL.Path, "/api/v1/apps/")
+	routeMux.Handle("/apps/", managerAuthMiddleware(http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		relativePath := strings.TrimPrefix(request.URL.Path, "/apps/")
 		pathSegments := strings.Split(relativePath, "/")
 
 		if len(pathSegments) == 1 && pathSegments[0] != "" {
