@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"pocketrun-api/internal/config"
+
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -32,6 +34,10 @@ type JWTClaims struct {
 	Role   string `json:"role,omitempty"`
 	Exp    int64  `json:"exp"`
 	Iat    int64  `json:"iat"`
+}
+
+func getJWTSecret() string {
+	return config.GetEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
 }
 
 func HashPassword(password string) (string, error) {
@@ -72,7 +78,12 @@ func CheckPassword(password, storedHash string) bool {
 	return hmac.Equal(actualHash, expectedHash)
 }
 
-func GenerateJWT(userID, email, role, secret string) (string, error) {
+func GenerateJWT(userID, email, role string) (string, error) {
+	secret := getJWTSecret()
+	if secret == "" {
+		return "", errors.New("JWT secret is not configured")
+	}
+
 	header := map[string]string{
 		"alg": "HS256",
 		"typ": "JWT",
@@ -107,7 +118,12 @@ func GenerateJWT(userID, email, role, secret string) (string, error) {
 	return unsignedToken + "." + signature, nil
 }
 
-func ValidateJWT(tokenStr, secret string) (*JWTClaims, error) {
+func ValidateJWT(tokenStr string) (*JWTClaims, error) {
+	secret := getJWTSecret()
+	if secret == "" {
+		return nil, errors.New("JWT secret is not configured")
+	}
+
 	parts := strings.Split(tokenStr, ".")
 	if len(parts) != 3 {
 		return nil, errors.New("invalid token format")

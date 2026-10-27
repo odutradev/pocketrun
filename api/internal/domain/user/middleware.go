@@ -14,7 +14,7 @@ const (
 	UserEmailKey contextKey = "userEmail"
 )
 
-func ManagerAuth(jwtSecret string) func(http.Handler) http.Handler {
+func ManagerAuth() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -33,7 +33,7 @@ func ManagerAuth(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := ValidateJWT(parts[1], jwtSecret)
+			claims, err := ValidateJWT(parts[1])
 			if err != nil {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusUnauthorized)

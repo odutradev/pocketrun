@@ -12,14 +12,14 @@ import (
 	"pocketrun-api/internal/middleware/cors"
 )
 
-func NewAdminRouter(db *database.MongoDB, allowedOrigins, jwtSecret string) http.Handler {
+func NewAdminRouter(db *database.MongoDB, allowedOrigins string) http.Handler {
 	mux := http.NewServeMux()
 
-	managerAuthMW := user.ManagerAuth(jwtSecret)
+	managerAuthMW := user.ManagerAuth()
 
 	health.RegisterRoutes(mux)
-	setup.RegisterRoutes(mux, db, jwtSecret)
-	user.RegisterRoutes(mux, db, managerAuthMW, jwtSecret)
+	setup.RegisterRoutes(mux, db)
+	user.RegisterRoutes(mux, db, managerAuthMW)
 	application.RegisterRoutes(mux, db, managerAuthMW)
 
 	corsMiddleware := cors.CORS(allowedOrigins)

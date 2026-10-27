@@ -13,14 +13,12 @@ import (
 )
 
 type AuthHandler struct {
-	DB        *database.MongoDB
-	JWTSecret string
+	DB *database.MongoDB
 }
 
-func NewAuthHandler(db *database.MongoDB, jwtSecret string) *AuthHandler {
+func NewAuthHandler(db *database.MongoDB) *AuthHandler {
 	return &AuthHandler{
-		DB:        db,
-		JWTSecret: jwtSecret,
+		DB: db,
 	}
 }
 
@@ -125,7 +123,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		role = "admin"
 	}
 
-	tokenStr, err := GenerateJWT(u.ID.Hex(), u.Email, role, h.JWTSecret)
+	tokenStr, err := GenerateJWT(u.ID.Hex(), u.Email, role)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)

@@ -18,15 +18,13 @@ import (
 )
 
 type SetupHandler struct {
-	DB        *database.MongoDB
-	JWTSecret string
-	mu        sync.Mutex
+	DB *database.MongoDB
+	mu sync.Mutex
 }
 
-func NewSetupHandler(db *database.MongoDB, jwtSecret string) *SetupHandler {
+func NewSetupHandler(db *database.MongoDB) *SetupHandler {
 	return &SetupHandler{
-		DB:        db,
-		JWTSecret: jwtSecret,
+		DB: db,
 	}
 }
 
@@ -45,6 +43,33 @@ type SetupAdminResponse struct {
 	Token   string    `json:"token"`
 	User    user.User `json:"user"`
 	Message string    `json:"message"`
+}
+
+func CheckInitialStatus(db *database.MongoDB) {
+	if db == nil || db.Database == nil {
+		log.Println("[Setup] Warning: Database unavailable for initial status check")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	count, err := db.Database.Collection("users").CountDocuments(ctx, bson.M{})
+	if err != nil {
+		log.Printf("[Setup] Warning: Could not verify users count: %v", err)
+		return
+	}
+
+	if count == 0 {
+		log.Println("==================================================================")
+		log.Println("  [PocketRun] INITIAL SETUP REQUIRED (Dokploy-style onboarding)  ")
+		log.Println("  No users found in database. Initial setup mode is ACTIVE.       ")
+		log.Println("  Access the web console to configure the initial Superadmin.     ")
+		log.Println("==================================================================")
+		return
+	}
+
+	log.Printf("[Setup] Platform operational with %d registered manager(s).", count)
 }
 
 func (h *SetupHandler) GetStatus(w http.ResponseWriter, r *http.Request) {
@@ -169,7 +194,7 @@ func (h *SetupHandler) SetupAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenStr, err := user.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role, h.JWTSecret)
+	tokenStr, err := user.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Superadmin created, but failed to generate authentication token"})
@@ -186,8 +211,8 @@ func (h *SetupHandler) SetupAdmin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB, jwtSecret string) {
-	h := NewSetupHandler(db, jwtSecret)
+func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB) {
+	h := NewSetupHandler(db)
 	mux.HandleFunc("GET /api/v1/setup/status", h.GetStatus)
 	mux.HandleFunc("POST /api/v1/setup/admin", h.SetupAdmin)
 }
