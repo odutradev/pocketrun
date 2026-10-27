@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark dark-theme" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,12 +8,97 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <title>PocketRun - Modern Micro-service Platform</title>
     <style>
+      :root {
+        --brand-50: #F7FCFA;
+        --brand-100: #F7FDFA;
+        --brand-200: #E8F8F2;
+        --brand-300: #D0F3E5;
+        --brand-400: #AFEDD5;
+        --brand-500: #83E7C0;
+        --brand-600: #4AE1A7;
+        --brand-700: #00FF9D;
+        --brand-800: #1B8B60;
+        --brand-900: #12523A;
+        --brand-950: #0A281D;
+      }
+
+      :root.light,
+      .radix-themes.light,
+      .radix-themes.light-theme {
+        --app-bg: #F7FCFA;
+        --app-text: #0A281D;
+        --mint-1: #F7FCFA;
+        --mint-2: #F7FDFA;
+        --mint-3: #E8F8F2;
+        --mint-4: #D0F3E5;
+        --mint-5: #AFEDD5;
+        --mint-6: #83E7C0;
+        --mint-7: #4AE1A7;
+        --mint-8: #1B8B60;
+        --mint-9: #00FF9D;
+        --mint-10: #4AE1A7;
+        --mint-11: #1B8B60;
+        --mint-12: #0A281D;
+        --mint-a1: rgba(0, 255, 157, 0.03);
+        --mint-a2: rgba(0, 255, 157, 0.06);
+        --mint-a3: rgba(0, 255, 157, 0.12);
+        --mint-a4: rgba(0, 255, 157, 0.20);
+        --mint-a5: rgba(0, 255, 157, 0.28);
+        --mint-a6: rgba(0, 255, 157, 0.38);
+        --mint-a7: rgba(27, 139, 96, 0.48);
+        --mint-a8: rgba(27, 139, 96, 0.62);
+        --mint-a9: #00FF9D;
+        --mint-a10: #4AE1A7;
+        --mint-a11: #1B8B60;
+        --mint-a12: #0A281D;
+        --mint-contrast: #0A281D;
+        --mint-surface: rgba(232, 248, 242, 0.85);
+        --mint-indicator: #00FF9D;
+        --mint-track: #00FF9D;
+      }
+
+      :root.dark,
+      .radix-themes.dark,
+      .radix-themes.dark-theme {
+        --app-bg: #07130E;
+        --app-text: #F7FDFA;
+        --mint-1: #06140E;
+        --mint-2: #0A281D;
+        --mint-3: #12523A;
+        --mint-4: #166849;
+        --mint-5: #1B8B60;
+        --mint-6: #28A776;
+        --mint-7: #4AE1A7;
+        --mint-8: #83E7C0;
+        --mint-9: #00FF9D;
+        --mint-10: #4AE1A7;
+        --mint-11: #00FF9D;
+        --mint-12: #E8F8F2;
+        --mint-a1: rgba(0, 255, 157, 0.03);
+        --mint-a2: rgba(0, 255, 157, 0.06);
+        --mint-a3: rgba(0, 255, 157, 0.12);
+        --mint-a4: rgba(0, 255, 157, 0.18);
+        --mint-a5: rgba(0, 255, 157, 0.26);
+        --mint-a6: rgba(0, 255, 157, 0.36);
+        --mint-a7: rgba(74, 225, 167, 0.48);
+        --mint-a8: rgba(131, 231, 192, 0.62);
+        --mint-a9: #00FF9D;
+        --mint-a10: #4AE1A7;
+        --mint-a11: #00FF9D;
+        --mint-a12: #E8F8F2;
+        --mint-contrast: #0A281D;
+        --mint-surface: rgba(10, 40, 29, 0.65);
+        --mint-indicator: #00FF9D;
+        --mint-track: #00FF9D;
+      }
+
       body {
         margin: 0;
-        background-color: #0b0d13;
-        color: #f1f5f9;
+        background-color: var(--app-bg, #07130E);
+        color: var(--app-text, #F7FDFA);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-font-smoothing: antialiased;
+        transition: background-color 0.2s ease, color 0.2s ease;
       }
     </style>
   </head>

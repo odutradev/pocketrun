@@ -3,12 +3,14 @@ import { Theme } from '@radix-ui/themes'
 import '@radix-ui/themes/styles.css'
 import { useEffect } from 'react'
 
+import useSystemStore from '@stores/system'
 import { themeConfig } from '@styles/theme'
 import useAuthStore from '@stores/auth'
 import AppRouter from '@routes'
 
 export const RootApp = () => {
   const { initializeAuth } = useAuthStore()
+  const { theme } = useSystemStore()
 
   useEffect(() => {
     initializeAuth()
@@ -16,7 +18,7 @@ export const RootApp = () => {
 
   return (
     <Theme
-      appearance={themeConfig.appearance}
+      appearance={theme}
       accentColor={themeConfig.accentColor}
       grayColor={themeConfig.grayColor}
       radius={themeConfig.radius}
