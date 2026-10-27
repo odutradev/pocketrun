@@ -24,3 +24,4 @@ func GetManagerEmail(requestContext context.Context) string {
 	}
 	return ""
 }
+

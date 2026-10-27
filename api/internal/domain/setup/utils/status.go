@@ -36,3 +36,4 @@ func CheckInitialStatus(mongoDatabase *database.MongoDB) {
 
 	log.Printf("[Setup] Platform operational with %d registered manager(s).", usersCount)
 }
+

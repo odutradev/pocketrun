@@ -35,3 +35,4 @@ func ValidateStrongPassword(password string) error {
 
 	return nil
 }
+

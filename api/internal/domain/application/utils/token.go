@@ -75,3 +75,4 @@ func FindMatchingToken(tokens []tokensRepo.Token, tokenHash string) *tokensRepo.
 func IsTokenExpired(token *tokensRepo.Token) bool {
 	return token != nil && token.ExpiresAt != nil && time.Now().After(*token.ExpiresAt)
 }
+

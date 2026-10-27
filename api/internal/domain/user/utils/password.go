@@ -46,3 +46,4 @@ func CheckPassword(plainPassword, storedPasswordHash string) bool {
 
 	return hmac.Equal(calculatedHash, expectedHash)
 }
+

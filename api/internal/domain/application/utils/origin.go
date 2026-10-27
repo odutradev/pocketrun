@@ -26,3 +26,4 @@ func IsOriginAllowed(allowedOrigins []string, originHeader string, allowNonBrows
 
 	return false
 }
+

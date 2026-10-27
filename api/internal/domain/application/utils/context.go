@@ -37,3 +37,4 @@ func ParseManagerAndApplicationIDs(request *http.Request, applicationIDHex strin
 	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
 	return managerObjectID, applicationObjectID, parseError
 }
+

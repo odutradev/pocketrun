@@ -100,3 +100,4 @@ func ValidateJWT(tokenString string) (*JWTClaims, error) {
 
 	return &tokenClaims, nil
 }
+
