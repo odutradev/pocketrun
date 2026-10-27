@@ -5,10 +5,15 @@ import (
 	"strings"
 
 	"pocketrun-api/internal/database"
+	"pocketrun-api/internal/domain/application/handlers"
+	"pocketrun-api/internal/domain/application/repositories"
+	kvRepositories "pocketrun-api/internal/domain/kv/repositories"
 )
 
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, managerAuthMiddleware func(http.Handler) http.Handler) {
-	applicationHandler := NewAppHandler(mongoDatabase)
+	appRepository := repositories.NewApplicationRepository(mongoDatabase)
+	kvRepository := kvRepositories.NewKVRepository(mongoDatabase)
+	applicationHandler := handlers.NewAppHandler(appRepository, kvRepository)
 
 	routeMux.Handle("GET /apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.ListApps)))
 	routeMux.Handle("POST /apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.CreateApp)))

@@ -1,4 +1,4 @@
-package application
+package repositories
 
 import (
 	"crypto/rand"
