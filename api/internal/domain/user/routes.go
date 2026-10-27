@@ -4,10 +4,13 @@ import (
 	"net/http"
 
 	"pocketrun-api/internal/database"
+	"pocketrun-api/internal/domain/user/handlers"
+	"pocketrun-api/internal/domain/user/repositories"
 )
 
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, managerAuthMiddleware func(http.Handler) http.Handler) {
-	authHandler := NewAuthHandler(mongoDatabase)
+	userRepository := repositories.NewUserRepository(mongoDatabase)
+	authHandler := handlers.NewAuthHandler(userRepository)
 
 	routeMux.HandleFunc("POST /auth/register", authHandler.Register)
 	routeMux.HandleFunc("POST /auth/login", authHandler.Login)

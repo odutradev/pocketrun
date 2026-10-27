@@ -1,4 +1,4 @@
-package user
+package handlers
 
 import (
 	"context"
@@ -7,35 +7,19 @@ import (
 	"strings"
 	"time"
 
-	"pocketrun-api/internal/database"
+	"pocketrun-api/internal/domain/user/repositories"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type AuthHandler struct {
-	Database *database.MongoDB
+	UserRepository *repositories.UserRepository
 }
 
-func NewAuthHandler(mongoDatabase *database.MongoDB) *AuthHandler {
+func NewAuthHandler(userRepository *repositories.UserRepository) *AuthHandler {
 	return &AuthHandler{
-		Database: mongoDatabase,
+		UserRepository: userRepository,
 	}
-}
-
-type RegisterRequest struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type AuthResponse struct {
-	Token string `json:"token"`
-	User  User   `json:"user"`
 }
 
 func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, payload any) {
@@ -72,7 +56,7 @@ func (handler *AuthHandler) Register(responseWriter http.ResponseWriter, request
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	totalUsers, countError := handler.Database.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	totalUsers, countError := handler.UserRepository.CountUsers(queryContext)
 	if countError == nil && totalUsers > 0 {
 		writeJSONResponse(responseWriter, http.StatusForbidden, map[string]string{"error": "Public registration is disabled. Please contact your administrator."})
 		return
@@ -102,9 +86,8 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	var foundUser User
-	findError := handler.Database.Database.Collection("users").FindOne(queryContext, bson.M{"email": loginPayload.Email}).Decode(&foundUser)
-	if findError != nil || !CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
+	foundUser, findError := handler.UserRepository.FindByEmail(queryContext, loginPayload.Email)
+	if findError != nil || !repositories.CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
 		return
 	}
@@ -114,7 +97,7 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 		userRole = "admin"
 	}
 
-	jwtToken, tokenError := GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
+	jwtToken, tokenError := repositories.GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate authentication token"})
 		return
@@ -122,12 +105,12 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 
 	writeJSONResponse(responseWriter, http.StatusOK, AuthResponse{
 		Token: jwtToken,
-		User:  foundUser,
+		User:  *foundUser,
 	})
 }
 
 func (handler *AuthHandler) Me(responseWriter http.ResponseWriter, request *http.Request) {
-	managerIDString := GetManagerID(request.Context())
+	managerIDString := repositories.GetManagerID(request.Context())
 	if managerIDString == "" {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -142,8 +125,8 @@ func (handler *AuthHandler) Me(responseWriter http.ResponseWriter, request *http
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	var foundUser User
-	if findError := handler.Database.Database.Collection("users").FindOne(queryContext, bson.M{"_id": managerObjectID}).Decode(&foundUser); findError != nil {
+	foundUser, findError := handler.UserRepository.FindByID(queryContext, managerObjectID)
+	if findError != nil {
 		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "User not found"})
 		return
 	}

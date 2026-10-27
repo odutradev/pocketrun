@@ -5,13 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-)
 
-type contextKey string
-
-const (
-	UserIDKey    contextKey = "userID"
-	UserEmailKey contextKey = "userEmail"
+	"pocketrun-api/internal/domain/user/repositories"
 )
 
 func ManagerAuth() func(http.Handler) http.Handler {
@@ -33,7 +28,7 @@ func ManagerAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			tokenClaims, validationError := ValidateJWT(headerParts[1])
+			tokenClaims, validationError := repositories.ValidateJWT(headerParts[1])
 			if validationError != nil {
 				responseWriter.Header().Set("Content-Type", "application/json")
 				responseWriter.WriteHeader(http.StatusUnauthorized)
@@ -41,8 +36,8 @@ func ManagerAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			authenticatedContext := context.WithValue(request.Context(), UserIDKey, tokenClaims.UserID)
-			authenticatedContext = context.WithValue(authenticatedContext, UserEmailKey, tokenClaims.Email)
+			authenticatedContext := context.WithValue(request.Context(), repositories.UserIDKey, tokenClaims.UserID)
+			authenticatedContext = context.WithValue(authenticatedContext, repositories.UserEmailKey, tokenClaims.Email)
 
 			nextHandler.ServeHTTP(responseWriter, request.WithContext(authenticatedContext))
 		})
@@ -50,15 +45,9 @@ func ManagerAuth() func(http.Handler) http.Handler {
 }
 
 func GetManagerID(requestContext context.Context) string {
-	if managerID, exists := requestContext.Value(UserIDKey).(string); exists {
-		return managerID
-	}
-	return ""
+	return repositories.GetManagerID(requestContext)
 }
 
 func GetManagerEmail(requestContext context.Context) string {
-	if managerEmail, exists := requestContext.Value(UserEmailKey).(string); exists {
-		return managerEmail
-	}
-	return ""
+	return repositories.GetManagerEmail(requestContext)
 }
