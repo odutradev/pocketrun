@@ -19,71 +19,71 @@ type MongoDB struct {
 }
 
 func ConnectMongoDB() *MongoDB {
-	uri := config.GetEnv("MONGODB_URI", "mongodb://localhost:27017")
-	dbName := config.GetEnv("MONGODB_NAME", "pocketrun")
+	mongoURI := config.GetEnv("MONGODB_URI", "mongodb://localhost:27017")
+	databaseName := config.GetEnv("MONGODB_NAME", "pocketrun")
 
-	if uri == "" || dbName == "" {
+	if mongoURI == "" || databaseName == "" {
 		log.Fatalf("[MongoDB] Invalid configuration: MONGODB_URI and MONGODB_NAME are required")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	connectionContext, cancelConnection := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelConnection()
 
-	clientOpts := options.Client().ApplyURI(uri)
-	client, err := mongo.Connect(clientOpts)
-	if err != nil {
-		log.Fatalf("[MongoDB] Failed to create client: %v", err)
+	clientOptions := options.Client().ApplyURI(mongoURI)
+	mongoClient, connectError := mongo.Connect(clientOptions)
+	if connectError != nil {
+		log.Fatalf("[MongoDB] Failed to create client: %v", connectError)
 	}
 
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		log.Fatalf("[MongoDB] Failed to ping database: %v", err)
+	if pingError := mongoClient.Ping(connectionContext, readpref.Primary()); pingError != nil {
+		log.Fatalf("[MongoDB] Failed to ping database: %v", pingError)
 	}
 
-	log.Printf("[MongoDB] Connection established successfully! (Database: %s)", dbName)
+	log.Printf("[MongoDB] Connection established successfully! (Database: %s)", databaseName)
 
-	db := client.Database(dbName)
-	mb := &MongoDB{
-		Client:   client,
-		Database: db,
+	databaseInstance := mongoClient.Database(databaseName)
+	mongoDatabase := &MongoDB{
+		Client:   mongoClient,
+		Database: databaseInstance,
 	}
 
-	if err := mb.EnsureIndexes(ctx); err != nil {
-		log.Printf("[MongoDB] Warning initializing indexes: %v", err)
+	if indexError := mongoDatabase.EnsureIndexes(connectionContext); indexError != nil {
+		log.Printf("[MongoDB] Warning initializing indexes: %v", indexError)
 	}
 
-	return mb
+	return mongoDatabase
 }
 
-func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
-	usersCol := m.Database.Collection("users")
-	_, err := usersCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+func (mongoDatabase *MongoDB) EnsureIndexes(indexContext context.Context) error {
+	usersCollection := mongoDatabase.Database.Collection("users")
+	_, userIndexError := usersCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys:    bson.D{{Key: "email", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
-	if err != nil {
-		log.Printf("[MongoDB] Index users.email: %v", err)
+	if userIndexError != nil {
+		log.Printf("[MongoDB] Index users.email: %v", userIndexError)
 	}
 
-	appsCol := m.Database.Collection("applications")
-	_, _ = appsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+	applicationsCollection := mongoDatabase.Database.Collection("applications")
+	_, _ = applicationsCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys: bson.D{{Key: "manager_id", Value: 1}},
 	})
-	_, _ = appsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+	_, _ = applicationsCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys:    bson.D{{Key: "project_id", Value: 1}},
 		Options: options.Index().SetUnique(true),
 	})
-	_, _ = appsCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+	_, _ = applicationsCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys: bson.D{{Key: "tokens.token_hash", Value: 1}},
 	})
 
-	kvCol := m.Database.Collection("kv_documents")
-	_, _ = kvCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+	keyValueCollection := mongoDatabase.Database.Collection("kv_documents")
+	_, _ = keyValueCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys: bson.D{
 			{Key: "app_id", Value: 1},
 			{Key: "collection_name", Value: 1},
 		},
 	})
-	_, _ = kvCol.Indexes().CreateOne(ctx, mongo.IndexModel{
+	_, _ = keyValueCollection.Indexes().CreateOne(indexContext, mongo.IndexModel{
 		Keys:    bson.D{{Key: "expires_at", Value: 1}},
 		Options: options.Index().SetExpireAfterSeconds(0),
 	})
@@ -91,15 +91,15 @@ func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (m *MongoDB) Close() {
-	if m == nil || m.Client == nil {
+func (mongoDatabase *MongoDB) Close() {
+	if mongoDatabase == nil || mongoDatabase.Client == nil {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	disconnectContext, cancelDisconnect := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelDisconnect()
 
-	if err := m.Client.Disconnect(ctx); err != nil {
-		log.Printf("[MongoDB] Error closing connection: %v", err)
+	if disconnectError := mongoDatabase.Client.Disconnect(disconnectContext); disconnectError != nil {
+		log.Printf("[MongoDB] Error closing connection: %v", disconnectError)
 	}
 }

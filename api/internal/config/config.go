@@ -7,44 +7,44 @@ import (
 	"sync"
 )
 
-var envOnce sync.Once
+var loadEnvironmentOnce sync.Once
 
-func ensureEnvLoaded() {
-	envOnce.Do(func() {
-		loadEnvFile(".env")
+func ensureEnvironmentLoaded() {
+	loadEnvironmentOnce.Do(func() {
+		loadEnvironmentFile(".env")
 	})
 }
 
-func loadEnvFile(filename string) {
-	file, err := os.Open(filename)
-	if err != nil {
+func loadEnvironmentFile(filePath string) {
+	environmentFile, openError := os.Open(filePath)
+	if openError != nil {
 		return
 	}
-	defer file.Close()
+	defer environmentFile.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
+	lineScanner := bufio.NewScanner(environmentFile)
+	for lineScanner.Scan() {
+		trimmedLine := strings.TrimSpace(lineScanner.Text())
+		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
 			continue
 		}
 
-		parts := strings.SplitN(line, "=", 2)
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-			value = strings.Trim(value, `"'`)
-			if os.Getenv(key) == "" {
-				os.Setenv(key, value)
+		keyValueParts := strings.SplitN(trimmedLine, "=", 2)
+		if len(keyValueParts) == 2 {
+			environmentKey := strings.TrimSpace(keyValueParts[0])
+			environmentValue := strings.TrimSpace(keyValueParts[1])
+			environmentValue = strings.Trim(environmentValue, `"'`)
+			if os.Getenv(environmentKey) == "" {
+				os.Setenv(environmentKey, environmentValue)
 			}
 		}
 	}
 }
 
-func GetEnv(key, defaultValue string) string {
-	ensureEnvLoaded()
-	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
-		return value
+func GetEnv(environmentKey, defaultValue string) string {
+	ensureEnvironmentLoaded()
+	if environmentValue := strings.TrimSpace(os.Getenv(environmentKey)); environmentValue != "" {
+		return environmentValue
 	}
 	return defaultValue
 }
