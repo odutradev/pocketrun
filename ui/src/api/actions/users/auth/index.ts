@@ -3,11 +3,11 @@ import apiClient from '@api/client'
 import type { SignInPayload, SignUpPayload, AuthResponse } from './types'
 
 export const signInAction = async (payload: SignInPayload): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>('/api/v1/auth/login', payload, { skipAuth: true })
+  return apiClient.post<AuthResponse>('/auth/login', payload, { skipAuth: true })
 }
 
 export const signUpAction = async (payload: SignUpPayload): Promise<AuthResponse> => {
-  return apiClient.post<AuthResponse>('/api/v1/auth/register', payload, { skipAuth: true })
+  return apiClient.post<AuthResponse>('/auth/register', payload, { skipAuth: true })
 }
 
 export default {

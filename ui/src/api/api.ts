@@ -95,7 +95,7 @@ const getAuthHeaders = () => {
 }
 
 export const registerManager = async (name: string, email: string, password: string): Promise<AuthResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+  const res = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password })
@@ -106,7 +106,7 @@ export const registerManager = async (name: string, email: string, password: str
 }
 
 export const loginManager = async (email: string, password: string): Promise<AuthResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+  const res = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -117,7 +117,7 @@ export const loginManager = async (email: string, password: string): Promise<Aut
 }
 
 export const fetchManagerMe = async (): Promise<ManagerUser> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+  const res = await fetch(`${API_BASE_URL}/auth/me`, {
     headers: getAuthHeaders()
   })
   const data = await res.json()
@@ -126,7 +126,7 @@ export const fetchManagerMe = async (): Promise<ManagerUser> => {
 }
 
 export const fetchApplications = async (): Promise<Application[]> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps`, {
+  const res = await fetch(`${API_BASE_URL}/apps`, {
     headers: getAuthHeaders()
   })
   const data = await res.json()
@@ -135,7 +135,7 @@ export const fetchApplications = async (): Promise<Application[]> => {
 }
 
 export const createApplication = async (payload: CreateAppPayload): Promise<CreateAppResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps`, {
+  const res = await fetch(`${API_BASE_URL}/apps`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload)
@@ -146,7 +146,7 @@ export const createApplication = async (payload: CreateAppPayload): Promise<Crea
 }
 
 export const updateApplication = async (appId: string, payload: Partial<CreateAppPayload>): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload)
@@ -156,7 +156,7 @@ export const updateApplication = async (appId: string, payload: Partial<CreateAp
 }
 
 export const deleteApplication = async (appId: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   })
@@ -165,7 +165,7 @@ export const deleteApplication = async (appId: string): Promise<void> => {
 }
 
 export const createAPIToken = async (appId: string, payload: CreateTokenPayload): Promise<CreateTokenResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/tokens`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}/tokens`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify(payload)
@@ -176,7 +176,7 @@ export const createAPIToken = async (appId: string, payload: CreateTokenPayload)
 }
 
 export const deleteAPIToken = async (appId: string, tokenId: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/tokens/${tokenId}`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}/tokens/${tokenId}`, {
     method: 'DELETE',
     headers: getAuthHeaders()
   })
@@ -185,7 +185,7 @@ export const deleteAPIToken = async (appId: string, tokenId: string): Promise<vo
 }
 
 export const fetchExplorerCollections = async (appId: string): Promise<string[]> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/explorer/collections`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}/explorer/collections`, {
     headers: getAuthHeaders()
   })
   const data = await res.json()
@@ -199,7 +199,7 @@ export const fetchExplorerDocuments = async (
   page = 1,
   limit = 20
 ): Promise<ExplorerDocumentsResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/apps/${appId}/explorer/${collection}?page=${page}&limit=${limit}`, {
+  const res = await fetch(`${API_BASE_URL}/apps/${appId}/explorer/${collection}?page=${page}&limit=${limit}`, {
     headers: getAuthHeaders()
   })
   const data = await res.json()
@@ -214,14 +214,14 @@ export const fetchHealthPing = async (): Promise<{ status: string }> => {
 }
 
 export const fetchSetupStatus = async (): Promise<SetupStatusResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/setup/status`)
+  const res = await fetch(`${API_BASE_URL}/setup/status`)
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Failed to check setup status')
   return data
 }
 
 export const setupSuperadmin = async (payload: SetupAdminPayload): Promise<AuthResponse> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/setup/admin`, {
+  const res = await fetch(`${API_BASE_URL}/setup/admin`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)

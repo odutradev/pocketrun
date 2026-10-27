@@ -90,12 +90,12 @@ export const AppDetail = ({ app, onBack, onRefreshApp }: AppDetailProps) => {
     setTimeout(() => setCopiedSnippet(null), 2000)
   }, [])
 
-  const curlSnippet = `curl -X POST "${API_BASE_URL}/api/v1/data/pedidos" \\
+  const curlSnippet = `curl -X POST "${API_BASE_URL}/kv/pedidos/create" \\
   -H "Authorization: Bearer <SEU_TOKEN>" \\
   -H "Content-Type: application/json" \\
-  -d '{"cliente": "Maria", "valor": 150.00, "status": "pago"}'`
+  -d '{"data": {"cliente": "Maria", "valor": 150.00, "status": "pago"}}'`
 
-  const jsSnippet = `const res = await fetch("${API_BASE_URL}/api/v1/data/pedidos", {
+  const jsSnippet = `const res = await fetch("${API_BASE_URL}/kv/pedidos/create", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <SEU_TOKEN>",

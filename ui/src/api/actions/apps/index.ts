@@ -3,19 +3,19 @@ import apiClient from '@api/client'
 import type { Application, CreateAppPayload, CreateAppResponse, UpdateAppPayload } from './types'
 
 export const getApplicationsAction = async (): Promise<Application[]> => {
-  return apiClient.get<Application[]>('/api/v1/apps')
+  return apiClient.get<Application[]>('/apps')
 }
 
 export const createApplicationAction = async (payload: CreateAppPayload): Promise<CreateAppResponse> => {
-  return apiClient.post<CreateAppResponse>('/api/v1/apps', payload)
+  return apiClient.post<CreateAppResponse>('/apps', payload)
 }
 
 export const updateApplicationAction = async (appId: string, payload: UpdateAppPayload): Promise<void> => {
-  return apiClient.put<void>(`/api/v1/apps/${appId}`, payload)
+  return apiClient.put<void>(`/apps/${appId}`, payload)
 }
 
 export const deleteApplicationAction = async (appId: string): Promise<void> => {
-  return apiClient.del<void>(`/api/v1/apps/${appId}`)
+  return apiClient.del<void>(`/apps/${appId}`)
 }
 
 export default {

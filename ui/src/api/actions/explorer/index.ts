@@ -3,7 +3,7 @@ import apiClient from '@api/client'
 import type { ExplorerDocumentsResponse, GetExplorerDocumentsParams } from './types'
 
 export const getExplorerCollectionsAction = async (appId: string): Promise<string[]> => {
-  return apiClient.get<string[]>(`/api/v1/apps/${appId}/explorer/collections`)
+  return apiClient.get<string[]>(`/apps/${appId}/explorer/collections`)
 }
 
 export const getExplorerDocumentsAction = async ({
@@ -13,7 +13,7 @@ export const getExplorerDocumentsAction = async ({
   limit = 20
 }: GetExplorerDocumentsParams): Promise<ExplorerDocumentsResponse> => {
   return apiClient.get<ExplorerDocumentsResponse>(
-    `/api/v1/apps/${appId}/explorer/${collection}?page=${page}&limit=${limit}`
+    `/apps/${appId}/explorer/${collection}?page=${page}&limit=${limit}`
   )
 }
 
