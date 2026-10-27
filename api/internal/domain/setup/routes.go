@@ -4,19 +4,21 @@ import (
 	"net/http"
 
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/setup/handlers"
-	userRepositories "pocketrun-api/internal/domain/user/repositories"
+	adminHandler "pocketrun-api/internal/domain/setup/handlers/admin"
+	statusHandler "pocketrun-api/internal/domain/setup/handlers/status"
+	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 )
 
 func CheckInitialStatus(mongoDatabase *database.MongoDB) {
-	userRepository := userRepositories.NewUserRepository(mongoDatabase)
-	handlers.CheckInitialStatus(userRepository)
+	usersRepository := usersRepo.NewRepository(mongoDatabase)
+	statusHandler.CheckInitialStatus(usersRepository)
 }
 
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB) {
-	userRepository := userRepositories.NewUserRepository(mongoDatabase)
-	setupHandler := handlers.NewSetupHandler(userRepository)
+	usersRepository := usersRepo.NewRepository(mongoDatabase)
+	setupStatusHandler := statusHandler.NewHandler(usersRepository)
+	setupAdminHandler := adminHandler.NewHandler(usersRepository)
 
-	routeMux.HandleFunc("GET /setup/status", setupHandler.GetStatus)
-	routeMux.HandleFunc("POST /setup/admin", setupHandler.SetupAdmin)
+	routeMux.HandleFunc("GET /setup/status", setupStatusHandler.GetStatus)
+	routeMux.HandleFunc("POST /setup/admin", setupAdminHandler.SetupAdmin)
 }

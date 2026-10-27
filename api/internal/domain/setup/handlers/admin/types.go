@@ -1,15 +1,10 @@
-package handlers
+package admin
 
 import (
 	"unicode"
 
-	userRepositories "pocketrun-api/internal/domain/user/repositories"
+	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 )
-
-type StatusResponse struct {
-	SetupRequired bool `json:"setup_required"`
-	HasUsers      bool `json:"has_users"`
-}
 
 type SetupAdminRequest struct {
 	Name     string `json:"name"`
@@ -18,9 +13,9 @@ type SetupAdminRequest struct {
 }
 
 type SetupAdminResponse struct {
-	Token   string                `json:"token"`
-	User    userRepositories.User `json:"user"`
-	Message string                `json:"message"`
+	Token   string         `json:"token"`
+	User    usersRepo.User `json:"user"`
+	Message string         `json:"message"`
 }
 
 func validateStrongPassword(password string) error {
