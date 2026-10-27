@@ -4,11 +4,11 @@ import (
 	"testing"
 )
 
-func TestValidateStrongPassword(t *testing.T) {
-	tests := []struct {
-		name     string
-		password string
-		wantErr  bool
+func TestValidateStrongPassword(testingInstance *testing.T) {
+	testCases := []struct {
+		name        string
+		password    string
+		expectError bool
 	}{
 		{"Too short", "Ab1!", true},
 		{"No letters", "12345678", true},
@@ -18,11 +18,11 @@ func TestValidateStrongPassword(t *testing.T) {
 		{"Valid complex password", "Secure#P0cketRun", false},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := validateStrongPassword(tt.password)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("validateStrongPassword(%q) error = %v, wantErr %v", tt.password, err, tt.wantErr)
+	for _, testCase := range testCases {
+		testingInstance.Run(testCase.name, func(subTest *testing.T) {
+			validationError := validateStrongPassword(testCase.password)
+			if (validationError != nil) != testCase.expectError {
+				subTest.Errorf("validateStrongPassword(%q) error = %v, expectError %v", testCase.password, validationError, testCase.expectError)
 			}
 		})
 	}

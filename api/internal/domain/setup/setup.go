@@ -18,13 +18,13 @@ import (
 )
 
 type SetupHandler struct {
-	DB *database.MongoDB
-	mu sync.Mutex
+	Database   *database.MongoDB
+	setupMutex sync.Mutex
 }
 
-func NewSetupHandler(db *database.MongoDB) *SetupHandler {
+func NewSetupHandler(mongoDatabase *database.MongoDB) *SetupHandler {
 	return &SetupHandler{
-		DB: db,
+		Database: mongoDatabase,
 	}
 }
 
@@ -45,22 +45,28 @@ type SetupAdminResponse struct {
 	Message string    `json:"message"`
 }
 
-func CheckInitialStatus(db *database.MongoDB) {
-	if db == nil || db.Database == nil {
+func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, payload any) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(statusCode)
+	_ = json.NewEncoder(responseWriter).Encode(payload)
+}
+
+func CheckInitialStatus(mongoDatabase *database.MongoDB) {
+	if mongoDatabase == nil || mongoDatabase.Database == nil {
 		log.Println("[Setup] Warning: Database unavailable for initial status check")
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelQuery()
 
-	count, err := db.Database.Collection("users").CountDocuments(ctx, bson.M{})
-	if err != nil {
-		log.Printf("[Setup] Warning: Could not verify users count: %v", err)
+	usersCount, countError := mongoDatabase.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	if countError != nil {
+		log.Printf("[Setup] Warning: Could not verify users count: %v", countError)
 		return
 	}
 
-	if count == 0 {
+	if usersCount == 0 {
 		log.Println("==================================================================")
 		log.Println("  [PocketRun] INITIAL SETUP REQUIRED (Dokploy-style onboarding)  ")
 		log.Println("  No users found in database. Initial setup mode is ACTIVE.       ")
@@ -69,182 +75,164 @@ func CheckInitialStatus(db *database.MongoDB) {
 		return
 	}
 
-	log.Printf("[Setup] Platform operational with %d registered manager(s).", count)
+	log.Printf("[Setup] Platform operational with %d registered manager(s).", usersCount)
 }
 
-func (h *SetupHandler) GetStatus(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func (handler *SetupHandler) GetStatus(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		http.Error(responseWriter, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if h.DB == nil || h.DB.Database == nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Database unavailable"})
+	if handler.Database == nil || handler.Database.Database == nil {
+		writeJSONResponse(responseWriter, http.StatusServiceUnavailable, map[string]string{"error": "Database unavailable"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	count, err := h.DB.Database.Collection("users").CountDocuments(ctx, bson.M{})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Failed to check setup status"})
+	usersCount, countError := handler.Database.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	if countError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to check setup status"})
 		return
 	}
 
-	_ = json.NewEncoder(w).Encode(StatusResponse{
-		SetupRequired: count == 0,
-		HasUsers:      count > 0,
+	writeJSONResponse(responseWriter, http.StatusOK, StatusResponse{
+		SetupRequired: usersCount == 0,
+		HasUsers:      usersCount > 0,
 	})
 }
 
-func (h *SetupHandler) SetupAdmin(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func (handler *SetupHandler) SetupAdmin(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		http.Error(responseWriter, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	if h.DB == nil || h.DB.Database == nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Database unavailable"})
+	if handler.Database == nil || handler.Database.Database == nil {
+		writeJSONResponse(responseWriter, http.StatusServiceUnavailable, map[string]string{"error": "Database unavailable"})
 		return
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	handler.setupMutex.Lock()
+	defer handler.setupMutex.Unlock()
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	count, err := h.DB.Database.Collection("users").CountDocuments(ctx, bson.M{})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Database error checking system status"})
+	usersCount, countError := handler.Database.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	if countError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Database error checking system status"})
 		return
 	}
 
-	if count > 0 {
-		w.WriteHeader(http.StatusForbidden)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Initial setup has already been completed"})
+	if usersCount > 0 {
+		writeJSONResponse(responseWriter, http.StatusForbidden, map[string]string{"error": "Initial setup has already been completed"})
 		return
 	}
 
-	var req SetupAdminRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+	var setupPayload SetupAdminRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&setupPayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
 		return
 	}
 
-	req.Name = strings.TrimSpace(req.Name)
-	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	setupPayload.Name = strings.TrimSpace(setupPayload.Name)
+	setupPayload.Email = strings.ToLower(strings.TrimSpace(setupPayload.Email))
 
-	if req.Name == "" || req.Email == "" || req.Password == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "All fields (name, email, password) are required"})
+	if setupPayload.Name == "" || setupPayload.Email == "" || setupPayload.Password == "" {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "All fields (name, email, password) are required"})
 		return
 	}
 
-	if len(req.Name) < 2 || len(req.Name) > 100 {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Name must be between 2 and 100 characters"})
+	if len(setupPayload.Name) < 2 || len(setupPayload.Name) > 100 {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Name must be between 2 and 100 characters"})
 		return
 	}
 
-	if _, err := mail.ParseAddress(req.Email); err != nil || !strings.Contains(req.Email, ".") {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Invalid email address format"})
+	if _, parseEmailError := mail.ParseAddress(setupPayload.Email); parseEmailError != nil || !strings.Contains(setupPayload.Email, ".") {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid email address format"})
 		return
 	}
 
-	if err := validateStrongPassword(req.Password); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+	if validationError := validateStrongPassword(setupPayload.Password); validationError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": validationError.Error()})
 		return
 	}
 
-	passwordHash, err := user.HashPassword(req.Password)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Failed to securely hash password"})
+	passwordHash, hashError := user.HashPassword(setupPayload.Password)
+	if hashError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to securely hash password"})
 		return
 	}
 
-	now := time.Now()
+	currentTime := time.Now()
 	newSuperadmin := user.User{
 		ID:           bson.NewObjectID(),
-		Name:         req.Name,
-		Email:        req.Email,
+		Name:         setupPayload.Name,
+		Email:        setupPayload.Email,
 		Role:         "superadmin",
 		PasswordHash: passwordHash,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		CreatedAt:    currentTime,
+		UpdatedAt:    currentTime,
 	}
 
-	_, err = h.DB.Database.Collection("users").InsertOne(ctx, newSuperadmin)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create superadmin user"})
+	_, insertError := handler.Database.Database.Collection("users").InsertOne(queryContext, newSuperadmin)
+	if insertError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to create superadmin user"})
 		return
 	}
 
-	tokenStr, err := user.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "Superadmin created, but failed to generate authentication token"})
+	jwtToken, tokenError := user.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
+	if tokenError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Superadmin created, but failed to generate authentication token"})
 		return
 	}
 
 	log.Printf("[Setup] Superadmin successfully initialized: %s (%s)", newSuperadmin.Name, newSuperadmin.Email)
 
-	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(SetupAdminResponse{
-		Token:   tokenStr,
+	writeJSONResponse(responseWriter, http.StatusCreated, SetupAdminResponse{
+		Token:   jwtToken,
 		User:    newSuperadmin,
 		Message: "PocketRun superadmin successfully configured",
 	})
 }
 
-func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB) {
-	h := NewSetupHandler(db)
-	mux.HandleFunc("GET /api/v1/setup/status", h.GetStatus)
-	mux.HandleFunc("POST /api/v1/setup/admin", h.SetupAdmin)
+func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB) {
+	setupHandler := NewSetupHandler(mongoDatabase)
+	routeMux.HandleFunc("GET /api/v1/setup/status", setupHandler.GetStatus)
+	routeMux.HandleFunc("POST /api/v1/setup/admin", setupHandler.SetupAdmin)
 }
 
 func validateStrongPassword(password string) error {
 	if len(password) < 8 {
-		return &validationError{"Password must be at least 8 characters long"}
+		return &passwordValidationError{message: "Password must be at least 8 characters long"}
 	}
 	if len(password) > 128 {
-		return &validationError{"Password must not exceed 128 characters"}
+		return &passwordValidationError{message: "Password must not exceed 128 characters"}
 	}
 
-	var hasLetter, hasDigit bool
-	for _, char := range password {
-		if unicode.IsLetter(char) {
+	var hasLetter, hasDigitOrSymbol bool
+	for _, character := range password {
+		if unicode.IsLetter(character) {
 			hasLetter = true
-		} else if unicode.IsDigit(char) || unicode.IsPunct(char) || unicode.IsSymbol(char) {
-			hasDigit = true
+		} else if unicode.IsDigit(character) || unicode.IsPunct(character) || unicode.IsSymbol(character) {
+			hasDigitOrSymbol = true
 		}
 	}
 
-	if !hasLetter || !hasDigit {
-		return &validationError{"Password must contain at least one letter and at least one digit or symbol"}
+	if !hasLetter || !hasDigitOrSymbol {
+		return &passwordValidationError{message: "Password must contain at least one letter and at least one digit or symbol"}
 	}
 
 	return nil
 }
 
-type validationError struct {
-	msg string
+type passwordValidationError struct {
+	message string
 }
 
-func (e *validationError) Error() string {
-	return e.msg
+func (validationError *passwordValidationError) Error() string {
+	return validationError.message
 }

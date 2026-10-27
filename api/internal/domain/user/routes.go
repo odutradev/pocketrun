@@ -6,10 +6,10 @@ import (
 	"pocketrun-api/internal/database"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB, managerAuthMW func(http.Handler) http.Handler) {
-	h := NewAuthHandler(db)
+func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, managerAuthMiddleware func(http.Handler) http.Handler) {
+	authHandler := NewAuthHandler(mongoDatabase)
 
-	mux.HandleFunc("POST /api/v1/auth/register", h.Register)
-	mux.HandleFunc("POST /api/v1/auth/login", h.Login)
-	mux.Handle("GET /api/v1/auth/me", managerAuthMW(http.HandlerFunc(h.Me)))
+	routeMux.HandleFunc("POST /api/v1/auth/register", authHandler.Register)
+	routeMux.HandleFunc("POST /api/v1/auth/login", authHandler.Login)
+	routeMux.Handle("GET /api/v1/auth/me", managerAuthMiddleware(http.HandlerFunc(authHandler.Me)))
 }

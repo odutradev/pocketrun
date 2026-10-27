@@ -29,128 +29,128 @@ type User struct {
 }
 
 type JWTClaims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role,omitempty"`
-	Exp    int64  `json:"exp"`
-	Iat    int64  `json:"iat"`
+	UserID         string `json:"user_id"`
+	Email          string `json:"email"`
+	Role           string `json:"role,omitempty"`
+	ExpirationTime int64  `json:"exp"`
+	IssuedAt       int64  `json:"iat"`
 }
 
 func getJWTSecret() string {
 	return config.GetEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
 }
 
-func HashPassword(password string) (string, error) {
-	salt := make([]byte, 16)
-	if _, err := rand.Read(salt); err != nil {
-		return "", fmt.Errorf("failed to generate salt: %w", err)
+func HashPassword(plainPassword string) (string, error) {
+	randomSalt := make([]byte, 16)
+	if _, readError := rand.Read(randomSalt); readError != nil {
+		return "", fmt.Errorf("failed to generate salt: %w", readError)
 	}
 
-	hasher := sha512.New()
-	hasher.Write(salt)
-	hasher.Write([]byte(password))
-	hash := hasher.Sum(nil)
+	sha512Hasher := sha512.New()
+	sha512Hasher.Write(randomSalt)
+	sha512Hasher.Write([]byte(plainPassword))
+	passwordHash := sha512Hasher.Sum(nil)
 
-	return fmt.Sprintf("%s:%s", hex.EncodeToString(salt), hex.EncodeToString(hash)), nil
+	return fmt.Sprintf("%s:%s", hex.EncodeToString(randomSalt), hex.EncodeToString(passwordHash)), nil
 }
 
-func CheckPassword(password, storedHash string) bool {
-	parts := strings.SplitN(storedHash, ":", 2)
-	if len(parts) != 2 {
+func CheckPassword(plainPassword, storedPasswordHash string) bool {
+	hashParts := strings.SplitN(storedPasswordHash, ":", 2)
+	if len(hashParts) != 2 {
 		return false
 	}
 
-	salt, err := hex.DecodeString(parts[0])
-	if err != nil {
+	decodedSalt, decodeSaltError := hex.DecodeString(hashParts[0])
+	if decodeSaltError != nil {
 		return false
 	}
 
-	expectedHash, err := hex.DecodeString(parts[1])
-	if err != nil {
+	expectedHash, decodeHashError := hex.DecodeString(hashParts[1])
+	if decodeHashError != nil {
 		return false
 	}
 
-	hasher := sha512.New()
-	hasher.Write(salt)
-	hasher.Write([]byte(password))
-	actualHash := hasher.Sum(nil)
+	sha512Hasher := sha512.New()
+	sha512Hasher.Write(decodedSalt)
+	sha512Hasher.Write([]byte(plainPassword))
+	calculatedHash := sha512Hasher.Sum(nil)
 
-	return hmac.Equal(actualHash, expectedHash)
+	return hmac.Equal(calculatedHash, expectedHash)
 }
 
-func GenerateJWT(userID, email, role string) (string, error) {
-	secret := getJWTSecret()
-	if secret == "" {
+func GenerateJWT(userID, userEmail, userRole string) (string, error) {
+	jwtSecret := getJWTSecret()
+	if jwtSecret == "" {
 		return "", errors.New("JWT secret is not configured")
 	}
 
-	header := map[string]string{
+	tokenHeader := map[string]string{
 		"alg": "HS256",
 		"typ": "JWT",
 	}
-	headerJSON, err := json.Marshal(header)
-	if err != nil {
-		return "", err
+	headerBytes, marshalHeaderError := json.Marshal(tokenHeader)
+	if marshalHeaderError != nil {
+		return "", marshalHeaderError
 	}
 
-	now := time.Now()
-	claims := JWTClaims{
-		UserID: userID,
-		Email:  email,
-		Role:   role,
-		Iat:    now.Unix(),
-		Exp:    now.Add(7 * 24 * time.Hour).Unix(),
+	currentTime := time.Now()
+	tokenClaims := JWTClaims{
+		UserID:         userID,
+		Email:          userEmail,
+		Role:           userRole,
+		IssuedAt:       currentTime.Unix(),
+		ExpirationTime: currentTime.Add(7 * 24 * time.Hour).Unix(),
 	}
-	claimsJSON, err := json.Marshal(claims)
-	if err != nil {
-		return "", err
+	claimsBytes, marshalClaimsError := json.Marshal(tokenClaims)
+	if marshalClaimsError != nil {
+		return "", marshalClaimsError
 	}
 
-	b64Header := base64.RawURLEncoding.EncodeToString(headerJSON)
-	b64Claims := base64.RawURLEncoding.EncodeToString(claimsJSON)
+	encodedHeader := base64.RawURLEncoding.EncodeToString(headerBytes)
+	encodedClaims := base64.RawURLEncoding.EncodeToString(claimsBytes)
 
-	unsignedToken := b64Header + "." + b64Claims
+	unsignedToken := encodedHeader + "." + encodedClaims
 
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(unsignedToken))
-	signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	hmacSigner := hmac.New(sha256.New, []byte(jwtSecret))
+	hmacSigner.Write([]byte(unsignedToken))
+	tokenSignature := base64.RawURLEncoding.EncodeToString(hmacSigner.Sum(nil))
 
-	return unsignedToken + "." + signature, nil
+	return unsignedToken + "." + tokenSignature, nil
 }
 
-func ValidateJWT(tokenStr string) (*JWTClaims, error) {
-	secret := getJWTSecret()
-	if secret == "" {
+func ValidateJWT(tokenString string) (*JWTClaims, error) {
+	jwtSecret := getJWTSecret()
+	if jwtSecret == "" {
 		return nil, errors.New("JWT secret is not configured")
 	}
 
-	parts := strings.Split(tokenStr, ".")
-	if len(parts) != 3 {
+	tokenParts := strings.Split(tokenString, ".")
+	if len(tokenParts) != 3 {
 		return nil, errors.New("invalid token format")
 	}
 
-	unsignedToken := parts[0] + "." + parts[1]
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(unsignedToken))
-	expectedSignature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	unsignedToken := tokenParts[0] + "." + tokenParts[1]
+	hmacSigner := hmac.New(sha256.New, []byte(jwtSecret))
+	hmacSigner.Write([]byte(unsignedToken))
+	expectedSignature := base64.RawURLEncoding.EncodeToString(hmacSigner.Sum(nil))
 
-	if !hmac.Equal([]byte(parts[2]), []byte(expectedSignature)) {
+	if !hmac.Equal([]byte(tokenParts[2]), []byte(expectedSignature)) {
 		return nil, errors.New("invalid token signature")
 	}
 
-	claimsBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
-	if err != nil {
+	decodedClaimsBytes, decodeClaimsError := base64.RawURLEncoding.DecodeString(tokenParts[1])
+	if decodeClaimsError != nil {
 		return nil, errors.New("failed to decode claims")
 	}
 
-	var claims JWTClaims
-	if err := json.Unmarshal(claimsBytes, &claims); err != nil {
+	var tokenClaims JWTClaims
+	if unmarshalError := json.Unmarshal(decodedClaimsBytes, &tokenClaims); unmarshalError != nil {
 		return nil, errors.New("failed to parse claims")
 	}
 
-	if time.Now().Unix() > claims.Exp {
+	if time.Now().Unix() > tokenClaims.ExpirationTime {
 		return nil, errors.New("token has expired")
 	}
 
-	return &claims, nil
+	return &tokenClaims, nil
 }
