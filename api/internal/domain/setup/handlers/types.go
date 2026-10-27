@@ -1,9 +1,9 @@
-package setup
+package handlers
 
 import (
 	"unicode"
 
-	"pocketrun-api/internal/domain/user"
+	userRepositories "pocketrun-api/internal/domain/user/repositories"
 )
 
 type StatusResponse struct {
@@ -18,9 +18,9 @@ type SetupAdminRequest struct {
 }
 
 type SetupAdminResponse struct {
-	Token   string    `json:"token"`
-	User    user.User `json:"user"`
-	Message string    `json:"message"`
+	Token   string                `json:"token"`
+	User    userRepositories.User `json:"user"`
+	Message string                `json:"message"`
 }
 
 func validateStrongPassword(password string) error {
@@ -54,4 +54,3 @@ type passwordValidationError struct {
 func (validationError *passwordValidationError) Error() string {
 	return validationError.message
 }
-

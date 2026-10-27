@@ -1,4 +1,4 @@
-package setup
+package handlers
 
 import (
 	"context"
@@ -10,20 +10,19 @@ import (
 	"sync"
 	"time"
 
-	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/user"
+	userRepositories "pocketrun-api/internal/domain/user/repositories"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type SetupHandler struct {
-	Database   *database.MongoDB
-	setupMutex sync.Mutex
+	UserRepository *userRepositories.UserRepository
+	setupMutex     sync.Mutex
 }
 
-func NewSetupHandler(mongoDatabase *database.MongoDB) *SetupHandler {
+func NewSetupHandler(userRepository *userRepositories.UserRepository) *SetupHandler {
 	return &SetupHandler{
-		Database: mongoDatabase,
+		UserRepository: userRepository,
 	}
 }
 
@@ -33,8 +32,8 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func CheckInitialStatus(mongoDatabase *database.MongoDB) {
-	if mongoDatabase == nil || mongoDatabase.Database == nil {
+func CheckInitialStatus(userRepository *userRepositories.UserRepository) {
+	if !userRepository.IsAvailable() {
 		log.Println("[Setup] Warning: Database unavailable for initial status check")
 		return
 	}
@@ -42,7 +41,7 @@ func CheckInitialStatus(mongoDatabase *database.MongoDB) {
 	queryContext, cancelQuery := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelQuery()
 
-	usersCount, countError := mongoDatabase.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	usersCount, countError := userRepository.CountUsers(queryContext)
 	if countError != nil {
 		log.Printf("[Setup] Warning: Could not verify users count: %v", countError)
 		return
@@ -66,7 +65,7 @@ func (handler *SetupHandler) GetStatus(responseWriter http.ResponseWriter, reque
 		return
 	}
 
-	if handler.Database == nil || handler.Database.Database == nil {
+	if !handler.UserRepository.IsAvailable() {
 		writeJSONResponse(responseWriter, http.StatusServiceUnavailable, map[string]string{"error": "Database unavailable"})
 		return
 	}
@@ -74,7 +73,7 @@ func (handler *SetupHandler) GetStatus(responseWriter http.ResponseWriter, reque
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	usersCount, countError := handler.Database.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	usersCount, countError := handler.UserRepository.CountUsers(queryContext)
 	if countError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to check setup status"})
 		return
@@ -92,7 +91,7 @@ func (handler *SetupHandler) SetupAdmin(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	if handler.Database == nil || handler.Database.Database == nil {
+	if !handler.UserRepository.IsAvailable() {
 		writeJSONResponse(responseWriter, http.StatusServiceUnavailable, map[string]string{"error": "Database unavailable"})
 		return
 	}
@@ -103,7 +102,7 @@ func (handler *SetupHandler) SetupAdmin(responseWriter http.ResponseWriter, requ
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	usersCount, countError := handler.Database.Database.Collection("users").CountDocuments(queryContext, bson.M{})
+	usersCount, countError := handler.UserRepository.CountUsers(queryContext)
 	if countError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Database error checking system status"})
 		return
@@ -143,14 +142,14 @@ func (handler *SetupHandler) SetupAdmin(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	passwordHash, hashError := user.HashPassword(setupPayload.Password)
+	passwordHash, hashError := userRepositories.HashPassword(setupPayload.Password)
 	if hashError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to securely hash password"})
 		return
 	}
 
 	currentTime := time.Now()
-	newSuperadmin := user.User{
+	newSuperadmin := userRepositories.User{
 		ID:           bson.NewObjectID(),
 		Name:         setupPayload.Name,
 		Email:        setupPayload.Email,
@@ -160,13 +159,12 @@ func (handler *SetupHandler) SetupAdmin(responseWriter http.ResponseWriter, requ
 		UpdatedAt:    currentTime,
 	}
 
-	_, insertError := handler.Database.Database.Collection("users").InsertOne(queryContext, newSuperadmin)
-	if insertError != nil {
+	if insertError := handler.UserRepository.Create(queryContext, newSuperadmin); insertError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to create superadmin user"})
 		return
 	}
 
-	jwtToken, tokenError := user.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
+	jwtToken, tokenError := userRepositories.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Superadmin created, but failed to generate authentication token"})
 		return
