@@ -7,10 +7,10 @@ import (
 )
 
 func main() {
-	mongoDB := database.ConnectMongoDB()
-	defer mongoDB.Close()
+	mongoDatabase := database.ConnectMongoDB()
+	defer mongoDatabase.Close()
 
-	setup.CheckInitialStatus(mongoDB)
+	setup.CheckInitialStatus(mongoDatabase)
 
-	router.StartServers(mongoDB)
+	router.StartServers(mongoDatabase)
 }

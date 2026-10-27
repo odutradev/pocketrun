@@ -23,38 +23,38 @@ import (
 	"pocketrun-api/internal/middleware/cors"
 )
 
-func NewAdminRouter(db *database.MongoDB) http.Handler {
+func NewAdminRouter(mongoDatabase *database.MongoDB) http.Handler {
 	defaultOrigins := config.GetEnv("CORS_ALLOWED_ORIGINS", "*")
 	allowedOrigins := config.GetEnv("ADMIN_CORS_ALLOWED_ORIGINS", defaultOrigins)
 
-	mux := http.NewServeMux()
+	routeMux := http.NewServeMux()
 
-	managerAuthMW := user.ManagerAuth()
+	managerAuthMiddleware := user.ManagerAuth()
 
-	health.RegisterRoutes(mux)
-	setup.RegisterRoutes(mux, db)
-	user.RegisterRoutes(mux, db, managerAuthMW)
-	application.RegisterRoutes(mux, db, managerAuthMW)
+	health.RegisterRoutes(routeMux)
+	setup.RegisterRoutes(routeMux, mongoDatabase)
+	user.RegisterRoutes(routeMux, mongoDatabase, managerAuthMiddleware)
+	application.RegisterRoutes(routeMux, mongoDatabase, managerAuthMiddleware)
 
 	corsMiddleware := cors.CORS(allowedOrigins)
-	return corsMiddleware(mux)
+	return corsMiddleware(routeMux)
 }
 
-func NewPublicRouter(db *database.MongoDB) http.Handler {
+func NewPublicRouter(mongoDatabase *database.MongoDB) http.Handler {
 	allowedOrigins := config.GetEnv("CORS_ALLOWED_ORIGINS", "*")
 
-	mux := http.NewServeMux()
+	routeMux := http.NewServeMux()
 
-	appAuthMW := application.AppAuth(db)
+	applicationAuthMiddleware := application.AppAuth(mongoDatabase)
 
-	health.RegisterRoutes(mux)
-	kv.RegisterRoutes(mux, db, appAuthMW)
+	health.RegisterRoutes(routeMux)
+	kv.RegisterRoutes(routeMux, mongoDatabase, applicationAuthMiddleware)
 
 	corsMiddleware := cors.CORS(allowedOrigins)
-	return corsMiddleware(mux)
+	return corsMiddleware(routeMux)
 }
 
-func StartServers(db *database.MongoDB) {
+func buildConfiguredServers(mongoDatabase *database.MongoDB) []*http.Server {
 	apiMode := strings.ToLower(config.GetEnv("API_MODE", "all"))
 	publicPort := config.GetEnv("PUBLIC_PORT", config.GetEnv("PORT", "8080"))
 	adminPort := config.GetEnv("ADMIN_PORT", "8081")
@@ -63,55 +63,69 @@ func StartServers(db *database.MongoDB) {
 		log.Fatalf("[Router] Invalid API_MODE %q (expected all, public, or admin)", apiMode)
 	}
 
-	var servers []*http.Server
+	var activeServers []*http.Server
 
 	if apiMode == "all" || apiMode == "public" {
-		pubSrv := &http.Server{
+		publicServer := &http.Server{
 			Addr:    fmt.Sprintf(":%s", publicPort),
-			Handler: NewPublicRouter(db),
+			Handler: NewPublicRouter(mongoDatabase),
 		}
-		servers = append(servers, pubSrv)
+		activeServers = append(activeServers, publicServer)
 		log.Printf("[Public API] Operational on http://localhost:%s (Endpoints: /kv/*, /validate/*, /ping)", publicPort)
 	}
 
 	if apiMode == "all" || apiMode == "admin" {
-		admSrv := &http.Server{
+		adminServer := &http.Server{
 			Addr:    fmt.Sprintf(":%s", adminPort),
-			Handler: NewAdminRouter(db),
+			Handler: NewAdminRouter(mongoDatabase),
 		}
-		servers = append(servers, admSrv)
+		activeServers = append(activeServers, adminServer)
 		log.Printf("[Admin API]  Operational on http://localhost:%s (Endpoints: /api/v1/setup/*, /api/v1/auth/*, /api/v1/apps/*, /ping)", adminPort)
 	}
 
-	stopChan := make(chan os.Signal, 1)
-	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
+	return activeServers
+}
 
-	for _, srv := range servers {
-		s := srv
-		go func() {
-			if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Fatalf("Server on %s failed: %v", s.Addr, err)
-			}
-		}()
-	}
+func waitForShutdownSignal() {
+	shutdownSignalChannel := make(chan os.Signal, 1)
+	signal.Notify(shutdownSignalChannel, os.Interrupt, syscall.SIGTERM)
+	<-shutdownSignalChannel
+}
 
-	<-stopChan
+func shutdownServersGracefully(activeServers []*http.Server) {
 	log.Println("Shutting down PocketRun server(s)...")
 
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer shutdownCancel()
+	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelShutdown()
 
-	var wg sync.WaitGroup
-	for _, srv := range servers {
-		wg.Add(1)
-		s := srv
+	var shutdownWaitGroup sync.WaitGroup
+	for _, server := range activeServers {
+		shutdownWaitGroup.Add(1)
+		currentServer := server
 		go func() {
-			defer wg.Done()
-			if err := s.Shutdown(shutdownCtx); err != nil {
-				log.Printf("Error shutting down server %s: %v", s.Addr, err)
+			defer shutdownWaitGroup.Done()
+			if shutdownError := currentServer.Shutdown(shutdownContext); shutdownError != nil {
+				log.Printf("Error shutting down server %s: %v", currentServer.Addr, shutdownError)
 			}
 		}()
 	}
-	wg.Wait()
+
+	shutdownWaitGroup.Wait()
 	log.Println("All server(s) stopped gracefully.")
+}
+
+func StartServers(mongoDatabase *database.MongoDB) {
+	activeServers := buildConfiguredServers(mongoDatabase)
+
+	for _, server := range activeServers {
+		currentServer := server
+		go func() {
+			if listenError := currentServer.ListenAndServe(); listenError != nil && !errors.Is(listenError, http.ErrServerClosed) {
+				log.Fatalf("Server on %s failed: %v", currentServer.Addr, listenError)
+			}
+		}()
+	}
+
+	waitForShutdownSignal()
+	shutdownServersGracefully(activeServers)
 }
