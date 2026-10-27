@@ -7,3 +7,4 @@ import (
 func RegisterRoutes(routeMux *http.ServeMux) {
 	routeMux.HandleFunc("GET /ping", Ping)
 }
+

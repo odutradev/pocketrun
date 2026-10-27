@@ -43,3 +43,4 @@ func NewPublicRouter(mongoDatabase *database.MongoDB) http.Handler {
 	corsMiddleware := cors.CORS(allowedOrigins)
 	return corsMiddleware(routeMux)
 }
+
