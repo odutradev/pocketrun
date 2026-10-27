@@ -2,9 +2,10 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
+
+	"pocketrun-api/internal/config"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -17,18 +18,25 @@ type MongoDB struct {
 	Database *mongo.Database
 }
 
-func ConnectMongoDB(uri, dbName string) (*MongoDB, error) {
+func ConnectMongoDB() *MongoDB {
+	uri := config.GetEnv("MONGODB_URI", "mongodb://localhost:27017")
+	dbName := config.GetEnv("MONGODB_NAME", "pocketrun")
+
+	if uri == "" || dbName == "" {
+		log.Fatalf("[MongoDB] Invalid configuration: MONGODB_URI and MONGODB_NAME are required")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	clientOpts := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(clientOpts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create MongoDB client: %w", err)
+		log.Fatalf("[MongoDB] Failed to create client: %v", err)
 	}
 
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		return nil, fmt.Errorf("failed to ping MongoDB: %w", err)
+		log.Fatalf("[MongoDB] Failed to ping database: %v", err)
 	}
 
 	log.Printf("[MongoDB] Connection established successfully! (Database: %s)", dbName)
@@ -43,7 +51,7 @@ func ConnectMongoDB(uri, dbName string) (*MongoDB, error) {
 		log.Printf("[MongoDB] Warning initializing indexes: %v", err)
 	}
 
-	return mb, nil
+	return mb
 }
 
 func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
@@ -83,9 +91,15 @@ func (m *MongoDB) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (m *MongoDB) Close(ctx context.Context) error {
-	if m.Client != nil {
-		return m.Client.Disconnect(ctx)
+func (m *MongoDB) Close() {
+	if m == nil || m.Client == nil {
+		return
 	}
-	return nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := m.Client.Disconnect(ctx); err != nil {
+		log.Printf("[MongoDB] Error closing connection: %v", err)
+	}
 }

@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"sync"
 )
+
+var envOnce sync.Once
 
 type Config struct {
 	AdminPort      string
@@ -19,17 +22,17 @@ type Config struct {
 }
 
 func Load() *Config {
-	loadEnvFile(".env")
+	ensureEnvLoaded()
 
-	adminPort := getEnv("ADMIN_PORT", "8081")
-	publicPort := getEnv("PUBLIC_PORT", getEnv("PORT", "8080"))
-	apiMode := strings.ToLower(getEnv("API_MODE", "all"))
-	env := getEnv("ENV", "development")
-	allowedOrigins := getEnv("CORS_ALLOWED_ORIGINS", "*")
-	adminOrigins := getEnv("ADMIN_CORS_ALLOWED_ORIGINS", allowedOrigins)
-	mongoURI := getEnv("MONGODB_URI", "mongodb://localhost:27017")
-	mongoDBName := getEnv("MONGODB_NAME", "pocketrun")
-	jwtSecret := getEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
+	adminPort := GetEnv("ADMIN_PORT", "8081")
+	publicPort := GetEnv("PUBLIC_PORT", GetEnv("PORT", "8080"))
+	apiMode := strings.ToLower(GetEnv("API_MODE", "all"))
+	env := GetEnv("ENV", "development")
+	allowedOrigins := GetEnv("CORS_ALLOWED_ORIGINS", "*")
+	adminOrigins := GetEnv("ADMIN_CORS_ALLOWED_ORIGINS", allowedOrigins)
+	mongoURI := GetEnv("MONGODB_URI", "mongodb://localhost:27017")
+	mongoDBName := GetEnv("MONGODB_NAME", "pocketrun")
+	jwtSecret := GetEnv("JWT_SECRET", "pocketrun-secret-key-change-in-production")
 
 	return &Config{
 		AdminPort:      adminPort,
@@ -42,6 +45,12 @@ func Load() *Config {
 		MongoDBName:    mongoDBName,
 		JWTSecret:      jwtSecret,
 	}
+}
+
+func ensureEnvLoaded() {
+	envOnce.Do(func() {
+		loadEnvFile(".env")
+	})
 }
 
 func loadEnvFile(filename string) {
@@ -68,14 +77,11 @@ func loadEnvFile(filename string) {
 			}
 		}
 	}
-
-	if err := scanner.Err(); err != nil {
-		return
-	}
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
+func GetEnv(key, defaultValue string) string {
+	ensureEnvLoaded()
+	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		return value
 	}
 	return defaultValue
