@@ -89,7 +89,7 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         <Button
           type="submit"
           variant="solid"
-          color="iris"
+          color="mint"
           size="3"
           loading={isSubmitting}
           leftIcon={<UserPlus size={16} />}

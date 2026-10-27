@@ -14,7 +14,7 @@ export const SystemStatusGrid = ({ appsCount, tokensCount }: SystemStatusGridPro
           <Text size="2" weight="medium" color="gray">
             Aplicações Ativas
           </Text>
-          <Layers size={18} color="var(--iris-9)" />
+          <Layers size={18} color="var(--mint-11)" />
         </Flex>
         <Heading size="7" weight="bold">
           {appsCount}
@@ -26,7 +26,7 @@ export const SystemStatusGrid = ({ appsCount, tokensCount }: SystemStatusGridPro
           <Text size="2" weight="medium" color="gray">
             Tokens de Acesso
           </Text>
-          <Key size={18} color="var(--cyan-9)" />
+          <Key size={18} color="var(--teal-11)" />
         </Flex>
         <Heading size="7" weight="bold">
           {tokensCount}

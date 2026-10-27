@@ -125,7 +125,7 @@ console.log(data);`
               <Heading size="5" weight="bold">
                 {app.name}
               </Heading>
-              <Badge size="1" variant="surface" color="iris" radius="full">
+              <Badge size="1" variant="surface" color="mint" radius="full">
                 {app.project_id}
               </Badge>
             </Flex>
@@ -135,7 +135,7 @@ console.log(data);`
           </Box>
 
           <Flex gap="3">
-            <Badge size="2" variant="surface" color="iris">
+            <Badge size="2" variant="surface" color="mint">
               🔑 {app.tokens?.length || 0} Tokens
             </Badge>
             <Badge size="2" variant="surface" color={app.allowed_origins.includes('*') ? 'amber' : 'grass'}>
@@ -239,7 +239,7 @@ console.log(data);`
                   <Button
                     type="submit"
                     variant="solid"
-                    color="iris"
+                    color="mint"
                     size="2"
                     loading={savingSettings}
                     leftIcon={<Save size={15} />}
@@ -265,7 +265,7 @@ console.log(data);`
               </Box>
               <Button
                 variant="solid"
-                color="iris"
+                color="mint"
                 size="2"
                 onClick={() => setIsTokenModalOpen(true)}
                 leftIcon={<Plus size={15} />}

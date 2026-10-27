@@ -104,7 +104,7 @@ export const SetupForm = ({ onSuccess }: SetupFormProps) => {
         <Button
           type="submit"
           variant="solid"
-          color="iris"
+          color="mint"
           size="3"
           loading={isSubmitting}
           rightIcon={<ArrowRight size={16} />}

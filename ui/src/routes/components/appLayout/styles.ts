@@ -4,9 +4,9 @@ export const backgroundStyle: CSSProperties = {
   minHeight: '100vh',
   display: 'flex',
   flexDirection: 'column',
-  backgroundColor: '#0c101c',
+  backgroundColor: 'var(--app-bg, var(--color-background))',
   backgroundImage:
-    'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))'
+    'radial-gradient(ellipse 80% 50% at 50% -20%, var(--mint-a4), transparent)'
 }
 
 export const mainContentStyle: CSSProperties = {

@@ -4,7 +4,7 @@ export const headerStyle: CSSProperties = {
   position: 'sticky',
   top: 0,
   zIndex: 50,
-  backgroundColor: 'rgba(11, 13, 19, 0.8)',
+  backgroundColor: 'var(--color-panel-translucent)',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
   borderBottom: '1px solid var(--gray-a3)'
@@ -20,8 +20,8 @@ export const logoIconStyle: CSSProperties = {
   width: 28,
   height: 28,
   borderRadius: 'var(--radius-2)',
-  backgroundColor: 'var(--iris-a3)',
-  border: '1px solid var(--iris-a4)',
+  backgroundColor: 'var(--mint-a3)',
+  border: '1px solid var(--mint-a4)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center'

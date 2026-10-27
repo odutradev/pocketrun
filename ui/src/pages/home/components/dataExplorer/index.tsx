@@ -144,7 +144,7 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
                 <Button
                   key={col}
                   variant={selectedCollection === col ? 'solid' : 'ghost'}
-                  color="iris"
+                  color="mint"
                   size="2"
                   onClick={() => setSelectedCollection(col)}
                   leftIcon={<Folder size={14} />}
@@ -159,7 +159,7 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
 
         <Card size="2">
           <Flex justify="between" align="center" gap="3" mb="3">
-            <Badge size="2" variant="surface" color="iris">
+            <Badge size="2" variant="surface" color="mint">
               {selectedCollection || 'Selecione uma coleção'}
             </Badge>
 
@@ -230,7 +230,7 @@ export const DataExplorer = ({ appId, projectName }: DataExplorerProps) => {
                       <Table.Cell style={{ textAlign: 'center' }}>
                         <Button
                           variant="ghost"
-                          color="iris"
+                          color="mint"
                           size="1"
                           onClick={() => setActiveDoc(doc)}
                           leftIcon={<Eye size={13} />}

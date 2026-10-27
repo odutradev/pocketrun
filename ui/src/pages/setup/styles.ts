@@ -8,11 +8,11 @@ export const containerStyle: CSSProperties = {
 }
 
 export const cardStyle: CSSProperties = {
-  backgroundColor: 'rgba(13, 16, 23, 0.75)',
+  backgroundColor: 'var(--color-panel-translucent)',
   border: '1px solid var(--gray-a4)',
   backdropFilter: 'blur(20px)',
   WebkitBackdropFilter: 'blur(20px)',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.24)'
+  boxShadow: 'var(--shadow-4)'
 }
 
 export const cardContentStyle: CSSProperties = {

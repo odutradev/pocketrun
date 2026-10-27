@@ -10,7 +10,7 @@ export const SetupHeader = ({ title, subtitle }: SetupHeaderProps) => {
     <Box style={headerContainerStyle}>
       <Flex justify="center" mb="3">
         <Box style={iconContainerStyle}>
-          <ShieldCheck size={20} color="var(--iris-9)" />
+          <ShieldCheck size={20} color="var(--mint-11)" />
         </Box>
       </Flex>
       <Heading size="5" weight="bold" mb="1" style={{ letterSpacing: '-0.02em' }}>

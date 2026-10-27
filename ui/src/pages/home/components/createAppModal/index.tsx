@@ -76,7 +76,7 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleDone()}>
       <Dialog.Content maxWidth="520px" style={{ padding: '28px' }}>
         <Flex justify="between" align="start" mb="3">
-          <Badge size="1" variant="surface" color="iris" radius="full">
+          <Badge size="1" variant="surface" color="mint" radius="full">
             <Flex align="center" gap="1">
               <Plus size={13} />
               Nova Aplicação
@@ -151,7 +151,7 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
                 <Button
                   type="submit"
                   size="3"
-                  color="iris"
+                  color="mint"
                   variant="solid"
                   loading={loading}
                   mt="2"
@@ -214,7 +214,7 @@ export const CreateAppModal = ({ isOpen, onClose, onSuccess }: CreateAppModalPro
               </Flex>
             </Box>
 
-            <Button size="3" color="iris" variant="solid" onClick={handleDone} style={{ width: '100%' }}>
+            <Button size="3" color="mint" variant="solid" onClick={handleDone} style={{ width: '100%' }}>
               Entendi e Salvei o Token
             </Button>
           </Box>

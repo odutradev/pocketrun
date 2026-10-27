@@ -17,14 +17,14 @@ export const WelcomeBanner = ({ onOpenAuth }: WelcomeBannerProps) => {
               width: 64,
               height: 64,
               borderRadius: 'var(--radius-4)',
-              background: 'linear-gradient(135deg, var(--iris-9) 0%, var(--cyan-9) 100%)',
+              background: 'linear-gradient(135deg, var(--mint-9) 0%, var(--mint-6) 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 8px 28px var(--iris-a6)'
+              boxShadow: '0 8px 28px var(--mint-a5)'
             }}
           >
-            <Sparkles size={32} color="#FFF" />
+            <Sparkles size={32} color="var(--mint-contrast)" />
           </Box>
 
           <Heading size="7" weight="bold" mb="3" style={{ letterSpacing: '-0.03em' }}>
@@ -37,7 +37,7 @@ export const WelcomeBanner = ({ onOpenAuth }: WelcomeBannerProps) => {
 
           <Button
             size="3"
-            color="iris"
+            color="mint"
             variant="solid"
             onClick={onOpenAuth}
             leftIcon={<Shield size={18} />}

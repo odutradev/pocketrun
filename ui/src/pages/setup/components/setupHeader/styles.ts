@@ -9,8 +9,8 @@ export const iconContainerStyle: CSSProperties = {
   width: 40,
   height: 40,
   borderRadius: 'var(--radius-3)',
-  backgroundColor: 'var(--iris-a3)',
-  border: '1px solid var(--iris-a5)',
+  backgroundColor: 'var(--mint-a3)',
+  border: '1px solid var(--mint-a5)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center'

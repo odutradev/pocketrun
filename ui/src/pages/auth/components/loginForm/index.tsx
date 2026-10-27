@@ -73,7 +73,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <Button
           type="submit"
           variant="solid"
-          color="iris"
+          color="mint"
           size="3"
           loading={isSubmitting}
           leftIcon={<LogIn size={16} />}

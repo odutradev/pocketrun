@@ -75,7 +75,7 @@ export const HomePage = () => {
           </Button>
           <Button
             variant="solid"
-            color="iris"
+            color="mint"
             size="2"
             onClick={() => setIsCreateModalOpen(true)}
             leftIcon={<Plus size={16} />}
@@ -112,7 +112,7 @@ export const HomePage = () => {
             </Text>
             <Button
               variant="solid"
-              color="iris"
+              color="mint"
               size="2"
               onClick={() => setIsCreateModalOpen(true)}
               leftIcon={<Plus size={16} />}
@@ -137,7 +137,7 @@ export const HomePage = () => {
             >
               <Box mb="4">
                 <Flex justify="between" align="center" mb="2">
-                  <Badge size="1" variant="surface" color="iris" radius="full">
+                  <Badge size="1" variant="surface" color="mint" radius="full">
                     {app.project_id}
                   </Badge>
                   <Text size="1" color="gray">
@@ -174,7 +174,7 @@ export const HomePage = () => {
                       🌐 {app.allowed_origins.includes('*') ? 'Qualquer Origem' : `${app.allowed_origins.length} Origens`}
                     </Text>
                   </Flex>
-                  <Button variant="ghost" color="iris" size="1" rightIcon={<ArrowRight size={13} />}>
+                  <Button variant="ghost" color="mint" size="1" rightIcon={<ArrowRight size={13} />}>
                     Gerenciar
                   </Button>
                 </Flex>

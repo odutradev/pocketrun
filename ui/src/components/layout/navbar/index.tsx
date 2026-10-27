@@ -1,18 +1,20 @@
-import { Flex, Box, Badge, Button, Heading, Text } from '@radix-ui/themes'
-import { User, LogOut, ShieldCheck, Database } from 'lucide-react'
+import { Flex, Box, Badge, Button, Heading, Text, IconButton } from '@radix-ui/themes'
+import { User, LogOut, ShieldCheck, Database, Sun, Moon } from 'lucide-react'
 
 import { headerStyle, innerContainerStyle, logoIconStyle, statusBadgeStyle, userBadgeStyle, actionButtonStyle } from './styles'
+import useSystemStore from '@stores/system'
 import useAuthStore from '@stores/auth'
 
 import type { NavbarProps } from './types'
 
 export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth }: NavbarProps) => {
+  const { isDarkMode, toggleTheme } = useSystemStore()
   const { user, logout } = useAuthStore()
 
   const getStatusColor = () => {
     if (apiStatus === 'online') return 'grass'
     if (apiStatus === 'offline') return 'amber'
-    return 'iris'
+    return 'mint'
   }
 
   return (
@@ -21,7 +23,7 @@ export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth
         <Flex justify="between" align="center" wrap="wrap" gap="3">
           <Flex align="center" gap="2">
             <Box style={logoIconStyle}>
-              <Database size={15} color="var(--iris-9)" />
+              <Database size={15} color="var(--mint-11)" />
             </Box>
             <Heading size="3" weight="medium" style={{ letterSpacing: '-0.02em' }}>
               PocketRun
@@ -50,16 +52,28 @@ export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth
               </Badge>
             )}
 
+            <IconButton
+              size="1"
+              variant="soft"
+              color="gray"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+              aria-label={isDarkMode ? 'Ativar modo claro' : 'Ativar modo escuro'}
+              style={actionButtonStyle}
+            >
+              {isDarkMode ? <Sun size={14} /> : <Moon size={14} />}
+            </IconButton>
+
             {user ? (
               <Flex align="center" gap="2">
                 <Box style={userBadgeStyle}>
                   <Flex align="center" gap="2">
-                    <ShieldCheck size={14} color="var(--iris-9)" />
+                    <ShieldCheck size={14} color="var(--mint-11)" />
                     <Text size="1" weight="medium">
                       {user.name}
                     </Text>
                     {user.role === 'superadmin' && (
-                      <Badge size="1" variant="solid" color="iris">
+                      <Badge size="1" variant="solid" color="mint">
                         SUPERADMIN
                       </Badge>
                     )}
@@ -81,7 +95,7 @@ export const Navbar = ({ apiStatus = 'online', setupRequired = false, onOpenAuth
             ) : !setupRequired && onOpenAuth ? (
               <Button
                 variant="soft"
-                color="iris"
+                color="mint"
                 size="1"
                 onClick={onOpenAuth}
                 style={actionButtonStyle}

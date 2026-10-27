@@ -58,7 +58,7 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleDone()}>
       <Dialog.Content maxWidth="480px" style={{ padding: '28px' }}>
         <Flex justify="between" align="start" mb="3">
-          <Badge size="1" variant="surface" color="iris" radius="full">
+          <Badge size="1" variant="surface" color="mint" radius="full">
             <Flex align="center" gap="1">
               <Key size={13} />
               Novo Token de Acesso
@@ -125,7 +125,7 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
                 <Button
                   type="submit"
                   size="3"
-                  color="iris"
+                  color="mint"
                   variant="solid"
                   loading={loading}
                   mt="2"
@@ -188,7 +188,7 @@ export const CreateTokenModal = ({ appId, isOpen, onClose, onSuccess }: CreateTo
               </Flex>
             </Box>
 
-            <Button size="3" color="iris" variant="solid" onClick={handleDone} style={{ width: '100%' }}>
+            <Button size="3" color="mint" variant="solid" onClick={handleDone} style={{ width: '100%' }}>
               Fechar e Concluir
             </Button>
           </Box>
