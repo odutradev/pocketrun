@@ -1,4 +1,4 @@
-package kv
+package repositories
 
 import (
 	"time"
@@ -15,13 +15,4 @@ type KVDocument struct {
 	ExpiresAt      *time.Time    `bson:"expires_at,omitempty" json:"expires_at,omitempty"`
 	CreatedAt      time.Time     `bson:"created_at" json:"created_at"`
 	UpdatedAt      time.Time     `bson:"updated_at" json:"updated_at"`
-}
-
-type CreateKVRequest struct {
-	Data          map[string]any `json:"data"`
-	ExpiresInDays int            `json:"expiresInDays,omitempty"`
-}
-
-type UpdateKVRequest struct {
-	Data map[string]any `json:"data"`
 }

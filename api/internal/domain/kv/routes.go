@@ -5,10 +5,13 @@ import (
 	"strings"
 
 	"pocketrun-api/internal/database"
+	"pocketrun-api/internal/domain/kv/handlers"
+	"pocketrun-api/internal/domain/kv/repositories"
 )
 
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, applicationAuthMiddleware func(http.Handler) http.Handler) {
-	keyValueHandler := NewKVHandler(mongoDatabase)
+	keyValueRepository := repositories.NewKVRepository(mongoDatabase)
+	keyValueHandler := handlers.NewKVHandler(keyValueRepository)
 
 	routeMux.Handle("/validate/control-access", applicationAuthMiddleware(http.HandlerFunc(keyValueHandler.ValidateControlAccess)))
 
