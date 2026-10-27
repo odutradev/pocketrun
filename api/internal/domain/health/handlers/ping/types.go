@@ -1,4 +1,4 @@
-package handlers
+package ping
 
 type PingResponse struct {
 	Status  string `json:"status"`
