@@ -1,4 +1,4 @@
-package repositories
+package apps
 
 import (
 	"context"
@@ -10,21 +10,21 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-type ApplicationRepository struct {
+type Repository struct {
 	collection *mongo.Collection
 }
 
-func NewApplicationRepository(mongoDatabase *database.MongoDB) *ApplicationRepository {
+func NewRepository(mongoDatabase *database.MongoDB) *Repository {
 	if mongoDatabase == nil || mongoDatabase.Database == nil {
-		return &ApplicationRepository{}
+		return &Repository{}
 	}
 
-	return &ApplicationRepository{
+	return &Repository{
 		collection: mongoDatabase.Database.Collection("applications"),
 	}
 }
 
-func (repository *ApplicationRepository) VerifyOwnership(queryContext context.Context, applicationID, managerID bson.ObjectID) bool {
+func (repository *Repository) VerifyOwnership(queryContext context.Context, applicationID, managerID bson.ObjectID) bool {
 	matchingCount, _ := repository.collection.CountDocuments(
 		queryContext,
 		bson.M{"_id": applicationID, "manager_id": managerID},
@@ -32,7 +32,7 @@ func (repository *ApplicationRepository) VerifyOwnership(queryContext context.Co
 	return matchingCount > 0
 }
 
-func (repository *ApplicationRepository) ExistsByProjectID(queryContext context.Context, projectID string) bool {
+func (repository *Repository) ExistsByProjectID(queryContext context.Context, projectID string) bool {
 	existingCount, _ := repository.collection.CountDocuments(
 		queryContext,
 		bson.M{"project_id": projectID},
@@ -40,7 +40,7 @@ func (repository *ApplicationRepository) ExistsByProjectID(queryContext context.
 	return existingCount > 0
 }
 
-func (repository *ApplicationRepository) FindByManagerID(queryContext context.Context, managerID bson.ObjectID) ([]Application, error) {
+func (repository *Repository) FindByManagerID(queryContext context.Context, managerID bson.ObjectID) ([]Application, error) {
 	applicationsCursor, findError := repository.collection.Find(queryContext, bson.M{"manager_id": managerID})
 	if findError != nil {
 		return nil, findError
@@ -59,12 +59,12 @@ func (repository *ApplicationRepository) FindByManagerID(queryContext context.Co
 	return applications, nil
 }
 
-func (repository *ApplicationRepository) Create(queryContext context.Context, application Application) error {
+func (repository *Repository) Create(queryContext context.Context, application Application) error {
 	_, insertError := repository.collection.InsertOne(queryContext, application)
 	return insertError
 }
 
-func (repository *ApplicationRepository) FindByIDAndManager(queryContext context.Context, applicationID, managerID bson.ObjectID) (*Application, error) {
+func (repository *Repository) FindByIDAndManager(queryContext context.Context, applicationID, managerID bson.ObjectID) (*Application, error) {
 	var foundApplication Application
 	findError := repository.collection.FindOne(
 		queryContext,
@@ -77,7 +77,7 @@ func (repository *ApplicationRepository) FindByIDAndManager(queryContext context
 	return &foundApplication, nil
 }
 
-func (repository *ApplicationRepository) UpdateByIDAndManager(
+func (repository *Repository) UpdateByIDAndManager(
 	queryContext context.Context,
 	applicationID, managerID bson.ObjectID,
 	name, description string,
@@ -106,7 +106,7 @@ func (repository *ApplicationRepository) UpdateByIDAndManager(
 	return updateResult.MatchedCount > 0, nil
 }
 
-func (repository *ApplicationRepository) DeleteByIDAndManager(queryContext context.Context, applicationID, managerID bson.ObjectID) (bool, error) {
+func (repository *Repository) DeleteByIDAndManager(queryContext context.Context, applicationID, managerID bson.ObjectID) (bool, error) {
 	deleteResult, deleteError := repository.collection.DeleteOne(
 		queryContext,
 		bson.M{"_id": applicationID, "manager_id": managerID},
@@ -118,33 +118,7 @@ func (repository *ApplicationRepository) DeleteByIDAndManager(queryContext conte
 	return deleteResult.DeletedCount > 0, nil
 }
 
-func (repository *ApplicationRepository) AddToken(queryContext context.Context, applicationID, managerID bson.ObjectID, token Token) (bool, error) {
-	updateResult, updateError := repository.collection.UpdateOne(
-		queryContext,
-		bson.M{"_id": applicationID, "manager_id": managerID},
-		bson.M{"$push": bson.M{"tokens": token}},
-	)
-	if updateError != nil {
-		return false, updateError
-	}
-
-	return updateResult.MatchedCount > 0, nil
-}
-
-func (repository *ApplicationRepository) RemoveToken(queryContext context.Context, applicationID, managerID bson.ObjectID, tokenID string) (bool, error) {
-	updateResult, updateError := repository.collection.UpdateOne(
-		queryContext,
-		bson.M{"_id": applicationID, "manager_id": managerID},
-		bson.M{"$pull": bson.M{"tokens": bson.M{"id": tokenID}}},
-	)
-	if updateError != nil {
-		return false, updateError
-	}
-
-	return updateResult.MatchedCount > 0, nil
-}
-
-func (repository *ApplicationRepository) FindByTokenHash(queryContext context.Context, tokenHash string) (*Application, error) {
+func (repository *Repository) FindByTokenHash(queryContext context.Context, tokenHash string) (*Application, error) {
 	var foundApplication Application
 	findError := repository.collection.FindOne(queryContext, bson.M{
 		"tokens.token_hash": tokenHash,
@@ -154,13 +128,4 @@ func (repository *ApplicationRepository) FindByTokenHash(queryContext context.Co
 	}
 
 	return &foundApplication, nil
-}
-
-func (repository *ApplicationRepository) UpdateTokenLastUsedAt(queryContext context.Context, applicationID bson.ObjectID, tokenHash string) error {
-	_, updateError := repository.collection.UpdateOne(
-		queryContext,
-		bson.M{"_id": applicationID, "tokens.token_hash": tokenHash},
-		bson.M{"$set": bson.M{"tokens.$.last_used_at": time.Now()}},
-	)
-	return updateError
 }

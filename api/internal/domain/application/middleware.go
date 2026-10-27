@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/application/repositories"
+	appsRepo "pocketrun-api/internal/domain/application/repositories/apps"
+	tokensRepo "pocketrun-api/internal/domain/application/repositories/tokens"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -40,7 +41,7 @@ func extractAccessToken(request *http.Request) string {
 	return ""
 }
 
-func findMatchingToken(tokens []repositories.Token, tokenHash string) *repositories.Token {
+func findMatchingToken(tokens []tokensRepo.Token, tokenHash string) *tokensRepo.Token {
 	for tokenIndex := range tokens {
 		if tokens[tokenIndex].TokenHash == tokenHash {
 			return &tokens[tokenIndex]
@@ -49,19 +50,20 @@ func findMatchingToken(tokens []repositories.Token, tokenHash string) *repositor
 	return nil
 }
 
-func isTokenExpired(token *repositories.Token) bool {
+func isTokenExpired(token *tokensRepo.Token) bool {
 	return token != nil && token.ExpiresAt != nil && time.Now().After(*token.ExpiresAt)
 }
 
-func updateTokenLastUsedAt(appRepository *repositories.ApplicationRepository, applicationID bson.ObjectID, tokenHash string) {
+func updateTokenLastUsedAt(tokensRepository *tokensRepo.Repository, applicationID bson.ObjectID, tokenHash string) {
 	updateContext, cancelUpdate := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelUpdate()
 
-	_ = appRepository.UpdateTokenLastUsedAt(updateContext, applicationID, tokenHash)
+	_ = tokensRepository.UpdateTokenLastUsedAt(updateContext, applicationID, tokenHash)
 }
 
 func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
-	appRepository := repositories.NewApplicationRepository(mongoDatabase)
+	appsRepository := appsRepo.NewRepository(mongoDatabase)
+	tokensRepository := tokensRepo.NewRepository(mongoDatabase)
 
 	return func(nextHandler http.Handler) http.Handler {
 		return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
@@ -73,12 +75,12 @@ func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
 				return
 			}
 
-			tokenHash := repositories.HashAPIToken(rawToken)
+			tokenHash := tokensRepo.HashAPIToken(rawToken)
 
 			queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 			defer cancelQuery()
 
-			foundApplication, findError := appRepository.FindByTokenHash(queryContext, tokenHash)
+			foundApplication, findError := appsRepository.FindByTokenHash(queryContext, tokenHash)
 			if findError != nil {
 				writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{
 					"error": "Invalid application access token",
@@ -95,7 +97,7 @@ func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
 			}
 
 			originHeader := request.Header.Get("Origin")
-			if !repositories.IsOriginAllowed(foundApplication.AllowedOrigins, originHeader, foundApplication.AllowNonBrowserRequests) {
+			if !appsRepo.IsOriginAllowed(foundApplication.AllowedOrigins, originHeader, foundApplication.AllowNonBrowserRequests) {
 				writeJSONResponse(responseWriter, http.StatusForbidden, map[string]string{
 					"error":  "Access denied: Origin not allowed for this application",
 					"origin": originHeader,
@@ -117,7 +119,7 @@ func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
 				return
 			}
 
-			go updateTokenLastUsedAt(appRepository, foundApplication.ID, tokenHash)
+			go updateTokenLastUsedAt(tokensRepository, foundApplication.ID, tokenHash)
 
 			authenticatedContext := context.WithValue(request.Context(), AppKey, foundApplication)
 			authenticatedContext = context.WithValue(authenticatedContext, ProjectIDKey, foundApplication.ProjectID)
@@ -127,8 +129,8 @@ func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
 	}
 }
 
-func GetAppFromContext(requestContext context.Context) *repositories.Application {
-	if applicationInstance, exists := requestContext.Value(AppKey).(*repositories.Application); exists {
+func GetAppFromContext(requestContext context.Context) *appsRepo.Application {
+	if applicationInstance, exists := requestContext.Value(AppKey).(*appsRepo.Application); exists {
 		return applicationInstance
 	}
 	return nil
