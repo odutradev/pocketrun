@@ -1,19 +1,59 @@
-package handlers
+package documents
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
 	"pocketrun-api/internal/domain/application"
-	"pocketrun-api/internal/domain/kv/repositories"
+	documentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func (handler *KVHandler) Create(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+type Handler struct {
+	Repository *documentsRepo.Repository
+}
+
+func NewHandler(repository *documentsRepo.Repository) *Handler {
+	return &Handler{Repository: repository}
+}
+
+func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, payload any) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(statusCode)
+	_ = json.NewEncoder(responseWriter).Encode(payload)
+}
+
+func buildCollectionQueryFilter(applicationID bson.ObjectID, collectionName string, queryParameters url.Values) bson.M {
+	queryFilter := bson.M{
+		"app_id":          applicationID,
+		"collection_name": collectionName,
+	}
+
+	for parameterKey, parameterValues := range queryParameters {
+		if parameterKey == "page" || parameterKey == "limit" || parameterKey == "pagination" {
+			continue
+		}
+		if len(parameterValues) > 0 {
+			rawValue := parameterValues[0]
+			if booleanValue, parseBoolError := strconv.ParseBool(rawValue); parseBoolError == nil {
+				queryFilter["data."+parameterKey] = booleanValue
+			} else if numericValue, parseFloatError := strconv.ParseFloat(rawValue, 64); parseFloatError == nil {
+				queryFilter["data."+parameterKey] = numericValue
+			} else {
+				queryFilter["data."+parameterKey] = rawValue
+			}
+		}
+	}
+
+	return queryFilter
+}
+
+func (handler *Handler) Create(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -38,7 +78,7 @@ func (handler *KVHandler) Create(responseWriter http.ResponseWriter, request *ht
 		expirationDate = &calculatedExpiration
 	}
 
-	newDocument := repositories.KVDocument{
+	newDocument := documentsRepo.KVDocument{
 		ID:             bson.NewObjectID(),
 		AppID:          authenticatedApplication.ID,
 		ProjectID:      authenticatedApplication.ProjectID,
@@ -60,7 +100,7 @@ func (handler *KVHandler) Create(responseWriter http.ResponseWriter, request *ht
 	writeJSONResponse(responseWriter, http.StatusCreated, newDocument)
 }
 
-func (handler *KVHandler) GetAll(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+func (handler *Handler) GetAll(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -105,7 +145,7 @@ func (handler *KVHandler) GetAll(responseWriter http.ResponseWriter, request *ht
 	writeJSONResponse(responseWriter, http.StatusOK, documents)
 }
 
-func (handler *KVHandler) GetByID(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+func (handler *Handler) GetByID(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -130,7 +170,7 @@ func (handler *KVHandler) GetByID(responseWriter http.ResponseWriter, request *h
 	writeJSONResponse(responseWriter, http.StatusOK, foundDocument)
 }
 
-func (handler *KVHandler) Update(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+func (handler *Handler) Update(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -161,7 +201,7 @@ func (handler *KVHandler) Update(responseWriter http.ResponseWriter, request *ht
 	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Document updated successfully"})
 }
 
-func (handler *KVHandler) Delete(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+func (handler *Handler) Delete(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -186,7 +226,7 @@ func (handler *KVHandler) Delete(responseWriter http.ResponseWriter, request *ht
 	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Document deleted successfully"})
 }
 
-func (handler *KVHandler) DeleteAllCollection(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+func (handler *Handler) DeleteAllCollection(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -208,7 +248,7 @@ func (handler *KVHandler) DeleteAllCollection(responseWriter http.ResponseWriter
 	})
 }
 
-func (handler *KVHandler) DeleteAllProject(responseWriter http.ResponseWriter, request *http.Request) {
+func (handler *Handler) DeleteAllProject(responseWriter http.ResponseWriter, request *http.Request) {
 	authenticatedApplication := application.GetAppFromContext(request.Context())
 	if authenticatedApplication == nil {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})

@@ -5,22 +5,24 @@ import (
 	"strings"
 
 	"pocketrun-api/internal/database"
-	"pocketrun-api/internal/domain/kv/handlers"
-	"pocketrun-api/internal/domain/kv/repositories"
+	documentsHandler "pocketrun-api/internal/domain/kv/handlers/documents"
+	validationHandler "pocketrun-api/internal/domain/kv/handlers/validation"
+	documentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
 )
 
 func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, applicationAuthMiddleware func(http.Handler) http.Handler) {
-	keyValueRepository := repositories.NewKVRepository(mongoDatabase)
-	keyValueHandler := handlers.NewKVHandler(keyValueRepository)
+	keyValueRepository := documentsRepo.NewRepository(mongoDatabase)
+	keyValueDocumentsHandler := documentsHandler.NewHandler(keyValueRepository)
+	keyValueValidationHandler := validationHandler.NewHandler()
 
-	routeMux.Handle("/validate/control-access", applicationAuthMiddleware(http.HandlerFunc(keyValueHandler.ValidateControlAccess)))
+	routeMux.Handle("/validate/control-access", applicationAuthMiddleware(http.HandlerFunc(keyValueValidationHandler.ValidateControlAccess)))
 
 	routeMux.Handle("/kv/", applicationAuthMiddleware(http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		relativePath := strings.TrimPrefix(request.URL.Path, "/kv/")
 		pathSegments := strings.Split(relativePath, "/")
 
 		if relativePath == "project/delete-all" && request.Method == http.MethodDelete {
-			keyValueHandler.DeleteAllProject(responseWriter, request)
+			keyValueDocumentsHandler.DeleteAllProject(responseWriter, request)
 			return
 		}
 
@@ -35,32 +37,32 @@ func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, ap
 		switch actionName {
 		case "create":
 			if request.Method == http.MethodPost {
-				keyValueHandler.Create(responseWriter, request, collectionName)
+				keyValueDocumentsHandler.Create(responseWriter, request, collectionName)
 				return
 			}
 		case "get-all":
 			if request.Method == http.MethodGet {
-				keyValueHandler.GetAll(responseWriter, request, collectionName)
+				keyValueDocumentsHandler.GetAll(responseWriter, request, collectionName)
 				return
 			}
 		case "get":
 			if len(pathSegments) == 3 && request.Method == http.MethodGet {
-				keyValueHandler.GetByID(responseWriter, request, collectionName, pathSegments[2])
+				keyValueDocumentsHandler.GetByID(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "update":
 			if len(pathSegments) == 3 && request.Method == http.MethodPatch {
-				keyValueHandler.Update(responseWriter, request, collectionName, pathSegments[2])
+				keyValueDocumentsHandler.Update(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "delete":
 			if len(pathSegments) == 3 && request.Method == http.MethodDelete {
-				keyValueHandler.Delete(responseWriter, request, collectionName, pathSegments[2])
+				keyValueDocumentsHandler.Delete(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "delete-all":
 			if request.Method == http.MethodDelete {
-				keyValueHandler.DeleteAllCollection(responseWriter, request, collectionName)
+				keyValueDocumentsHandler.DeleteAllCollection(responseWriter, request, collectionName)
 				return
 			}
 		}

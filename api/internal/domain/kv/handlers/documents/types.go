@@ -1,4 +1,4 @@
-package handlers
+package documents
 
 type CreateKVRequest struct {
 	Data          map[string]any `json:"data"`
