@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
+	userUtils "pocketrun-api/internal/domain/user/utils"
 )
 
 func ManagerAuth() func(http.Handler) http.Handler {
@@ -28,7 +28,7 @@ func ManagerAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			tokenClaims, validationError := usersRepo.ValidateJWT(headerParts[1])
+			tokenClaims, validationError := userUtils.ValidateJWT(headerParts[1])
 			if validationError != nil {
 				responseWriter.Header().Set("Content-Type", "application/json")
 				responseWriter.WriteHeader(http.StatusUnauthorized)
@@ -36,18 +36,10 @@ func ManagerAuth() func(http.Handler) http.Handler {
 				return
 			}
 
-			authenticatedContext := context.WithValue(request.Context(), usersRepo.UserIDKey, tokenClaims.UserID)
-			authenticatedContext = context.WithValue(authenticatedContext, usersRepo.UserEmailKey, tokenClaims.Email)
+			authenticatedContext := context.WithValue(request.Context(), userUtils.UserIDKey, tokenClaims.UserID)
+			authenticatedContext = context.WithValue(authenticatedContext, userUtils.UserEmailKey, tokenClaims.Email)
 
 			nextHandler.ServeHTTP(responseWriter, request.WithContext(authenticatedContext))
 		})
 	}
-}
-
-func GetManagerID(requestContext context.Context) string {
-	return usersRepo.GetManagerID(requestContext)
-}
-
-func GetManagerEmail(requestContext context.Context) string {
-	return usersRepo.GetManagerEmail(requestContext)
 }

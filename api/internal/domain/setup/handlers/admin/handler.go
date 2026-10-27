@@ -12,6 +12,7 @@ import (
 
 	setupUtils "pocketrun-api/internal/domain/setup/utils"
 	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
+	userUtils "pocketrun-api/internal/domain/user/utils"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -90,7 +91,7 @@ func (handler *Handler) SetupAdmin(responseWriter http.ResponseWriter, request *
 		return
 	}
 
-	passwordHash, hashError := usersRepo.HashPassword(setupPayload.Password)
+	passwordHash, hashError := userUtils.HashPassword(setupPayload.Password)
 	if hashError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to securely hash password"})
 		return
@@ -112,7 +113,7 @@ func (handler *Handler) SetupAdmin(responseWriter http.ResponseWriter, request *
 		return
 	}
 
-	jwtToken, tokenError := usersRepo.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
+	jwtToken, tokenError := userUtils.GenerateJWT(newSuperadmin.ID.Hex(), newSuperadmin.Email, newSuperadmin.Role)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Superadmin created, but failed to generate authentication token"})
 		return

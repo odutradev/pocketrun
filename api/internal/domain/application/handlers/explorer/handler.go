@@ -9,7 +9,7 @@ import (
 
 	appsRepo "pocketrun-api/internal/domain/application/repositories/apps"
 	kvDocumentsRepo "pocketrun-api/internal/domain/kv/repositories/documents"
-	"pocketrun-api/internal/domain/user"
+	userUtils "pocketrun-api/internal/domain/user/utils"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -36,7 +36,7 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 }
 
 func parseManagerAndApplicationIDs(request *http.Request, applicationIDHex string) (bson.ObjectID, bson.ObjectID, error) {
-	managerIDString := user.GetManagerID(request.Context())
+	managerIDString := userUtils.GetManagerID(request.Context())
 	managerObjectID, _ := bson.ObjectIDFromHex(managerIDString)
 	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
 	return managerObjectID, applicationObjectID, parseError

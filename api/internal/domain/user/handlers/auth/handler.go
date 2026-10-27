@@ -8,6 +8,7 @@ import (
 	"time"
 
 	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
+	userUtils "pocketrun-api/internal/domain/user/utils"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -87,7 +88,7 @@ func (handler *Handler) Login(responseWriter http.ResponseWriter, request *http.
 	defer cancelQuery()
 
 	foundUser, findError := handler.UsersRepository.FindByEmail(queryContext, loginPayload.Email)
-	if findError != nil || !usersRepo.CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
+	if findError != nil || !userUtils.CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
 		return
 	}
@@ -97,7 +98,7 @@ func (handler *Handler) Login(responseWriter http.ResponseWriter, request *http.
 		userRole = "admin"
 	}
 
-	jwtToken, tokenError := usersRepo.GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
+	jwtToken, tokenError := userUtils.GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate authentication token"})
 		return
@@ -110,7 +111,7 @@ func (handler *Handler) Login(responseWriter http.ResponseWriter, request *http.
 }
 
 func (handler *Handler) Me(responseWriter http.ResponseWriter, request *http.Request) {
-	managerIDString := usersRepo.GetManagerID(request.Context())
+	managerIDString := userUtils.GetManagerID(request.Context())
 	if managerIDString == "" {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
