@@ -7,51 +7,51 @@ import (
 	"pocketrun-api/internal/database"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB, managerAuthMW func(http.Handler) http.Handler) {
-	h := NewAppHandler(db)
+func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, managerAuthMiddleware func(http.Handler) http.Handler) {
+	applicationHandler := NewAppHandler(mongoDatabase)
 
-	mux.Handle("GET /api/v1/apps", managerAuthMW(http.HandlerFunc(h.ListApps)))
-	mux.Handle("POST /api/v1/apps", managerAuthMW(http.HandlerFunc(h.CreateApp)))
+	routeMux.Handle("GET /api/v1/apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.ListApps)))
+	routeMux.Handle("POST /api/v1/apps", managerAuthMiddleware(http.HandlerFunc(applicationHandler.CreateApp)))
 
-	mux.Handle("/api/v1/apps/", managerAuthMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, "/api/v1/apps/")
-		parts := strings.Split(path, "/")
+	routeMux.Handle("/api/v1/apps/", managerAuthMiddleware(http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		relativePath := strings.TrimPrefix(request.URL.Path, "/api/v1/apps/")
+		pathSegments := strings.Split(relativePath, "/")
 
-		if len(parts) == 1 && parts[0] != "" {
-			appID := parts[0]
-			switch r.Method {
+		if len(pathSegments) == 1 && pathSegments[0] != "" {
+			applicationID := pathSegments[0]
+			switch request.Method {
 			case http.MethodGet:
-				h.GetApp(w, r, appID)
+				applicationHandler.GetApp(responseWriter, request, applicationID)
 			case http.MethodPut:
-				h.UpdateApp(w, r, appID)
+				applicationHandler.UpdateApp(responseWriter, request, applicationID)
 			case http.MethodDelete:
-				h.DeleteApp(w, r, appID)
+				applicationHandler.DeleteApp(responseWriter, request, applicationID)
 			default:
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				http.Error(responseWriter, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 			return
 		}
 
-		if len(parts) == 2 && parts[1] == "tokens" && r.Method == http.MethodPost {
-			h.CreateToken(w, r, parts[0])
+		if len(pathSegments) == 2 && pathSegments[1] == "tokens" && request.Method == http.MethodPost {
+			applicationHandler.CreateToken(responseWriter, request, pathSegments[0])
 			return
 		}
 
-		if len(parts) == 3 && parts[1] == "tokens" && r.Method == http.MethodDelete {
-			h.DeleteToken(w, r, parts[0], parts[2])
+		if len(pathSegments) == 3 && pathSegments[1] == "tokens" && request.Method == http.MethodDelete {
+			applicationHandler.DeleteToken(responseWriter, request, pathSegments[0], pathSegments[2])
 			return
 		}
 
-		if len(parts) == 3 && parts[1] == "explorer" && parts[2] == "collections" && r.Method == http.MethodGet {
-			h.GetExplorerCollections(w, r, parts[0])
+		if len(pathSegments) == 3 && pathSegments[1] == "explorer" && pathSegments[2] == "collections" && request.Method == http.MethodGet {
+			applicationHandler.GetExplorerCollections(responseWriter, request, pathSegments[0])
 			return
 		}
 
-		if len(parts) == 3 && parts[1] == "explorer" && r.Method == http.MethodGet {
-			h.GetExplorerDocuments(w, r, parts[0], parts[2])
+		if len(pathSegments) == 3 && pathSegments[1] == "explorer" && request.Method == http.MethodGet {
+			applicationHandler.GetExplorerDocuments(responseWriter, request, pathSegments[0], pathSegments[2])
 			return
 		}
 
-		http.Error(w, "Endpoint not found", http.StatusNotFound)
+		http.Error(responseWriter, "Endpoint not found", http.StatusNotFound)
 	})))
 }

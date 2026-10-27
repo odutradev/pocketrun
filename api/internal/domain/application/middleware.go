@@ -2,7 +2,6 @@ package application
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -19,64 +18,84 @@ const (
 	ProjectIDKey contextKey = "projectIDKey"
 )
 
-func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rawToken := r.Header.Get("controlAccess")
-			if rawToken == "" {
-				rawToken = r.Header.Get("X-Pocket-Token")
-			}
-			if rawToken == "" {
-				authHeader := r.Header.Get("Authorization")
-				if strings.HasPrefix(authHeader, "Bearer ") {
-					rawToken = strings.TrimPrefix(authHeader, "Bearer ")
-				}
-			}
+func extractAccessToken(request *http.Request) string {
+	if controlAccessToken := request.Header.Get("controlAccess"); controlAccessToken != "" {
+		return controlAccessToken
+	}
+	if pocketToken := request.Header.Get("X-Pocket-Token"); pocketToken != "" {
+		return pocketToken
+	}
+	authorizationHeader := request.Header.Get("Authorization")
+	if strings.HasPrefix(authorizationHeader, "Bearer ") {
+		return strings.TrimPrefix(authorizationHeader, "Bearer ")
+	}
+	return ""
+}
 
+func findMatchingToken(tokens []Token, tokenHash string) *Token {
+	for tokenIndex := range tokens {
+		if tokens[tokenIndex].TokenHash == tokenHash {
+			return &tokens[tokenIndex]
+		}
+	}
+	return nil
+}
+
+func isTokenExpired(token *Token) bool {
+	return token != nil && token.ExpiresAt != nil && time.Now().After(*token.ExpiresAt)
+}
+
+func updateTokenLastUsedAt(mongoDatabase *database.MongoDB, applicationID bson.ObjectID, tokenHash string) {
+	updateContext, cancelUpdate := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelUpdate()
+
+	currentTime := time.Now()
+	_, _ = mongoDatabase.Database.Collection("applications").UpdateOne(
+		updateContext,
+		bson.M{"_id": applicationID, "tokens.token_hash": tokenHash},
+		bson.M{"$set": bson.M{"tokens.$.last_used_at": currentTime}},
+	)
+}
+
+func AppAuth(mongoDatabase *database.MongoDB) func(http.Handler) http.Handler {
+	return func(nextHandler http.Handler) http.Handler {
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+			rawToken := extractAccessToken(request)
 			if rawToken == "" {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "Application access token missing. Provide controlAccess or X-Pocket-Token header."})
+				writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{
+					"error": "Application access token missing. Provide controlAccess or X-Pocket-Token header.",
+				})
 				return
 			}
 
 			tokenHash := HashAPIToken(rawToken)
 
-			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-			defer cancel()
+			queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+			defer cancelQuery()
 
-			var app Application
-			err := db.Database.Collection("applications").FindOne(ctx, bson.M{
+			var foundApplication Application
+			findError := mongoDatabase.Database.Collection("applications").FindOne(queryContext, bson.M{
 				"tokens.token_hash": tokenHash,
-			}).Decode(&app)
+			}).Decode(&foundApplication)
 
-			if err != nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "Invalid application access token"})
+			if findError != nil {
+				writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{
+					"error": "Invalid application access token",
+				})
 				return
 			}
 
-			var matchedToken *Token
-			for i, t := range app.Tokens {
-				if t.TokenHash == tokenHash {
-					matchedToken = &app.Tokens[i]
-					break
-				}
-			}
-
-			if matchedToken != nil && matchedToken.ExpiresAt != nil && time.Now().After(*matchedToken.ExpiresAt) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusUnauthorized)
-				json.NewEncoder(w).Encode(map[string]string{"error": "Application access token has expired"})
+			matchedToken := findMatchingToken(foundApplication.Tokens, tokenHash)
+			if isTokenExpired(matchedToken) {
+				writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{
+					"error": "Application access token has expired",
+				})
 				return
 			}
 
-			originHeader := r.Header.Get("Origin")
-			if !IsOriginAllowed(app.AllowedOrigins, originHeader, app.AllowNonBrowserRequests) {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(map[string]string{
+			originHeader := request.Header.Get("Origin")
+			if !IsOriginAllowed(foundApplication.AllowedOrigins, originHeader, foundApplication.AllowNonBrowserRequests) {
+				writeJSONResponse(responseWriter, http.StatusForbidden, map[string]string{
 					"error":  "Access denied: Origin not allowed for this application",
 					"origin": originHeader,
 				})
@@ -84,48 +103,39 @@ func AppAuth(db *database.MongoDB) func(http.Handler) http.Handler {
 			}
 
 			if originHeader != "" {
-				w.Header().Set("Access-Control-Allow-Origin", originHeader)
+				responseWriter.Header().Set("Access-Control-Allow-Origin", originHeader)
 			} else {
-				w.Header().Set("Access-Control-Allow-Origin", "*")
+				responseWriter.Header().Set("Access-Control-Allow-Origin", "*")
 			}
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, controlAccess, X-Pocket-Token, Authorization")
-			w.Header().Set("projectID", app.ProjectID)
+			responseWriter.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			responseWriter.Header().Set("Access-Control-Allow-Headers", "Content-Type, controlAccess, X-Pocket-Token, Authorization")
+			responseWriter.Header().Set("projectID", foundApplication.ProjectID)
 
-			if r.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusNoContent)
+			if request.Method == http.MethodOptions {
+				responseWriter.WriteHeader(http.StatusNoContent)
 				return
 			}
 
-			go func(appID bson.ObjectID, tokHash string) {
-				updateCtx, updateCancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer updateCancel()
-				now := time.Now()
-				_, _ = db.Database.Collection("applications").UpdateOne(
-					updateCtx,
-					bson.M{"_id": appID, "tokens.token_hash": tokHash},
-					bson.M{"$set": bson.M{"tokens.$.last_used_at": now}},
-				)
-			}(app.ID, tokenHash)
+			go updateTokenLastUsedAt(mongoDatabase, foundApplication.ID, tokenHash)
 
-			reqCtx := context.WithValue(r.Context(), AppKey, &app)
-			reqCtx = context.WithValue(reqCtx, ProjectIDKey, app.ProjectID)
+			authenticatedContext := context.WithValue(request.Context(), AppKey, &foundApplication)
+			authenticatedContext = context.WithValue(authenticatedContext, ProjectIDKey, foundApplication.ProjectID)
 
-			next.ServeHTTP(w, r.WithContext(reqCtx))
+			nextHandler.ServeHTTP(responseWriter, request.WithContext(authenticatedContext))
 		})
 	}
 }
 
-func GetAppFromContext(ctx context.Context) *Application {
-	if val, ok := ctx.Value(AppKey).(*Application); ok {
-		return val
+func GetAppFromContext(requestContext context.Context) *Application {
+	if applicationInstance, exists := requestContext.Value(AppKey).(*Application); exists {
+		return applicationInstance
 	}
 	return nil
 }
 
-func GetProjectIDFromContext(ctx context.Context) string {
-	if val, ok := ctx.Value(ProjectIDKey).(string); ok {
-		return val
+func GetProjectIDFromContext(requestContext context.Context) string {
+	if projectID, exists := requestContext.Value(ProjectIDKey).(string); exists {
+		return projectID
 	}
 	return ""
 }

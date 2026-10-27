@@ -16,11 +16,11 @@ import (
 )
 
 type AppHandler struct {
-	DB *database.MongoDB
+	Database *database.MongoDB
 }
 
-func NewAppHandler(db *database.MongoDB) *AppHandler {
-	return &AppHandler{DB: db}
+func NewAppHandler(mongoDatabase *database.MongoDB) *AppHandler {
+	return &AppHandler{Database: mongoDatabase}
 }
 
 type CreateAppRequest struct {
@@ -46,412 +46,358 @@ type CreateTokenResponse struct {
 	RawToken string `json:"raw_token"`
 }
 
-func (h *AppHandler) ListApps(w http.ResponseWriter, r *http.Request) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, err := bson.ObjectIDFromHex(managerIDStr)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	cursor, err := h.DB.Database.Collection("applications").Find(ctx, bson.M{"manager_id": managerID})
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch applications"})
-		return
-	}
-	defer cursor.Close(ctx)
-
-	var apps []Application
-	if err := cursor.All(ctx, &apps); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode applications"})
-		return
-	}
-
-	if apps == nil {
-		apps = []Application{}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(apps)
+func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, payload any) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(statusCode)
+	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func (h *AppHandler) CreateApp(w http.ResponseWriter, r *http.Request) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, err := bson.ObjectIDFromHex(managerIDStr)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func parseManagerAndApplicationIDs(request *http.Request, applicationIDHex string) (bson.ObjectID, bson.ObjectID, error) {
+	managerIDString := user.GetManagerID(request.Context())
+	managerObjectID, _ := bson.ObjectIDFromHex(managerIDString)
+	applicationObjectID, parseError := bson.ObjectIDFromHex(applicationIDHex)
+	return managerObjectID, applicationObjectID, parseError
+}
+
+func (handler *AppHandler) verifyApplicationOwnership(queryContext context.Context, applicationID, managerID bson.ObjectID) bool {
+	matchingCount, _ := handler.Database.Database.Collection("applications").CountDocuments(
+		queryContext,
+		bson.M{"_id": applicationID, "manager_id": managerID},
+	)
+	return matchingCount > 0
+}
+
+func (handler *AppHandler) ListApps(responseWriter http.ResponseWriter, request *http.Request) {
+	managerIDString := user.GetManagerID(request.Context())
+	managerObjectID, parseError := bson.ObjectIDFromHex(managerIDString)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	var req CreateAppRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
+
+	applicationsCursor, findError := handler.Database.Database.Collection("applications").Find(queryContext, bson.M{"manager_id": managerObjectID})
+	if findError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch applications"})
+		return
+	}
+	defer applicationsCursor.Close(queryContext)
+
+	var applications []Application
+	if decodeError := applicationsCursor.All(queryContext, &applications); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to decode applications"})
 		return
 	}
 
-	req.Name = strings.TrimSpace(req.Name)
-	req.ProjectID = strings.ToLower(strings.TrimSpace(req.ProjectID))
-	if req.Name == "" || req.ProjectID == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Name and project_id are required"})
+	if applications == nil {
+		applications = []Application{}
+	}
+
+	writeJSONResponse(responseWriter, http.StatusOK, applications)
+}
+
+func (handler *AppHandler) CreateApp(responseWriter http.ResponseWriter, request *http.Request) {
+	managerIDString := user.GetManagerID(request.Context())
+	managerObjectID, parseError := bson.ObjectIDFromHex(managerIDString)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"project_id": req.ProjectID})
-	if count > 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-		json.NewEncoder(w).Encode(map[string]string{"error": "project_id is already in use"})
+	var createPayload CreateAppRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&createPayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 		return
 	}
 
-	if req.AllowedOrigins == nil {
-		req.AllowedOrigins = []string{"*"}
-	}
-
-	rawToken, tokenStruct, err := GenerateAPIToken("Default Token", 365)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate initial token"})
+	createPayload.Name = strings.TrimSpace(createPayload.Name)
+	createPayload.ProjectID = strings.ToLower(strings.TrimSpace(createPayload.ProjectID))
+	if createPayload.Name == "" || createPayload.ProjectID == "" {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Name and project_id are required"})
 		return
 	}
 
-	now := time.Now()
-	newApp := Application{
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
+
+	existingCount, _ := handler.Database.Database.Collection("applications").CountDocuments(queryContext, bson.M{"project_id": createPayload.ProjectID})
+	if existingCount > 0 {
+		writeJSONResponse(responseWriter, http.StatusConflict, map[string]string{"error": "project_id is already in use"})
+		return
+	}
+
+	if createPayload.AllowedOrigins == nil {
+		createPayload.AllowedOrigins = []string{"*"}
+	}
+
+	rawToken, generatedToken, tokenError := GenerateAPIToken("Default Token", 365)
+	if tokenError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate initial token"})
+		return
+	}
+
+	currentTime := time.Now()
+	newApplication := Application{
 		ID:                      bson.NewObjectID(),
-		ManagerID:               managerID,
-		Name:                    req.Name,
-		ProjectID:               req.ProjectID,
-		Description:             req.Description,
-		AllowedOrigins:          req.AllowedOrigins,
+		ManagerID:               managerObjectID,
+		Name:                    createPayload.Name,
+		ProjectID:               createPayload.ProjectID,
+		Description:             createPayload.Description,
+		AllowedOrigins:          createPayload.AllowedOrigins,
 		AllowNonBrowserRequests: true,
-		Tokens:                  []Token{tokenStruct},
-		CreatedAt:               now,
-		UpdatedAt:               now,
+		Tokens:                  []Token{generatedToken},
+		CreatedAt:               currentTime,
+		UpdatedAt:               currentTime,
 	}
 
-	_, err = h.DB.Database.Collection("applications").InsertOne(ctx, newApp)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create application"})
+	_, insertError := handler.Database.Database.Collection("applications").InsertOne(queryContext, newApplication)
+	if insertError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to create application"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(CreateAppResponse{
-		Application: newApp,
+	writeJSONResponse(responseWriter, http.StatusCreated, CreateAppResponse{
+		Application: newApplication,
 		RawToken:    rawToken,
 	})
 }
 
-func (h *AppHandler) GetApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) GetApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	var app Application
-	err = h.DB.Database.Collection("applications").FindOne(ctx, bson.M{"_id": appID, "manager_id": managerID}).Decode(&app)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found"})
+	var foundApplication Application
+	findError := handler.Database.Database.Collection("applications").FindOne(
+		queryContext,
+		bson.M{"_id": applicationObjectID, "manager_id": managerObjectID},
+	).Decode(&foundApplication)
+	if findError != nil {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(app)
+	writeJSONResponse(responseWriter, http.StatusOK, foundApplication)
 }
 
-func (h *AppHandler) UpdateApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) UpdateApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	var req CreateAppRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+	var updatePayload CreateAppRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&updatePayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	update := bson.M{
+	updateFields := bson.M{
 		"$set": bson.M{
-			"name":                        req.Name,
-			"description":                 req.Description,
-			"allowed_origins":             req.AllowedOrigins,
-			"allow_non_browser_requests": req.AllowNonBrowserRequests,
+			"name":                        updatePayload.Name,
+			"description":                 updatePayload.Description,
+			"allowed_origins":             updatePayload.AllowedOrigins,
+			"allow_non_browser_requests": updatePayload.AllowNonBrowserRequests,
 			"updated_at":                  time.Now(),
 		},
 	}
 
-	res, err := h.DB.Database.Collection("applications").UpdateOne(ctx, bson.M{"_id": appID, "manager_id": managerID}, update)
-	if err != nil || res.MatchedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found or update failed"})
+	updateResult, updateError := handler.Database.Database.Collection("applications").UpdateOne(
+		queryContext,
+		bson.M{"_id": applicationObjectID, "manager_id": managerObjectID},
+		updateFields,
+	)
+	if updateError != nil || updateResult.MatchedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found or update failed"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Application updated successfully"})
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Application updated successfully"})
 }
 
-func (h *AppHandler) DeleteApp(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) DeleteApp(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 10*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("applications").DeleteOne(ctx, bson.M{"_id": appID, "manager_id": managerID})
-	if err != nil || res.DeletedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found"})
+	deleteResult, deleteError := handler.Database.Database.Collection("applications").DeleteOne(
+		queryContext,
+		bson.M{"_id": applicationObjectID, "manager_id": managerObjectID},
+	)
+	if deleteError != nil || deleteResult.DeletedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found"})
 		return
 	}
 
-	_, _ = h.DB.Database.Collection("kv_documents").DeleteMany(ctx, bson.M{"app_id": appID})
+	_, _ = handler.Database.Database.Collection("kv_documents").DeleteMany(queryContext, bson.M{"app_id": applicationObjectID})
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Application and all associated data deleted successfully"})
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Application and all associated data deleted successfully"})
 }
 
-func (h *AppHandler) CreateToken(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) CreateToken(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	var req CreateTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+	var tokenPayload CreateTokenRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&tokenPayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 		return
 	}
 
-	if req.Name == "" {
-		req.Name = "New API Token"
+	if tokenPayload.Name == "" {
+		tokenPayload.Name = "New API Token"
 	}
 
-	rawToken, tokenStruct, err := GenerateAPIToken(req.Name, req.ValidityDays)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})
+	rawToken, generatedToken, tokenError := GenerateAPIToken(tokenPayload.Name, tokenPayload.ValidityDays)
+	if tokenError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate token"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("applications").UpdateOne(
-		ctx,
-		bson.M{"_id": appID, "manager_id": managerID},
-		bson.M{"$push": bson.M{"tokens": tokenStruct}},
+	updateResult, updateError := handler.Database.Database.Collection("applications").UpdateOne(
+		queryContext,
+		bson.M{"_id": applicationObjectID, "manager_id": managerObjectID},
+		bson.M{"$push": bson.M{"tokens": generatedToken}},
 	)
 
-	if err != nil || res.MatchedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found"})
+	if updateError != nil || updateResult.MatchedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(CreateTokenResponse{
-		Token:    tokenStruct,
+	writeJSONResponse(responseWriter, http.StatusCreated, CreateTokenResponse{
+		Token:    generatedToken,
 		RawToken: rawToken,
 	})
 }
 
-func (h *AppHandler) DeleteToken(w http.ResponseWriter, r *http.Request, appIDHex, tokenID string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) DeleteToken(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex, tokenID string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("applications").UpdateOne(
-		ctx,
-		bson.M{"_id": appID, "manager_id": managerID},
+	updateResult, updateError := handler.Database.Database.Collection("applications").UpdateOne(
+		queryContext,
+		bson.M{"_id": applicationObjectID, "manager_id": managerObjectID},
 		bson.M{"$pull": bson.M{"tokens": bson.M{"id": tokenID}}},
 	)
 
-	if err != nil || res.MatchedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application or token not found"})
+	if updateError != nil || updateResult.MatchedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application or token not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Token revoked successfully"})
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Token revoked successfully"})
 }
 
-func (h *AppHandler) GetExplorerCollections(w http.ResponseWriter, r *http.Request, appIDHex string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) GetExplorerCollections(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"_id": appID, "manager_id": managerID})
-	if count == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found"})
+	if !handler.verifyApplicationOwnership(queryContext, applicationObjectID, managerObjectID) {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found"})
 		return
 	}
 
-	var cols []string
-	res := h.DB.Database.Collection("kv_documents").Distinct(ctx, "collection_name", bson.M{"app_id": appID})
-	if err := res.Decode(&cols); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch collections"})
+	var collectionNames []string
+	distinctResult := handler.Database.Database.Collection("kv_documents").Distinct(queryContext, "collection_name", bson.M{"app_id": applicationObjectID})
+	if decodeError := distinctResult.Decode(&collectionNames); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch collections"})
 		return
 	}
 
-	if cols == nil {
-		cols = []string{}
+	if collectionNames == nil {
+		collectionNames = []string{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(cols)
+	writeJSONResponse(responseWriter, http.StatusOK, collectionNames)
 }
 
-func (h *AppHandler) GetExplorerDocuments(w http.ResponseWriter, r *http.Request, appIDHex, colName string) {
-	managerIDStr := user.GetManagerID(r.Context())
-	managerID, _ := bson.ObjectIDFromHex(managerIDStr)
-	appID, err := bson.ObjectIDFromHex(appIDHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid app ID"})
+func (handler *AppHandler) GetExplorerDocuments(responseWriter http.ResponseWriter, request *http.Request, applicationIDHex, collectionName string) {
+	managerObjectID, applicationObjectID, parseError := parseManagerAndApplicationIDs(request, applicationIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid app ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	count, _ := h.DB.Database.Collection("applications").CountDocuments(ctx, bson.M{"_id": appID, "manager_id": managerID})
-	if count == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Application not found"})
+	if !handler.verifyApplicationOwnership(queryContext, applicationObjectID, managerObjectID) {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Application not found"})
 		return
 	}
 
-	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
-	if page < 1 {
-		page = 1
+	pageNumber, _ := strconv.Atoi(request.URL.Query().Get("page"))
+	if pageNumber < 1 {
+		pageNumber = 1
 	}
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	if limit < 1 || limit > 100 {
-		limit = 20
+	pageSizeLimit, _ := strconv.Atoi(request.URL.Query().Get("limit"))
+	if pageSizeLimit < 1 || pageSizeLimit > 100 {
+		pageSizeLimit = 20
 	}
 
-	filter := bson.M{"app_id": appID, "collection_name": colName}
-	total, _ := h.DB.Database.Collection("kv_documents").CountDocuments(ctx, filter)
+	documentsFilter := bson.M{"app_id": applicationObjectID, "collection_name": collectionName}
+	totalDocuments, _ := handler.Database.Database.Collection("kv_documents").CountDocuments(queryContext, documentsFilter)
 
-	skip := int64((page - 1) * limit)
-	opts := options.Find().SetSkip(skip).SetLimit(int64(limit)).SetSort(bson.M{"created_at": -1})
+	documentsToSkip := int64((pageNumber - 1) * pageSizeLimit)
+	findOptions := options.Find().SetSkip(documentsToSkip).SetLimit(int64(pageSizeLimit)).SetSort(bson.M{"created_at": -1})
 
-	cursor, err := h.DB.Database.Collection("kv_documents").Find(ctx, filter, opts)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to query documents"})
+	documentsCursor, findError := handler.Database.Database.Collection("kv_documents").Find(queryContext, documentsFilter, findOptions)
+	if findError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to query documents"})
 		return
 	}
-	defer cursor.Close(ctx)
+	defer documentsCursor.Close(queryContext)
 
-	var docs []bson.M
-	if err := cursor.All(ctx, &docs); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode documents"})
+	var documents []bson.M
+	if decodeError := documentsCursor.All(queryContext, &documents); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to decode documents"})
 		return
 	}
 
-	if docs == nil {
-		docs = []bson.M{}
+	if documents == nil {
+		documents = []bson.M{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"data":        docs,
-		"total":       total,
-		"page":        page,
-		"limit":       limit,
-		"total_pages": (total + int64(limit) - 1) / int64(limit),
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]any{
+		"data":        documents,
+		"total":       totalDocuments,
+		"page":        pageNumber,
+		"limit":       pageSizeLimit,
+		"total_pages": (totalDocuments + int64(pageSizeLimit) - 1) / int64(pageSizeLimit),
 	})
 }

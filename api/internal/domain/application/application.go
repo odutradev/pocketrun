@@ -34,59 +34,59 @@ type Application struct {
 	UpdatedAt               time.Time     `bson:"updated_at" json:"updated_at"`
 }
 
-func GenerateAPIToken(name string, validityDays int) (string, Token, error) {
-	bytes := make([]byte, 24)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", Token{}, fmt.Errorf("failed to generate random token: %w", err)
+func GenerateAPIToken(tokenName string, validityDays int) (string, Token, error) {
+	randomBytes := make([]byte, 24)
+	if _, readError := rand.Read(randomBytes); readError != nil {
+		return "", Token{}, fmt.Errorf("failed to generate random token: %w", readError)
 	}
 
-	randomStr := hex.EncodeToString(bytes)
-	rawToken := fmt.Sprintf("pk_live_%s", randomStr)
+	randomHexString := hex.EncodeToString(randomBytes)
+	rawToken := fmt.Sprintf("pk_live_%s", randomHexString)
 
 	tokenHash := HashAPIToken(rawToken)
-	tokenID := fmt.Sprintf("tok_%s", randomStr[:8])
-	prefix := rawToken[:12] + "..."
+	tokenID := fmt.Sprintf("tok_%s", randomHexString[:8])
+	tokenPrefix := rawToken[:12] + "..."
 
-	now := time.Now()
-	var expiresAt *time.Time
+	currentTime := time.Now()
+	var expirationDate *time.Time
 	if validityDays > 0 {
-		exp := now.AddDate(0, 0, validityDays)
-		expiresAt = &exp
+		calculatedExpiration := currentTime.AddDate(0, 0, validityDays)
+		expirationDate = &calculatedExpiration
 	}
 
-	tokenStruct := Token{
+	generatedToken := Token{
 		ID:          tokenID,
-		Name:        name,
+		Name:        tokenName,
 		TokenHash:   tokenHash,
-		TokenPrefix: prefix,
-		ExpiresAt:   expiresAt,
-		CreatedAt:   now,
+		TokenPrefix: tokenPrefix,
+		ExpiresAt:   expirationDate,
+		CreatedAt:   currentTime,
 	}
 
-	return rawToken, tokenStruct, nil
+	return rawToken, generatedToken, nil
 }
 
 func HashAPIToken(rawToken string) string {
-	h := sha256.Sum256([]byte(strings.TrimSpace(rawToken)))
-	return hex.EncodeToString(h[:])
+	sha256Hash := sha256.Sum256([]byte(strings.TrimSpace(rawToken)))
+	return hex.EncodeToString(sha256Hash[:])
 }
 
-func IsOriginAllowed(allowedOrigins []string, originHeader string, allowNonBrowser bool) bool {
-	originHeader = strings.TrimSpace(originHeader)
+func IsOriginAllowed(allowedOrigins []string, originHeader string, allowNonBrowserRequests bool) bool {
+	trimmedOrigin := strings.TrimSpace(originHeader)
 
-	if originHeader == "" {
-		return allowNonBrowser
+	if trimmedOrigin == "" {
+		return allowNonBrowserRequests
 	}
 
-	originHeader = strings.TrimSuffix(originHeader, "/")
+	trimmedOrigin = strings.TrimSuffix(trimmedOrigin, "/")
 
-	for _, allowed := range allowedOrigins {
-		allowed = strings.TrimSpace(allowed)
-		if allowed == "*" {
+	for _, allowedOrigin := range allowedOrigins {
+		allowedOrigin = strings.TrimSpace(allowedOrigin)
+		if allowedOrigin == "*" {
 			return true
 		}
-		allowedNormalized := strings.TrimSuffix(allowed, "/")
-		if strings.EqualFold(allowedNormalized, originHeader) {
+		normalizedAllowedOrigin := strings.TrimSuffix(allowedOrigin, "/")
+		if strings.EqualFold(normalizedAllowedOrigin, trimmedOrigin) {
 			return true
 		}
 	}
