@@ -7,7 +7,8 @@ export const API_BASE_URL = (
 export const STORAGE_KEYS = {
   TOKEN: 'pocketrun_manager_token',
   REFRESH_TOKEN: 'pocketrun_manager_refresh_token',
-  USER: 'pocketrun_manager_user'
+  USER: 'pocketrun_manager_user',
+  SYSTEM_SETTINGS: 'pocketrun_system_settings'
 } as const
 
 export default {
