@@ -13,3 +13,4 @@ export interface SystemState {
   updateSettings: (partial: Partial<SystemSettings>) => void
   resetSettings: () => void
 }
+
