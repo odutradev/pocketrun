@@ -1,6 +1,6 @@
 {
   "name": "pocketrun",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em React/Vite, esteira CI/CD via GitHub Actions e configurações para deploy.",
   "homepage": "https://github.com/odutradev/pocketrun#readme",
   "bugs": {
