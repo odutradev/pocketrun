@@ -1,4 +1,4 @@
-package handlers
+package auth
 
 import (
 	"context"
@@ -7,18 +7,18 @@ import (
 	"strings"
 	"time"
 
-	"pocketrun-api/internal/domain/user/repositories"
+	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type AuthHandler struct {
-	UserRepository *repositories.UserRepository
+type Handler struct {
+	UsersRepository *usersRepo.Repository
 }
 
-func NewAuthHandler(userRepository *repositories.UserRepository) *AuthHandler {
-	return &AuthHandler{
-		UserRepository: userRepository,
+func NewHandler(usersRepository *usersRepo.Repository) *Handler {
+	return &Handler{
+		UsersRepository: usersRepository,
 	}
 }
 
@@ -28,7 +28,7 @@ func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, paylo
 	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func (handler *AuthHandler) Register(responseWriter http.ResponseWriter, request *http.Request) {
+func (handler *Handler) Register(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		http.Error(responseWriter, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -56,7 +56,7 @@ func (handler *AuthHandler) Register(responseWriter http.ResponseWriter, request
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	totalUsers, countError := handler.UserRepository.CountUsers(queryContext)
+	totalUsers, countError := handler.UsersRepository.CountUsers(queryContext)
 	if countError == nil && totalUsers > 0 {
 		writeJSONResponse(responseWriter, http.StatusForbidden, map[string]string{"error": "Public registration is disabled. Please contact your administrator."})
 		return
@@ -65,7 +65,7 @@ func (handler *AuthHandler) Register(responseWriter http.ResponseWriter, request
 	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"error": "Initial setup required. Please use the initial setup wizard."})
 }
 
-func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *http.Request) {
+func (handler *Handler) Login(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		http.Error(responseWriter, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -86,8 +86,8 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	foundUser, findError := handler.UserRepository.FindByEmail(queryContext, loginPayload.Email)
-	if findError != nil || !repositories.CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
+	foundUser, findError := handler.UsersRepository.FindByEmail(queryContext, loginPayload.Email)
+	if findError != nil || !usersRepo.CheckPassword(loginPayload.Password, foundUser.PasswordHash) {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Invalid email or password"})
 		return
 	}
@@ -97,7 +97,7 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 		userRole = "admin"
 	}
 
-	jwtToken, tokenError := repositories.GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
+	jwtToken, tokenError := usersRepo.GenerateJWT(foundUser.ID.Hex(), foundUser.Email, userRole)
 	if tokenError != nil {
 		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to generate authentication token"})
 		return
@@ -109,8 +109,8 @@ func (handler *AuthHandler) Login(responseWriter http.ResponseWriter, request *h
 	})
 }
 
-func (handler *AuthHandler) Me(responseWriter http.ResponseWriter, request *http.Request) {
-	managerIDString := repositories.GetManagerID(request.Context())
+func (handler *Handler) Me(responseWriter http.ResponseWriter, request *http.Request) {
+	managerIDString := usersRepo.GetManagerID(request.Context())
 	if managerIDString == "" {
 		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
@@ -125,7 +125,7 @@ func (handler *AuthHandler) Me(responseWriter http.ResponseWriter, request *http
 	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
 	defer cancelQuery()
 
-	foundUser, findError := handler.UserRepository.FindByID(queryContext, managerObjectID)
+	foundUser, findError := handler.UsersRepository.FindByID(queryContext, managerObjectID)
 	if findError != nil {
 		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "User not found"})
 		return

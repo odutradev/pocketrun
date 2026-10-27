@@ -1,7 +1,7 @@
-package handlers
+package auth
 
 import (
-	"pocketrun-api/internal/domain/user/repositories"
+	usersRepo "pocketrun-api/internal/domain/user/repositories/users"
 )
 
 type RegisterRequest struct {
@@ -16,6 +16,6 @@ type LoginRequest struct {
 }
 
 type AuthResponse struct {
-	Token string            `json:"token"`
-	User  repositories.User `json:"user"`
+	Token string         `json:"token"`
+	User  usersRepo.User `json:"user"`
 }
