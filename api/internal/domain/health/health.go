@@ -10,18 +10,18 @@ type PingResponse struct {
 	Message string `json:"message"`
 }
 
-func Ping(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+func Ping(responseWriter http.ResponseWriter, request *http.Request) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(http.StatusOK)
 
-	response := PingResponse{
+	pingResponse := PingResponse{
 		Status:  "success",
 		Message: "pong",
 	}
 
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(responseWriter).Encode(pingResponse)
 }
 
-func RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("GET /ping", Ping)
+func RegisterRoutes(routeMux *http.ServeMux) {
+	routeMux.HandleFunc("GET /ping", Ping)
 }

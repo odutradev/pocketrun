@@ -5,18 +5,18 @@ import (
 )
 
 func CORS(allowedOrigins string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+	return func(nextHandler http.Handler) http.Handler {
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+			responseWriter.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
+			responseWriter.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			responseWriter.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-			if r.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusNoContent)
+			if request.Method == http.MethodOptions {
+				responseWriter.WriteHeader(http.StatusNoContent)
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			nextHandler.ServeHTTP(responseWriter, request)
 		})
 	}
 }
