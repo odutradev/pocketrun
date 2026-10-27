@@ -18,10 +18,10 @@ type KVDocument struct {
 }
 
 type CreateKVRequest struct {
-	Data          map[string]interface{} `json:"data"`
-	ExpiresInDays int                    `json:"expiresInDays,omitempty"`
+	Data          map[string]any `json:"data"`
+	ExpiresInDays int            `json:"expiresInDays,omitempty"`
 }
 
 type UpdateKVRequest struct {
-	Data map[string]interface{} `json:"data"`
+	Data map[string]any `json:"data"`
 }

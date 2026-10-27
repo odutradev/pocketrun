@@ -7,61 +7,61 @@ import (
 	"pocketrun-api/internal/database"
 )
 
-func RegisterRoutes(mux *http.ServeMux, db *database.MongoDB, appAuthMW func(http.Handler) http.Handler) {
-	h := NewKVHandler(db)
+func RegisterRoutes(routeMux *http.ServeMux, mongoDatabase *database.MongoDB, applicationAuthMiddleware func(http.Handler) http.Handler) {
+	keyValueHandler := NewKVHandler(mongoDatabase)
 
-	mux.Handle("/validate/control-access", appAuthMW(http.HandlerFunc(h.ValidateControlAccess)))
+	routeMux.Handle("/validate/control-access", applicationAuthMiddleware(http.HandlerFunc(keyValueHandler.ValidateControlAccess)))
 
-	mux.Handle("/kv/", appAuthMW(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimPrefix(r.URL.Path, "/kv/")
-		parts := strings.Split(path, "/")
+	routeMux.Handle("/kv/", applicationAuthMiddleware(http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		relativePath := strings.TrimPrefix(request.URL.Path, "/kv/")
+		pathSegments := strings.Split(relativePath, "/")
 
-		if path == "project/delete-all" && r.Method == http.MethodDelete {
-			h.DeleteAllProject(w, r)
+		if relativePath == "project/delete-all" && request.Method == http.MethodDelete {
+			keyValueHandler.DeleteAllProject(responseWriter, request)
 			return
 		}
 
-		if len(parts) < 2 {
-			http.Error(w, "Invalid KV route pattern", http.StatusBadRequest)
+		if len(pathSegments) < 2 {
+			http.Error(responseWriter, "Invalid KV route pattern", http.StatusBadRequest)
 			return
 		}
 
-		collectionName := parts[0]
-		action := parts[1]
+		collectionName := pathSegments[0]
+		actionName := pathSegments[1]
 
-		switch action {
+		switch actionName {
 		case "create":
-			if r.Method == http.MethodPost {
-				h.Create(w, r, collectionName)
+			if request.Method == http.MethodPost {
+				keyValueHandler.Create(responseWriter, request, collectionName)
 				return
 			}
 		case "get-all":
-			if r.Method == http.MethodGet {
-				h.GetAll(w, r, collectionName)
+			if request.Method == http.MethodGet {
+				keyValueHandler.GetAll(responseWriter, request, collectionName)
 				return
 			}
 		case "get":
-			if len(parts) == 3 && r.Method == http.MethodGet {
-				h.GetByID(w, r, collectionName, parts[2])
+			if len(pathSegments) == 3 && request.Method == http.MethodGet {
+				keyValueHandler.GetByID(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "update":
-			if len(parts) == 3 && r.Method == http.MethodPatch {
-				h.Update(w, r, collectionName, parts[2])
+			if len(pathSegments) == 3 && request.Method == http.MethodPatch {
+				keyValueHandler.Update(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "delete":
-			if len(parts) == 3 && r.Method == http.MethodDelete {
-				h.Delete(w, r, collectionName, parts[2])
+			if len(pathSegments) == 3 && request.Method == http.MethodDelete {
+				keyValueHandler.Delete(responseWriter, request, collectionName, pathSegments[2])
 				return
 			}
 		case "delete-all":
-			if r.Method == http.MethodDelete {
-				h.DeleteAllCollection(w, r, collectionName)
+			if request.Method == http.MethodDelete {
+				keyValueHandler.DeleteAllCollection(responseWriter, request, collectionName)
 				return
 			}
 		}
 
-		http.Error(w, "Endpoint not found or method not allowed", http.StatusNotFound)
+		http.Error(responseWriter, "Endpoint not found or method not allowed", http.StatusNotFound)
 	})))
 }

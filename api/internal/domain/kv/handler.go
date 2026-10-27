@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -15,362 +16,322 @@ import (
 )
 
 type KVHandler struct {
-	DB *database.MongoDB
+	Database *database.MongoDB
 }
 
-func NewKVHandler(db *database.MongoDB) *KVHandler {
-	return &KVHandler{DB: db}
+func NewKVHandler(mongoDatabase *database.MongoDB) *KVHandler {
+	return &KVHandler{Database: mongoDatabase}
 }
 
-func (h *KVHandler) ValidateControlAccess(w http.ResponseWriter, r *http.Request) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":     "valid",
-		"message":    "Access token and origin are valid",
-		"project_id": app.ProjectID,
-		"app_name":   app.Name,
-	})
+func writeJSONResponse(responseWriter http.ResponseWriter, statusCode int, payload any) {
+	responseWriter.Header().Set("Content-Type", "application/json")
+	responseWriter.WriteHeader(statusCode)
+	_ = json.NewEncoder(responseWriter).Encode(payload)
 }
 
-func (h *KVHandler) Create(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
-		return
-	}
-
-	var req CreateKVRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
-		return
-	}
-
-	if req.Data == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Field 'data' is required"})
-		return
-	}
-
-	now := time.Now()
-	var expiresAt *time.Time
-	if req.ExpiresInDays > 0 {
-		exp := now.AddDate(0, 0, req.ExpiresInDays)
-		expiresAt = &exp
-	}
-
-	doc := KVDocument{
-		ID:             bson.NewObjectID(),
-		AppID:          app.ID,
-		ProjectID:      app.ProjectID,
-		CollectionName: collectionName,
-		Data:           req.Data,
-		ExpiresAt:      expiresAt,
-		CreatedAt:      now,
-		UpdatedAt:      now,
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	_, err := h.DB.Database.Collection("kv_documents").InsertOne(ctx, doc)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create document"})
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(doc)
-}
-
-func (h *KVHandler) GetAll(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	filter := bson.M{
-		"app_id":          app.ID,
+func buildCollectionQueryFilter(applicationID bson.ObjectID, collectionName string, queryParameters url.Values) bson.M {
+	queryFilter := bson.M{
+		"app_id":          applicationID,
 		"collection_name": collectionName,
 	}
 
-	queryParams := r.URL.Query()
-	for key, values := range queryParams {
-		if key == "page" || key == "limit" || key == "pagination" {
+	for parameterKey, parameterValues := range queryParameters {
+		if parameterKey == "page" || parameterKey == "limit" || parameterKey == "pagination" {
 			continue
 		}
-		if len(values) > 0 {
-			val := values[0]
-			if boolVal, err := strconv.ParseBool(val); err == nil {
-				filter["data."+key] = boolVal
-			} else if floatVal, err := strconv.ParseFloat(val, 64); err == nil {
-				filter["data."+key] = floatVal
+		if len(parameterValues) > 0 {
+			rawValue := parameterValues[0]
+			if booleanValue, parseBoolError := strconv.ParseBool(rawValue); parseBoolError == nil {
+				queryFilter["data."+parameterKey] = booleanValue
+			} else if numericValue, parseFloatError := strconv.ParseFloat(rawValue, 64); parseFloatError == nil {
+				queryFilter["data."+parameterKey] = numericValue
 			} else {
-				filter["data."+key] = val
+				queryFilter["data."+parameterKey] = rawValue
 			}
 		}
 	}
 
-	page, _ := strconv.Atoi(queryParams.Get("page"))
-	if page < 1 {
-		page = 1
-	}
+	return queryFilter
+}
 
-	limit, _ := strconv.Atoi(queryParams.Get("limit"))
-	if limit < 1 || limit > 500 {
-		limit = 50
-	}
-
-	usePagination := queryParams.Get("pagination") == "true" || queryParams.Get("page") != "" || queryParams.Get("limit") != ""
-
-	opts := options.Find().SetSort(bson.M{"created_at": -1})
-	if usePagination {
-		skip := int64((page - 1) * limit)
-		opts.SetSkip(skip).SetLimit(int64(limit))
-	}
-
-	total, _ := h.DB.Database.Collection("kv_documents").CountDocuments(ctx, filter)
-
-	cursor, err := h.DB.Database.Collection("kv_documents").Find(ctx, filter, opts)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch documents"})
-		return
-	}
-	defer cursor.Close(ctx)
-
-	var docs []KVDocument
-	if err := cursor.All(ctx, &docs); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode documents"})
+func (handler *KVHandler) ValidateControlAccess(responseWriter http.ResponseWriter, request *http.Request) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	if docs == nil {
-		docs = []KVDocument{}
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]any{
+		"status":     "valid",
+		"message":    "Access token and origin are valid",
+		"project_id": authenticatedApplication.ProjectID,
+		"app_name":   authenticatedApplication.Name,
+	})
+}
+
+func (handler *KVHandler) Create(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	var createPayload CreateKVRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&createPayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return
+	}
+
+	if createPayload.Data == nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Field 'data' is required"})
+		return
+	}
+
+	currentTime := time.Now()
+	var expirationDate *time.Time
+	if createPayload.ExpiresInDays > 0 {
+		calculatedExpiration := currentTime.AddDate(0, 0, createPayload.ExpiresInDays)
+		expirationDate = &calculatedExpiration
+	}
+
+	newDocument := KVDocument{
+		ID:             bson.NewObjectID(),
+		AppID:          authenticatedApplication.ID,
+		ProjectID:      authenticatedApplication.ProjectID,
+		CollectionName: collectionName,
+		Data:           createPayload.Data,
+		ExpiresAt:      expirationDate,
+		CreatedAt:      currentTime,
+		UpdatedAt:      currentTime,
+	}
+
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
+
+	_, insertError := handler.Database.Database.Collection("kv_documents").InsertOne(queryContext, newDocument)
+	if insertError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to create document"})
+		return
+	}
+
+	writeJSONResponse(responseWriter, http.StatusCreated, newDocument)
+}
+
+func (handler *KVHandler) GetAll(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
+
+	queryParameters := request.URL.Query()
+	queryFilter := buildCollectionQueryFilter(authenticatedApplication.ID, collectionName, queryParameters)
+
+	pageNumber, _ := strconv.Atoi(queryParameters.Get("page"))
+	if pageNumber < 1 {
+		pageNumber = 1
+	}
+
+	pageSizeLimit, _ := strconv.Atoi(queryParameters.Get("limit"))
+	if pageSizeLimit < 1 || pageSizeLimit > 500 {
+		pageSizeLimit = 50
+	}
+
+	usePagination := queryParameters.Get("pagination") == "true" || queryParameters.Get("page") != "" || queryParameters.Get("limit") != ""
+
+	findOptions := options.Find().SetSort(bson.M{"created_at": -1})
 	if usePagination {
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"data":        docs,
-			"total":       total,
-			"page":        page,
-			"limit":       limit,
-			"total_pages": (total + int64(limit) - 1) / int64(limit),
+		documentsToSkip := int64((pageNumber - 1) * pageSizeLimit)
+		findOptions.SetSkip(documentsToSkip).SetLimit(int64(pageSizeLimit))
+	}
+
+	totalDocuments, _ := handler.Database.Database.Collection("kv_documents").CountDocuments(queryContext, queryFilter)
+
+	documentsCursor, findError := handler.Database.Database.Collection("kv_documents").Find(queryContext, queryFilter, findOptions)
+	if findError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to fetch documents"})
+		return
+	}
+	defer documentsCursor.Close(queryContext)
+
+	var documents []KVDocument
+	if decodeError := documentsCursor.All(queryContext, &documents); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to decode documents"})
+		return
+	}
+
+	if documents == nil {
+		documents = []KVDocument{}
+	}
+
+	if usePagination {
+		writeJSONResponse(responseWriter, http.StatusOK, map[string]any{
+			"data":        documents,
+			"total":       totalDocuments,
+			"page":        pageNumber,
+			"limit":       pageSizeLimit,
+			"total_pages": (totalDocuments + int64(pageSizeLimit) - 1) / int64(pageSizeLimit),
 		})
-	} else {
-		json.NewEncoder(w).Encode(docs)
+		return
 	}
+
+	writeJSONResponse(responseWriter, http.StatusOK, documents)
 }
 
-func (h *KVHandler) GetByID(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func (handler *KVHandler) GetByID(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	docID, err := bson.ObjectIDFromHex(idHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid document ID"})
+	documentObjectID, parseError := bson.ObjectIDFromHex(documentIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid document ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	var doc KVDocument
-	err = h.DB.Database.Collection("kv_documents").FindOne(ctx, bson.M{
-		"_id":             docID,
-		"app_id":          app.ID,
+	var foundDocument KVDocument
+	findError := handler.Database.Database.Collection("kv_documents").FindOne(queryContext, bson.M{
+		"_id":             documentObjectID,
+		"app_id":          authenticatedApplication.ID,
 		"collection_name": collectionName,
-	}).Decode(&doc)
+	}).Decode(&foundDocument)
 
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Document not found"})
+	if findError != nil {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Document not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(doc)
+	writeJSONResponse(responseWriter, http.StatusOK, foundDocument)
 }
 
-func (h *KVHandler) Update(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func (handler *KVHandler) Update(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	docID, err := bson.ObjectIDFromHex(idHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid document ID"})
+	documentObjectID, parseError := bson.ObjectIDFromHex(documentIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid document ID"})
 		return
 	}
 
-	var req UpdateKVRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+	var updatePayload UpdateKVRequest
+	if decodeError := json.NewDecoder(request.Body).Decode(&updatePayload); decodeError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	update := bson.M{
+	updateFields := bson.M{
 		"$set": bson.M{
-			"data":       req.Data,
+			"data":       updatePayload.Data,
 			"updated_at": time.Now(),
 		},
 	}
 
-	res, err := h.DB.Database.Collection("kv_documents").UpdateOne(ctx, bson.M{
-		"_id":             docID,
-		"app_id":          app.ID,
+	updateResult, updateError := handler.Database.Database.Collection("kv_documents").UpdateOne(queryContext, bson.M{
+		"_id":             documentObjectID,
+		"app_id":          authenticatedApplication.ID,
 		"collection_name": collectionName,
-	}, update)
+	}, updateFields)
 
-	if err != nil || res.MatchedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Document not found or update failed"})
+	if updateError != nil || updateResult.MatchedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Document not found or update failed"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Document updated successfully"})
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Document updated successfully"})
 }
 
-func (h *KVHandler) Delete(w http.ResponseWriter, r *http.Request, collectionName, idHex string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func (handler *KVHandler) Delete(responseWriter http.ResponseWriter, request *http.Request, collectionName, documentIDHex string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	docID, err := bson.ObjectIDFromHex(idHex)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid document ID"})
+	documentObjectID, parseError := bson.ObjectIDFromHex(documentIDHex)
+	if parseError != nil {
+		writeJSONResponse(responseWriter, http.StatusBadRequest, map[string]string{"error": "Invalid document ID"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 5*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("kv_documents").DeleteOne(ctx, bson.M{
-		"_id":             docID,
-		"app_id":          app.ID,
+	deleteResult, deleteError := handler.Database.Database.Collection("kv_documents").DeleteOne(queryContext, bson.M{
+		"_id":             documentObjectID,
+		"app_id":          authenticatedApplication.ID,
 		"collection_name": collectionName,
 	})
 
-	if err != nil || res.DeletedCount == 0 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Document not found"})
+	if deleteError != nil || deleteResult.DeletedCount == 0 {
+		writeJSONResponse(responseWriter, http.StatusNotFound, map[string]string{"error": "Document not found"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"message": "Document deleted successfully"})
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]string{"message": "Document deleted successfully"})
 }
 
-func (h *KVHandler) DeleteAllCollection(w http.ResponseWriter, r *http.Request, collectionName string) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func (handler *KVHandler) DeleteAllCollection(responseWriter http.ResponseWriter, request *http.Request, collectionName string) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 10*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("kv_documents").DeleteMany(ctx, bson.M{
-		"app_id":          app.ID,
+	deleteResult, deleteError := handler.Database.Database.Collection("kv_documents").DeleteMany(queryContext, bson.M{
+		"app_id":          authenticatedApplication.ID,
 		"collection_name": collectionName,
 	})
 
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete collection"})
+	if deleteError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to delete collection"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]any{
 		"message":       "Collection cleared successfully",
-		"deleted_count": res.DeletedCount,
+		"deleted_count": deleteResult.DeletedCount,
 	})
 }
 
-func (h *KVHandler) DeleteAllProject(w http.ResponseWriter, r *http.Request) {
-	app := application.GetAppFromContext(r.Context())
-	if app == nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+func (handler *KVHandler) DeleteAllProject(responseWriter http.ResponseWriter, request *http.Request) {
+	authenticatedApplication := application.GetAppFromContext(request.Context())
+	if authenticatedApplication == nil {
+		writeJSONResponse(responseWriter, http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
+	queryContext, cancelQuery := context.WithTimeout(request.Context(), 10*time.Second)
+	defer cancelQuery()
 
-	res, err := h.DB.Database.Collection("kv_documents").DeleteMany(ctx, bson.M{
-		"app_id": app.ID,
+	deleteResult, deleteError := handler.Database.Database.Collection("kv_documents").DeleteMany(queryContext, bson.M{
+		"app_id": authenticatedApplication.ID,
 	})
 
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete project data"})
+	if deleteError != nil {
+		writeJSONResponse(responseWriter, http.StatusInternalServerError, map[string]string{"error": "Failed to delete project data"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	writeJSONResponse(responseWriter, http.StatusOK, map[string]any{
 		"message":       "All project data cleared successfully",
-		"deleted_count": res.DeletedCount,
+		"deleted_count": deleteResult.DeletedCount,
 	})
 }
