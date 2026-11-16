@@ -159,7 +159,7 @@ networks:
     driver: bridge
 ```
 
-> A imagem da UI publicada pelo CI é compilada sem `VITE_API_URL` e usa o valor padrão do código. Para apontar para outro domínio, gere a imagem com `--build-arg VITE_API_URL=...`.
+> A imagem da UI publicada pelo CI é compilada sem `VITE_API_URL` e `VITE_PUBLIC_API_URL` e usa os valores padrão do código. Para apontar para outros domínios, gere a imagem com `--build-arg VITE_API_URL=...` (API admin) e `--build-arg VITE_PUBLIC_API_URL=...` (API pública, usada nos exemplos de código).
 
 ### Passo 2: Variáveis (aba Environment)
 

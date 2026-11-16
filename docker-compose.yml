@@ -40,6 +40,7 @@ services:
       context: ./ui
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:5001}
+        - VITE_PUBLIC_API_URL=${VITE_PUBLIC_API_URL:-http://localhost:5000}
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-3000}:80"
