@@ -1,8 +1,4 @@
-export const API_BASE_URL = (
-  import.meta.env.VITE_ADMIN_API_URL ||
-  import.meta.env.VITE_API_URL ||
-  'http://localhost:8081'
-).replace(/\/+$/, '')
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5001').replace(/\/+$/, '')
 
 export const STORAGE_KEYS = {
   TOKEN: 'pocketrun_manager_token',

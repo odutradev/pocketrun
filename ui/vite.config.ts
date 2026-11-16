@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react()],
+  envDir: path.resolve(import.meta.dirname, '..'),
   resolve: {
     alias: {
       '@actions': path.resolve(import.meta.dirname, './src/api/actions'),

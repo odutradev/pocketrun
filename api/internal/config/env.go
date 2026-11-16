@@ -12,6 +12,7 @@ var loadEnvironmentOnce sync.Once
 func ensureEnvironmentLoaded() {
 	loadEnvironmentOnce.Do(func() {
 		loadEnvironmentFile(".env")
+		loadEnvironmentFile("../.env")
 	})
 }
 
