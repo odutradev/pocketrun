@@ -16,7 +16,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently -n \"api,ui\" -c \"blue,green\" \"npm run dev:api\" \"npm run dev:ui\"",
-    "dev:api": "cd api && go run cmd/server/main.go",
+    "dev:api": "cd api && go run ./cmd/api",
     "dev:ui": "npm run dev --prefix ui",
     "publish": "npx pub --bump-package --push"
   },

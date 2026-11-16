@@ -6,7 +6,7 @@ COPY go.mod go.sum* ./
 
 COPY . .
 
-RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/server
+RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/api
 
 FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
