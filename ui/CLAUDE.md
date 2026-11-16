@@ -11,6 +11,7 @@ This guide defines this frontend's architecture, component, state and code rules
 | Framework | React + Vite |
 | Language | TypeScript (100% typed) |
 | Base components | @radix-ui/themes |
+| Icons | @radix-ui/react-icons |
 | Styling | Styled Components |
 | Global state | Zustand |
 | Requests | Axios |
@@ -150,6 +151,7 @@ const UserFilters = () => {
 - **Exports:** Mixed. Default for the file's main component, hook or store and named for types and API functions. One component per file.
 - **Props:** always typed in the component's types file.
 - **Base components:** @radix-ui/themes.
+- **Icons:** @radix-ui/react-icons only, imported by name (`import { TrashIcon } from "@radix-ui/react-icons"`). Never add another icon library (lucide-react, react-icons, heroicons). When an icon does not exist in the set, use the closest one available instead of mixing libraries.
 - **Styles:** Styled Components. Styles in `styles.ts` with access to the theme.
 
 ```text
@@ -503,6 +505,7 @@ export default useUserStore;
 - [ ] Props and state are typed, with no `any`.
 - [ ] API calls go through "actions/ folder" and use "useAction hook".
 - [ ] Styles use Styled Components with theme tokens.
+- [ ] Icons come from @radix-ui/react-icons.
 - [ ] Imports follow "Alias per folder".
 - [ ] Principle "Early returns" applied.
 - [ ] Principle "Immutability" applied.
