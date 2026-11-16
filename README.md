@@ -4,23 +4,26 @@ Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em
 
 ---
 
-## 🐳 Imagens Docker Hub
+## 🧩 Serviços
 
-As imagens Docker deste projeto são automaticamente compiladas e publicadas no **Docker Hub** através do GitHub Actions a cada push na branch `master`:
+A mesma imagem da API roda em dois modos, escolhidos pela variável `API_MODE`:
 
-- **API Backend:** `darknx/pocketrun-api:latest`
-- **UI Frontend:** `darknx/pocketrun-ui:latest`
+| Serviço | `API_MODE` | Rotas | Autenticação |
+| :--- | :--- | :--- | :--- |
+| `api` | `public` | `/kv/*`, `/validate/*`, `/ping` | Token da aplicação (`pk_live_...`) |
+| `admin` | `admin` | `/setup/*`, `/auth/*`, `/apps/*`, `/ping` | JWT do gestor |
+| `ui` | — | Painel web (nginx) | — |
+
+Todo container escuta na porta `80`. No desenvolvimento local, `API_MODE=all` sobe os dois servidores no mesmo processo, em `PORT` (pública) e `ADMIN_PORT` (admin).
 
 ---
 
-## 🍃 Opções de Banco de Dados MongoDB
+## 🐳 Imagens Docker Hub
 
-A API do PocketRun oferece suporte nativo a duas formas de conexão com o MongoDB, alternáveis pela variável de ambiente `MONGODB_URI`:
+As imagens são compiladas e publicadas no **Docker Hub** pelo GitHub Actions a cada push na `master` cuja mensagem contém uma versão (`X.Y.Z`), como o commit `chore: bump version to X` gerado na publicação:
 
-### ☁️ MongoDB Externo / Nuvem (ex: MongoDB Atlas)
-Configuração recomendada para produção no Dokploy:
-- **`MONGODB_URI`:** `mongodb+srv://<usuario>:<senha>@cluster0.mongodb.net/?retryWrites=true&w=majority`
-- **`MONGODB_NAME`:** `pocketrun`
+- **API:** `darknx/pocketrun-api:latest`
+- **UI:** `darknx/pocketrun-ui:latest`
 
 ---
 
@@ -28,19 +31,20 @@ Configuração recomendada para produção no Dokploy:
 
 ```text
 .
-├── .github/workflows/   # CI/CD - Build e push automático para o Docker Hub
-├── api/                  # Código-fonte da API Go (pocketrun-api)
-│   ├── cmd/server/       # Ponto de entrada da aplicação (main.go)
-│   ├── internal/         # Regras de negócio, handlers, middlewares, configs e DB (MongoDB)
-│   ├── Dockerfile        # Build multi-stage para gerar a imagem minimalista da API
-│   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
-├── ui/                   # Aplicação Frontend React + Vite (pocketrun-ui)
-│   ├── src/              # Código-fonte da interface (subcomponentes, estilos, tipos)
-│   ├── Dockerfile        # Build multi-stage com Nginx para o frontend
-│   ├── nginx.conf        # Configuração do Nginx para SPA (HTML5 History API)
-│   └── .dockerignore     # Arquivos ignorados durante a cópia para o container
-├── docker-compose.yml    # Orquestração dos serviços (API + UI) para deploy no Dokploy
-└── README.md             # Instruções de uso e implantação
+├── .github/workflows/    # CI/CD - build e push para o Docker Hub
+├── api/                  # API Go
+│   ├── cmd/api/          # Ponto de entrada (main.go)
+│   ├── internal/         # Domínios, handlers, repositórios, middlewares, config e MongoDB
+│   ├── Dockerfile        # Build multi-stage com runner distroless
+│   └── .dockerignore
+├── ui/                   # Frontend React + Vite
+│   ├── src/
+│   ├── Dockerfile        # Build multi-stage com runner nginx
+│   ├── nginx.conf        # SPA fallback, gzip, cache e headers de segurança
+│   └── .dockerignore
+├── .env.example          # Variáveis de todos os apps e do compose
+├── docker-compose.yml    # Serviços api, admin e ui
+└── package.json          # Scripts de orquestração
 ```
 
 ---
@@ -48,40 +52,55 @@ Configuração recomendada para produção no Dokploy:
 ## 🚀 Como Executar Localmente
 
 ### Pré-requisitos
-- Go 1.24+ e Node.js 22+ (se rodar diretamente sem Docker)
-- Docker & Docker Compose (se rodar via containers)
+- Go 1.27+ e Node.js 22+
+- Docker e Docker Compose (para rodar via containers)
 
-### Rodando diretamente (Sem Docker)
+### Configuração
 
-**Terminal 1 — API Backend:**
 ```bash
-cd api
-go run ./cmd/server
+cp .env.example .env
 ```
 
-**Terminal 2 — UI Frontend:**
+Um único `.env` na raiz é lido pelo docker-compose, pela API e pelo Vite.
+
+### Rodando diretamente
+
 ```bash
-cd ui
+npm install
+npm --prefix ui install
 npm run dev
 ```
-A UI estará acessível em `http://localhost:5173` e a API em `http://localhost:8080/ping`.
 
-### Rodando com Docker Compose (Local)
+- UI: `http://localhost:3000`
+- API pública: `http://localhost:5000/ping`
+- API admin: `http://localhost:5001/ping`
+
+Use `npm run dev:api` ou `npm run dev:web` para subir um app só, e `npm run build` para compilar os dois.
+
+### Rodando com Docker Compose
 
 ```bash
-docker compose up --build
+npm run up
 ```
-A UI estará acessível em `http://localhost:3000` e a API em `http://localhost:8080/ping`.
+
+As portas publicadas vêm de `PORT`, `ADMIN_PORT` e `FRONTEND_PORT`.
 
 ---
 
-## 🐳 Guia de Deploy no Dokploy (Hostinger DNS / Sem Cloudflare)
+## 🍃 MongoDB
+
+A conexão é definida por `MONGODB_URI` e `MONGODB_NAME`. Em produção, use um cluster externo (ex: MongoDB Atlas):
+
+- **`MONGODB_URI`:** `mongodb+srv://<usuario>:<senha>@cluster0.mongodb.net/?retryWrites=true&w=majority`
+- **`MONGODB_NAME`:** `pocketrun`
 
 ---
 
-### Passo 1: Configuração do Compose no Dokploy
+## 🐳 Deploy no Dokploy
 
-No Dokploy, crie uma aplicação Compose utilizando as imagens oficiais do Docker Hub:
+### Passo 1: Compose
+
+Crie uma aplicação Compose usando as imagens do Docker Hub:
 
 ```yaml
 services:
@@ -89,25 +108,40 @@ services:
     image: darknx/pocketrun-api:latest
     restart: unless-stopped
     expose:
-      - "8080"
+      - "80"
     environment:
-      - PORT=8080
-      - ENV=${ENV:-production}
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-${CORS_ORIGIN:-*}}
-      - MONGODB_URI=${MONGODB_URI:-${MONGO_URI:-${MONGOURI}}}
-      - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
-      - JWT_SECRET=${JWT_SECRET:-${JWT:-pocketrun-secret-key-change-in-production}}
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+      - PORT=80
+      - API_MODE=public
+      - APP_ENV=production
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_NAME=${MONGODB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
     dns:
       - 8.8.8.8
       - 1.1.1.1
     networks:
-      - pocketrun-network
+      - app-network
+
+  admin:
+    image: darknx/pocketrun-api:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      - ADMIN_PORT=80
+      - API_MODE=admin
+      - APP_ENV=production
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
+      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_NAME=${MONGODB_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    networks:
+      - app-network
 
   ui:
     image: darknx/pocketrun-ui:latest
@@ -115,47 +149,36 @@ services:
     expose:
       - "80"
     depends_on:
-      api:
-        condition: service_healthy
+      - api
+      - admin
     networks:
-      - pocketrun-network
+      - app-network
 
 networks:
-  pocketrun-network:
+  app-network:
     driver: bridge
 ```
 
----
+> A imagem da UI publicada pelo CI é compilada sem `VITE_API_URL` e usa o valor padrão do código. Para apontar para outro domínio, gere a imagem com `--build-arg VITE_API_URL=...`.
 
-### Passo 2: Configuração das Variáveis na Aba Environment no Dokploy
-
-Na aba **Environment** do Dokploy, informe sua URI externa do MongoDB e o segredo JWT:
+### Passo 2: Variáveis (aba Environment)
 
 ```env
-PORT=8080
-ENV=production
 CORS_ALLOWED_ORIGINS=*
+ADMIN_CORS_ALLOWED_ORIGINS=*
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
 JWT_SECRET=gere_uma_chave_secreta_forte_aqui
 ```
 
----
+### Passo 3: Domínios (aba Domains)
 
-### Passo 3: Configuração de Domínio no Dokploy (Aba Domains)
+Todos os serviços usam **Container Port `80`** e HTTPS ativado:
 
-Na aba **Domains** do serviço Compose no Dokploy:
+| Serviço | Host |
+| :--- | :--- |
+| `ui` | `pocketrun.odutra.com` |
+| `api` | `api.pocketrun.odutra.com` |
+| `admin` | `admin.pocketrun.odutra.com` |
 
-1. **Frontend (`ui`):**
-   * **Service Name:** `ui`
-   * **Host:** `pocketrun.odutra.com`
-   * **Container Port:** `80`
-   * **HTTPS:** Ativado.
-
-2. **Backend API (`api`):**
-   * **Service Name:** `api`
-   * **Host:** `api.pocketrun.odutra.com`
-   * **Container Port:** `80`
-   * **HTTPS:** Ativado.
-
-3. Clique em **Save** e faça o **Deploy**.
+Clique em **Save** e faça o **Deploy**.
