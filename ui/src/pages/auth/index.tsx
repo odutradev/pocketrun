@@ -1,27 +1,19 @@
-import { Box } from '@radix-ui/themes'
+import AuthPanel from "@components/authPanel";
+import Card from "@components/card";
 
-import RegisterForm from './components/registerForm'
-import AuthHeader from './components/authHeader'
-import LoginForm from './components/loginForm'
-import AuthTabs from './components/authTabs'
-import { containerStyle } from './styles'
-import Card from '@components/ui/card'
-import useAuthPage from './hook'
+import useAuthPage from "./hook";
+import { Container } from "./styles";
 
-export const AuthPage = () => {
-  const { authMode, title, subtitle, handleModeChange } = useAuthPage()
+const AuthPage: React.FC = () => {
+  const { handleSuccess } = useAuthPage();
 
   return (
-    <Box style={containerStyle}>
-      <AuthHeader title={title} subtitle={subtitle} />
-      <Card>
-        <Card.Content>
-          <AuthTabs value={authMode} onChange={handleModeChange} />
-          {authMode === 'login' ? <LoginForm /> : <RegisterForm />}
-        </Card.Content>
+    <Container>
+      <Card size="3">
+        <AuthPanel onSuccess={handleSuccess} />
       </Card>
-    </Box>
-  )
-}
+    </Container>
+  );
+};
 
-export default AuthPage
+export default AuthPage;

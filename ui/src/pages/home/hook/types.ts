@@ -1,16 +1,17 @@
-import type { Application } from '@projectTypes/application'
-import type { ManagerUser } from '@projectTypes/user'
+import type { Application } from "@utils/types/application";
+import type { User } from "@utils/types/user";
 
 export interface UseHomePageReturn {
-  user: ManagerUser | null
-  apps: Application[]
-  loading: boolean
-  selectedApp: Application | null
-  isCreateModalOpen: boolean
-  isAuthModalOpen: boolean
-  totalTokens: number
-  loadApps: () => Promise<void>
-  setSelectedApp: (app: Application | null) => void
-  setIsCreateModalOpen: (open: boolean) => void
-  setIsAuthModalOpen: (open: boolean) => void
+  user: User | null;
+  applications: Application[];
+  isLoading: boolean;
+  totalTokens: number;
+  isCreateModalOpen: boolean;
+  isAuthModalOpen: boolean;
+  loadApplications: () => Promise<void>;
+  handleOpenCreate: () => void;
+  handleCloseCreate: () => void;
+  handleOpenAuth: () => void;
+  handleCloseAuth: () => void;
+  handleSelectApplication: (application: Application) => void;
 }

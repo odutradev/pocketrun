@@ -18,16 +18,15 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@actions/*": ["./src/api/actions/*"],
+      "@actions/*": ["./src/actions/*"],
+      "@assets/*": ["./src/assets/*"],
       "@components/*": ["./src/components/*"],
       "@hooks/*": ["./src/hooks/*"],
-      "@stores/*": ["./src/stores/*"],
-      "@api/*": ["./src/api/*"],
-      "@projectTypes/*": ["./src/types/*"],
       "@pages/*": ["./src/pages/*"],
-      "@routes": ["./src/routes"],
       "@routes/*": ["./src/routes/*"],
-      "@styles/*": ["./src/styles/*"]
+      "@stores/*": ["./src/stores/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": ["src"]

@@ -1,105 +1,45 @@
-import { create } from 'zustand'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-import { STORAGE_KEYS } from '@api/config'
+import { storageKeys } from "@assets/config";
+import { rolePermissions } from "@assets/data";
+import type { Permission, UserRole } from "@utils/types/user";
 
-import type { SystemSettings, ThemeAppearance, SystemState } from './types'
+export type ThemeAppearance = "dark" | "light";
 
-const DEFAULT_SETTINGS: SystemSettings = {
-  theme: 'dark'
+interface SystemStore {
+  theme: ThemeAppearance;
+  toggleTheme: () => void;
+  hasPermissions: (role: UserRole | undefined, required: Permission[]) => boolean;
 }
 
 const applyDocumentTheme = (theme: ThemeAppearance) => {
-  if (typeof document === 'undefined') return
-  const root = document.documentElement
-  root.classList.remove('light', 'dark', 'light-theme', 'dark-theme')
-  root.classList.add(theme, `${theme}-theme`)
-  root.setAttribute('data-theme', theme)
-}
+  const root = document.documentElement;
+  root.classList.remove("light", "dark", "light-theme", "dark-theme");
+  root.classList.add(theme, `${theme}-theme`);
+  root.setAttribute("data-theme", theme);
+};
 
-const loadStoredSettings = (): SystemSettings => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SYSTEM_SETTINGS)
-    if (!raw) return DEFAULT_SETTINGS
-    const parsed = JSON.parse(raw) as Partial<SystemSettings>
-    const resolvedTheme: ThemeAppearance = parsed.theme === 'light' ? 'light' : 'dark'
-    return {
-      ...DEFAULT_SETTINGS,
-      ...parsed,
-      theme: resolvedTheme
+const useSystemStore = create<SystemStore>()(
+  persist(
+    (set, get) => ({
+      theme: "dark",
+      toggleTheme: () => {
+        const theme: ThemeAppearance = get().theme === "dark" ? "light" : "dark";
+        applyDocumentTheme(theme);
+        set({ theme });
+      },
+      hasPermissions: (role, required) => {
+        const granted = role ? rolePermissions[role] ?? [] : [];
+        return required.every((permission) => granted.includes(permission));
+      }
+    }),
+    {
+      name: storageKeys.system,
+      partialize: (state) => ({ theme: state.theme }),
+      onRehydrateStorage: () => (state) => applyDocumentTheme(state?.theme ?? "dark")
     }
-  } catch {
-    return DEFAULT_SETTINGS
-  }
-}
+  )
+);
 
-const persistSettings = (settings: SystemSettings) => {
-  localStorage.setItem(STORAGE_KEYS.SYSTEM_SETTINGS, JSON.stringify(settings))
-  applyDocumentTheme(settings.theme)
-}
-
-const initialSettings = loadStoredSettings()
-applyDocumentTheme(initialSettings.theme)
-
-export const useSystemStore = create<SystemState>((set) => ({
-  settings: initialSettings,
-  theme: initialSettings.theme,
-  isDarkMode: initialSettings.theme === 'dark',
-
-  setTheme: (theme: ThemeAppearance) => {
-    set((state) => {
-      const nextSettings: SystemSettings = {
-        ...state.settings,
-        theme
-      }
-      persistSettings(nextSettings)
-      return {
-        settings: nextSettings,
-        theme,
-        isDarkMode: theme === 'dark'
-      }
-    })
-  },
-
-  toggleTheme: () => {
-    set((state) => {
-      const nextTheme: ThemeAppearance = state.theme === 'dark' ? 'light' : 'dark'
-      const nextSettings: SystemSettings = {
-        ...state.settings,
-        theme: nextTheme
-      }
-      persistSettings(nextSettings)
-      return {
-        settings: nextSettings,
-        theme: nextTheme,
-        isDarkMode: nextTheme === 'dark'
-      }
-    })
-  },
-
-  updateSettings: (partial: Partial<SystemSettings>) => {
-    set((state) => {
-      const nextSettings: SystemSettings = {
-        ...state.settings,
-        ...partial
-      }
-      persistSettings(nextSettings)
-      return {
-        settings: nextSettings,
-        theme: nextSettings.theme,
-        isDarkMode: nextSettings.theme === 'dark'
-      }
-    })
-  },
-
-  resetSettings: () => {
-    persistSettings(DEFAULT_SETTINGS)
-    set({
-      settings: DEFAULT_SETTINGS,
-      theme: DEFAULT_SETTINGS.theme,
-      isDarkMode: DEFAULT_SETTINGS.theme === 'dark'
-    })
-  }
-}))
-
-export default useSystemStore
-
+export default useSystemStore;

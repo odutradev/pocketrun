@@ -1,105 +1,28 @@
-import { create } from 'zustand'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-import { getProfileAction } from '@api/actions/users/profile'
-import { STORAGE_KEYS } from '@api/config'
+import { storageKeys } from "@assets/config";
+import type { Session, User } from "@utils/types/user";
 
-import type { ManagerUser } from '@projectTypes/user'
-import type { AuthState } from './types'
+interface AuthStore {
+  token: string | null;
+  user: User | null;
+  setSession: (session: Session) => void;
+  setUser: (user: User) => void;
+  clearSession: () => void;
+}
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: localStorage.getItem(STORAGE_KEYS.TOKEN),
-  isAuthenticated: Boolean(localStorage.getItem(STORAGE_KEYS.TOKEN)),
-  isLoading: true,
-
-  login: (token: string, user: ManagerUser) => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token)
-    set({
-      token,
-      user,
-      isAuthenticated: true,
-      isLoading: false
-    })
-  },
-
-  register: (token: string, user: ManagerUser) => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token)
-    set({
-      token,
-      user,
-      isAuthenticated: true,
-      isLoading: false
-    })
-  },
-
-  logout: () => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN)
-    set({
+const useAuthStore = create<AuthStore>()(
+  persist(
+    (set) => ({
       token: null,
       user: null,
-      isAuthenticated: false,
-      isLoading: false
-    })
-  },
+      setSession: ({ token, user }) => set({ token, user }),
+      setUser: (user) => set({ user }),
+      clearSession: () => set({ token: null, user: null })
+    }),
+    { name: storageKeys.auth }
+  )
+);
 
-  initializeAuth: async () => {
-    const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN)
-    if (!savedToken) {
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false
-      })
-      return
-    }
-
-    try {
-      const profile = await getProfileAction()
-      set({
-        token: savedToken,
-        user: profile,
-        isAuthenticated: true,
-        isLoading: false
-      })
-    } catch {
-      localStorage.removeItem(STORAGE_KEYS.TOKEN)
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false
-      })
-    }
-  },
-
-  refreshUser: async () => {
-    const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN)
-    if (!savedToken) {
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false
-      })
-      return
-    }
-
-    try {
-      const profile = await getProfileAction()
-      set({
-        user: profile,
-        isAuthenticated: true
-      })
-    } catch {
-      localStorage.removeItem(STORAGE_KEYS.TOKEN)
-      set({
-        token: null,
-        user: null,
-        isAuthenticated: false
-      })
-    }
-  }
-}))
-
-export default useAuthStore
+export default useAuthStore;

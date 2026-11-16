@@ -1,0 +1,16 @@
+import { Select, Text } from "@radix-ui/themes";
+import styled from "styled-components";
+
+export const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
+
+export const Label = styled(Text)`
+  display: block;
+`;
+
+export const SelectTrigger = styled(Select.Trigger)`
+  width: 100%;
+`;

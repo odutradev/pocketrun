@@ -1,27 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
-import type { UseAuthPageReturn } from './types'
-import type { AuthMode } from '../types'
+import type { UseAuthPageReturn } from "./types";
 
-export const useAuthPage = (): UseAuthPageReturn => {
-  const [authMode, setAuthMode] = useState<AuthMode>('login')
+const useAuthPage = (): UseAuthPageReturn => {
+  const navigate = useNavigate();
+  const handleSuccess = useCallback(() => navigate("/"), [navigate]);
+  return { handleSuccess };
+};
 
-  const handleModeChange = useCallback((mode: AuthMode) => {
-    setAuthMode(mode)
-  }, [])
-
-  const title = authMode === 'login' ? 'Entrar no PocketRun' : 'Criar Nova Conta'
-  const subtitle =
-    authMode === 'login'
-      ? 'Acesse o painel administrativo da sua plataforma de microsserviços'
-      : 'Cadastre sua conta para gerenciar aplicações e chaves de acesso'
-
-  return {
-    authMode,
-    title,
-    subtitle,
-    handleModeChange
-  }
-}
-
-export default useAuthPage
+export default useAuthPage;

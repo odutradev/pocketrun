@@ -1,24 +1,26 @@
-import path from 'node:path'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import path from "node:path";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+const sourceFolder = (folder: string) => path.resolve(import.meta.dirname, "./src", folder);
 
 export default defineConfig({
   plugins: [react()],
-  envDir: path.resolve(import.meta.dirname, '..'),
+  envDir: path.resolve(import.meta.dirname, ".."),
   resolve: {
     alias: {
-      '@actions': path.resolve(import.meta.dirname, './src/api/actions'),
-      '@components': path.resolve(import.meta.dirname, './src/components'),
-      '@hooks': path.resolve(import.meta.dirname, './src/hooks'),
-      '@stores': path.resolve(import.meta.dirname, './src/stores'),
-      '@api': path.resolve(import.meta.dirname, './src/api'),
-      '@projectTypes': path.resolve(import.meta.dirname, './src/types'),
-      '@pages': path.resolve(import.meta.dirname, './src/pages'),
-      '@routes': path.resolve(import.meta.dirname, './src/routes'),
-      '@styles': path.resolve(import.meta.dirname, './src/styles')
+      "@actions": sourceFolder("actions"),
+      "@assets": sourceFolder("assets"),
+      "@components": sourceFolder("components"),
+      "@hooks": sourceFolder("hooks"),
+      "@pages": sourceFolder("pages"),
+      "@routes": sourceFolder("routes"),
+      "@stores": sourceFolder("stores"),
+      "@styles": sourceFolder("styles"),
+      "@utils": sourceFolder("utils")
     }
   },
   server: {
     port: 3000
   }
-})
+});

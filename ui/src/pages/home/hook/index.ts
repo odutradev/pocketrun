@@ -1,72 +1,39 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { getApplicationsAction } from '@api/actions/apps'
-import useAuthStore from '@stores/auth'
+import useAuthStore from "@stores/auth";
+import type { Application } from "@utils/types/application";
 
-import type { Application } from '@projectTypes/application'
-import type { UseHomePageReturn } from './types'
+import useHomeStore from "./store";
+import type { UseHomePageReturn } from "./types";
 
-export const useHomePage = (): UseHomePageReturn => {
-  const { user } = useAuthStore()
-  const [apps, setApps] = useState<Application[]>([])
-  const [loading, setLoading] = useState<boolean>(Boolean(user))
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false)
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false)
+const useHomePage = (): UseHomePageReturn => {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { applications, isLoading, isCreateModalOpen, isAuthModalOpen, loadApplications, setCreateModalOpen, setAuthModalOpen } =
+    useHomeStore();
 
-  const loadApps = useCallback(async () => {
-    if (!user) {
-      setApps([])
-      setLoading(false)
-      return
-    }
+  const totalTokens = applications.reduce((total, application) => total + (application.tokens?.length ?? 0), 0);
 
-    setLoading(true)
-    try {
-      const data = await getApplicationsAction()
-      setApps(data)
-      if (selectedApp) {
-        const updated = data.find((a) => a.id === selectedApp.id)
-        if (updated) setSelectedApp(updated)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [user, selectedApp])
-
-  useEffect(() => {
-    if (!user) return
-
-    let isSubscribed = true
-    getApplicationsAction()
-      .then((data) => {
-        if (!isSubscribed) return
-        setApps(data)
-      })
-      .finally(() => {
-        if (isSubscribed) setLoading(false)
-      })
-
-    return () => {
-      isSubscribed = false
-    }
-  }, [user])
-
-  const totalTokens = apps.reduce((acc, app) => acc + (app.tokens?.length || 0), 0)
+  const handleSelectApplication = useCallback(
+    (application: Application) => navigate(`/apps/${application.id}`),
+    [navigate]
+  );
 
   return {
     user,
-    apps,
-    loading,
-    selectedApp,
+    applications,
+    isLoading,
+    totalTokens,
     isCreateModalOpen,
     isAuthModalOpen,
-    totalTokens,
-    loadApps,
-    setSelectedApp,
-    setIsCreateModalOpen,
-    setIsAuthModalOpen
-  }
-}
+    loadApplications,
+    handleOpenCreate: () => setCreateModalOpen(true),
+    handleCloseCreate: () => setCreateModalOpen(false),
+    handleOpenAuth: () => setAuthModalOpen(true),
+    handleCloseAuth: () => setAuthModalOpen(false),
+    handleSelectApplication
+  };
+};
 
-export default useHomePage
+export default useHomePage;

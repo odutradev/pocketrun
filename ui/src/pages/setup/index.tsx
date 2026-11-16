@@ -1,24 +1,18 @@
-import { Box } from '@radix-ui/themes'
+import Card from "@components/card";
 
-import { containerStyle, cardStyle, cardContentStyle } from './styles'
-import SetupHeader from './components/setupHeader'
-import SetupForm from './components/setupForm'
-import Card from '@components/ui/card'
-import useSetupPage from './hook'
+import { Container, Content } from "./styles";
+import SetupForm from "./subcomponents/setupForm";
+import SetupHeader from "./subcomponents/setupHeader";
 
-export const SetupPage = () => {
-  const { title, subtitle } = useSetupPage()
+const SetupPage: React.FC = () => (
+  <Container>
+    <Card>
+      <Content>
+        <SetupHeader />
+        <SetupForm />
+      </Content>
+    </Card>
+  </Container>
+);
 
-  return (
-    <Box style={containerStyle}>
-      <Card style={cardStyle}>
-        <Card.Content style={cardContentStyle}>
-          <SetupHeader title={title} subtitle={subtitle} />
-          <SetupForm />
-        </Card.Content>
-      </Card>
-    </Box>
-  )
-}
-
-export default SetupPage
+export default SetupPage;

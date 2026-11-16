@@ -1,26 +1,15 @@
-import type { CSSProperties } from 'react'
+import styled from "styled-components";
 
-export const containerStyle: CSSProperties = {
-  maxWidth: 420,
-  margin: '0 auto',
-  width: '100%',
-  padding: '16px'
-}
+export const Container = styled.div`
+  width: 100%;
+  max-width: ${({ theme }) => theme.layout.narrowWidth};
+  margin: 0 auto;
+`;
 
-export const cardStyle: CSSProperties = {
-  backgroundColor: 'var(--color-panel-translucent)',
-  border: '1px solid var(--gray-a4)',
-  backdropFilter: 'blur(20px)',
-  WebkitBackdropFilter: 'blur(20px)',
-  boxShadow: 'var(--shadow-4)'
-}
+export const Content = styled.div`
+  padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(2)};
 
-export const cardContentStyle: CSSProperties = {
-  padding: '30px 26px'
-}
-
-export default {
-  containerStyle,
-  cardStyle,
-  cardContentStyle
-}
+  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+    padding: ${({ theme }) => theme.spacing(7)} ${({ theme }) => theme.spacing(6)};
+  }
+`;

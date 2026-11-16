@@ -1,32 +1,17 @@
-import { createRoot } from 'react-dom/client'
-import { Theme } from '@radix-ui/themes'
-import '@radix-ui/themes/styles.css'
-import { useEffect } from 'react'
+import "@radix-ui/themes/styles.css";
+import "react-toastify/dist/ReactToastify.css";
 
-import useSystemStore from '@stores/system'
-import { themeConfig } from '@styles/theme'
-import useAuthStore from '@stores/auth'
-import AppRouter from '@routes'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-export const RootApp = () => {
-  const { initializeAuth } = useAuthStore()
-  const { theme } = useSystemStore()
+import AppProviders from "@components/appProviders";
 
-  useEffect(() => {
-    initializeAuth()
-  }, [initializeAuth])
+const rootElement = document.getElementById("root");
 
-  return (
-    <Theme
-      appearance={theme}
-      accentColor={themeConfig.accentColor}
-      grayColor={themeConfig.grayColor}
-      radius={themeConfig.radius}
-      scaling={themeConfig.scaling}
-    >
-      <AppRouter />
-    </Theme>
-  )
+if (rootElement) {
+  createRoot(rootElement).render(
+    <StrictMode>
+      <AppProviders />
+    </StrictMode>
+  );
 }
-
-createRoot(document.getElementById('root')!).render(<RootApp />)

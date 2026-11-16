@@ -1,24 +1,22 @@
-import type { ChangeEvent, FormEvent } from 'react'
+import type { ChangeEvent, FormEvent } from "react";
+import type { z } from "zod";
 
-export type ValidationRules<T> = {
-  [K in keyof T]?: (value: T[K], allValues: T) => string | undefined
+export type FormSchema = z.ZodType<Record<string, unknown>, Record<string, unknown>>;
+
+export type FormErrors<TValues> = Partial<Record<keyof TValues, string>>;
+
+export interface UseFormOptions<TSchema extends FormSchema> {
+  schema: TSchema;
+  initialValues: z.input<TSchema>;
+  onSubmit: (values: z.output<TSchema>) => Promise<unknown> | unknown;
 }
 
-export interface UseFormOptions<T> {
-  initialValues: T
-  validationRules?: ValidationRules<T>
-  onSubmit: (values: T) => Promise<void> | void
-}
-
-export interface UseFormReturn<T> {
-  values: T
-  errors: Partial<Record<keyof T, string>>
-  touched: Partial<Record<keyof T, boolean>>
-  isSubmitting: boolean
-  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
-  setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void
-  handleBlur: (field: keyof T) => void
-  handleSubmit: (event?: FormEvent) => Promise<void>
-  resetForm: () => void
-  setErrors: (errors: Partial<Record<keyof T, string>>) => void
+export interface UseFormReturn<TSchema extends FormSchema> {
+  values: z.input<TSchema>;
+  errors: FormErrors<z.input<TSchema>>;
+  isSubmitting: boolean;
+  setFieldValue: <TKey extends keyof z.input<TSchema>>(field: TKey, value: z.input<TSchema>[TKey]) => void;
+  handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleSubmit: (event?: FormEvent) => Promise<void>;
+  reset: () => void;
 }

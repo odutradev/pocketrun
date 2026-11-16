@@ -1,11 +1,7 @@
-import type { CSSProperties } from 'react'
+import styled from "styled-components";
 
-export const containerStyle: CSSProperties = {
-  maxWidth: 460,
-  margin: '0 auto',
-  width: '100%'
-}
-
-export default {
-  containerStyle
-}
+export const Container = styled.div`
+  width: 100%;
+  max-width: ${({ theme }) => theme.layout.narrowWidth};
+  margin: 0 auto;
+`;
