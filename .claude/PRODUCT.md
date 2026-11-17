@@ -53,7 +53,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 - Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
 - Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
 - Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
-- Painel com menu lateral: Aplicações e Usuários em cima, perfil e saída embaixo.
+- Painel com menu lateral: Aplicações e Usuários em cima, um grupo **Serviços** separado com KV, Páginas e Links (cada um na cor da sua ferramenta; Páginas e Links marcados "Em breve" até o módulo chegar), perfil e saída embaixo.
 - Aplicações: criar, listar, ver detalhes, editar, excluir (`/apps/*`).
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
