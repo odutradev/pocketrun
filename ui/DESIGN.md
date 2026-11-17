@@ -16,7 +16,9 @@ This guide defines how the panel looks and behaves: principles, tokens, componen
 
 ## 2. Tokens
 
-Use `theme.brand.*` and `theme.motion.*` for new UI. `theme.palette.*` is the old Radix mapping (mint accent). Do not mix the two on the same screen; when you touch a screen, migrate it to `brand`.
+Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The panel is dark only; there is no light theme and no `theme.palette`. Radix Themes is kept only for primitives (dialog, dropdown menu) and is restyled by `src/styles/global.ts`.
+
+`theme.accent` is the color of the current context: steel on general screens, the tool's colors inside a tool. Use it for the five context points (section 4) and never pick `brand.tools[...]` by hand in a component.
 
 | Role | Token | Use |
 | :--- | :--- | :--- |
@@ -26,24 +28,25 @@ Use `theme.brand.*` and `theme.motion.*` for new UI. `theme.palette.*` is the ol
 | Border | `brand.border` / `brand.strongBorder` | Dividers / control outlines |
 | Text | `brand.steel` | Primary text and the neutral primary button fill |
 | Muted text | `brand.steelMuted` | Secondary text, labels, captions (passes 4.5:1 on every surface) |
-| Tool fill | `brand.tools[tool].base` | Context fills: primary button, active stroke, chart line |
-| Tool text | `brand.tools[tool].text` | Tool-colored text on dark surfaces |
-| Tool tint | `brand.tools[tool].soft` | Selected row, active list item, chart area, focus ring |
-| Text on tool fill | `brand.tools[tool].contrast` | Label on a tool-colored button |
+| Context fill | `accent.base` | Primary button, active stroke, header stroke, chart line |
+| Context text | `accent.text` | Context-colored text on dark surfaces (ids, JSON keys) |
+| Context tint | `accent.soft` | Selected row, active list item, chart area, focus ring |
+| Text on context fill | `accent.contrast` | Label on the primary button |
 | States | `brand.states.success / warning / error` (+ `*Text`) | Status only: never for a tool, never decorative |
 
 - **Fonts:** `brand.fonts.display` (Unbounded 800) for page titles, big numbers and section labels; `brand.fonts.body` (Hanken Grotesk) for UI; `brand.fonts.mono` (Space Mono) per principle 3.
 - **Spacing:** `theme.spacing(n)` on a 4 px grid. Sections 56 px apart, card padding 24–28 px.
-- **Radius:** 10 px on controls, 16 px on panels, 20 px on large cards, pill (`999px`) on badges and chips.
+- **Radius:** `radii.control` (10 px) on controls, `radii.box` (12 px) on boxes inside cards, `radii.panel` (16 px) on panels, `radii.card` (20 px) on large cards and dialogs, `radii.pill` on badges and chips.
 - **Motion:** `motion.fast` for hover and color, `motion.base` for state changes and closing, `motion.expressive` with `easing.snap` for opening. Loader is the symbol's `motion="loop"`.
 
 ## 3. Components and their rules
 
-- **Buttons:** variants are primary (steel fill, graphite text), tool (tool fill), secondary (raised fill, strong border), ghost and danger (error outline; solid error only for the final irreversible step). Sizes are 32, 40 and 48 px; 40 px is the default and 44 px is the minimum touch target on mobile. Use one primary per area. Loading keeps the width and swaps the label ("Salvando…"). Icon-only buttons always have an `aria-label`.
+- **Buttons:** variants are primary (context fill: steel on general screens, tool color inside a tool), secondary (raised fill, strong border), ghost, danger (error outline) and dangerSolid (only for the final irreversible step, inside `confirmDialog`). Links that look like buttons use `linkButton`. Sizes are 32, 40 and 48 px; 40 px is the default and 44 px is the minimum touch target on mobile. Use one primary per area. Loading keeps the width and swaps the label ("Salvando…"). Icon-only buttons always have an `aria-label`.
 - **Fields:** the label goes above the field, help text below and the error below in error text with `aria-invalid`. Focus uses a 2 px border plus a 4 px soft ring, in steel (general) or the tool color (in context). Machine values use the mono font. Prefixes such as `https://` or `/p/` sit in a raised segment inside the field.
 - **Selection:**
-  - Checkbox, radio and switch always come with a visible label.
+  - Checkbox, radio and switch always come with a visible label. Settings rows use `switchField`.
   - A switch that is on uses `states.success`.
+  - Selects are native (`select`), wrapped in the field frame.
   - Segmented controls handle 2–4 views of the same data.
   - Filter chips are toggle buttons with `aria-pressed`.
 - **Feedback:**
@@ -73,7 +76,7 @@ Use `theme.brand.*` and `theme.motion.*` for new UI. `theme.palette.*` is the ol
 
 ## 4. Tool context
 
-The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every other screen is `general`. Only these five points change with the context:
+The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every other screen is `general`. A page declares it in its metadata (`context: "data"`) and `appLayout` provides the matching theme, so components read `theme.accent` and `theme.context`. Only these five points change with the context:
 
 1. A 3 px top stroke on the header.
 2. The logo: `BrandMark` with `context={tool}`.
@@ -95,24 +98,47 @@ Reuse before creating. Add every new shared component here in the same work.
 
 | Need | Component |
 | :--- | :--- |
-| Logo, symbol, app icon, loader, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`) |
+| Logo, symbol, app icon, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`) |
+| Page loader (symbol loop) | `@components/loader` |
+| Page shell: top bar, offline banner, tool context | `@components/appLayout` with `@components/navbar` |
+| API status pill or panel line | `@components/apiStatus` |
+| Page title with eyebrow, description and actions | `@components/pageHeader` |
+| Section or panel title (h2) with actions | `@components/sectionHeader` |
+| Path on pages deeper than one level | `@components/breadcrumbs` |
+| Underline tabs and their panel | `@components/tabNav` + `@components/tabPanel` |
+| Tool switcher (Dados, Conteúdos, Links) | `@components/toolSwitcher` |
 | Buttons with icon or loading | `@components/button` |
-| Text field with label and error | `@components/input` |
+| Link styled as a button | `@components/linkButton` |
+| Icon-only button (label required) | `@components/iconButton` |
+| Text field with label, hint, error, prefix, mono | `@components/input` |
 | Multi-line field | `@components/textArea` |
-| Card surface (default, dashed, danger, interactive) | `@components/card` |
-| Code and JSON | `@components/codeBlock` |
+| Select | `@components/select` |
+| Settings row with switch | `@components/switchField` |
+| 2–4 views of the same content | `@components/segmentedControl` |
+| Custom field (label, hint, error frame) | `@components/formField` |
+| Status or info pill | `@components/badge` |
+| Token or document validity | `@components/expiryBadge` |
+| Card surface (default, dashed, danger, link) | `@components/card` |
+| Big number | `@components/statCard` |
+| Inline alert or top banner | `@components/alert` |
 | Empty list or section | `@components/emptyState` |
-| Dialog title row | `@components/dialogHeader` |
+| Loading placeholder | `@components/skeleton` |
+| Data table with selectable rows | `@components/dataTable` |
+| Pagination | `@components/pagination` |
+| Dialog | `@components/dialog` |
+| Destructive confirmation (typed Project ID) | `@components/confirmDialog` |
 | Show a secret once | `@components/secretReveal` |
-| Top bar and API status | `@components/navbar` |
+| Machine value with copy button | `@components/copyField` |
+| Code and JSON (highlighted, copyable) | `@components/codeBlock` |
+| Text only for screen readers | `@components/visuallyHidden` |
 | Async action with toasts | `@hooks/useAction` |
 | Copy with feedback | `@hooks/useClipboard` |
 
-Components shown in the style guide but not built yet (side menu, bulk action bar, command palette, drawer, stat card, chart) are created as global components when the first screen needs them, following this guide.
+Components shown in the style guide but not built yet (side menu, bulk action bar, command palette, drawer, chart) are created as global components when the first screen needs them, following this guide.
 
 ## 7. Checklist
 
-- [ ] Uses `theme.brand` / `theme.motion` tokens, no hard-coded colors, no mix with `theme.palette` on the same screen.
+- [ ] Uses `theme.brand`, `theme.accent`, `theme.radii` and `theme.motion` tokens, no hard-coded colors.
 - [ ] Tool color appears only on the five context points, and only one tool per screen.
 - [ ] Machine values in mono; numbers in display.
 - [ ] Every state has text or an icon, not color only; contrast 4.5:1 for text.

@@ -363,7 +363,7 @@ No hard-coded colors or spacing: use the theme.
 
 ✅ Do:
 ```typescript
-color: ${({ theme }) => theme.palette.primary.main};
+color: ${({ theme }) => theme.brand.steel};
 ```
 
 ❌ Don't:
