@@ -6,6 +6,7 @@ import AppLayout from "@components/appLayout";
 import RouteGuard from "@components/routeGuard";
 import appDetailsMetadata from "@pages/appDetails/metadata";
 import authMetadata from "@pages/auth/metadata";
+import brandMetadata from "@pages/brand/metadata";
 import homeMetadata from "@pages/home/metadata";
 import setupMetadata from "@pages/setup/metadata";
 import type { PageMetadata } from "@utils/types/page";
@@ -14,6 +15,7 @@ const HomePage = lazy(() => import("@pages/home"));
 const AuthPage = lazy(() => import("@pages/auth"));
 const SetupPage = lazy(() => import("@pages/setup"));
 const AppDetailsPage = lazy(() => import("@pages/appDetails"));
+const BrandPage = lazy(() => import("@pages/brand"));
 
 const pageRoute = (path: string, Page: LazyExoticComponent<ComponentType>, metadata: PageMetadata) => ({
   path,
@@ -26,6 +28,8 @@ const pageRoute = (path: string, Page: LazyExoticComponent<ComponentType>, metad
 });
 
 const router = createBrowserRouter([
+  // Manual de marca público, fora do layout do painel.
+  pageRoute("/id", BrandPage, brandMetadata),
   {
     element: <AppLayout />,
     children: [

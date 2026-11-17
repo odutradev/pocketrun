@@ -1,0 +1,68 @@
+import { ArrowDownIcon, DownloadIcon } from "@radix-ui/react-icons";
+import { Button as RadixButton, SegmentedControl } from "@radix-ui/themes";
+
+import { brandContextOptions, defaultLogoConfig } from "@assets/data";
+import BrandLogo from "@components/brandLogo";
+import Button from "@components/button";
+
+import useBrandPage from "../../hook";
+import { ControlScroller, Eyebrow, Lead, PanelText } from "../../styles";
+import { Actions, Container, Intro, Showcase, ShowcaseStage, Title } from "./styles";
+
+const Hero: React.FC = () => {
+  const { heroContext, handleHeroContextChange, handleDownloadSvg } = useBrandPage();
+  const activeContext = brandContextOptions.find((option) => option.value === heroContext);
+
+  const handleContextChange = (raw: string) => {
+    const option = brandContextOptions.find((item) => item.value === raw);
+    if (option) handleHeroContextChange(option.value);
+  };
+
+  return (
+    <Container>
+      <Intro>
+        <Eyebrow>Manual de marca · Identidade visual oficial</Eyebrow>
+        <Title>Identidade visual do PocketRun</Title>
+        <Lead>
+          O guia de símbolo, logotipo, cores, tipografia e usos da marca, com todos os arquivos para baixar em SVG, PNG,
+          WEBP e JPG, em vários tamanhos, proporções e cores.
+        </Lead>
+        <Actions>
+          <RadixButton asChild size="3" highContrast>
+            <a href="#downloads">
+              Ir para os downloads
+              <ArrowDownIcon />
+            </a>
+          </RadixButton>
+          <Button
+            size="3"
+            variant="soft"
+            color="gray"
+            highContrast
+            leftIcon={<DownloadIcon />}
+            onClick={() => handleDownloadSvg(defaultLogoConfig)}
+          >
+            Baixar o logo principal (SVG)
+          </Button>
+        </Actions>
+      </Intro>
+      <Showcase>
+        <ShowcaseStage $context={heroContext}>
+          <BrandLogo size={34} layout="stacked" context={heroContext} />
+        </ShowcaseStage>
+        <ControlScroller>
+          <SegmentedControl.Root value={heroContext} onValueChange={handleContextChange} size="2">
+            {brandContextOptions.map((option) => (
+              <SegmentedControl.Item key={option.value} value={option.value}>
+                {option.label}
+              </SegmentedControl.Item>
+            ))}
+          </SegmentedControl.Root>
+        </ControlScroller>
+        <PanelText>{activeContext?.description}</PanelText>
+      </Showcase>
+    </Container>
+  );
+};
+
+export default Hero;
