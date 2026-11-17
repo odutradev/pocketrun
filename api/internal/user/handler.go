@@ -22,7 +22,6 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.HandleFunc("POST /auth/login", h.login)
-	mux.HandleFunc("POST /auth/register", h.register)
 	mux.Handle("GET /auth/me", authenticate(http.HandlerFunc(h.me)))
 }
 
@@ -45,21 +44,6 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, session)
-}
-
-func (h *Handler) register(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	err := h.service.Register(ctx)
-	if errors.Is(err, ErrRegistrationDisabled) {
-		httpx.WriteError(w, http.StatusForbidden, "registration_disabled")
-		return
-	}
-	if errors.Is(err, ErrSetupRequired) {
-		httpx.WriteError(w, http.StatusConflict, "setup_required")
-		return
-	}
-	h.logger.ErrorContext(ctx, "register", "error", err)
-	httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 }
 
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {

@@ -14,13 +14,11 @@ const (
 )
 
 var (
-	ErrUserNotFound         = errors.New("user not found")
-	ErrEmailTaken           = errors.New("email already in use")
-	ErrInvalidCredentials   = errors.New("invalid credentials")
-	ErrRegistrationDisabled = errors.New("registration disabled")
-	ErrSetupRequired        = errors.New("initial setup required")
-	ErrInvalidToken         = errors.New("invalid token")
-	ErrExpiredToken         = errors.New("token expired")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrEmailTaken         = errors.New("email already in use")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidToken       = errors.New("invalid token")
+	ErrExpiredToken       = errors.New("token expired")
 )
 
 type User struct {

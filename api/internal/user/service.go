@@ -79,18 +79,6 @@ func (s *Service) Login(ctx context.Context, input LoginInput) (*Session, error)
 	return s.IssueSession(user)
 }
 
-func (s *Service) Register(ctx context.Context) error {
-	count, err := s.Count(ctx)
-	if err != nil {
-		return err
-	}
-
-	if count > 0 {
-		return ErrRegistrationDisabled
-	}
-	return ErrSetupRequired
-}
-
 func (s *Service) GetUserByID(ctx context.Context, id bson.ObjectID) (*User, error) {
 	user, err := s.repository.FindByID(ctx, id)
 	if err != nil {
