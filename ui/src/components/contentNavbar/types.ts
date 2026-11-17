@@ -1,3 +1,4 @@
+import type { ButtonVariant } from "@components/button/types";
 import type { ReactNode } from "react";
 
 export interface ContentNavbarAction {
@@ -6,6 +7,7 @@ export interface ContentNavbarAction {
   to?: string;
   onClick?: () => void;
   isDisabled?: boolean;
+  variant?: ButtonVariant;
 }
 
 export interface ContentNavbarProps {

@@ -41,12 +41,17 @@ const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = f
             />
           )}
           {action && isActionLink && (
-            <LinkButton to={action.to} variant="primary" leftIcon={action.icon}>
+            <LinkButton to={action.to} variant={action.variant ?? "primary"} leftIcon={action.icon}>
               {action.label}
             </LinkButton>
           )}
           {action && !isActionLink && (
-            <Button leftIcon={action.icon} onClick={action.onClick} disabled={action.isDisabled}>
+            <Button
+              variant={action.variant}
+              leftIcon={action.icon}
+              onClick={action.onClick}
+              disabled={action.isDisabled}
+            >
               {action.label}
             </Button>
           )}
