@@ -23,7 +23,7 @@ const DangerTab = () => {
       success: "Aplicação excluída",
       error: "Não foi possível excluir a aplicação"
     },
-    callback: () => navigate("/")
+    callback: () => navigate("/kv")
   });
 
   return (

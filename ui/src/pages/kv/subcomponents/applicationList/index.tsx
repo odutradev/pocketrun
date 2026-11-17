@@ -6,11 +6,11 @@ import EmptyState from "@components/emptyState";
 import { pluralize } from "@utils/functions";
 import Button from "@components/button";
 import Input from "@components/input";
-import useHomePage from "../../hook";
+import useKvPage from "../../hook";
 import Card from "@components/card";
 
 const ApplicationList = () => {
-  const { applications, filteredApplications, search, handleSearchChange, handleOpenCreate } = useHomePage();
+  const { applications, filteredApplications, search, handleSearchChange, handleOpenCreate } = useKvPage();
 
   if (applications.length === 0) {
     return (

@@ -48,7 +48,7 @@ const AppDetailsPage = () => {
       <EmptyState
         title="Aplicação não encontrada"
         description="Ela pode ter sido excluída, ou o endereço está errado."
-        actions={<LinkButton to="/">Voltar às aplicações</LinkButton>}
+        actions={<LinkButton to="/kv">Voltar às aplicações</LinkButton>}
       />
     );
   }

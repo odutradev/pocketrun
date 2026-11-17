@@ -8,20 +8,26 @@ import type { KvStore } from "./types";
 
 const logger = createLocalLogger("kvPage");
 
-const useKvStore = create<KvStore>()((set) => ({
+const useKvStore = create<KvStore>()((set, get) => ({
   applications: [],
   isLoading: true,
+  isRefreshing: false,
+  search: "",
+  isCreateModalOpen: false,
   loadApplications: async () => {
-    set({ isLoading: true });
+    const isFirstLoad = get().applications.length === 0;
+    set(isFirstLoad ? { isLoading: true } : { isRefreshing: true });
     try {
       set({ applications: await listApplications() });
     } catch (error) {
       logger.error(error);
       toast.error(getErrorMessage(error, "Não foi possível carregar as aplicações"));
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isRefreshing: false });
     }
-  }
+  },
+  setSearch: (search) => set({ search }),
+  setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen })
 }));
 
 export default useKvStore;

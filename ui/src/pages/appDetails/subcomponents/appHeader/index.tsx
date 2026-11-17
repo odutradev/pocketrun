@@ -11,7 +11,7 @@ const AppHeader = () => {
 
   return (
     <Container>
-      <Breadcrumbs items={[{ label: "Aplicações", to: "/" }, { label: application.name }]} />
+      <Breadcrumbs items={[{ label: "KV", to: "/kv" }, { label: application.name }]} />
       <PageHeader title={application.name} actions={<ToolSwitcher active="data" />}>
         <Meta>
           <CopyField value={application.projectId} label="Project ID" />

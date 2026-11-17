@@ -11,14 +11,14 @@ import Button from "@components/button";
 import Dialog from "@components/dialog";
 import Input from "@components/input";
 import useForm from "@hooks/useForm";
-import useHomePage from "../../hook";
+import useKvPage from "../../hook";
 
 import type { CreateApplicationValues } from "@utils/types/application";
 
 const initialValues = { name: "", projectId: "", origins: "*", description: "" };
 
 const CreateAppModal = () => {
-  const { isCreateModalOpen, handleCloseCreate, loadApplications } = useHomePage();
+  const { isCreateModalOpen, handleCloseCreate, loadApplications } = useKvPage();
   const [rawToken, setRawToken] = useState<string | null>(null);
 
   const { execute } = useAction({
