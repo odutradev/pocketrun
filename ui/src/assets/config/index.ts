@@ -1,8 +1,9 @@
 const trimTrailingSlash = (url: string) => url.replace(/\/+$/, "");
 
-export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://localhost:5001");
+// Uma API só: as rotas públicas ficam na raiz e as do painel sob /admin.
+export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://localhost:5000");
 
-export const publicApiUrl = trimTrailingSlash(import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000");
+export const adminApiUrl = `${apiUrl}/admin`;
 
 export const storageKeys = {
   auth: "pocketrun_auth"

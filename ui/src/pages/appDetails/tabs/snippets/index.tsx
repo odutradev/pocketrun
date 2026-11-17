@@ -1,4 +1,4 @@
-import { publicApiUrl } from "@assets/config";
+import { apiUrl } from "@assets/config";
 import Card from "@components/card";
 import CodeBlock from "@components/codeBlock";
 import SectionHeader from "@components/sectionHeader";
@@ -9,7 +9,7 @@ const snippets = [
   {
     key: "curl",
     title: "cURL",
-    code: `curl -X POST "${publicApiUrl}/kv/pedidos/create" \\
+    code: `curl -X POST "${apiUrl}/kv/pedidos/create" \\
   -H "Authorization: Bearer <SEU_TOKEN>" \\
   -H "Content-Type: application/json" \\
   -d '{"data": {"cliente": "Maria", "valor": 150.00, "status": "pago"}}'`
@@ -17,7 +17,7 @@ const snippets = [
   {
     key: "js",
     title: "JavaScript (fetch)",
-    code: `const response = await fetch("${publicApiUrl}/kv/pedidos/create", {
+    code: `const response = await fetch("${apiUrl}/kv/pedidos/create", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <SEU_TOKEN>",

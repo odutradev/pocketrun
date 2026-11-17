@@ -1,6 +1,6 @@
 import axios, { isAxiosError } from "axios";
 
-import { apiUrl } from "@assets/config";
+import { adminApiUrl } from "@assets/config";
 import useAuthStore from "@stores/auth";
 import type { ApiError, ApiErrorBody, ApiErrorCode } from "@utils/types/api";
 
@@ -22,7 +22,7 @@ export const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "code" in error && "status" in error;
 
 const api = axios.create({
-  baseURL: apiUrl,
+  baseURL: adminApiUrl,
   headers: { "Content-Type": "application/json" }
 });
 
