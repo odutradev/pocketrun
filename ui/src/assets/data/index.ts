@@ -148,7 +148,7 @@ export const brandTools: BrandToolInfo[] = [
     tool: "content",
     name: "Conteúdos",
     colorName: "Latão",
-    route: "/p/:slug",
+    route: "/:slug",
     status: "planned",
     origin: "Vem do Shareds",
     description: "Micro-páginas em HTML, CSS e JS, com editor no painel e métricas de acesso."
@@ -157,8 +157,8 @@ export const brandTools: BrandToolInfo[] = [
     tool: "links",
     name: "Links",
     colorName: "Oliva de campo",
-    route: "/l/:slug",
-    status: "planned",
+    route: "/:slug",
+    status: "live",
     origin: "Vem do Shareds",
     description: "Links curtos que redirecionam para qualquer endereço, com contagem de acessos."
   }
