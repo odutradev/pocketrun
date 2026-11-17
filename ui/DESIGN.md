@@ -104,17 +104,16 @@ Reuse before creating. Add every new shared component here in the same work.
 | Page loader (symbol loop) | `@components/loader` |
 | Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
 | API status pill, panel line or pulsing dot with tooltip (address and version) | `@components/apiStatus` |
-| Page title with eyebrow, description and actions | `@components/pageHeader` |
+| Page header: title, info tooltip, reload, one action and free actions | `@components/contentNavbar` |
 | Section or panel title (h2) with actions | `@components/sectionHeader` |
-| Path on pages deeper than one level | `@components/breadcrumbs` |
 | Underline tabs and their panel | `@components/tabNav` + `@components/tabPanel` |
-| Tool switcher (Dados, Conteúdos, Links) | `@components/toolSwitcher` |
 | Buttons with icon or loading | `@components/button` |
 | Link styled as a button | `@components/linkButton` |
 | Icon-only button (label required) | `@components/iconButton` |
 | Text field with label, hint, error, prefix, mono | `@components/input` |
 | Multi-line field | `@components/textArea` |
 | Select | `@components/select` |
+| Number with a slider across the field and an exact-value input at the end (manual value may go past the slider max) | `@components/rangeField` |
 | Settings row with switch | `@components/switchField` |
 | 2–4 views of the same content | `@components/segmentedControl` |
 | Custom field (label, hint, error frame) | `@components/formField` |
