@@ -8,18 +8,8 @@ import (
 	"strings"
 )
 
-const (
-	ModeAll    = "all"
-	ModePublic = "public"
-	ModeAdmin  = "admin"
-)
-
-var ErrInvalidAPIMode = errors.New("invalid api mode")
-
 type Config struct {
-	APIMode                 string
-	PublicPort              string
-	AdminPort               string
+	Port                    string
 	CORSAllowedOrigins      string
 	AdminCORSAllowedOrigins string
 	MongoURI                string
@@ -36,28 +26,14 @@ func Load() (Config, error) {
 
 	corsAllowedOrigins := lookup("CORS_ALLOWED_ORIGINS", "*")
 	cfg := Config{
-		APIMode:                 strings.ToLower(lookup("API_MODE", ModeAll)),
-		PublicPort:              lookup("PUBLIC_PORT", lookup("PORT", "8080")),
-		AdminPort:               lookup("ADMIN_PORT", "8081"),
+		Port:                    lookup("PORT", "8080"),
 		CORSAllowedOrigins:      corsAllowedOrigins,
 		AdminCORSAllowedOrigins: lookup("ADMIN_CORS_ALLOWED_ORIGINS", corsAllowedOrigins),
 		MongoURI:                lookup("MONGODB_URI", "mongodb://localhost:27017"),
 		MongoName:               lookup("MONGODB_NAME", "pocketrun"),
 		JWTSecret:               lookup("JWT_SECRET", "pocketrun-secret-key-change-in-production"),
 	}
-
-	if cfg.APIMode != ModeAll && cfg.APIMode != ModePublic && cfg.APIMode != ModeAdmin {
-		return Config{}, fmt.Errorf("api mode %q: %w", cfg.APIMode, ErrInvalidAPIMode)
-	}
 	return cfg, nil
-}
-
-func (c Config) ServesPublic() bool {
-	return c.APIMode == ModeAll || c.APIMode == ModePublic
-}
-
-func (c Config) ServesAdmin() bool {
-	return c.APIMode == ModeAll || c.APIMode == ModeAdmin
 }
 
 func lookup(key, fallback string) string {

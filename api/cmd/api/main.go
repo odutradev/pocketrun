@@ -20,7 +20,10 @@ import (
 	"pocketrun-api/internal/user"
 )
 
-const startupTimeout = 10 * time.Second
+const (
+	startupTimeout = 10 * time.Second
+	adminPrefix    = "/admin"
+)
 
 type indexer interface {
 	EnsureIndexes(ctx context.Context) error
@@ -79,27 +82,26 @@ func run(logger *slog.Logger) error {
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
 	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
 
-	servers := []*http.Server{}
-	if cfg.ServesPublic() {
-		mux := http.NewServeMux()
-		authenticateApplication := application.Authenticate(applicationService, logger)
-		healthHandler.Register(mux)
-		applicationHandler.RegisterPublic(mux, authenticateApplication)
-		documentHandler.RegisterPublic(mux, authenticateApplication)
-		servers = append(servers, httpx.NewServer(cfg.PublicPort, httpx.CORS(cfg.CORSAllowedOrigins)(mux)))
-	}
+	adminMux := http.NewServeMux()
+	authenticateManager := user.Authenticate(signer)
+	healthHandler.Register(adminMux)
+	setupHandler.Register(adminMux)
+	userHandler.Register(adminMux, authenticateManager)
+	applicationHandler.RegisterAdmin(adminMux, authenticateManager)
+	documentHandler.RegisterAdmin(adminMux, authenticateManager)
 
-	if cfg.ServesAdmin() {
-		mux := http.NewServeMux()
-		authenticateManager := user.Authenticate(signer)
-		healthHandler.Register(mux)
-		setupHandler.Register(mux)
-		userHandler.Register(mux, authenticateManager)
-		applicationHandler.RegisterAdmin(mux, authenticateManager)
-		documentHandler.RegisterAdmin(mux, authenticateManager)
-		servers = append(servers, httpx.NewServer(cfg.AdminPort, httpx.CORS(cfg.AdminCORSAllowedOrigins)(mux)))
-	}
+	publicMux := http.NewServeMux()
+	authenticateApplication := application.Authenticate(applicationService, logger)
+	healthHandler.Register(publicMux)
+	applicationHandler.RegisterPublic(publicMux, authenticateApplication)
+	documentHandler.RegisterPublic(publicMux, authenticateApplication)
 
+	// Uma porta só: as rotas do painel ficam sob /admin, com CORS próprio, e o resto é a API pública.
+	root := http.NewServeMux()
+	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins)(adminMux)))
+	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins)(publicMux))
+
+	servers := []*http.Server{httpx.NewServer(cfg.Port, root)}
 	return httpx.Serve(ctx, logger, servers)
 }
 
