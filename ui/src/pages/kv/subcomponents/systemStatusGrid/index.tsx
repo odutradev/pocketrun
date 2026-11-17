@@ -1,6 +1,6 @@
 import StatCard from "@components/statCard";
-import useKvPage from "../../hook";
 import { StatGrid } from "./styles";
+import useKvPage from "../../hook";
 
 const SystemStatusGrid = () => {
   const { applications, totalTokens, openOriginCount } = useKvPage();

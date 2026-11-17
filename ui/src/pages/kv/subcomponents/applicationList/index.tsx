@@ -6,8 +6,8 @@ import EmptyState from "@components/emptyState";
 import { pluralize } from "@utils/functions";
 import Button from "@components/button";
 import Input from "@components/input";
-import useKvPage from "../../hook";
 import Card from "@components/card";
+import useKvPage from "../../hook";
 
 const ApplicationList = () => {
   const { applications, filteredApplications, search, handleSearchChange, handleOpenCreate } = useKvPage();
