@@ -93,6 +93,8 @@ Text, surfaces, borders and states never change. Never show two tools' colors on
 - User-facing copy is Brazilian Portuguese, short, imperative on buttons ("Criar documento", not "Clique para criar").
 - Name things as `.claude/PRODUCT.md` does: aplicação, gestor, token de acesso, coleção, documento, origens permitidas.
 - Errors say what happened and what to do next; never show raw codes to the user.
+- Optional fields end their label with ` *` ("Grupo *"). Never write "(opcional)" or "Opcional." in labels or hints.
+- Hints are one short sentence, only when the field is not obvious. No hint that repeats the label, explains the control or states a count the screen already shows; a value preview (like the public URL) is shown alone, without a "Endereço:" prefix.
 
 ## 6. Inventory
 
