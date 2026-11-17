@@ -20,7 +20,7 @@ Lista do que falta construir para o PocketRun cumprir a visão descrita em `.cla
 
 Itens de conversa, não de código: discutir com o dono e registrar a decisão em `.claude/PRODUCT.md` (seção 7).
 
-- **1.1** ⬜ Definir onde páginas e links são servidos: caminho na API pública (`/p/{slug}`), domínio dedicado ou os dois.
+- **1.1** ⬜ Registrar em `.claude/PRODUCT.md` onde páginas e links são servidos. Direção já escolhida pelo dono: domínio dedicado, servido pela mesma API (ver a regra na seção 3).
 - **1.2** ⬜ Definir se o slug é único por aplicação ou na instância inteira.
 - **1.3** ⬜ Definir como importar os dados atuais do Shareds (collections do PocketDB).
 - **1.4** ⬜ Definir se o upload de arquivos volta e onde os arquivos ficam guardados (MongoDB GridFS, disco, S3 compatível).
@@ -36,6 +36,14 @@ Itens de conversa, não de código: discutir com o dono e registrar a decisão e
 
 Depende de 1.1 e 1.2.
 
+**Regra de negócio:** não existe um segundo front nem um serviço separado para páginas e links.
+
+- A mesma API em Go serve tudo. Páginas e links são um grupo de rotas próprio no código, ao lado das rotas públicas e das rotas `/admin`.
+- Páginas e links ficam num domínio só deles (ex: `s.odutra.com`), configurado por variável de ambiente. Esse domínio aponta para o mesmo container `api`, e a API escolhe o grupo de rotas pelo host da requisição.
+- O domínio próprio é obrigatório por segurança. As páginas executam HTML e JS escritos pelo usuário, e no mesmo domínio do painel ou da API esse JS teria acesso à sessão do gestor.
+- A API entrega o HTML da página já montado, com cache e headers de segurança (CSP). O redirect é uma resposta `302` do servidor, nunca feito em JavaScript no navegador, para ser instantâneo e funcionar com robôs e prévias de link.
+- Como todas as aplicações compartilham o mesmo domínio, o slug tem que ser único na instância inteira (resposta do 1.2).
+
 - **3.1** ⬜ Criar o domínio de páginas: modelo (slug, HTML, CSS, JS, ativo, datas), repositório e índice de slug, vinculado à aplicação.
 - **3.2** ⬜ Criar o domínio de links: modelo (slug, URL de destino, ativo, datas), repositório e índice de slug, vinculado à aplicação.
 - **3.3** ⬜ Rotas admin de páginas: listar, criar, ver, editar, excluir, ativar e desativar.
@@ -43,6 +51,7 @@ Depende de 1.1 e 1.2.
 - **3.5** ⬜ Geração de slug aleatório e validação de slug personalizado (formato, palavras reservadas, unicidade).
 - **3.6** ⬜ Rota pública que serve a página pelo slug, montando HTML, CSS e JS, com headers de segurança.
 - **3.7** ⬜ Rota pública de redirecionamento pelo slug do link.
+- **3.8** ⬜ Roteamento por host na API: variável de ambiente com o domínio de páginas e links (em `.env.example` e no compose), grupo de rotas servido só nesse domínio, e o passo a passo do domínio extra no Dokploy no `README.md`.
 
 ## 4. Páginas & Links: painel
 
