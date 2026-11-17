@@ -2,11 +2,9 @@ import { ExitIcon } from "@radix-ui/react-icons";
 
 import IdentitySection from "./subcomponents/identity";
 import PasswordSection from "./subcomponents/password";
-import PageHeader from "@components/pageHeader";
+import ContentNavbar from "@components/contentNavbar";
 import { formatDate } from "@utils/functions";
 import { roleLabels } from "@assets/data";
-import Button from "@components/button";
-import Badge from "@components/badge";
 import { Container } from "./styles";
 import useProfilePage from "./hook";
 
@@ -17,18 +15,11 @@ const ProfilePage = () => {
 
   return (
     <Container>
-      <PageHeader
-        eyebrow="Sua conta"
+      <ContentNavbar
         title="Perfil"
-        description={`Conta criada em ${formatDate(user.createdAt)}.`}
-        actions={
-          <Button variant="secondary" leftIcon={<ExitIcon />} onClick={handleSignOut}>
-            Sair
-          </Button>
-        }
-      >
-        <Badge tone={user.role === "superadmin" ? "accent" : "neutral"}>{roleLabels[user.role]}</Badge>
-      </PageHeader>
+        info={`${roleLabels[user.role]} · conta criada em ${formatDate(user.createdAt)}. Aqui você muda seu nome, e-mail e senha.`}
+        action={{ label: "Sair", icon: <ExitIcon />, onClick: handleSignOut, variant: "secondary" }}
+      />
       <IdentitySection />
       <PasswordSection />
     </Container>

@@ -1,23 +1,29 @@
-import { Container, Description, Meta } from "./styles";
-import ToolSwitcher from "@components/toolSwitcher";
-import Breadcrumbs from "@components/breadcrumbs";
-import PageHeader from "@components/pageHeader";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+
+import ContentNavbar from "@components/contentNavbar";
+import LinkButton from "@components/linkButton";
 import CopyField from "@components/copyField";
 import useAppDetailsPage from "../../hook";
+import { Container } from "./styles";
 
 const AppHeader = () => {
-  const { application } = useAppDetailsPage();
+  const { application, isLoading, loadApplication } = useAppDetailsPage();
   if (!application) return null;
 
   return (
     <Container>
-      <Breadcrumbs items={[{ label: "KV", to: "/kv" }, { label: application.name }]} />
-      <PageHeader title={application.name} actions={<ToolSwitcher active="data" />}>
-        <Meta>
-          <CopyField value={application.projectId} label="Project ID" />
-          <Description>{application.description || "Sem descrição."}</Description>
-        </Meta>
-      </PageHeader>
+      <ContentNavbar
+        title={application.name}
+        info={application.description || "Aplicação do KV, sem descrição."}
+        actions={
+          <LinkButton to="/kv" leftIcon={<ArrowLeftIcon />}>
+            KV
+          </LinkButton>
+        }
+        onReload={() => loadApplication(application.id)}
+        isReloading={isLoading}
+      />
+      <CopyField value={application.projectId} label="Project ID" />
     </Container>
   );
 };
