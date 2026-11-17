@@ -37,7 +37,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
 - **Fonts:** `brand.fonts.display` (Unbounded 800) for page titles, big numbers and section labels; `brand.fonts.body` (Hanken Grotesk) for UI; `brand.fonts.mono` (Space Mono) per principle 3.
 - **Spacing:** `theme.spacing(n)` on a 4 px grid. Sections 56 px apart, card padding 24–28 px.
 - **Radius:** `radii.tight` (4 px) on side menu items, so the context stroke stays straight; `radii.control` (10 px) on controls, `radii.box` (12 px) on boxes inside cards, `radii.panel` (16 px) on panels, `radii.card` (20 px) on large cards and dialogs, `radii.pill` on badges and chips.
-- **Motion:** `motion.fast` for hover and color, `motion.base` for state changes and closing, `motion.expressive` with `easing.snap` for opening. Loader is the symbol's `motion="loop"`.
+- **Motion:** `motion.fast` for hover and color, `motion.base` for state changes and closing, `motion.expressive` with `easing.snap` for opening. Loader is the symbol's `motion="loop"`. A logo that follows the tool context uses `hasContextTransition` (blades close, swap color, reopen); a logo that is a link uses `isHoverable` (blades spread on hover). The side menu logo uses both, plus `motion="intro"` on first load.
 
 ## 3. Components and their rules
 
@@ -98,7 +98,7 @@ Reuse before creating. Add every new shared component here in the same work.
 
 | Need | Component |
 | :--- | :--- |
-| Logo, symbol, app icon, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`) |
+| Logo, symbol, app icon, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`, `hasContextTransition`, `isHoverable`) |
 | Page loader (symbol loop) | `@components/loader` |
 | Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
 | API status pill or panel line | `@components/apiStatus` |
