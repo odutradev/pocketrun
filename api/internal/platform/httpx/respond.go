@@ -23,7 +23,9 @@ func WriteJSON(w http.ResponseWriter, status int, payload any) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write(body)
+	if _, err := w.Write(body); err != nil {
+		return
+	}
 }
 
 func WriteError(w http.ResponseWriter, status int, code string) {

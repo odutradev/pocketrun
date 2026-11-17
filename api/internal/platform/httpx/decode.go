@@ -49,19 +49,7 @@ func Decode(w http.ResponseWriter, r *http.Request, validate *validator.Validate
 		normalizer.Normalize()
 	}
 
-	err := validate.Struct(payload)
-	var validationErrors validator.ValidationErrors
-	if errors.As(err, &validationErrors) {
-		fields := make(map[string]string, len(validationErrors))
-		for _, fieldError := range validationErrors {
-			fields[fieldError.Field()] = fieldError.Tag()
-		}
-		return &ValidationError{Fields: fields}
-	}
-	if err != nil {
-		return fmt.Errorf("validate body: %w", err)
-	}
-	return nil
+	return validateStruct(validate, payload)
 }
 
 func WriteDecodeError(w http.ResponseWriter, err error) {
