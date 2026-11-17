@@ -37,3 +37,10 @@ func (m *Mongo) Close(ctx context.Context) error {
 	}
 	return nil
 }
+
+func (m *Mongo) Drop(ctx context.Context) error {
+	if err := m.database.Drop(ctx); err != nil {
+		return fmt.Errorf("drop database %s: %w", m.database.Name(), err)
+	}
+	return nil
+}
