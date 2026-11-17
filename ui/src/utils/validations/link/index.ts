@@ -8,9 +8,8 @@ export const linkFormSchema = z
     slug: z
       .string()
       .trim()
-      .min(1, "Defina um slug ou gere um aleatório")
       .max(64, "Slug muito longo")
-      .regex(slugPattern, "Use só letras minúsculas, números e hífen"),
+      .refine((slug) => slug === "" || slugPattern.test(slug), "Use só letras minúsculas, números e hífen"),
     url: z
       .string()
       .trim()

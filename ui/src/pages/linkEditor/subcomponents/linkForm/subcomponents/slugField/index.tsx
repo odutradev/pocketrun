@@ -68,7 +68,7 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
         spellCheck={false}
         isMono
         maxLength={64}
-        placeholder="minha-promo"
+        placeholder="promocao-de-dezembro"
         value={value}
         onChange={(event) => onChange(toSlug(event.target.value))}
         error={error ?? unavailableMessage}
@@ -78,7 +78,7 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
               Endereço público: <PublicUrl>{publicLinkUrl(value)}</PublicUrl>
             </>
           ) : (
-            "Letras minúsculas, números e hífen. Ou gere um id aleatório."
+            "Opcional. Vazio, um id aleatório é gerado ao salvar. Use letras minúsculas, números e hífen."
           )
         }
         trailing={

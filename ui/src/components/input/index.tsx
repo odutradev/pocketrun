@@ -14,6 +14,7 @@ const Input = ({
   hint,
   error,
   leftIcon,
+  leading,
   trailing,
   prefix,
   isMono = false,
@@ -31,6 +32,7 @@ const Input = ({
   return (
     <FormField controlId={inputId} label={label} isLabelHidden={isLabelHidden} hint={hint} error={error}>
       <Control $hasError={Boolean(error)} $isMono={isMono} $size={size}>
+        {leading}
         {prefix && <Prefix aria-hidden="true">{prefix}</Prefix>}
         {leftIcon && <Icon aria-hidden="true">{leftIcon}</Icon>}
         <Field
