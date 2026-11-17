@@ -22,7 +22,7 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /setup/status", h.getStatus)
+	mux.HandleFunc("GET /setup/status/details", h.getStatus)
 	mux.HandleFunc("POST /setup/admin/create", h.createAdmin)
 }
 

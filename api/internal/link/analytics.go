@@ -1,14 +1,11 @@
 package link
 
 import (
-	"errors"
 	"sort"
 	"time"
 )
 
 const MaxShareEntries = 8
-
-var ErrInvalidRange = errors.New("invalid analytics range")
 
 type Range string
 
@@ -73,15 +70,20 @@ type Analytics struct {
 	Browsers    []Share    `json:"browsers"`
 }
 
-func ParseRange(value string) (Range, error) {
-	switch Range(value) {
-	case "":
-		return RangeWeek, nil
-	case RangeDay, RangeWeek, RangeMonth, RangeQuarter, RangeAll:
-		return Range(value), nil
-	default:
-		return "", ErrInvalidRange
+type AnalyticsParams struct {
+	Range    string `json:"range" query:"range" validate:"omitempty,oneof=24h 7d 30d 90d all"`
+	Timezone string `json:"tz" query:"tz" validate:"omitempty,timezone"`
+}
+
+func (p AnalyticsParams) Query() AnalyticsQuery {
+	query := AnalyticsQuery{Range: RangeWeek, Location: time.UTC}
+	if p.Range != "" {
+		query.Range = Range(p.Range)
 	}
+	if location, err := time.LoadLocation(p.Timezone); err == nil && p.Timezone != "" {
+		query.Location = location
+	}
+	return query
 }
 
 func (r Range) Duration() time.Duration {

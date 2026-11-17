@@ -14,7 +14,7 @@ export const getLink = async (linkId: string, signal?: AbortSignal) => {
 };
 
 export const checkLinkSlug = async (slug: string, linkId?: string, signal?: AbortSignal) => {
-  const response = await api.get<SlugAvailability>("/links/slug-availability", { params: { slug, linkId }, signal });
+  const response = await api.get<SlugAvailability>("/links/slug-availability/check", { params: { slug, linkId }, signal });
   return response.data;
 };
 
@@ -54,12 +54,12 @@ export const deleteLinkGroup = async (groupId: string) => {
 };
 
 export const getLinkHistory = async (linkId: string, before?: string, signal?: AbortSignal) => {
-  const response = await api.get<LinkHistoryPage>(`/links/${linkId}/history`, { params: { before }, signal });
+  const response = await api.get<LinkHistoryPage>(`/links/${linkId}/history/list`, { params: { before }, signal });
   return response.data;
 };
 
 export const getLinkAnalytics = async (linkId: string, range: AnalyticsRange, signal?: AbortSignal) => {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const response = await api.get<LinkAnalytics>(`/links/${linkId}/analytics`, { params: { range, tz }, signal });
+  const response = await api.get<LinkAnalytics>(`/links/${linkId}/analytics/details`, { params: { range, tz }, signal });
   return response.data;
 };

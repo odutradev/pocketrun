@@ -3,6 +3,7 @@ package kv
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -42,8 +43,8 @@ func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Hand
 }
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
-	mux.Handle("GET /apps/{id}/explorer/collections", authenticate(http.HandlerFunc(h.listCollections)))
-	mux.Handle("GET /apps/{id}/explorer/collections/{collection}/documents", authenticate(http.HandlerFunc(h.exploreCollection)))
+	mux.Handle("GET /apps/{id}/explorer/collections/list", authenticate(http.HandlerFunc(h.listCollections)))
+	mux.Handle("GET /apps/{id}/explorer/collections/{collection}/documents/list", authenticate(http.HandlerFunc(h.exploreCollection)))
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
@@ -198,11 +199,13 @@ func (h *Handler) exploreCollection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := r.URL.Query()
-	page := parsePositive(query.Get("page"), 1, 0)
-	limit := parsePositive(query.Get("limit"), DefaultExplorerLimit, MaxExplorerLimit)
+	var params ExplorerParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
 
-	documentsPage, err := h.service.ExploreCollection(ctx, app.ID, r.PathValue("collection"), page, limit)
+	documentsPage, err := h.service.ExploreCollection(ctx, app.ID, r.PathValue("collection"), params.PageOrDefault(), params.LimitOrDefault())
 	if err != nil {
 		h.writeError(w, r, "explore collection", err)
 		return
@@ -214,14 +217,19 @@ func (h *Handler) ownedApplication(r *http.Request) (*application.Application, e
 	ctx := r.Context()
 	managerID, err := user.ManagerIDFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse manager id: %w", err)
 	}
 
 	id, err := application.ParseID(r.PathValue("id"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse application id: %w", err)
 	}
-	return h.applications.GetByID(ctx, managerID, id)
+
+	app, err := h.applications.GetByID(ctx, managerID, id)
+	if err != nil {
+		return nil, fmt.Errorf("find owned application %s: %w", id.Hex(), err)
+	}
+	return app, nil
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {

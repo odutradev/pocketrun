@@ -120,6 +120,31 @@ type ListQuery struct {
 	GroupID *bson.ObjectID
 }
 
+type ListParams struct {
+	GroupID string `json:"groupId" query:"groupId" validate:"omitempty,mongodb"`
+}
+
+func (p ListParams) Query() ListQuery {
+	groupID, err := bson.ObjectIDFromHex(p.GroupID)
+	if err != nil {
+		return ListQuery{}
+	}
+	return ListQuery{GroupID: &groupID}
+}
+
+type SlugCheckParams struct {
+	Slug   string `json:"slug" query:"slug" validate:"max=64"`
+	LinkID string `json:"linkId" query:"linkId" validate:"omitempty,mongodb"`
+}
+
+func (p SlugCheckParams) OwnerID() *bson.ObjectID {
+	id, err := bson.ObjectIDFromHex(p.LinkID)
+	if err != nil {
+		return nil
+	}
+	return &id
+}
+
 func ParseID(value string) (bson.ObjectID, error) {
 	id, err := bson.ObjectIDFromHex(value)
 	if err != nil {

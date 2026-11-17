@@ -11,13 +11,31 @@ const (
 	DefaultListLimit     = 50
 	MaxListLimit         = 500
 	DefaultExplorerLimit = 20
-	MaxExplorerLimit     = 100
 )
 
 var (
 	ErrDocumentNotFound  = errors.New("document not found")
 	ErrInvalidDocumentID = errors.New("invalid document id")
 )
+
+type ExplorerParams struct {
+	Page  int `json:"page" query:"page" validate:"omitempty,min=1"`
+	Limit int `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
+}
+
+func (p ExplorerParams) PageOrDefault() int {
+	if p.Page == 0 {
+		return 1
+	}
+	return p.Page
+}
+
+func (p ExplorerParams) LimitOrDefault() int {
+	if p.Limit == 0 {
+		return DefaultExplorerLimit
+	}
+	return p.Limit
+}
 
 type Document struct {
 	ID             bson.ObjectID `json:"id" bson:"_id"`

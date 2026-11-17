@@ -9,7 +9,7 @@ export const signIn = async (data: SignInValues) => {
 };
 
 export const getProfile = async () => {
-  const response = await api.get<User>("/auth/me");
+  const response = await api.get<User>("/auth/me/details");
   return response.data;
 };
 

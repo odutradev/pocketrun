@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -24,7 +25,7 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.HandleFunc("POST /auth/login", h.login)
-	mux.Handle("GET /auth/me", authenticate(http.HandlerFunc(h.me)))
+	mux.Handle("GET /auth/me/details", authenticate(http.HandlerFunc(h.me)))
 	mux.Handle("PATCH /auth/me/update", authenticate(http.HandlerFunc(h.updateProfile)))
 	mux.Handle("PATCH /auth/me/password/update", authenticate(http.HandlerFunc(h.changePassword)))
 	mux.Handle("GET /users/list", authenticate(http.HandlerFunc(h.list)))
@@ -220,7 +221,7 @@ func (h *Handler) writeServiceError(ctx context.Context, w http.ResponseWriter, 
 func parseIDs(r *http.Request) (bson.ObjectID, bson.ObjectID, error) {
 	managerID, err := ManagerIDFromContext(r.Context())
 	if err != nil {
-		return bson.ObjectID{}, bson.ObjectID{}, err
+		return bson.ObjectID{}, bson.ObjectID{}, fmt.Errorf("parse manager id: %w", err)
 	}
 
 	id, err := bson.ObjectIDFromHex(r.PathValue("id"))

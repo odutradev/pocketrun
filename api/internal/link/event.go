@@ -6,10 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const (
-	HistoryPageSize    = 30
-	MaxHistoryPageSize = 100
-)
+const HistoryPageSize = 30
 
 type EventType string
 
@@ -46,6 +43,22 @@ type Event struct {
 type HistoryQuery struct {
 	Before *time.Time
 	Limit  int
+}
+
+type HistoryParams struct {
+	Before string `json:"before" query:"before" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Limit  int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
+}
+
+func (p HistoryParams) Query() HistoryQuery {
+	query := HistoryQuery{Limit: HistoryPageSize}
+	if p.Limit > 0 {
+		query.Limit = p.Limit
+	}
+	if before, err := time.Parse(time.RFC3339Nano, p.Before); err == nil {
+		query.Before = &before
+	}
+	return query
 }
 
 type HistoryPage struct {

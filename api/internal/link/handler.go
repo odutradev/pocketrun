@@ -4,11 +4,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/platform/httpx"
@@ -28,13 +25,13 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /links/list", authenticate(http.HandlerFunc(h.list)))
-	mux.Handle("GET /links/slug-availability", authenticate(http.HandlerFunc(h.checkSlug)))
+	mux.Handle("GET /links/slug-availability/check", authenticate(http.HandlerFunc(h.checkSlug)))
 	mux.Handle("POST /links/create", authenticate(http.HandlerFunc(h.create)))
 	mux.Handle("GET /links/{id}/details", authenticate(http.HandlerFunc(h.getByID)))
 	mux.Handle("PATCH /links/{id}/update", authenticate(http.HandlerFunc(h.update)))
 	mux.Handle("DELETE /links/{id}/delete", authenticate(http.HandlerFunc(h.delete)))
-	mux.Handle("GET /links/{id}/history", authenticate(http.HandlerFunc(h.history)))
-	mux.Handle("GET /links/{id}/analytics", authenticate(http.HandlerFunc(h.analytics)))
+	mux.Handle("GET /links/{id}/history/list", authenticate(http.HandlerFunc(h.history)))
+	mux.Handle("GET /links/{id}/analytics/details", authenticate(http.HandlerFunc(h.analytics)))
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux) {
@@ -42,17 +39,13 @@ func (h *Handler) RegisterPublic(mux *http.ServeMux) {
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	var query ListQuery
-	if value := r.URL.Query().Get("groupId"); value != "" {
-		groupID, err := group.ParseID(value)
-		if err != nil {
-			h.writeError(w, r, "list links", err)
-			return
-		}
-		query.GroupID = &groupID
+	var params ListParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
 	}
 
-	links, err := h.service.List(r.Context(), query)
+	links, err := h.service.List(r.Context(), params.Query())
 	if err != nil {
 		h.writeError(w, r, "list links", err)
 		return
@@ -61,17 +54,13 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) checkSlug(w http.ResponseWriter, r *http.Request) {
-	var ownerID *bson.ObjectID
-	if value := r.URL.Query().Get("linkId"); value != "" {
-		id, err := ParseID(value)
-		if err != nil {
-			h.writeError(w, r, "check link slug", err)
-			return
-		}
-		ownerID = &id
+	var params SlugCheckParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
 	}
 
-	availability, err := h.service.CheckSlug(r.Context(), r.URL.Query().Get("slug"), ownerID)
+	availability, err := h.service.CheckSlug(r.Context(), params.Slug, params.OwnerID())
 	if err != nil {
 		h.writeError(w, r, "check link slug", err)
 		return
@@ -158,25 +147,13 @@ func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := HistoryQuery{Limit: HistoryPageSize}
-	if value := r.URL.Query().Get("before"); value != "" {
-		before, err := time.Parse(time.RFC3339Nano, value)
-		if err != nil {
-			httpx.WriteError(w, http.StatusBadRequest, "invalid_cursor")
-			return
-		}
-		query.Before = &before
-	}
-	if value := r.URL.Query().Get("limit"); value != "" {
-		limit, err := strconv.Atoi(value)
-		if err != nil || limit < 1 || limit > MaxHistoryPageSize {
-			httpx.WriteError(w, http.StatusBadRequest, "invalid_limit")
-			return
-		}
-		query.Limit = limit
+	var params HistoryParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
 	}
 
-	page, err := h.service.History(r.Context(), id, query)
+	page, err := h.service.History(r.Context(), id, params.Query())
 	if err != nil {
 		h.writeError(w, r, "link history", err)
 		return
@@ -191,23 +168,13 @@ func (h *Handler) analytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	period, err := ParseRange(r.URL.Query().Get("range"))
-	if err != nil {
-		h.writeError(w, r, "link analytics", err)
+	var params AnalyticsParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
 		return
 	}
 
-	location := time.UTC
-	if value := r.URL.Query().Get("tz"); value != "" {
-		loaded, err := time.LoadLocation(value)
-		if err != nil {
-			httpx.WriteError(w, http.StatusBadRequest, "invalid_timezone")
-			return
-		}
-		location = loaded
-	}
-
-	analytics, err := h.service.Analytics(r.Context(), id, AnalyticsQuery{Range: period, Location: location})
+	analytics, err := h.service.Analytics(r.Context(), id, params.Query())
 	if err != nil {
 		h.writeError(w, r, "link analytics", err)
 		return
@@ -237,8 +204,6 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_link_id")
 	case errors.Is(err, group.ErrInvalidGroupID):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_group_id")
-	case errors.Is(err, ErrInvalidRange):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_range")
 	case errors.Is(err, ErrInvalidSchedule):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_schedule")
 	case errors.Is(err, slug.ErrInvalidSlug):

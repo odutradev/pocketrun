@@ -37,11 +37,7 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_schedule: "A regra de ativação está incompleta.",
   invalid_slug: "Use só letras minúsculas, números e hífen no slug.",
   reserved_slug: "Esse slug é reservado pelo sistema.",
-  slug_taken: "Esse slug já está em uso.",
-  invalid_range: "Período de análise inválido.",
-  invalid_timezone: "Fuso horário inválido.",
-  invalid_cursor: "Não foi possível carregar mais itens do histórico.",
-  invalid_limit: "Não foi possível carregar mais itens do histórico."
+  slug_taken: "Esse slug já está em uso."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
