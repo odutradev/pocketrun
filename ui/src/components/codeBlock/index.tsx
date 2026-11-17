@@ -20,7 +20,7 @@ const toJsonTokens = (code: string): CodeToken[] =>
     })
     .filter((token) => token.text.length > 0);
 
-const CodeBlock: React.FC<CodeBlockProps> = ({ code, language = "text", title, isCopyable = false, maxHeight }) => {
+const CodeBlock = ({ code, language = "text", title, isCopyable = false, maxHeight }: CodeBlockProps) => {
   const { copy, isCopied } = useClipboard();
   const hasHeader = Boolean(title) || isCopyable;
 

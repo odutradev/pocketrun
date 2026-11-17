@@ -4,7 +4,7 @@ import useBrandPage from "../../hook";
 import { Body, Chip, Description, Hex, Meta, Name, Swatch, SwatchButton } from "./styles";
 import type { ColorSwatchProps } from "./types";
 
-const ColorSwatch: React.FC<ColorSwatchProps> = ({ color, size = "regular" }) => {
+const ColorSwatch = ({ color, size = "regular" }: ColorSwatchProps) => {
   const { handleCopyColor, isCopied } = useBrandPage();
   const copied = isCopied(color.hex);
 

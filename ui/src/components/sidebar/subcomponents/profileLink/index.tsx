@@ -9,7 +9,7 @@ import { Avatar, Container, Identity, Name, Profile, Role } from "./styles";
 import type { ProfileLinkProps } from "./types";
 
 // Quem está logado: abre a página de perfil; o botão ao lado encerra a sessão.
-const ProfileLink: React.FC<ProfileLinkProps> = ({ user, isActive }) => {
+const ProfileLink = ({ user, isActive }: ProfileLinkProps) => {
   const { clearSession } = useAuthStore();
 
   return (

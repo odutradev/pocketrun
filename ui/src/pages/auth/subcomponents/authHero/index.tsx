@@ -4,7 +4,7 @@ import BrandMark from "@components/brandMark";
 
 import { Container, Description, Headline, Pitch, Tools } from "./styles";
 
-const AuthHero: React.FC = () => (
+const AuthHero = () => (
   <Container aria-label="PocketRun">
     <BrandMark kind="horizontal" size={19} />
     <Pitch>

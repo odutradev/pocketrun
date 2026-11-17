@@ -74,7 +74,7 @@ const isItemActive = (item: SidebarItem, pathname: string) =>
 
 // Menu lateral: logo com o estado da API e áreas do painel em cima, o perfil do gestor embaixo.
 // No celular vira uma gaveta aberta pela barra do topo.
-const Sidebar: React.FC = () => {
+const Sidebar = () => {
   const { pathname } = useLocation();
   const { context } = useTheme();
   const { user } = useAuthStore();

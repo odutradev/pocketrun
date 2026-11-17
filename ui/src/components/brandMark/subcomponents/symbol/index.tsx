@@ -25,7 +25,7 @@ const rotationFor = (pose: SymbolPose, angle: number, index: number) => {
   return angle + symbolMotion.spreadDegrees * (index - 1) - symbolMotion.spreadTilt;
 };
 
-const BrandSymbol: React.FC<BrandSymbolProps> = ({
+const BrandSymbol = ({
   size,
   context = "general",
   palette = "dark",
@@ -39,7 +39,7 @@ const BrandSymbol: React.FC<BrandSymbolProps> = ({
   isStaggered = true,
   snapKey = 0,
   status
-}) => {
+}: BrandSymbolProps) => {
   const maskId = `rivet-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const colors = getSymbolColors(context, palette);
   const box = frame === "full" ? fullFrame : symbolViewBox;

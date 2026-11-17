@@ -11,7 +11,7 @@ import { Container } from "./styles";
 import { applicationColumns } from "./table";
 
 // Entrada do serviço KV: os dados ficam dentro de cada aplicação, então a página leva ao explorador dela.
-const KvPage: React.FC = () => {
+const KvPage = () => {
   const { applications, isLoading, loadApplications } = useKvPage();
 
   useEffect(() => {

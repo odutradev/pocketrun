@@ -11,7 +11,7 @@ import { Alphabet, Controls, Playground, Sample, ScaleLabel, ScaleRow, Specimen,
 
 const alphabet = "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789";
 
-const Typography: React.FC = () => {
+const Typography = () => {
   const {
     playgroundText,
     playgroundFamily,

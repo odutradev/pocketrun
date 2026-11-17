@@ -10,7 +10,7 @@ import useHomePage from "../../hook";
 import ApplicationCard from "../applicationCard";
 import { CardGrid, Count, CreateTile, SearchBox, Section, Toolbar } from "./styles";
 
-const ApplicationList: React.FC = () => {
+const ApplicationList = () => {
   const { applications, filteredApplications, search, handleSearchChange, handleOpenCreate } = useHomePage();
 
   if (applications.length === 0) {

@@ -6,7 +6,7 @@ import Input from "@components/input";
 import useSetupPage from "../../hook";
 import { Actions, Description, Form, Heading, Title } from "./styles";
 
-const SetupForm: React.FC = () => {
+const SetupForm = () => {
   const { form } = useSetupPage();
   const { values, errors, isSubmitting, handleChange, handleSubmit } = form;
 

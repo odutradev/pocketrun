@@ -12,7 +12,7 @@ import { createLocalLogger } from "@utils/functions";
 
 const logger = createLocalLogger("appProviders");
 
-const AppProviders: React.FC = () => {
+const AppProviders = () => {
   const { token, setUser } = useAuthStore();
 
   useEffect(() => {

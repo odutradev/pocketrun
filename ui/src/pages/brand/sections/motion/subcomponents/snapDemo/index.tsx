@@ -7,7 +7,7 @@ import Button from "@components/button";
 
 import { Demo } from "../../styles";
 
-const SnapDemo: React.FC = () => {
+const SnapDemo = () => {
   const [snapKey, setSnapKey] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
 

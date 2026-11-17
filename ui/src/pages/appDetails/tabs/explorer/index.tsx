@@ -33,7 +33,7 @@ const reportError = (signal: AbortSignal, fallback: string) => (error: unknown) 
   toast.error(getErrorMessage(error, fallback));
 };
 
-const ExplorerTab: React.FC = () => {
+const ExplorerTab = () => {
   const { applicationId } = useAppDetailsPage();
   const [collectionsState, setCollectionsState] = useState<LoadedState<string[]> | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);

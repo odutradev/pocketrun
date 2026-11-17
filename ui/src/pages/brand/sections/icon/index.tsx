@@ -12,7 +12,7 @@ import { FileInfo, FileRow, IconStage, SizeItem, Sizes } from "./styles";
 
 const realSizes = [16, 32, 48, 64, 128];
 
-const IconSection: React.FC = () => {
+const IconSection = () => {
   const { handleDownloadFavicon, isExporting } = useBrandPage();
 
   return (

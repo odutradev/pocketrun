@@ -3,7 +3,7 @@ import Skeleton from "@components/skeleton";
 import { Container, Empty, Item, List, Loading, Title } from "./styles";
 import type { CollectionListProps } from "./types";
 
-const CollectionList: React.FC<CollectionListProps> = ({ collections, selected, isLoading, onSelect }) => (
+const CollectionList = ({ collections, selected, isLoading, onSelect }: CollectionListProps) => (
   <Container aria-labelledby="collections-title">
     <Title id="collections-title">Coleções · {isLoading ? "…" : collections.length}</Title>
     {isLoading && (

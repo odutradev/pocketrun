@@ -4,7 +4,7 @@ import PageHeader from "@components/pageHeader";
 import { Container } from "./styles";
 
 // Serviço planejado: o menu já reserva o lugar, o módulo chega pelo roadmap.
-const LinksPage: React.FC = () => (
+const LinksPage = () => (
   <Container>
     <PageHeader
       eyebrow="Serviço"

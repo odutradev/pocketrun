@@ -14,14 +14,14 @@ const runLetters = ["R", "U", "N"] as const;
 // R abre com Dados, U com Conteúdos e N com Links.
 const runBladeOrder: BrandTool[] = ["data", "content", "links"];
 
-const BrandLogo: React.FC<BrandLogoProps> = ({
+const BrandLogo = ({
   size,
   layout = "horizontal",
   context = "general",
   palette = "dark",
   motion = "none",
   ...symbolProps
-}) => {
+}: BrandLogoProps) => {
   const { motion: timing } = useTheme();
   const colors = getSymbolColors(context, palette);
   const symbolSize = layout === "stacked" ? size * 1.8 : size * 1.28;

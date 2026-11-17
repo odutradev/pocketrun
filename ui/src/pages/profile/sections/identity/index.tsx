@@ -11,7 +11,7 @@ import useProfilePage from "../../hook";
 import { Actions, FieldRow, Form, Section } from "../../styles";
 
 // Nome e e-mail de acesso do próprio gestor.
-const IdentitySection: React.FC = () => {
+const IdentitySection = () => {
   const { user, handleUserUpdated } = useProfilePage();
 
   const { execute } = useAction({

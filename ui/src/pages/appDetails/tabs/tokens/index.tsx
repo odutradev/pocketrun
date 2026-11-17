@@ -16,7 +16,7 @@ import useAppDetailsPage from "../../hook";
 import { Body, Strong } from "./styles";
 import { getTokenColumns } from "./table";
 
-const TokensTab: React.FC = () => {
+const TokensTab = () => {
   const { applicationId, application, handleRefresh, handleOpenTokenModal } = useAppDetailsPage();
   const [tokenToRevoke, setTokenToRevoke] = useState<ApiToken | null>(null);
   const tokens = application?.tokens ?? [];

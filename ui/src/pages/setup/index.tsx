@@ -6,7 +6,7 @@ import SetupForm from "./subcomponents/setupForm";
 import SetupSteps from "./subcomponents/setupSteps";
 
 // Primeiro acesso da instância: aparece uma vez, até existir o primeiro gestor.
-const SetupPage: React.FC = () => (
+const SetupPage = () => (
   <Container>
     <BrandMark kind="horizontal" size={18} motion="intro" />
     <SetupSteps />

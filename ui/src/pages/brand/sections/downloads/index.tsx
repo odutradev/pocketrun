@@ -18,7 +18,7 @@ import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { Actions, Controls, Generator, Hint, Preview, PreviewMeta, PreviewStage } from "./styles";
 
-const DownloadsSection: React.FC = () => {
+const DownloadsSection = () => {
   const {
     generatorConfig,
     generatorPreview,

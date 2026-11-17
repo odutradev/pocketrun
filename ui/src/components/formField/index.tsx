@@ -7,7 +7,7 @@ import type { FormFieldProps } from "./types";
 
 // Rótulo acima, ajuda abaixo e erro abaixo dela. Os ids batem com os de `getFieldIds`,
 // que o controle usa em `aria-describedby`.
-const FormField: React.FC<FormFieldProps> = ({ controlId, label, isLabelHidden = false, hint, error, children }) => {
+const FormField = ({ controlId, label, isLabelHidden = false, hint, error, children }: FormFieldProps) => {
   const { hintId, errorId } = getFieldIds(controlId);
 
   return (

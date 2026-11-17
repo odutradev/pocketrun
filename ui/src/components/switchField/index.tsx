@@ -4,13 +4,13 @@ import { Description, Label, Row, Text, Thumb, Track } from "./styles";
 import type { SwitchFieldProps } from "./types";
 
 // Linha de configuração com rótulo visível, descrição e interruptor.
-const SwitchField: React.FC<SwitchFieldProps> = ({
+const SwitchField = ({
   label,
   description,
   isChecked,
   onCheckedChange,
   isDisabled = false
-}) => {
+}: SwitchFieldProps) => {
   const id = useId();
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;

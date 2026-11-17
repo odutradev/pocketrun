@@ -7,7 +7,7 @@ import { allowsAnyOrigin, describeOrigins, formatDate, pluralize } from "@utils/
 import { Badges, Body, Description, Footer, Identity, Name, ProjectId } from "./styles";
 import type { ApplicationCardProps } from "./types";
 
-const ApplicationCard: React.FC<ApplicationCardProps> = ({ application }) => {
+const ApplicationCard = ({ application }: ApplicationCardProps) => {
   const tokenCount = application.tokens?.length ?? 0;
   const isOpenToAnyOrigin = allowsAnyOrigin(application.allowedOrigins);
 

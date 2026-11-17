@@ -3,7 +3,7 @@ import StatCard from "@components/statCard";
 import useHomePage from "../../hook";
 import { StatGrid } from "./styles";
 
-const SystemStatusGrid: React.FC = () => {
+const SystemStatusGrid = () => {
   const { applications, totalTokens, openOriginCount } = useHomePage();
 
   return (

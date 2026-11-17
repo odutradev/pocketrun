@@ -57,6 +57,6 @@ const router = createBrowserRouter([
   }
 ]);
 
-const AppRouter: React.FC = () => <RouterProvider router={router} />;
+const AppRouter = () => <RouterProvider router={router} />;
 
 export default AppRouter;

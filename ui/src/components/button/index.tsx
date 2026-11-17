@@ -1,7 +1,7 @@
 import { Spinner, StyledButton } from "./styles";
 import type { ButtonProps } from "./types";
 
-const Button: React.FC<ButtonProps> = ({
+const Button = ({
   children,
   variant = "primary",
   size = "md",
@@ -13,7 +13,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled,
   type = "button",
   ...props
-}) => (
+}: ButtonProps) => (
   <StyledButton
     type={type}
     disabled={disabled || isLoading}

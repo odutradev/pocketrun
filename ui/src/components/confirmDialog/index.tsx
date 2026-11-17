@@ -8,7 +8,7 @@ import { Code } from "./styles";
 import type { ConfirmDialogProps } from "./types";
 
 // Confirmação de ação destrutiva. O botão sólido de erro aparece só neste passo final.
-const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
+const ConfirmDialog = ({
   isOpen,
   onClose,
   onConfirm,
@@ -17,7 +17,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   confirmLabel,
   isPending = false,
   confirmationText
-}) => {
+}: ConfirmDialogProps) => {
   const [typedText, setTypedText] = useState("");
   const isConfirmed = !confirmationText || typedText.trim() === confirmationText;
 

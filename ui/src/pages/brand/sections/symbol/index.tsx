@@ -13,7 +13,7 @@ const gridLines = Array.from({ length: 13 }, (_, index) => index * 8);
 
 const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
 
-const SymbolSection: React.FC = () => {
+const SymbolSection = () => {
   const { isGuidesVisible, handleGuidesChange } = useBrandPage();
 
   return (

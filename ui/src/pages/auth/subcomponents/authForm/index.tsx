@@ -4,7 +4,7 @@ import LoginForm from "../loginForm";
 import { Container, Eyebrow, Heading, Subtitle, Title } from "./styles";
 
 // Só login: o único cadastro aberto é o setup inicial; outros gestores são criados por dentro.
-const AuthForm: React.FC = () => (
+const AuthForm = () => (
   <Container>
     <Heading>
       <Eyebrow>Acesso do gestor</Eyebrow>

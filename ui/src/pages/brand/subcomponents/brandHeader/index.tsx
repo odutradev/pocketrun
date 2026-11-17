@@ -7,7 +7,7 @@ import LinkButton from "@components/linkButton";
 
 import { Actions, Bar, Container, NavLink, NavList, Top } from "./styles";
 
-const BrandHeader: React.FC = () => (
+const BrandHeader = () => (
   <Bar>
     <Container>
       <Top>

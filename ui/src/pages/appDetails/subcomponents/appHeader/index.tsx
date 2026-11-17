@@ -6,7 +6,7 @@ import ToolSwitcher from "@components/toolSwitcher";
 import useAppDetailsPage from "../../hook";
 import { Container, Description, Meta } from "./styles";
 
-const AppHeader: React.FC = () => {
+const AppHeader = () => {
   const { application } = useAppDetailsPage();
   if (!application) return null;
 

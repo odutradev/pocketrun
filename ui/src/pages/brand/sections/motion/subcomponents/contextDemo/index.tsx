@@ -9,7 +9,7 @@ import { ControlScroller } from "../../../../styles";
 import { Demo } from "../../styles";
 
 // A animação mora no BrandMark (`hasContextTransition`), a mesma usada no logo do menu do painel.
-const ContextDemo: React.FC = () => {
+const ContextDemo = () => {
   const [context, setContext] = useState<BrandContext>("general");
 
   const handleContextChange = (raw: string) => {

@@ -13,7 +13,7 @@ const steps: SetupStep[] = [
 
 const stateLabels = { done: "concluído", current: "passo atual", next: "próximo" } as const;
 
-const SetupSteps: React.FC = () => (
+const SetupSteps = () => (
   <List aria-label="Passos do setup">
     {steps.map((step, index) => (
       <Step key={step.label} aria-current={step.state === "current" ? "step" : undefined}>

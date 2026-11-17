@@ -8,7 +8,7 @@ import type { AppIconProps } from "./types";
 
 const variantForSize = (size: number): SymbolVariant => (size <= 32 ? "tiny" : size <= 64 ? "bold" : "full");
 
-const AppIcon: React.FC<AppIconProps> = ({ size, palette = "dark", context = "general", motion = "none", ...symbolProps }) => {
+const AppIcon = ({ size, palette = "dark", context = "general", motion = "none", ...symbolProps }: AppIconProps) => {
   const { motion: timing } = useTheme();
 
   return (

@@ -10,7 +10,7 @@ import useBrandPage from "../../hook";
 import { ControlScroller, Eyebrow, Lead, PanelText } from "../../styles";
 import { Actions, Container, Intro, Showcase, ShowcaseStage, Title } from "./styles";
 
-const Hero: React.FC = () => {
+const Hero = () => {
   const { heroContext, handleHeroContextChange, handleDownloadSvg } = useBrandPage();
   const activeContext = brandContextOptions.find((option) => option.value === heroContext);
 

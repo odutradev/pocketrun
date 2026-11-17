@@ -5,7 +5,7 @@ import IconButton from "@components/iconButton";
 import { Container, Controls, PageLabel } from "./styles";
 import type { PaginationProps } from "./types";
 
-const Pagination: React.FC<PaginationProps> = ({ page, totalPages, onPageChange, summary }) => (
+const Pagination = ({ page, totalPages, onPageChange, summary }: PaginationProps) => (
   <Container aria-label="Paginação">
     <span>{summary}</span>
     <Controls>

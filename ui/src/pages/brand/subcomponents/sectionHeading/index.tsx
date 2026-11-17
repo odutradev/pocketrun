@@ -2,7 +2,7 @@ import { Lead } from "../../styles";
 import { Container, Number, Title } from "./styles";
 import type { SectionHeadingProps } from "./types";
 
-const SectionHeading: React.FC<SectionHeadingProps> = ({ number, title, lead }) => (
+const SectionHeading = ({ number, title, lead }: SectionHeadingProps) => (
   <Container>
     <Number>{number}</Number>
     <Title>{title}</Title>

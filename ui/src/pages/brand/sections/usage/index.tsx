@@ -7,7 +7,7 @@ import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { Dont, DontIcon, Protection, ProtectionArea, ProtectionStage } from "./styles";
 
-const UsageSection: React.FC = () => (
+const UsageSection = () => (
   <Section id="usos">
     <SectionHeading
       number="08"

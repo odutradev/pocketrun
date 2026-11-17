@@ -13,7 +13,7 @@ import RemoveUserDialog from "./subcomponents/removeUserDialog";
 import UserFormModal from "./subcomponents/userFormModal";
 import { getUserColumns } from "./table";
 
-const UsersPage: React.FC = () => {
+const UsersPage = () => {
   const {
     users,
     isLoading,

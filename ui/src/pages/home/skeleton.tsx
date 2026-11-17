@@ -5,7 +5,7 @@ import { CardGrid } from "./subcomponents/applicationList/styles";
 import { StatGrid } from "./subcomponents/systemStatusGrid/styles";
 
 // Mesma forma da tela pronta: três números, a busca e a grade de cartões.
-const HomeSkeleton: React.FC = () => (
+const HomeSkeleton = () => (
   <Container aria-busy="true">
     <StatGrid>
       {[1, 2, 3].map((item) => (

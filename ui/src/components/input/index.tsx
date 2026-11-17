@@ -8,7 +8,7 @@ import { getFieldIds } from "@utils/functions";
 import { Control, Field, Icon, Prefix, Trailing } from "./styles";
 import type { InputProps } from "./types";
 
-const Input: React.FC<InputProps> = ({
+const Input = ({
   label,
   isLabelHidden,
   hint,
@@ -20,7 +20,7 @@ const Input: React.FC<InputProps> = ({
   type = "text",
   id,
   ...props
-}) => {
+}: InputProps) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const { describedBy } = getFieldIds(inputId, { hasHint: Boolean(hint), hasError: Boolean(error) });

@@ -7,7 +7,7 @@ import { Panel, PanelText, PanelTitle } from "../../../../styles";
 import { CardStage, ReplayButton, Specs } from "./styles";
 import type { MotionCardProps } from "./types";
 
-const MotionCard: React.FC<MotionCardProps> = ({ demo, children }) => {
+const MotionCard = ({ demo, children }: MotionCardProps) => {
   const [playCount, setPlayCount] = useState(0);
 
   return (

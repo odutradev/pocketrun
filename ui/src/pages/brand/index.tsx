@@ -16,7 +16,7 @@ import UsageSection from "./sections/usage";
 import { Content, Footer, Page } from "./styles";
 import BrandHeader from "./subcomponents/brandHeader";
 
-const BrandPage: React.FC = () => {
+const BrandPage = () => {
   const { prepareAssets } = useBrandPage();
 
   useEffect(() => {

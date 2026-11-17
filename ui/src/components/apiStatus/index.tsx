@@ -12,7 +12,7 @@ const displayUrl = apiUrl.replace(/^https?:\/\//, "");
 
 // Estado da API com ponto e texto, nunca só pela cor. No "dot" o estado vai no rótulo acessível
 // e o tooltip mostra só endereço e versão.
-const ApiStatus: React.FC<ApiStatusProps> = ({ variant = "pill" }) => {
+const ApiStatus = ({ variant = "pill" }: ApiStatusProps) => {
   const { apiStatus } = useSystemStore();
   const isOnline = apiStatus === "online";
 

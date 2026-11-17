@@ -11,7 +11,7 @@ import IdentitySection from "./sections/identity";
 import PasswordSection from "./sections/password";
 import { Container } from "./styles";
 
-const ProfilePage: React.FC = () => {
+const ProfilePage = () => {
   const { user, handleSignOut } = useProfilePage();
 
   if (!user) return null;

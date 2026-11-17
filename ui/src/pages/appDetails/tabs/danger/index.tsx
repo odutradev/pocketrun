@@ -11,7 +11,7 @@ import useAction from "@hooks/useAction";
 import useAppDetailsPage from "../../hook";
 import { Header, Row, RowDescription, RowText, RowTitle, Strong, Subtitle, Title } from "./styles";
 
-const DangerTab: React.FC = () => {
+const DangerTab = () => {
   const navigate = useNavigate();
   const { applicationId, application } = useAppDetailsPage();
   const [isConfirmOpen, setConfirmOpen] = useState(false);

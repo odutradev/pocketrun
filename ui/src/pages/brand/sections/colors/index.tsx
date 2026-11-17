@@ -16,7 +16,7 @@ const radixSnippet = [
   '<Theme accentColor="grass">  Links'
 ].join("\n");
 
-const Colors: React.FC = () => (
+const Colors = () => (
   <Section id="cores">
     <SectionHeading
       number="04"

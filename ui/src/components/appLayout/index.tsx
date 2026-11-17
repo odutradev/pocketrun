@@ -17,7 +17,7 @@ import type { RouteMatchHandle } from "./types";
 
 const logger = createLocalLogger("appLayout");
 
-const AppLayout: React.FC = () => {
+const AppLayout = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const matches = useMatches();

@@ -17,7 +17,7 @@ import { Actions, Form } from "./styles";
 
 const initialValues = { name: "", projectId: "", origins: "*", description: "" };
 
-const CreateAppModal: React.FC = () => {
+const CreateAppModal = () => {
   const { isCreateModalOpen, handleCloseCreate, loadApplications } = useHomePage();
   const [rawToken, setRawToken] = useState<string | null>(null);
 

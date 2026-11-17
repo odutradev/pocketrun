@@ -5,7 +5,7 @@ import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
 import { Route, Status, ToolHeader, ToolPanel, Writing } from "./styles";
 
-const ToolsSection: React.FC = () => (
+const ToolsSection = () => (
   <Section id="ferramentas">
     <SectionHeading
       number="07"

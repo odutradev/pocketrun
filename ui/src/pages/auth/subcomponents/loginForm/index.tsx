@@ -9,7 +9,7 @@ import { signInSchema } from "@utils/validations/auth";
 import useAuthPage from "../../hook";
 import { Form } from "./styles";
 
-const LoginForm: React.FC = () => {
+const LoginForm = () => {
   const { handleSuccess } = useAuthPage();
   const { setSession } = useAuthStore();
   const { execute } = useAction({

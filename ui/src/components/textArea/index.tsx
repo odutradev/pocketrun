@@ -6,7 +6,7 @@ import { getFieldIds } from "@utils/functions";
 import { Field } from "./styles";
 import type { TextAreaProps } from "./types";
 
-const TextArea: React.FC<TextAreaProps> = ({ label, hint, error, isMono = false, id, ...props }) => {
+const TextArea = ({ label, hint, error, isMono = false, id, ...props }: TextAreaProps) => {
   const generatedId = useId();
   const textAreaId = id ?? generatedId;
   const { describedBy } = getFieldIds(textAreaId, { hasHint: Boolean(hint), hasError: Boolean(error) });

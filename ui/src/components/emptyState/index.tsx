@@ -4,7 +4,7 @@ import { Actions, Container, Description, Title } from "./styles";
 import type { EmptyStateProps } from "./types";
 
 // Canivete fechado, uma frase e até duas ações.
-const EmptyState: React.FC<EmptyStateProps> = ({ title, description, actions, isCompact = false }) => (
+const EmptyState = ({ title, description, actions, isCompact = false }: EmptyStateProps) => (
   <Container $isCompact={isCompact}>
     <BrandMark kind="symbol" size={isCompact ? 36 : 52} pose="closed" />
     <Title>{title}</Title>

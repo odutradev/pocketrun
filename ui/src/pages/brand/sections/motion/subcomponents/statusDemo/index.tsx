@@ -11,7 +11,7 @@ const statusOptions: { value: SymbolStatus; label: string }[] = [
   { value: "offline", label: "API fora" }
 ];
 
-const StatusDemo: React.FC = () => {
+const StatusDemo = () => {
   const [status, setStatus] = useState<SymbolStatus>("online");
 
   const handleStatusChange = (raw: string) => {

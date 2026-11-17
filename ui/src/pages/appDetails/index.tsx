@@ -29,7 +29,7 @@ const tabContent: Record<DetailsTab, ReactNode> = {
   danger: <DangerTab />
 };
 
-const AppDetailsPage: React.FC = () => {
+const AppDetailsPage = () => {
   const { applicationId, application, isLoading, activeTab, loadApplication, reset, handleTabChange } =
     useAppDetailsPage();
 

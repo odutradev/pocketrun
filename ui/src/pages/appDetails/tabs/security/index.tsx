@@ -42,7 +42,7 @@ const toFormValues = (application: Application | null): SecuritySettingsValues =
   allowNonBrowserRequests: application?.allowNonBrowserRequests ?? true
 });
 
-const SecurityTab: React.FC = () => {
+const SecurityTab = () => {
   const { application, handleRefresh } = useAppDetailsPage();
   const [newOrigin, setNewOrigin] = useState("");
   const [newOriginError, setNewOriginError] = useState<string | undefined>();

@@ -7,7 +7,7 @@ import { Content, Description, Eyebrow, Footer, Header, Heading, Title } from ".
 import type { DialogProps } from "./types";
 
 // Diálogo para confirmação e segredos de uma vez só. O fundo escurece a 66%.
-const Dialog: React.FC<DialogProps> = ({
+const Dialog = ({
   isOpen,
   onClose,
   title,
@@ -16,7 +16,7 @@ const Dialog: React.FC<DialogProps> = ({
   children,
   footer,
   maxWidth = "520px"
-}) => (
+}: DialogProps) => (
   <RadixDialog.Root open={isOpen} onOpenChange={(isNextOpen) => !isNextOpen && onClose()}>
     {/* Sem descrição, o `aria-describedby` vazio avisa o Radix de que ela é dispensável. */}
     <Content maxWidth={maxWidth} {...(description ? {} : { "aria-describedby": undefined })}>

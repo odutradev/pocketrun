@@ -12,7 +12,7 @@ import ApplicationList from "./subcomponents/applicationList";
 import CreateAppModal from "./subcomponents/createAppModal";
 import SystemStatusGrid from "./subcomponents/systemStatusGrid";
 
-const HomePage: React.FC = () => {
+const HomePage = () => {
   const { isLoading, isRefreshing, loadApplications, handleOpenCreate } = useHomePage();
 
   useEffect(() => {

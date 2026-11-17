@@ -2,7 +2,7 @@ import { Anchor, RouterLink } from "./styles";
 import type { LinkButtonProps } from "./types";
 
 // Link com a aparência de botão: para navegar, não para executar ações.
-const LinkButton: React.FC<LinkButtonProps> = ({
+const LinkButton = ({
   children,
   to,
   href,
@@ -12,7 +12,7 @@ const LinkButton: React.FC<LinkButtonProps> = ({
   rightIcon,
   isFullWidth = false,
   isExternal = false
-}) => {
+}: LinkButtonProps) => {
   const styleProps = { $variant: variant, $size: size, $isFullWidth: isFullWidth };
   const content = (
     <>

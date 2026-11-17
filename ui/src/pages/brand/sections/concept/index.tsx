@@ -4,7 +4,7 @@ import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { Paragraphs, Quote, Text } from "./styles";
 
-const Concept: React.FC = () => (
+const Concept = () => (
   <Section id="conceito">
     <SectionHeading number="01" title="O conceito" />
     <Paragraphs>

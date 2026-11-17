@@ -7,7 +7,7 @@ import useSystemStore from "@stores/system";
 
 import type { RouteGuardProps } from "./types";
 
-const RouteGuard: React.FC<RouteGuardProps> = ({ metadata, children }) => {
+const RouteGuard = ({ metadata, children }: RouteGuardProps) => {
   const { token, user } = useAuthStore();
   const { apiStatus, isSetupRequired, hasPermissions } = useSystemStore();
 

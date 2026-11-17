@@ -19,7 +19,7 @@ const initialValues = { name: "", validityDays: defaultTokenValidity };
 
 const validityOptions = tokenValidityOptions.map((option) => ({ value: String(option.value), label: option.label }));
 
-const CreateTokenModal: React.FC = () => {
+const CreateTokenModal = () => {
   const { applicationId, isTokenModalOpen, handleCloseTokenModal, handleRefresh } = useAppDetailsPage();
   const [rawToken, setRawToken] = useState<string | null>(null);
 

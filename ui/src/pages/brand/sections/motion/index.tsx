@@ -24,7 +24,7 @@ const demoContent: Record<MotionDemoId, ReactNode> = {
   appIcon: <BrandMark kind="appIcon" size={120} motion="intro" />
 };
 
-const MotionSection: React.FC = () => (
+const MotionSection = () => (
   <Section id="movimento">
     <SectionHeading
       number="09"

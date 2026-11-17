@@ -14,7 +14,7 @@ const prefersReducedMotion = () =>
 
 // Ponto único da identidade visual: símbolo, logos horizontal, empilhado e só texto, e ícone do app,
 // em qualquer contexto, paleta e animação.
-const BrandMark: React.FC<BrandMarkProps> = ({
+const BrandMark = ({
   kind = "horizontal",
   size,
   context = "general",
@@ -27,7 +27,7 @@ const BrandMark: React.FC<BrandMarkProps> = ({
   hasContextTransition = false,
   isHoverable = false,
   ...symbolOnlyProps
-}) => {
+}: BrandMarkProps) => {
   const { motion: timing } = useTheme();
   const [targetContext, setTargetContext] = useState<BrandContext>(context);
   const [shownContext, setShownContext] = useState<BrandContext>(context);

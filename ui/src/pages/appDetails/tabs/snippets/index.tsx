@@ -31,7 +31,7 @@ const document = await response.json();`
   }
 ];
 
-const SnippetsTab: React.FC = () => (
+const SnippetsTab = () => (
   <Card as="section" aria-labelledby="snippets-title">
     <Body>
       <SectionHeader

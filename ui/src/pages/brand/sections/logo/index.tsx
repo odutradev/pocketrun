@@ -11,7 +11,7 @@ const versionKinds: LogoKind[] = ["horizontal", "stacked", "symbol", "wordmark"]
 // Tamanho de cada versão para que todas ocupem o palco de forma parecida.
 const versionSizes: Record<LogoKind, number> = { horizontal: 18, stacked: 18, symbol: 64, wordmark: 22, appIcon: 96 };
 
-const LogoSection: React.FC = () => (
+const LogoSection = () => (
   <Section id="logotipo">
     <SectionHeading
       number="03"

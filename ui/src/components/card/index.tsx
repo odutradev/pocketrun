@@ -2,7 +2,7 @@ import { LinkSurface, Surface } from "./styles";
 import type { CardProps } from "./types";
 
 // Superfície de cartão: painel, bloco tracejado (ação de criar) ou zona de perigo.
-const Card: React.FC<CardProps> = ({ children, tone = "default", padding = "md", as = "div", to, ...props }) => {
+const Card = ({ children, tone = "default", padding = "md", as = "div", to, ...props }: CardProps) => {
   if (to) {
     return (
       <LinkSurface to={to} aria-label={props["aria-label"]} className={props.className} $tone={tone} $padding={padding}>

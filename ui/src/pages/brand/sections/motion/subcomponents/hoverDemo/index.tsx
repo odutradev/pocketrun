@@ -5,7 +5,7 @@ import BrandMark from "@components/brandMark";
 import { Demo, Hint } from "../../styles";
 import { Target } from "./styles";
 
-const HoverDemo: React.FC = () => {
+const HoverDemo = () => {
   const [isSpread, setIsSpread] = useState(false);
 
   return (
