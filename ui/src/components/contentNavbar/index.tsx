@@ -9,35 +9,8 @@ import Button from "@components/button";
 import type { ContentNavbarProps } from "./types";
 
 const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = false }: ContentNavbarProps) => {
-  const defaultActions = (onReload || action) && (
-    <>
-      {onReload && (
-        <IconButton
-          label="Recarregar"
-          variant="secondary"
-          icon={
-            <ReloadIconSlot $isSpinning={isReloading}>
-              <ReloadIcon />
-            </ReloadIconSlot>
-          }
-          onClick={onReload}
-          disabled={isReloading}
-        />
-      )}
-      {action?.to && !action.isDisabled ? (
-        <LinkButton to={action.to} variant="primary" leftIcon={action.icon}>
-          {action.label}
-        </LinkButton>
-      ) : (
-        action && (
-          <Button leftIcon={action.icon} onClick={action.onClick} disabled={action.isDisabled}>
-            {action.label}
-          </Button>
-        )
-      )}
-    </>
-  );
-  const rightSide = actions ?? defaultActions;
+  const hasActions = Boolean(actions || onReload || action);
+  const isActionLink = Boolean(action?.to && !action.isDisabled);
 
   return (
     <Container>
@@ -51,7 +24,34 @@ const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = f
           </Tooltip>
         )}
       </Heading>
-      {rightSide && <Actions>{rightSide}</Actions>}
+      {hasActions && (
+        <Actions>
+          {actions}
+          {onReload && (
+            <IconButton
+              label="Recarregar"
+              variant="secondary"
+              icon={
+                <ReloadIconSlot $isSpinning={isReloading}>
+                  <ReloadIcon />
+                </ReloadIconSlot>
+              }
+              onClick={onReload}
+              disabled={isReloading}
+            />
+          )}
+          {action && isActionLink && (
+            <LinkButton to={action.to} variant="primary" leftIcon={action.icon}>
+              {action.label}
+            </LinkButton>
+          )}
+          {action && !isActionLink && (
+            <Button leftIcon={action.icon} onClick={action.onClick} disabled={action.isDisabled}>
+              {action.label}
+            </Button>
+          )}
+        </Actions>
+      )}
     </Container>
   );
 };

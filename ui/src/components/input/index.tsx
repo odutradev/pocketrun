@@ -14,6 +14,7 @@ const Input = ({
   hint,
   error,
   leftIcon,
+  trailing,
   prefix,
   isMono = false,
   size = "md",
@@ -39,6 +40,7 @@ const Input = ({
           aria-describedby={describedBy}
           {...props}
         />
+        {trailing && <Trailing>{trailing}</Trailing>}
         {isPasswordField && (
           <Trailing>
             <IconButton
