@@ -182,6 +182,16 @@ export const NavLink = styled(Link)<{ $isActive: boolean }>`
   `}
 `;
 
+export const ItemBadge = styled.span`
+  margin-left: auto;
+  padding: ${({ theme }) => `${theme.spacing(0.5)} ${theme.spacing(2)}`};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background-color: ${({ theme }) => theme.brand.raised};
+  color: ${({ theme }) => theme.brand.steelMuted};
+  font-size: 12px;
+  font-weight: 600;
+`;
+
 export const Bottom = styled.div`
   display: flex;
   flex-direction: column;

@@ -1,4 +1,13 @@
-import { Cross2Icon, HamburgerMenuIcon, LayersIcon, MixIcon, PersonIcon } from "@radix-ui/react-icons";
+import {
+  Cross2Icon,
+  FileTextIcon,
+  HamburgerMenuIcon,
+  LayersIcon,
+  Link2Icon,
+  MixIcon,
+  PersonIcon,
+  StackIcon
+} from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "styled-components";
@@ -17,6 +26,7 @@ import {
   Brand,
   CloseSlot,
   GroupLabel,
+  ItemBadge,
   LogoLink,
   MobileBar,
   Nav,
@@ -33,6 +43,28 @@ const groups: SidebarGroup[] = [
     items: [
       { label: "Aplicações", to: "/", icon: <LayersIcon />, matches: ["/", "/apps"], requiredPermissions: ["manage_apps"] },
       { label: "Usuários", to: "/users", icon: <PersonIcon />, matches: ["/users"], requiredPermissions: ["manage_users"] }
+    ]
+  },
+  {
+    label: "Serviços",
+    items: [
+      { label: "KV", to: "/kv", icon: <StackIcon />, matches: ["/kv"], requiredPermissions: ["manage_apps"] },
+      {
+        label: "Páginas",
+        to: "/pages",
+        icon: <FileTextIcon />,
+        matches: ["/pages"],
+        requiredPermissions: ["manage_apps"],
+        badge: "Em breve"
+      },
+      {
+        label: "Links",
+        to: "/links",
+        icon: <Link2Icon />,
+        matches: ["/links"],
+        requiredPermissions: ["manage_apps"],
+        badge: "Em breve"
+      }
     ]
   },
   {
@@ -114,6 +146,7 @@ const Sidebar: React.FC = () => {
                     <NavLink key={item.to} to={item.to} aria-current={isActive ? "page" : undefined} $isActive={isActive}>
                       <span aria-hidden="true">{item.icon}</span>
                       {item.label}
+                      {item.badge && <ItemBadge>{item.badge}</ItemBadge>}
                     </NavLink>
                   );
                 })}
