@@ -1,7 +1,7 @@
 import styled, { css, keyframes } from "styled-components";
-import type { DefaultTheme } from "styled-components";
 
 import type { ButtonSize, ButtonStyleProps, ButtonVariant } from "./types";
+import type { DefaultTheme } from "styled-components";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }

@@ -1,13 +1,15 @@
 import { SegmentedControl, TextField } from "@radix-ui/themes";
 
+import { Alphabet, Controls, Playground, Sample, ScaleLabel, ScaleRow, Specimen, Weight, Weights } from "./styles";
+import { ControlScroller, Grid, Label, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { brandTypeFamilies, brandTypeScale } from "@assets/data";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import OptionSelect from "../../subcomponents/optionSelect";
+import useBrandPage from "../../hook";
+
 import type { BrandOption } from "@utils/types/brand";
 
-import useBrandPage from "../../hook";
-import OptionSelect from "../../subcomponents/optionSelect";
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { ControlScroller, Grid, Label, Panel, PanelText, PanelTitle, Section } from "../../styles";
-import { Alphabet, Controls, Playground, Sample, ScaleLabel, ScaleRow, Specimen, Weight, Weights } from "./styles";
+
 
 const alphabet = "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789";
 

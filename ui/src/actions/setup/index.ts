@@ -1,4 +1,5 @@
 import api from "@utils/api";
+
 import type { Session, SetupStatus } from "@utils/types/user";
 import type { SignUpValues } from "@utils/validations/auth";
 

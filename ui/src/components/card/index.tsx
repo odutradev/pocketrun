@@ -1,4 +1,5 @@
 import { LinkSurface, Surface } from "./styles";
+
 import type { CardProps } from "./types";
 
 const Card = ({ children, tone = "default", padding = "md", as = "div", to, ...props }: CardProps) => {

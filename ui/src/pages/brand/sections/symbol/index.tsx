@@ -1,13 +1,12 @@
 import { Switch } from "@radix-ui/themes";
 
-import { brandOpticalSizes, brandSymbolParts } from "@assets/data";
-import BrandMark from "@components/brandMark";
-import { symbolBlades, symbolHandle, symbolPivot } from "@utils/functions/brandAssets";
-
-import useBrandPage from "../../hook";
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { Grid, Label, Lead, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
 import { Dot, Figure, Guides, GuidesToggle, Layout, PartHeader, PartSpec, Parts, Rule } from "./styles";
+import { Grid, Label, Lead, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
+import { symbolBlades, symbolHandle, symbolPivot } from "@utils/functions/brandAssets";
+import { brandOpticalSizes, brandSymbolParts } from "@assets/data";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import BrandMark from "@components/brandMark";
+import useBrandPage from "../../hook";
 
 const gridLines = Array.from({ length: 13 }, (_, index) => index * 8);
 

@@ -1,5 +1,7 @@
 import type { PageMetadata } from "@utils/types/page";
 
+
+
 const metadata: PageMetadata = {
   context: "data",
   privateRoute: true,

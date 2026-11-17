@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+
+
 export const createApplicationSchema = z.object({
   name: z.string().trim().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   projectId: z

@@ -1,4 +1,5 @@
 import { Dot, Root } from "./styles";
+
 import type { BadgeProps } from "./types";
 
 const Badge = ({ children, tone = "neutral", hasDot = false, isMono = false }: BadgeProps) => (

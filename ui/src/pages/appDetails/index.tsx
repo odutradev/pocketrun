@@ -1,23 +1,23 @@
 import { useEffect } from "react";
-import type { ReactNode } from "react";
 
+import CreateTokenModal from "./subcomponents/createTokenModal";
+import AppHeader from "./subcomponents/appHeader";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
-import TabNav from "@components/tabNav";
-import type { TabNavItem } from "@components/tabNav/types";
-import TabPanel from "@components/tabPanel";
-
-import useAppDetailsPage from "./hook";
-import type { DetailsTab } from "./hook/types";
-import AppDetailsSkeleton from "./skeleton";
 import { Container, TabArea } from "./styles";
-import AppHeader from "./subcomponents/appHeader";
-import CreateTokenModal from "./subcomponents/createTokenModal";
-import DangerTab from "./tabs/danger";
+import AppDetailsSkeleton from "./skeleton";
+import TabPanel from "@components/tabPanel";
 import ExplorerTab from "./tabs/explorer";
 import SecurityTab from "./tabs/security";
 import SnippetsTab from "./tabs/snippets";
+import TabNav from "@components/tabNav";
+import useAppDetailsPage from "./hook";
+import DangerTab from "./tabs/danger";
 import TokensTab from "./tabs/tokens";
+
+import type { TabNavItem } from "@components/tabNav/types";
+import type { DetailsTab } from "./hook/types";
+import type { ReactNode } from "react";
 
 const tabIdPrefix = "app-details";
 

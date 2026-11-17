@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
-
 import type { ButtonSize, ButtonVariant } from "@components/button/types";
+import type { ReactNode } from "react";
 
 export interface LinkButtonProps {
   children: ReactNode;

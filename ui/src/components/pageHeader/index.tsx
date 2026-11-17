@@ -1,4 +1,5 @@
 import { Actions, Container, Description, Eyebrow, Text, Title } from "./styles";
+
 import type { PageHeaderProps } from "./types";
 
 const PageHeader = ({ title, eyebrow, description, actions, children }: PageHeaderProps) => (

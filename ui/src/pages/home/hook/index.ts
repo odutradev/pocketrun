@@ -1,7 +1,7 @@
 import { allowsAnyOrigin } from "@utils/functions";
-import type { Application } from "@utils/types/application";
-
 import useHomeStore from "./store";
+
+import type { Application } from "@utils/types/application";
 import type { UseHomePageReturn } from "./types";
 
 const matchesSearch = (application: Application, search: string) => {

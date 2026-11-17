@@ -1,19 +1,20 @@
-import { lazy } from "react";
-import type { ComponentType, LazyExoticComponent } from "react";
 import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
+import { lazy } from "react";
 
-import AppLayout from "@components/appLayout";
-import RouteGuard from "@components/routeGuard";
 import appDetailsMetadata from "@pages/appDetails/metadata";
-import authMetadata from "@pages/auth/metadata";
+import profileMetadata from "@pages/profile/metadata";
 import brandMetadata from "@pages/brand/metadata";
-import homeMetadata from "@pages/home/metadata";
-import kvMetadata from "@pages/kv/metadata";
 import linksMetadata from "@pages/links/metadata";
 import pagesMetadata from "@pages/pages/metadata";
-import profileMetadata from "@pages/profile/metadata";
 import setupMetadata from "@pages/setup/metadata";
 import usersMetadata from "@pages/users/metadata";
+import authMetadata from "@pages/auth/metadata";
+import homeMetadata from "@pages/home/metadata";
+import RouteGuard from "@components/routeGuard";
+import AppLayout from "@components/appLayout";
+import kvMetadata from "@pages/kv/metadata";
+
+import type { ComponentType, LazyExoticComponent } from "react";
 import type { PageMetadata } from "@utils/types/page";
 
 const HomePage = lazy(() => import("@pages/home"));

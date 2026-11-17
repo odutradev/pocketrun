@@ -1,10 +1,10 @@
 import { toast } from "react-toastify";
 import { create } from "zustand";
 
-import { listUsers } from "@actions/users";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
-import type { User } from "@utils/types/user";
+import { listUsers } from "@actions/users";
 
+import type { User } from "@utils/types/user";
 import type { UserFormTarget } from "./types";
 
 const logger = createLocalLogger("usersPage");

@@ -1,6 +1,6 @@
+import { Actions, Container, Description, Title } from "./styles";
 import BrandMark from "@components/brandMark";
 
-import { Actions, Container, Description, Title } from "./styles";
 import type { EmptyStateProps } from "./types";
 
 const EmptyState = ({ title, description, actions, isCompact = false }: EmptyStateProps) => (

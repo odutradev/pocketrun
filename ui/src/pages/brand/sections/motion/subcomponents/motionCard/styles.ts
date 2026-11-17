@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 import { Stage } from "../../../../styles";
 
+
+
 export const CardStage = styled(Stage)`
   position: relative;
   min-height: 240px;

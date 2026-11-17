@@ -1,9 +1,8 @@
-import { brandTools } from "@assets/data";
-import BrandMark from "@components/brandMark";
-
-import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
 import { Route, Status, ToolHeader, ToolPanel, Writing } from "./styles";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import BrandMark from "@components/brandMark";
+import { brandTools } from "@assets/data";
 
 const ToolsSection = () => (
   <Section id="ferramentas">

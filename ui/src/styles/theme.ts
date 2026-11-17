@@ -1,6 +1,5 @@
-import type { ThemeProps } from "@radix-ui/themes";
-
 import type { BrandContext } from "@utils/types/brand";
+import type { ThemeProps } from "@radix-ui/themes";
 
 export const radixTheme: ThemeProps = {
   appearance: "dark",

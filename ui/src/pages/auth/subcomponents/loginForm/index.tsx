@@ -1,12 +1,11 @@
-import { signIn } from "@actions/auth";
-import Button from "@components/button";
-import Input from "@components/input";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
-import useAuthStore from "@stores/auth";
 import { signInSchema } from "@utils/validations/auth";
-
+import useAction from "@hooks/useAction";
+import Button from "@components/button";
+import useAuthStore from "@stores/auth";
+import { signIn } from "@actions/auth";
+import Input from "@components/input";
 import useAuthPage from "../../hook";
+import useForm from "@hooks/useForm";
 import { Form } from "./styles";
 
 const LoginForm = () => {

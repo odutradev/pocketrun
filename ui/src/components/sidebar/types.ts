@@ -1,6 +1,5 @@
-import type { ReactNode } from "react";
-
 import type { Permission } from "@utils/types/user";
+import type { ReactNode } from "react";
 
 export interface SidebarItem {
   label: string;

@@ -1,38 +1,25 @@
 import { Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-import type { KeyboardEvent } from "react";
 
+import { Actions, AddField, AddRow, Divider, EmptyLine, FieldLabel, Form, Origin, OriginActions, OriginItem, OriginList, Switches } from "./styles";
+import { originSchema, securitySettingsSchema } from "@utils/validations/application";
+import { allowsAnyOrigin, isLocalOrigin } from "@utils/functions";
+import SectionHeader from "@components/sectionHeader";
 import { updateApplication } from "@actions/apps";
+import SwitchField from "@components/switchField";
+import IconButton from "@components/iconButton";
+import useAppDetailsPage from "../../hook";
+import useAction from "@hooks/useAction";
+import Button from "@components/button";
 import Alert from "@components/alert";
 import Badge from "@components/badge";
-import Button from "@components/button";
-import Card from "@components/card";
-import IconButton from "@components/iconButton";
 import Input from "@components/input";
-import SectionHeader from "@components/sectionHeader";
-import SwitchField from "@components/switchField";
-import useAction from "@hooks/useAction";
 import useForm from "@hooks/useForm";
-import { allowsAnyOrigin, isLocalOrigin } from "@utils/functions";
-import type { Application } from "@utils/types/application";
-import { originSchema, securitySettingsSchema } from "@utils/validations/application";
-import type { SecuritySettingsValues } from "@utils/validations/application";
+import Card from "@components/card";
 
-import useAppDetailsPage from "../../hook";
-import {
-  Actions,
-  AddField,
-  AddRow,
-  Divider,
-  EmptyLine,
-  FieldLabel,
-  Form,
-  Origin,
-  OriginActions,
-  OriginItem,
-  OriginList,
-  Switches
-} from "./styles";
+import type { SecuritySettingsValues } from "@utils/validations/application";
+import type { Application } from "@utils/types/application";
+import type { KeyboardEvent } from "react";
 
 const newOriginId = "security-new-origin";
 

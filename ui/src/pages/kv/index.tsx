@@ -1,14 +1,13 @@
 import { useEffect } from "react";
 
-import DataTable from "@components/dataTable";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
 import PageHeader from "@components/pageHeader";
-
-import useKvPage from "./hook";
-import KvSkeleton from "./skeleton";
-import { Container } from "./styles";
+import DataTable from "@components/dataTable";
 import { applicationColumns } from "./table";
+import { Container } from "./styles";
+import KvSkeleton from "./skeleton";
+import useKvPage from "./hook";
 
 const KvPage = () => {
   const { applications, isLoading, loadApplications } = useKvPage();

@@ -1,9 +1,8 @@
+import SectionHeader from "@components/sectionHeader";
+import { Body, List, Placeholder } from "./styles";
+import CodeBlock from "@components/codeBlock";
 import { apiUrl } from "@assets/config";
 import Card from "@components/card";
-import CodeBlock from "@components/codeBlock";
-import SectionHeader from "@components/sectionHeader";
-
-import { Body, List, Placeholder } from "./styles";
 
 const snippets = [
   {

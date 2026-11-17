@@ -1,14 +1,13 @@
-import { updateProfile } from "@actions/auth";
-import Button from "@components/button";
-import Card from "@components/card";
-import Input from "@components/input";
-import SectionHeader from "@components/sectionHeader";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
-import { profileSchema } from "@utils/validations/user";
-
-import useProfilePage from "../../hook";
 import { Actions, FieldRow, Form, Section } from "../../styles";
+import { profileSchema } from "@utils/validations/user";
+import SectionHeader from "@components/sectionHeader";
+import { updateProfile } from "@actions/auth";
+import useAction from "@hooks/useAction";
+import Button from "@components/button";
+import useProfilePage from "../../hook";
+import Input from "@components/input";
+import useForm from "@hooks/useForm";
+import Card from "@components/card";
 
 const IdentitySection = () => {
   const { user, handleUserUpdated } = useProfilePage();

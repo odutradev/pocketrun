@@ -1,6 +1,7 @@
 import { useId } from "react";
 
 import { Description, Label, Row, Text, Thumb, Track } from "./styles";
+
 import type { SwitchFieldProps } from "./types";
 
 const SwitchField = ({

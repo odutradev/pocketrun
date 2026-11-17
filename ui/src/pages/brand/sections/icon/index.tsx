@@ -1,14 +1,14 @@
 import { DownloadIcon } from "@radix-ui/react-icons";
 
-import { brandFaviconPack, brandIconPalettes } from "@assets/data";
-import Button from "@components/button";
-
-import BrandMark from "@components/brandMark";
-
-import useBrandPage from "../../hook";
-import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Lead, Mono, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { FileInfo, FileRow, IconStage, SizeItem, Sizes } from "./styles";
+import { brandFaviconPack, brandIconPalettes } from "@assets/data";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import BrandMark from "@components/brandMark";
+import Button from "@components/button";
+import useBrandPage from "../../hook";
+
+
 
 const realSizes = [16, 32, 48, 64, 128];
 

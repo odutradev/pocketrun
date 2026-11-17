@@ -1,8 +1,7 @@
-import "@radix-ui/themes/styles.css";
 import "react-toastify/dist/ReactToastify.css";
-
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "@radix-ui/themes/styles.css";
+import { StrictMode } from "react";
 
 import AppProviders from "@components/appProviders";
 

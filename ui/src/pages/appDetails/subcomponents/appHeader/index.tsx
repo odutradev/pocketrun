@@ -1,10 +1,9 @@
-import Breadcrumbs from "@components/breadcrumbs";
-import CopyField from "@components/copyField";
-import PageHeader from "@components/pageHeader";
-import ToolSwitcher from "@components/toolSwitcher";
-
-import useAppDetailsPage from "../../hook";
 import { Container, Description, Meta } from "./styles";
+import ToolSwitcher from "@components/toolSwitcher";
+import Breadcrumbs from "@components/breadcrumbs";
+import PageHeader from "@components/pageHeader";
+import CopyField from "@components/copyField";
+import useAppDetailsPage from "../../hook";
 
 const AppHeader = () => {
   const { application } = useAppDetailsPage();

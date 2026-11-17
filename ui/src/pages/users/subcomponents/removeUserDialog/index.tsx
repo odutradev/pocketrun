@@ -1,7 +1,6 @@
-import { deleteUser } from "@actions/users";
 import ConfirmDialog from "@components/confirmDialog";
+import { deleteUser } from "@actions/users";
 import useAction from "@hooks/useAction";
-
 import useUsersPage from "../../hook";
 
 const RemoveUserDialog = () => {

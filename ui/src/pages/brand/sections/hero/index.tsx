@@ -1,14 +1,13 @@
 import { ArrowDownIcon, DownloadIcon } from "@radix-ui/react-icons";
 import { SegmentedControl } from "@radix-ui/themes";
 
+import { Actions, Container, Intro, Showcase, ShowcaseStage, Title } from "./styles";
+import { ControlScroller, Eyebrow, Lead, PanelText } from "../../styles";
 import { brandContextOptions, defaultLogoConfig } from "@assets/data";
+import LinkButton from "@components/linkButton";
 import BrandMark from "@components/brandMark";
 import Button from "@components/button";
-import LinkButton from "@components/linkButton";
-
 import useBrandPage from "../../hook";
-import { ControlScroller, Eyebrow, Lead, PanelText } from "../../styles";
-import { Actions, Container, Intro, Showcase, ShowcaseStage, Title } from "./styles";
 
 const Hero = () => {
   const { heroContext, handleHeroContextChange, handleDownloadSvg } = useBrandPage();

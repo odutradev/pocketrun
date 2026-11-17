@@ -1,6 +1,6 @@
-import { FormSide, Layout } from "./styles";
 import AuthForm from "./subcomponents/authForm";
 import AuthHero from "./subcomponents/authHero";
+import { FormSide, Layout } from "./styles";
 
 const AuthPage = () => (
   <Layout>

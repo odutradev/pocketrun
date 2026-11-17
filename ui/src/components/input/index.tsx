@@ -1,11 +1,11 @@
 import { EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 import { useId, useState } from "react";
 
-import FormField from "@components/formField";
+import { Control, Field, Icon, Prefix, Trailing } from "./styles";
 import IconButton from "@components/iconButton";
 import { getFieldIds } from "@utils/functions";
+import FormField from "@components/formField";
 
-import { Control, Field, Icon, Prefix, Trailing } from "./styles";
 import type { InputProps } from "./types";
 
 const Input = ({

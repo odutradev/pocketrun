@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
 import styled, { css } from "styled-components";
-import type { DefaultTheme } from "styled-components";
+import { Link } from "react-router-dom";
 
+import type { DefaultTheme } from "styled-components";
 import type { CardPadding, CardTone } from "./types";
 
 const paddings: Record<CardPadding, { mobile: number; desktop: number }> = {

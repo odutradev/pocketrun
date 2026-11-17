@@ -1,14 +1,13 @@
 import { MagnifyingGlassIcon, PlusIcon } from "@radix-ui/react-icons";
 
-import Button from "@components/button";
-import Card from "@components/card";
-import EmptyState from "@components/emptyState";
-import Input from "@components/input";
-import { pluralize } from "@utils/functions";
-
-import useHomePage from "../../hook";
-import ApplicationCard from "../applicationCard";
 import { CardGrid, Count, CreateTile, SearchBox, Section, Toolbar } from "./styles";
+import ApplicationCard from "../applicationCard";
+import EmptyState from "@components/emptyState";
+import { pluralize } from "@utils/functions";
+import Button from "@components/button";
+import Input from "@components/input";
+import useHomePage from "../../hook";
+import Card from "@components/card";
 
 const ApplicationList = () => {
   const { applications, filteredApplications, search, handleSearchChange, handleOpenCreate } = useHomePage();

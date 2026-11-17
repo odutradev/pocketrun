@@ -1,10 +1,11 @@
 import { create } from "zustand";
 
-import { getEmbeddedFontCss } from "@actions/brand";
-import { brandFontTimeout, brandWordmark } from "@assets/config";
-import { defaultLogoConfig } from "@assets/data";
-import { createLocalLogger } from "@utils/functions";
 import { measureWordmarkWidth } from "@utils/functions/brandAssets";
+import { brandFontTimeout, brandWordmark } from "@assets/config";
+import { createLocalLogger } from "@utils/functions";
+import { getEmbeddedFontCss } from "@actions/brand";
+import { defaultLogoConfig } from "@assets/data";
+
 import type { BrandContext, LogoConfig, TypeFamily } from "@utils/types/brand";
 
 const logger = createLocalLogger("brandPage");

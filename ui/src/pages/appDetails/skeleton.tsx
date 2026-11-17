@@ -1,7 +1,6 @@
-import Skeleton from "@components/skeleton";
-
-import { Container } from "./styles";
 import { Layout } from "./tabs/explorer/styles";
+import Skeleton from "@components/skeleton";
+import { Container } from "./styles";
 
 const AppDetailsSkeleton = () => (
   <Container aria-busy="true">

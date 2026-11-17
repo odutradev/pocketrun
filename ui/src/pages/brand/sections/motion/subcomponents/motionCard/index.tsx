@@ -1,11 +1,13 @@
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { Fragment, useState } from "react";
 
-import IconButton from "@components/iconButton";
-
 import { Panel, PanelText, PanelTitle } from "../../../../styles";
 import { CardStage, ReplayButton, Specs } from "./styles";
+import IconButton from "@components/iconButton";
+
 import type { MotionCardProps } from "./types";
+
+
 
 const MotionCard = ({ demo, children }: MotionCardProps) => {
   const [playCount, setPlayCount] = useState(0);

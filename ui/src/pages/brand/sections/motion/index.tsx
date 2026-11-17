@@ -1,17 +1,18 @@
-import type { ReactNode } from "react";
-
-import { brandMotionDemos, brandMotionTokens } from "@assets/data";
-import BrandMark from "@components/brandMark";
-import type { MotionDemoId } from "@utils/types/brand";
-
-import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Panel, PanelText, Section } from "../../styles";
+import { brandMotionDemos, brandMotionTokens } from "@assets/data";
+import SectionHeading from "../../subcomponents/sectionHeading";
 import { TokenName, TokenRow, TokenValue } from "./styles";
 import ContextDemo from "./subcomponents/contextDemo";
-import HoverDemo from "./subcomponents/hoverDemo";
 import MotionCard from "./subcomponents/motionCard";
-import SnapDemo from "./subcomponents/snapDemo";
 import StatusDemo from "./subcomponents/statusDemo";
+import HoverDemo from "./subcomponents/hoverDemo";
+import SnapDemo from "./subcomponents/snapDemo";
+import BrandMark from "@components/brandMark";
+
+import type { MotionDemoId } from "@utils/types/brand";
+import type { ReactNode } from "react";
+
+
 
 const demoContent: Record<MotionDemoId, ReactNode> = {
   intro: <BrandMark kind="symbol" size={120} motion="intro" motionDelay={200} />,

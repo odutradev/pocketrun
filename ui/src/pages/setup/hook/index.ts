@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
 
 import { createSuperadmin, getSetupStatus } from "@actions/setup";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
-import useAuthStore from "@stores/auth";
-import useSystemStore from "@stores/system";
 import { setupSchema } from "@utils/validations/auth";
-import type { SetupValues } from "@utils/validations/auth";
+import useSystemStore from "@stores/system";
+import useAction from "@hooks/useAction";
+import useAuthStore from "@stores/auth";
+import useForm from "@hooks/useForm";
 
+import type { SetupValues } from "@utils/validations/auth";
 import type { UseSetupPageReturn } from "./types";
+
+
 
 const initialValues = { name: "", email: "", password: "", confirmPassword: "" };
 

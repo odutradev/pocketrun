@@ -1,20 +1,22 @@
 import { Theme } from "@radix-ui/themes";
 import { useEffect } from "react";
 
-import useBrandPage from "./hook";
-import ColorsSection from "./sections/colors";
-import ConceptSection from "./sections/concept";
+import BrandHeader from "./subcomponents/brandHeader";
+import TypographySection from "./sections/typography";
 import DownloadsSection from "./sections/downloads";
-import Hero from "./sections/hero";
-import IconSection from "./sections/icon";
-import LogoSection from "./sections/logo";
+import { Content, Footer, Page } from "./styles";
+import ConceptSection from "./sections/concept";
+import ColorsSection from "./sections/colors";
 import MotionSection from "./sections/motion";
 import SymbolSection from "./sections/symbol";
 import ToolsSection from "./sections/tools";
-import TypographySection from "./sections/typography";
 import UsageSection from "./sections/usage";
-import { Content, Footer, Page } from "./styles";
-import BrandHeader from "./subcomponents/brandHeader";
+import IconSection from "./sections/icon";
+import LogoSection from "./sections/logo";
+import Hero from "./sections/hero";
+import useBrandPage from "./hook";
+
+
 
 const BrandPage = () => {
   const { prepareAssets } = useBrandPage();

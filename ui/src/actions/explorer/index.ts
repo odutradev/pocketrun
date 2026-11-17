@@ -1,4 +1,5 @@
 import api from "@utils/api";
+
 import type { ExplorerDocument, ExplorerQuery, Page } from "@utils/types/explorer";
 
 export const listCollections = async (applicationId: string, signal?: AbortSignal) => {

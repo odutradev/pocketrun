@@ -1,9 +1,8 @@
+import SetupSteps from "./subcomponents/setupSteps";
+import SetupForm from "./subcomponents/setupForm";
+import { Container, Content } from "./styles";
 import ApiStatus from "@components/apiStatus";
 import BrandMark from "@components/brandMark";
-
-import { Container, Content } from "./styles";
-import SetupForm from "./subcomponents/setupForm";
-import SetupSteps from "./subcomponents/setupSteps";
 
 const SetupPage = () => (
   <Container>

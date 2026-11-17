@@ -1,6 +1,6 @@
+import { Container, Empty, Item, List, Loading, Title } from "./styles";
 import Skeleton from "@components/skeleton";
 
-import { Container, Empty, Item, List, Loading, Title } from "./styles";
 import type { CollectionListProps } from "./types";
 
 const CollectionList = ({ collections, selected, isLoading, onSelect }: CollectionListProps) => (

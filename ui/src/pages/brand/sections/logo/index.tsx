@@ -1,10 +1,10 @@
-import { brandContextOptions, logoKindOptions } from "@assets/data";
-import BrandMark from "@components/brandMark";
-import type { LogoKind } from "@utils/types/brand";
-
-import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Lead, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
+import { brandContextOptions, logoKindOptions } from "@assets/data";
+import SectionHeading from "../../subcomponents/sectionHeading";
 import { ContextPanel, Stages } from "./styles";
+import BrandMark from "@components/brandMark";
+
+import type { LogoKind } from "@utils/types/brand";
 
 const versionKinds: LogoKind[] = ["horizontal", "stacked", "symbol", "wordmark"];
 

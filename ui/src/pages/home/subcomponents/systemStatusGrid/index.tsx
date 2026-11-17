@@ -1,5 +1,4 @@
 import StatCard from "@components/statCard";
-
 import useHomePage from "../../hook";
 import { StatGrid } from "./styles";
 

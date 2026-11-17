@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
-import type { DefaultTheme } from "styled-components";
 
+import type { DefaultTheme } from "styled-components";
 import type { AlertTone } from "./types";
 
 const tones = (theme: DefaultTheme): Record<AlertTone, { background: string; border: string; icon: string }> => ({

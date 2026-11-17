@@ -1,12 +1,12 @@
 import { TrashIcon } from "@radix-ui/react-icons";
 
-import type { DataTableColumn } from "@components/dataTable/types";
+import { MutedText, Name, Prefix } from "./styles";
 import ExpiryBadge from "@components/expiryBadge";
 import IconButton from "@components/iconButton";
 import { formatDate } from "@utils/functions";
-import type { ApiToken } from "@utils/types/application";
 
-import { MutedText, Name, Prefix } from "./styles";
+import type { DataTableColumn } from "@components/dataTable/types";
+import type { ApiToken } from "@utils/types/application";
 
 export const getTokenColumns = (onRevoke: (token: ApiToken) => void): DataTableColumn<ApiToken>[] => [
   {

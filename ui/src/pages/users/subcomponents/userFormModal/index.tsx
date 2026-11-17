@@ -1,18 +1,18 @@
+import { newUserFormSchema, userFormSchema } from "@utils/validations/user";
 import { createUser, updateUser } from "@actions/users";
 import { roleOptions } from "@assets/data";
+import { Actions, Form } from "./styles";
+import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Dialog from "@components/dialog";
-import Input from "@components/input";
 import Select from "@components/select";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
 import useAuthStore from "@stores/auth";
-import type { User, UserRole } from "@utils/types/user";
-import { newUserFormSchema, userFormSchema } from "@utils/validations/user";
-import type { UserFormValues } from "@utils/validations/user";
-
+import Input from "@components/input";
 import useUsersPage from "../../hook";
-import { Actions, Form } from "./styles";
+import useForm from "@hooks/useForm";
+
+import type { UserFormValues } from "@utils/validations/user";
+import type { User, UserRole } from "@utils/types/user";
 
 const UserFormModal = () => {
   const { formTarget, currentUserId, handleCloseForm, loadUsers } = useUsersPage();

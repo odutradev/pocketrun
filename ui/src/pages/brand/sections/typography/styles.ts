@@ -1,8 +1,10 @@
 import styled from "styled-components";
 
+import { Panel } from "../../styles";
+
 import type { TypeFamily } from "@utils/types/brand";
 
-import { Panel } from "../../styles";
+
 
 export const Specimen = styled.p<{ $family: TypeFamily }>`
   margin: 0;

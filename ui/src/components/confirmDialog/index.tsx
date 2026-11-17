@@ -3,8 +3,8 @@ import { useState } from "react";
 import Button from "@components/button";
 import Dialog from "@components/dialog";
 import Input from "@components/input";
-
 import { Code } from "./styles";
+
 import type { ConfirmDialogProps } from "./types";
 
 const ConfirmDialog = ({

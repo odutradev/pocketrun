@@ -2,9 +2,11 @@ import { SegmentedControl } from "@radix-ui/themes";
 import { useState } from "react";
 
 import BrandMark from "@components/brandMark";
+import { Demo } from "../../styles";
+
 import type { SymbolStatus } from "@utils/types/brand";
 
-import { Demo } from "../../styles";
+
 
 const statusOptions: { value: SymbolStatus; label: string }[] = [
   { value: "online", label: "API no ar" },

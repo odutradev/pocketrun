@@ -1,9 +1,9 @@
 import { useTheme } from "styled-components";
 
-import type { SymbolVariant } from "@utils/types/brand";
-
 import BrandSymbol from "../symbol";
 import { Tile } from "./styles";
+
+import type { SymbolVariant } from "@utils/types/brand";
 import type { AppIconProps } from "./types";
 
 const variantForSize = (size: number): SymbolVariant => (size <= 32 ? "tiny" : size <= 64 ? "bold" : "full");

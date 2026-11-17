@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components";
-import type { DefaultTheme } from "styled-components";
 
 import type { IconButtonSize, IconButtonVariant } from "./types";
+import type { DefaultTheme } from "styled-components";
 
 const sizes: Record<IconButtonSize, { mobile: string; desktop: string }> = {
   sm: { mobile: "36px", desktop: "32px" },

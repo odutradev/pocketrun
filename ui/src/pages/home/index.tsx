@@ -1,16 +1,15 @@
 import { PlusIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useEffect } from "react";
 
-import Button from "@components/button";
-import IconButton from "@components/iconButton";
-import PageHeader from "@components/pageHeader";
-
-import useHomePage from "./hook";
-import HomeSkeleton from "./skeleton";
-import { Container } from "./styles";
+import SystemStatusGrid from "./subcomponents/systemStatusGrid";
 import ApplicationList from "./subcomponents/applicationList";
 import CreateAppModal from "./subcomponents/createAppModal";
-import SystemStatusGrid from "./subcomponents/systemStatusGrid";
+import IconButton from "@components/iconButton";
+import PageHeader from "@components/pageHeader";
+import Button from "@components/button";
+import HomeSkeleton from "./skeleton";
+import { Container } from "./styles";
+import useHomePage from "./hook";
 
 const HomePage = () => {
   const { isLoading, isRefreshing, loadApplications, handleOpenCreate } = useHomePage();

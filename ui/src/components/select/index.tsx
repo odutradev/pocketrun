@@ -1,10 +1,10 @@
 import { ChevronDownIcon } from "@radix-ui/react-icons";
 import { useId } from "react";
 
-import FormField from "@components/formField";
-import { getFieldIds } from "@utils/functions";
-
 import { Chevron, Control, Field } from "./styles";
+import { getFieldIds } from "@utils/functions";
+import FormField from "@components/formField";
+
 import type { SelectProps } from "./types";
 
 const Select = ({ label, options, value, onValueChange, hint, error, id, ...props }: SelectProps) => {

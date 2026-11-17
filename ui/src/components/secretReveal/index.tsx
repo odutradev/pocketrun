@@ -1,10 +1,10 @@
 import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
 
-import Alert from "@components/alert";
-import Button from "@components/button";
-import useClipboard from "@hooks/useClipboard";
-
 import { Container, Label, Secret, SecretBox } from "./styles";
+import useClipboard from "@hooks/useClipboard";
+import Button from "@components/button";
+import Alert from "@components/alert";
+
 import type { SecretRevealProps } from "./types";
 
 const SecretReveal = ({ secret, label, confirmLabel, onConfirm }: SecretRevealProps) => {

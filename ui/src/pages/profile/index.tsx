@@ -1,15 +1,14 @@
 import { ExitIcon } from "@radix-ui/react-icons";
 
-import { roleLabels } from "@assets/data";
-import Badge from "@components/badge";
-import Button from "@components/button";
-import PageHeader from "@components/pageHeader";
-import { formatDate } from "@utils/functions";
-
-import useProfilePage from "./hook";
 import IdentitySection from "./sections/identity";
 import PasswordSection from "./sections/password";
+import PageHeader from "@components/pageHeader";
+import { formatDate } from "@utils/functions";
+import { roleLabels } from "@assets/data";
+import Button from "@components/button";
+import Badge from "@components/badge";
 import { Container } from "./styles";
+import useProfilePage from "./hook";
 
 const ProfilePage = () => {
   const { user, handleSignOut } = useProfilePage();

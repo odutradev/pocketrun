@@ -1,22 +1,14 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from "@radix-ui/react-icons";
 
-import {
-  brandContextOptions,
-  brandQuickKit,
-  logoAspectOptions,
-  logoBackgroundOptions,
-  logoKindOptions,
-  logoPaletteOptions,
-  rasterFormatOptions,
-  rasterSizeOptions
-} from "@assets/data";
-import Button from "@components/button";
-
-import useBrandPage from "../../hook";
-import OptionSelect from "../../subcomponents/optionSelect";
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section } from "../../styles";
+import { brandContextOptions, brandQuickKit, logoAspectOptions, logoBackgroundOptions, logoKindOptions, logoPaletteOptions, rasterFormatOptions, rasterSizeOptions } from "@assets/data";
 import { Actions, Controls, Generator, Hint, Preview, PreviewMeta, PreviewStage } from "./styles";
+import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section } from "../../styles";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import OptionSelect from "../../subcomponents/optionSelect";
+import Button from "@components/button";
+import useBrandPage from "../../hook";
+
+
 
 const DownloadsSection = () => {
   const {

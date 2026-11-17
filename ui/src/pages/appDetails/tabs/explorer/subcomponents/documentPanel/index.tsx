@@ -1,11 +1,11 @@
-import Card from "@components/card";
+import { Body, Details, Header, Mono, Title } from "./styles";
+import { formatDateTime } from "@utils/functions";
+import ExpiryBadge from "@components/expiryBadge";
+import EmptyState from "@components/emptyState";
 import CodeBlock from "@components/codeBlock";
 import CopyField from "@components/copyField";
-import EmptyState from "@components/emptyState";
-import ExpiryBadge from "@components/expiryBadge";
-import { formatDateTime } from "@utils/functions";
+import Card from "@components/card";
 
-import { Body, Details, Header, Mono, Title } from "./styles";
 import type { DocumentPanelProps } from "./types";
 
 const DocumentPanel = ({ document }: DocumentPanelProps) => (

@@ -1,11 +1,11 @@
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 
-import type { DataTableColumn } from "@components/dataTable/types";
-import LinkButton from "@components/linkButton";
 import { formatDate, pluralize } from "@utils/functions";
-import type { Application } from "@utils/types/application";
-
+import LinkButton from "@components/linkButton";
 import { Name, ProjectId } from "./styles";
+
+import type { DataTableColumn } from "@components/dataTable/types";
+import type { Application } from "@utils/types/application";
 
 export const applicationColumns: DataTableColumn<Application>[] = [
   { key: "name", header: "Aplicação", render: (application) => <Name>{application.name}</Name> },

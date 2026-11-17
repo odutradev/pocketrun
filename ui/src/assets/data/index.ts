@@ -1,30 +1,8 @@
 import theme from "@styles/theme";
-import type { ApiErrorCode } from "@utils/types/api";
-import type {
-  BrandColor,
-  BrandContext,
-  BrandOption,
-  BrandSection,
-  BrandToken,
-  BrandToolInfo,
-  BrandTypeStep,
-  FaviconItem,
-  IconPaletteInfo,
-  LogoAspect,
-  LogoBackground,
-  LogoConfig,
-  LogoKind,
-  LogoPalette,
-  MotionDemo,
-  MotionToken,
-  OpticalSize,
-  QuickKitItem,
-  RasterFormat,
-  RasterSize,
-  SymbolPart,
-  TypeFamily
-} from "@utils/types/brand";
+
+import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
 import type { Permission, UserRole } from "@utils/types/user";
+import type { ApiErrorCode } from "@utils/types/api";
 
 const { brand, motion } = theme;
 

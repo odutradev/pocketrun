@@ -1,8 +1,8 @@
 import styled from "styled-components";
 
 import { fieldControlStyles } from "@components/formField/styles";
-import type { FieldControlStyleProps } from "@components/formField/types";
 
+import type { FieldControlStyleProps } from "@components/formField/types";
 import type { InputSize } from "./types";
 
 const heights: Record<InputSize, { mobile: string; desktop: string }> = {

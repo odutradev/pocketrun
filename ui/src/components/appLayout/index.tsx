@@ -1,18 +1,18 @@
-import { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useMatches, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
+import { useEffect, useMemo } from "react";
 
-import { ping } from "@actions/health";
-import { getSetupStatus } from "@actions/setup";
-import { healthCheckInterval } from "@assets/config";
-import Alert from "@components/alert";
-import Sidebar from "@components/sidebar";
-import useSystemStore from "@stores/system";
-import ContextStyles from "@styles/context";
-import { withContext } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
-
+import { healthCheckInterval } from "@assets/config";
 import { Content, Main, Shell } from "./styles";
+import { getSetupStatus } from "@actions/setup";
+import { withContext } from "@styles/theme";
+import ContextStyles from "@styles/context";
+import useSystemStore from "@stores/system";
+import Sidebar from "@components/sidebar";
+import { ping } from "@actions/health";
+import Alert from "@components/alert";
+
 import type { RouteMatchHandle } from "./types";
 
 const logger = createLocalLogger("appLayout");

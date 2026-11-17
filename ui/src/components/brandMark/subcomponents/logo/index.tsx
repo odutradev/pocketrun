@@ -1,10 +1,10 @@
 import { useTheme } from "styled-components";
 
 import { getSymbolColors } from "@utils/functions/brandAssets";
-import type { BrandTool } from "@utils/types/brand";
-
-import BrandSymbol from "../symbol";
 import { Letter, Wordmark, Wrapper } from "./styles";
+import BrandSymbol from "../symbol";
+
+import type { BrandTool } from "@utils/types/brand";
 import type { BrandLogoProps } from "./types";
 
 const pocketLetters = ["P", "O", "C", "K", "E", "T"] as const;

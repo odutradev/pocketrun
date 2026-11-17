@@ -1,4 +1,5 @@
 import { StyledIconButton } from "./styles";
+
 import type { IconButtonProps } from "./types";
 
 const IconButton = ({

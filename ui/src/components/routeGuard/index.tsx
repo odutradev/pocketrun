@@ -1,11 +1,13 @@
-import { Suspense } from "react";
 import { Navigate } from "react-router-dom";
+import { Suspense } from "react";
 
+import useSystemStore from "@stores/system";
 import Loader from "@components/loader";
 import useAuthStore from "@stores/auth";
-import useSystemStore from "@stores/system";
 
 import type { RouteGuardProps } from "./types";
+
+
 
 const RouteGuard = ({ metadata, children }: RouteGuardProps) => {
   const { token, user } = useAuthStore();

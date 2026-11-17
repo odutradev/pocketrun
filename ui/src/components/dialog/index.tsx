@@ -1,9 +1,9 @@
-import { Cross2Icon } from "@radix-ui/react-icons";
 import { Dialog as RadixDialog } from "@radix-ui/themes";
-
-import IconButton from "@components/iconButton";
+import { Cross2Icon } from "@radix-ui/react-icons";
 
 import { Content, Description, Eyebrow, Footer, Header, Heading, Title } from "./styles";
+import IconButton from "@components/iconButton";
+
 import type { DialogProps } from "./types";
 
 const Dialog = ({

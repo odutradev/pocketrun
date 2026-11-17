@@ -1,8 +1,8 @@
 import styled from "styled-components";
 
-import type { BrandContext } from "@utils/types/brand";
-
 import { Panel } from "../../styles";
+
+import type { BrandContext } from "@utils/types/brand";
 
 export const Stages = styled.div`
   display: grid;

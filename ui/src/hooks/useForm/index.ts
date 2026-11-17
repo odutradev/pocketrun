@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
-import type { z } from "zod";
 
 import type { FormErrors, FormSchema, UseFormOptions, UseFormReturn } from "./types";
+import type { ChangeEvent, FormEvent } from "react";
+import type { z } from "zod";
 
 const toFieldErrors = <TValues>(issues: z.core.$ZodIssue[]): FormErrors<TValues> =>
   issues.reduce<FormErrors<TValues>>((errors, issue) => {

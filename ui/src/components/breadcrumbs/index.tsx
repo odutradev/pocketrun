@@ -1,4 +1,5 @@
 import { Crumb, Current, Item, List } from "./styles";
+
 import type { BreadcrumbsProps } from "./types";
 
 const Breadcrumbs = ({ items }: BreadcrumbsProps) => (

@@ -1,14 +1,14 @@
-import { changePassword } from "@actions/auth";
-import Button from "@components/button";
-import Card from "@components/card";
-import Input from "@components/input";
-import SectionHeader from "@components/sectionHeader";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
-import { changePasswordSchema } from "@utils/validations/user";
-import type { ChangePasswordValues } from "@utils/validations/user";
-
 import { Actions, FieldRow, Form, Section } from "../../styles";
+import { changePasswordSchema } from "@utils/validations/user";
+import SectionHeader from "@components/sectionHeader";
+import { changePassword } from "@actions/auth";
+import useAction from "@hooks/useAction";
+import Button from "@components/button";
+import Input from "@components/input";
+import useForm from "@hooks/useForm";
+import Card from "@components/card";
+
+import type { ChangePasswordValues } from "@utils/validations/user";
 
 const initialValues = { currentPassword: "", newPassword: "", confirmPassword: "" };
 

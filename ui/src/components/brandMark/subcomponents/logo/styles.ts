@@ -1,7 +1,6 @@
 import styled, { css, keyframes } from "styled-components";
 
 import type { SymbolMotion } from "@utils/types/brand";
-
 import type { BrandLogoLayout } from "./types";
 
 const letterRise = keyframes`

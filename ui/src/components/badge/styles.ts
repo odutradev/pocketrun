@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
-import type { DefaultTheme } from "styled-components";
 
+import type { DefaultTheme } from "styled-components";
 import type { BadgeTone } from "./types";
 
 const tones = (theme: DefaultTheme): Record<BadgeTone, { background: string; color: string; dot: string }> => ({

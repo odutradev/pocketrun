@@ -1,8 +1,11 @@
 import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
 
-import useBrandPage from "../../hook";
 import { Body, Chip, Description, Hex, Meta, Name, Swatch, SwatchButton } from "./styles";
+import useBrandPage from "../../hook";
+
 import type { ColorSwatchProps } from "./types";
+
+
 
 const ColorSwatch = ({ color, size = "regular" }: ColorSwatchProps) => {
   const { handleCopyColor, isCopied } = useBrandPage();

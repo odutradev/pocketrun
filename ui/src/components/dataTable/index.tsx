@@ -1,9 +1,10 @@
-import type { KeyboardEvent } from "react";
-
+import { Caption, Cell, HeaderCell, Row, ScrollBox, Table } from "./styles";
 import VisuallyHidden from "@components/visuallyHidden";
 
-import { Caption, Cell, HeaderCell, Row, ScrollBox, Table } from "./styles";
 import type { DataTableProps } from "./types";
+import type { KeyboardEvent } from "react";
+
+
 
 const DataTable = <TRow,>({
   caption,

@@ -1,9 +1,9 @@
 import { useId } from "react";
 
-import FormField from "@components/formField";
 import { getFieldIds } from "@utils/functions";
-
+import FormField from "@components/formField";
 import { Field } from "./styles";
+
 import type { TextAreaProps } from "./types";
 
 const TextArea = ({ label, hint, error, isMono = false, id, ...props }: TextAreaProps) => {

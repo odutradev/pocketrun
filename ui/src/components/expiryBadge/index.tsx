@@ -1,7 +1,7 @@
-import Badge from "@components/badge";
 import { formatDate, getExpiryInfo, pluralize } from "@utils/functions";
-
+import Badge from "@components/badge";
 import { MutedText } from "./styles";
+
 import type { ExpiryBadgeProps } from "./types";
 
 const ExpiryBadge = ({ expiresAt, noneLabel, isStatus = false }: ExpiryBadgeProps) => {

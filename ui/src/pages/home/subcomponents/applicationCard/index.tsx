@@ -1,10 +1,10 @@
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 
+import { allowsAnyOrigin, describeOrigins, formatDate, pluralize } from "@utils/functions";
+import { Badges, Body, Description, Footer, Identity, Name, ProjectId } from "./styles";
 import Badge from "@components/badge";
 import Card from "@components/card";
-import { allowsAnyOrigin, describeOrigins, formatDate, pluralize } from "@utils/functions";
 
-import { Badges, Body, Description, Footer, Identity, Name, ProjectId } from "./styles";
 import type { ApplicationCardProps } from "./types";
 
 const ApplicationCard = ({ application }: ApplicationCardProps) => {

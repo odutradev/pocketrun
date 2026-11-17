@@ -1,8 +1,9 @@
 import { CheckCircledIcon, CrossCircledIcon, ExclamationTriangleIcon, InfoCircledIcon } from "@radix-ui/react-icons";
-import type { ReactNode } from "react";
 
 import { Action, Body, Icon, Message, Root, Title } from "./styles";
+
 import type { AlertProps, AlertTone } from "./types";
+import type { ReactNode } from "react";
 
 const icons: Record<AlertTone, ReactNode> = {
   neutral: <InfoCircledIcon />,

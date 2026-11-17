@@ -2,6 +2,8 @@ import styled, { css } from "styled-components";
 
 import { Panel } from "../../styles";
 
+
+
 export const Generator = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);

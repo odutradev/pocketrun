@@ -1,12 +1,4 @@
-import type {
-  BrandContext,
-  BrandTool,
-  LogoPalette,
-  SymbolMotion,
-  SymbolPose,
-  SymbolStatus,
-  SymbolVariant
-} from "@utils/types/brand";
+import type { BrandContext, BrandTool, LogoPalette, SymbolMotion, SymbolPose, SymbolStatus, SymbolVariant } from "@utils/types/brand";
 
 export type SymbolFrame = "tight" | "full";
 

@@ -1,7 +1,8 @@
-import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { create } from "zustand";
 
 import { storageKeys } from "@assets/config";
+
 import type { Session, User } from "@utils/types/user";
 
 interface AuthStore {

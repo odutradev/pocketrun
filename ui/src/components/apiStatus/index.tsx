@@ -1,9 +1,9 @@
 import { Tooltip } from "@radix-ui/themes";
 
+import { Address, Container, Dot, DotTrigger, TooltipBody, TooltipLabel, TooltipValue } from "./styles";
 import { apiUrl, appVersion } from "@assets/config";
 import useSystemStore from "@stores/system";
 
-import { Address, Container, Dot, DotTrigger, TooltipBody, TooltipLabel, TooltipValue } from "./styles";
 import type { ApiStatusProps } from "./types";
 
 const statusLabels = { online: "API no ar", offline: "API fora do ar" } as const;

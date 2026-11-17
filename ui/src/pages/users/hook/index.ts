@@ -1,6 +1,6 @@
 import useAuthStore from "@stores/auth";
-
 import useUsersStore from "./store";
+
 import type { UseUsersPageReturn } from "./types";
 
 const useUsersPage = (): UseUsersPageReturn => {

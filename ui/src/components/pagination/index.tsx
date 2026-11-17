@@ -1,8 +1,8 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 
+import { Container, Controls, PageLabel } from "./styles";
 import IconButton from "@components/iconButton";
 
-import { Container, Controls, PageLabel } from "./styles";
 import type { PaginationProps } from "./types";
 
 const Pagination = ({ page, totalPages, onPageChange, summary }: PaginationProps) => (

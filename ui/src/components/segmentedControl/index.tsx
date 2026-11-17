@@ -1,4 +1,5 @@
 import { Group, Segment } from "./styles";
+
 import type { SegmentedControlProps } from "./types";
 
 const SegmentedControl = <TValue extends string>({

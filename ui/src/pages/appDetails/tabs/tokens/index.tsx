@@ -1,20 +1,20 @@
 import { PlusIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
-import { deleteToken } from "@actions/apps";
-import Alert from "@components/alert";
-import Button from "@components/button";
-import Card from "@components/card";
 import ConfirmDialog from "@components/confirmDialog";
-import DataTable from "@components/dataTable";
-import EmptyState from "@components/emptyState";
 import SectionHeader from "@components/sectionHeader";
-import useAction from "@hooks/useAction";
-import type { ApiToken } from "@utils/types/application";
-
+import EmptyState from "@components/emptyState";
+import DataTable from "@components/dataTable";
+import { deleteToken } from "@actions/apps";
 import useAppDetailsPage from "../../hook";
-import { Body, Strong } from "./styles";
 import { getTokenColumns } from "./table";
+import useAction from "@hooks/useAction";
+import { Body, Strong } from "./styles";
+import Button from "@components/button";
+import Alert from "@components/alert";
+import Card from "@components/card";
+
+import type { ApiToken } from "@utils/types/application";
 
 const TokensTab = () => {
   const { applicationId, application, handleRefresh, handleOpenTokenModal } = useAppDetailsPage();

@@ -1,8 +1,10 @@
 import styled from "styled-components";
 
+import { Panel } from "../../styles";
+
 import type { BrandTool } from "@utils/types/brand";
 
-import { Panel } from "../../styles";
+
 
 export const ToolPanel = styled(Panel)<{ $tool: BrandTool }>`
   box-shadow: inset 0 3px 0 ${({ theme, $tool }) => theme.brand.tools[$tool].base};

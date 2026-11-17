@@ -1,7 +1,8 @@
-import { useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { useCallback } from "react";
 
 import useAppDetailsStore from "./store";
+
 import type { UseAppDetailsPageReturn } from "./types";
 
 const useAppDetailsPage = (): UseAppDetailsPageReturn => {

@@ -1,5 +1,4 @@
 import Skeleton from "@components/skeleton";
-
 import { Container } from "./styles";
 
 const KvSkeleton = () => (

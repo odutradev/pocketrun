@@ -1,10 +1,9 @@
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 
+import { Actions, Description, Form, Heading, Title } from "./styles";
 import Button from "@components/button";
 import Input from "@components/input";
-
 import useSetupPage from "../../hook";
-import { Actions, Description, Form, Heading, Title } from "./styles";
 
 const SetupForm = () => {
   const { form } = useSetupPage();

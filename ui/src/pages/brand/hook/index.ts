@@ -1,21 +1,14 @@
 import { useCallback, useMemo } from "react";
 
-import useAction from "@hooks/useAction";
+import { buildFaviconSvg, buildLogoFileName, buildLogoSvg, downloadBlob, getOpaqueFill, getRasterDimensions, rasterizeSvg, svgToBlob } from "@utils/functions/brandAssets";
 import useClipboard from "@hooks/useClipboard";
-import {
-  buildFaviconSvg,
-  buildLogoFileName,
-  buildLogoSvg,
-  downloadBlob,
-  getOpaqueFill,
-  getRasterDimensions,
-  rasterizeSvg,
-  svgToBlob
-} from "@utils/functions/brandAssets";
-import type { FaviconItem, LogoConfig } from "@utils/types/brand";
-
+import useAction from "@hooks/useAction";
 import useBrandStore from "./store";
+
+import type { FaviconItem, LogoConfig } from "@utils/types/brand";
 import type { UseBrandPageReturn } from "./types";
+
+
 
 const rasterToastMessages = {
   pending: "Gerando a imagem...",

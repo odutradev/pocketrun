@@ -1,7 +1,8 @@
 import styled, { css, keyframes } from "styled-components";
 
-import { symbolMotion } from "@assets/config";
 import { symbolPivot } from "@utils/functions/brandAssets";
+import { symbolMotion } from "@assets/config";
+
 import type { SymbolMotion, SymbolPose, SymbolStatus } from "@utils/types/brand";
 
 const bladeTransform = (angle: number) => `translate(${symbolPivot.x}px, ${symbolPivot.y}px) rotate(${angle}deg)`;

@@ -1,6 +1,7 @@
 import api from "@utils/api";
-import type { User } from "@utils/types/user";
+
 import type { UserFormValues } from "@utils/validations/user";
+import type { User } from "@utils/types/user";
 
 export const listUsers = async () => {
   const response = await api.get<User[]>("/users/list");

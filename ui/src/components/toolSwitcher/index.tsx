@@ -1,6 +1,6 @@
+import { Item, List, Soon } from "./styles";
 import { brandTools } from "@assets/data";
 
-import { Item, List, Soon } from "./styles";
 import type { ToolSwitcherProps } from "./types";
 
 const ToolSwitcher = ({ active }: ToolSwitcherProps) => (

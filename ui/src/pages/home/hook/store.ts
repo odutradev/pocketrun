@@ -1,8 +1,9 @@
 import { toast } from "react-toastify";
 import { create } from "zustand";
 
-import { listApplications } from "@actions/apps";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
+import { listApplications } from "@actions/apps";
+
 import type { Application } from "@utils/types/application";
 
 const logger = createLocalLogger("homePage");

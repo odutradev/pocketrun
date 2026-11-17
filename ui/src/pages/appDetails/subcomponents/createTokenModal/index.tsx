@@ -1,19 +1,19 @@
 import { useState } from "react";
 
-import { createToken } from "@actions/apps";
 import { defaultTokenValidity, tokenValidityOptions } from "@assets/data";
-import Button from "@components/button";
-import Dialog from "@components/dialog";
-import Input from "@components/input";
-import SecretReveal from "@components/secretReveal";
-import Select from "@components/select";
-import useAction from "@hooks/useAction";
-import useForm from "@hooks/useForm";
 import { createTokenSchema } from "@utils/validations/application";
-import type { CreateTokenValues } from "@utils/validations/application";
-
+import SecretReveal from "@components/secretReveal";
+import { createToken } from "@actions/apps";
 import useAppDetailsPage from "../../hook";
 import { Actions, Form } from "./styles";
+import useAction from "@hooks/useAction";
+import Button from "@components/button";
+import Dialog from "@components/dialog";
+import Select from "@components/select";
+import Input from "@components/input";
+import useForm from "@hooks/useForm";
+
+import type { CreateTokenValues } from "@utils/validations/application";
 
 const initialValues = { name: "", validityDays: defaultTokenValidity };
 

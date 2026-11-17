@@ -1,12 +1,12 @@
 import { SegmentedControl } from "@radix-ui/themes";
 import { useState } from "react";
 
+import { ControlScroller } from "../../../../styles";
 import { brandContextOptions } from "@assets/data";
 import BrandMark from "@components/brandMark";
-import type { BrandContext } from "@utils/types/brand";
-
-import { ControlScroller } from "../../../../styles";
 import { Demo } from "../../styles";
+
+import type { BrandContext } from "@utils/types/brand";
 
 const ContextDemo = () => {
   const [context, setContext] = useState<BrandContext>("general");

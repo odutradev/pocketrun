@@ -1,15 +1,14 @@
 import { TrashIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
+import { Header, Row, RowDescription, RowText, RowTitle, Strong, Subtitle, Title } from "./styles";
+import ConfirmDialog from "@components/confirmDialog";
 import { deleteApplication } from "@actions/apps";
+import useAppDetailsPage from "../../hook";
+import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Card from "@components/card";
-import ConfirmDialog from "@components/confirmDialog";
-import useAction from "@hooks/useAction";
-
-import useAppDetailsPage from "../../hook";
-import { Header, Row, RowDescription, RowText, RowTitle, Strong, Subtitle, Title } from "./styles";
 
 const DangerTab = () => {
   const navigate = useNavigate();

@@ -1,11 +1,11 @@
 import { ExitIcon } from "@radix-ui/react-icons";
 
-import { roleLabels } from "@assets/data";
-import IconButton from "@components/iconButton";
-import useAuthStore from "@stores/auth";
-import { getInitial } from "@utils/functions";
-
 import { Avatar, Container, Identity, Name, Profile, Role } from "./styles";
+import IconButton from "@components/iconButton";
+import { getInitial } from "@utils/functions";
+import { roleLabels } from "@assets/data";
+import useAuthStore from "@stores/auth";
+
 import type { ProfileLinkProps } from "./types";
 
 const ProfileLink = ({ user, isActive }: ProfileLinkProps) => {

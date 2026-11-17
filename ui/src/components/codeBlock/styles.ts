@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import type { DefaultTheme } from "styled-components";
 
+import type { DefaultTheme } from "styled-components";
 import type { CodeTokenKind } from "./types";
 
 const tokenColors = (theme: DefaultTheme): Record<CodeTokenKind, string> => ({

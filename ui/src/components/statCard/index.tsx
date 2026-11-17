@@ -1,4 +1,5 @@
 import { Container, Header, Hint, Label, Value } from "./styles";
+
 import type { StatCardProps } from "./types";
 
 const StatCard = ({ label, value, hint, icon }: StatCardProps) => (

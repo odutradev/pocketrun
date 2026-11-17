@@ -1,9 +1,10 @@
 import { brandNeutralColors, brandStateColors, brandTokens, brandToolColors } from "@assets/data";
-
-import ColorSwatch from "../../subcomponents/colorSwatch";
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { Grid, Label, Lead, Mono, Panel, PanelText, Section } from "../../styles";
 import { Code, Table, TableCell, TableHead, TableRow, TokenColor } from "./styles";
+import { Grid, Label, Lead, Mono, Panel, PanelText, Section } from "../../styles";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import ColorSwatch from "../../subcomponents/colorSwatch";
+
+
 
 const radixSnippet = [
   "// painel inteiro: neutro, botões globais em aço",

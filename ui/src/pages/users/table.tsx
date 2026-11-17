@@ -1,13 +1,13 @@
 import { Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
-import { roleLabels } from "@assets/data";
-import Badge from "@components/badge";
-import type { DataTableColumn } from "@components/dataTable/types";
+import { Email, NameCell, RowActions } from "./styles";
 import IconButton from "@components/iconButton";
 import { formatDate } from "@utils/functions";
-import type { User } from "@utils/types/user";
+import { roleLabels } from "@assets/data";
+import Badge from "@components/badge";
 
-import { Email, NameCell, RowActions } from "./styles";
+import type { DataTableColumn } from "@components/dataTable/types";
+import type { User } from "@utils/types/user";
 
 interface UserColumnsOptions {
   currentUserId: string | undefined;

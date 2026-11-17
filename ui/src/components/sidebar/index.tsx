@@ -1,40 +1,17 @@
-import {
-  Cross2Icon,
-  FileTextIcon,
-  HamburgerMenuIcon,
-  LayersIcon,
-  Link2Icon,
-  PersonIcon,
-  StackIcon
-} from "@radix-ui/react-icons";
-import { useEffect, useState } from "react";
+import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, LayersIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "styled-components";
+import { useEffect, useState } from "react";
 
-import ApiStatus from "@components/apiStatus";
-import Badge from "@components/badge";
-import BrandMark from "@components/brandMark";
-import IconButton from "@components/iconButton";
-import useAuthStore from "@stores/auth";
-import useSystemStore from "@stores/system";
-
-import {
-  Aside,
-  Backdrop,
-  Bottom,
-  Brand,
-  BrandEnd,
-  CloseSlot,
-  GroupLabel,
-  ItemBadge,
-  LogoLink,
-  MobileBar,
-  Nav,
-  NavGroup,
-  NavLink,
-  Top
-} from "./styles";
+import { Aside, Backdrop, Bottom, Brand, BrandEnd, CloseSlot, GroupLabel, ItemBadge, LogoLink, MobileBar, Nav, NavGroup, NavLink, Top } from "./styles";
 import ProfileLink from "./subcomponents/profileLink";
+import IconButton from "@components/iconButton";
+import ApiStatus from "@components/apiStatus";
+import BrandMark from "@components/brandMark";
+import useSystemStore from "@stores/system";
+import useAuthStore from "@stores/auth";
+import Badge from "@components/badge";
+
 import type { SidebarGroup, SidebarItem } from "./types";
 
 const groups: SidebarGroup[] = [

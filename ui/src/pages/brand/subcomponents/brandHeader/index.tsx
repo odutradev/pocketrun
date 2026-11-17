@@ -1,11 +1,12 @@
 import { ArrowRightIcon, DownloadIcon } from "@radix-ui/react-icons";
 import { Link } from "react-router-dom";
 
-import { brandSections } from "@assets/data";
-import BrandMark from "@components/brandMark";
-import LinkButton from "@components/linkButton";
-
 import { Actions, Bar, Container, NavLink, NavList, Top } from "./styles";
+import LinkButton from "@components/linkButton";
+import BrandMark from "@components/brandMark";
+import { brandSections } from "@assets/data";
+
+
 
 const BrandHeader = () => (
   <Bar>

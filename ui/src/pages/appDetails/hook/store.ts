@@ -1,10 +1,10 @@
 import { toast } from "react-toastify";
 import { create } from "zustand";
 
-import { getApplication } from "@actions/apps";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
-import type { Application } from "@utils/types/application";
+import { getApplication } from "@actions/apps";
 
+import type { Application } from "@utils/types/application";
 import type { DetailsTab } from "./types";
 
 const logger = createLocalLogger("appDetailsPage");

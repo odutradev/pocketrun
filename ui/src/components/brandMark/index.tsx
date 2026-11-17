@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
 import { useTheme } from "styled-components";
+import { useEffect, useState } from "react";
 
-import type { BrandContext, SymbolPose } from "@utils/types/brand";
-
-import { HoverArea } from "./styles";
+import BrandSymbol from "./subcomponents/symbol";
 import AppIcon from "./subcomponents/appIcon";
 import BrandLogo from "./subcomponents/logo";
-import BrandSymbol from "./subcomponents/symbol";
+import { HoverArea } from "./styles";
+
+import type { BrandContext, SymbolPose } from "@utils/types/brand";
 import type { BrandMarkProps } from "./types";
 
 const prefersReducedMotion = () =>

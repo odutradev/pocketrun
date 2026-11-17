@@ -1,18 +1,10 @@
 import { useId } from "react";
 
-import { symbolMotion } from "@assets/config";
-import {
-  getSymbolColors,
-  symbolBladeThickness,
-  symbolBlades,
-  symbolHandle,
-  symbolHandleHeight,
-  symbolPivot,
-  symbolViewBox
-} from "@utils/functions/brandAssets";
-import type { SymbolPose } from "@utils/types/brand";
-
+import { getSymbolColors, symbolBladeThickness, symbolBlades, symbolHandle, symbolHandleHeight, symbolPivot, symbolViewBox } from "@utils/functions/brandAssets";
 import { Blade, Handle, Ring, Svg } from "./styles";
+import { symbolMotion } from "@assets/config";
+
+import type { SymbolPose } from "@utils/types/brand";
 import type { BrandSymbolProps } from "./types";
 
 const fullFrame = { x: 0, y: 0, width: 96, height: 96 };

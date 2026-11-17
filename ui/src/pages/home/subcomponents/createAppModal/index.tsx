@@ -1,19 +1,19 @@
 import { useState } from "react";
 
+import { createApplicationSchema } from "@utils/validations/application";
+import { parseOrigins, toProjectId } from "@utils/functions";
+import SecretReveal from "@components/secretReveal";
 import { createApplication } from "@actions/apps";
+import TextArea from "@components/textArea";
+import { Actions, Form } from "./styles";
+import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Dialog from "@components/dialog";
 import Input from "@components/input";
-import SecretReveal from "@components/secretReveal";
-import TextArea from "@components/textArea";
-import useAction from "@hooks/useAction";
 import useForm from "@hooks/useForm";
-import { parseOrigins, toProjectId } from "@utils/functions";
-import { createApplicationSchema } from "@utils/validations/application";
-import type { CreateApplicationValues } from "@utils/validations/application";
-
 import useHomePage from "../../hook";
-import { Actions, Form } from "./styles";
+
+import type { CreateApplicationValues } from "@utils/validations/application";
 
 const initialValues = { name: "", projectId: "", origins: "*", description: "" };
 

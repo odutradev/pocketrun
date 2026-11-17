@@ -1,8 +1,9 @@
+import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
+import SectionHeading from "../../subcomponents/sectionHeading";
+import { Paragraphs, Quote, Text } from "./styles";
 import { brandPersonality } from "@assets/data";
 
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
-import { Paragraphs, Quote, Text } from "./styles";
+
 
 const Concept = () => (
   <Section id="conceito">

@@ -1,11 +1,10 @@
 import { Cross2Icon } from "@radix-ui/react-icons";
 
+import { Dont, DontIcon, Protection, ProtectionArea, ProtectionStage } from "./styles";
+import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
+import SectionHeading from "../../subcomponents/sectionHeading";
 import { brandDonts, brandUsageRules } from "@assets/data";
 import BrandMark from "@components/brandMark";
-
-import SectionHeading from "../../subcomponents/sectionHeading";
-import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
-import { Dont, DontIcon, Protection, ProtectionArea, ProtectionStage } from "./styles";
 
 const UsageSection = () => (
   <Section id="usos">

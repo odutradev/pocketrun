@@ -2,23 +2,23 @@ import { MagnifyingGlassIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-import { listCollections, listDocuments } from "@actions/explorer";
-import { explorerPageSize } from "@assets/config";
-import Card from "@components/card";
-import DataTable from "@components/dataTable";
-import EmptyState from "@components/emptyState";
-import IconButton from "@components/iconButton";
-import Input from "@components/input";
-import Loader from "@components/loader";
-import Pagination from "@components/pagination";
 import { createLocalLogger, getErrorMessage, pluralize } from "@utils/functions";
-import type { ExplorerDocument, Page } from "@utils/types/explorer";
-
-import useAppDetailsPage from "../../hook";
 import { DetailSlot, DocumentsBody, Layout, Toolbar } from "./styles";
+import { listCollections, listDocuments } from "@actions/explorer";
 import CollectionList from "./subcomponents/collectionList";
 import DocumentPanel from "./subcomponents/documentPanel";
 import { documentColumns, matchesSearch } from "./table";
+import { explorerPageSize } from "@assets/config";
+import EmptyState from "@components/emptyState";
+import IconButton from "@components/iconButton";
+import Pagination from "@components/pagination";
+import DataTable from "@components/dataTable";
+import useAppDetailsPage from "../../hook";
+import Loader from "@components/loader";
+import Input from "@components/input";
+import Card from "@components/card";
+
+import type { ExplorerDocument, Page } from "@utils/types/explorer";
 
 const logger = createLocalLogger("explorerTab");
 

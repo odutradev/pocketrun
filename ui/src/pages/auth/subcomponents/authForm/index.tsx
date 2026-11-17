@@ -1,7 +1,6 @@
-import ApiStatus from "@components/apiStatus";
-
-import LoginForm from "../loginForm";
 import { Container, Eyebrow, Heading, Subtitle, Title } from "./styles";
+import ApiStatus from "@components/apiStatus";
+import LoginForm from "../loginForm";
 
 const AuthForm = () => (
   <Container>

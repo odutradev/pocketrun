@@ -1,6 +1,5 @@
 import EmptyState from "@components/emptyState";
 import PageHeader from "@components/pageHeader";
-
 import { Container } from "./styles";
 
 const LinksPage = () => (

@@ -1,9 +1,11 @@
 import { CheckIcon } from "@radix-ui/react-icons";
 
+import { Connector, Label, List, Marker, Step } from "./styles";
 import VisuallyHidden from "@components/visuallyHidden";
 
-import { Connector, Label, List, Marker, Step } from "./styles";
 import type { SetupStep } from "./types";
+
+
 
 const steps: SetupStep[] = [
   { label: "API conectada", state: "done" },

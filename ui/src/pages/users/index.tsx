@@ -1,17 +1,16 @@
 import { PlusIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useEffect } from "react";
 
-import Button from "@components/button";
-import DataTable from "@components/dataTable";
-import IconButton from "@components/iconButton";
-import PageHeader from "@components/pageHeader";
-
-import useUsersPage from "./hook";
-import UsersSkeleton from "./skeleton";
-import { Container } from "./styles";
 import RemoveUserDialog from "./subcomponents/removeUserDialog";
 import UserFormModal from "./subcomponents/userFormModal";
+import IconButton from "@components/iconButton";
+import PageHeader from "@components/pageHeader";
+import DataTable from "@components/dataTable";
 import { getUserColumns } from "./table";
+import Button from "@components/button";
+import UsersSkeleton from "./skeleton";
+import { Container } from "./styles";
+import useUsersPage from "./hook";
 
 const UsersPage = () => {
   const {

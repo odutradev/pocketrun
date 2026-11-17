@@ -1,8 +1,8 @@
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 
+import { Container, ErrorText, Hint, Label } from "./styles";
 import { getFieldIds } from "@utils/functions";
 
-import { Container, ErrorText, Hint, Label } from "./styles";
 import type { FormFieldProps } from "./types";
 
 const FormField = ({ controlId, label, isLabelHidden = false, hint, error, children }: FormFieldProps) => {

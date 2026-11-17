@@ -1,5 +1,4 @@
 import type { BrandContext, LogoPalette } from "@utils/types/brand";
-
 import type { SymbolMotionProps } from "../symbol/types";
 
 export type BrandLogoLayout = "horizontal" | "stacked" | "wordmark";

@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 import { Panel } from "../../styles";
 
+
+
 export const Protection = styled(Panel)`
   align-items: center;
   text-align: center;

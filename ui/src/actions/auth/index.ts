@@ -1,7 +1,8 @@
 import api from "@utils/api";
-import type { Session, User } from "@utils/types/user";
-import type { SignInValues } from "@utils/validations/auth";
+
 import type { ChangePasswordPayload, ProfileValues } from "@utils/validations/user";
+import type { SignInValues } from "@utils/validations/auth";
+import type { Session, User } from "@utils/types/user";
 
 export const signIn = async (data: SignInValues) => {
   const response = await api.post<Session>("/auth/login", data);

@@ -1,9 +1,9 @@
-import type { DataTableColumn } from "@components/dataTable/types";
-import ExpiryBadge from "@components/expiryBadge";
-import { formatDate, shortenId } from "@utils/functions";
-import type { ExplorerDocument } from "@utils/types/explorer";
-
 import { DataSummary, IdText, MutedText } from "./styles";
+import { formatDate, shortenId } from "@utils/functions";
+import ExpiryBadge from "@components/expiryBadge";
+
+import type { DataTableColumn } from "@components/dataTable/types";
+import type { ExplorerDocument } from "@utils/types/explorer";
 
 export const documentColumns: DataTableColumn<ExplorerDocument>[] = [
   {

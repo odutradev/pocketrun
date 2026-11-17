@@ -2,8 +2,8 @@ import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
 
 import IconButton from "@components/iconButton";
 import useClipboard from "@hooks/useClipboard";
-
 import { Container, Value } from "./styles";
+
 import type { CopyFieldProps } from "./types";
 
 const CopyField = ({ value, label }: CopyFieldProps) => {

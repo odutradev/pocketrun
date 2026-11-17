@@ -1,14 +1,16 @@
+import { ThemeProvider } from "styled-components";
+import { ToastContainer } from "react-toastify";
 import { Theme } from "@radix-ui/themes";
 import { useEffect } from "react";
-import { ToastContainer } from "react-toastify";
-import { ThemeProvider } from "styled-components";
 
-import { getProfile } from "@actions/auth";
-import AppRouter from "@routes/index";
-import useAuthStore from "@stores/auth";
-import GlobalStyles from "@styles/global";
-import theme, { radixTheme } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
+import theme, { radixTheme } from "@styles/theme";
+import { getProfile } from "@actions/auth";
+import GlobalStyles from "@styles/global";
+import useAuthStore from "@stores/auth";
+import AppRouter from "@routes/index";
+
+
 
 const logger = createLocalLogger("appProviders");
 

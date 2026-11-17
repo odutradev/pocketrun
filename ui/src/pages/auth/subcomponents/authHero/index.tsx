@@ -1,8 +1,7 @@
+import { Container, Description, Headline, Pitch, Tools } from "./styles";
+import BrandMark from "@components/brandMark";
 import { brandTools } from "@assets/data";
 import Badge from "@components/badge";
-import BrandMark from "@components/brandMark";
-
-import { Container, Description, Headline, Pitch, Tools } from "./styles";
 
 const AuthHero = () => (
   <Container aria-label="PocketRun">

@@ -1,8 +1,7 @@
-import Skeleton from "@components/skeleton";
-
-import { Container } from "./styles";
-import { CardGrid } from "./subcomponents/applicationList/styles";
 import { StatGrid } from "./subcomponents/systemStatusGrid/styles";
+import { CardGrid } from "./subcomponents/applicationList/styles";
+import Skeleton from "@components/skeleton";
+import { Container } from "./styles";
 
 const HomeSkeleton = () => (
   <Container aria-busy="true">

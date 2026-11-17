@@ -1,8 +1,7 @@
-import type { KeyboardEvent } from "react";
-
 import { getTabIds } from "@utils/functions";
-
 import { Count, List, Tab } from "./styles";
+
+import type { KeyboardEvent } from "react";
 import type { TabNavProps } from "./types";
 
 const TabNav = <TValue extends string>({

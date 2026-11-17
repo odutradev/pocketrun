@@ -1,13 +1,7 @@
 import api from "@utils/api";
+
+import type { Application, CreateApplicationPayload, CreatedApplication, CreatedToken, CreateTokenPayload, UpdateApplicationPayload } from "@utils/types/application";
 import type { MessageResponse } from "@utils/types/api";
-import type {
-  Application,
-  CreateApplicationPayload,
-  CreatedApplication,
-  CreatedToken,
-  CreateTokenPayload,
-  UpdateApplicationPayload
-} from "@utils/types/application";
 
 export const listApplications = async (signal?: AbortSignal) => {
   const response = await api.get<Application[]>("/apps/list", { signal });

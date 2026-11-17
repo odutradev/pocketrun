@@ -1,18 +1,7 @@
 import { brandWordmark } from "@assets/config";
 import theme from "@styles/theme";
-import type {
-  BrandContext,
-  BrandTool,
-  BuiltSvg,
-  LogoAspect,
-  LogoBackground,
-  LogoConfig,
-  LogoKind,
-  LogoPalette,
-  RasterFormat,
-  SymbolColors,
-  SymbolVariant
-} from "@utils/types/brand";
+
+import type { BrandContext, BrandTool, BuiltSvg, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, RasterFormat, SymbolColors, SymbolVariant } from "@utils/types/brand";
 
 const { brand } = theme;
 

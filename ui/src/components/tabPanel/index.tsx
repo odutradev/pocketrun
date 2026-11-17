@@ -1,6 +1,6 @@
 import { getTabIds } from "@utils/functions";
-
 import { Panel } from "./styles";
+
 import type { TabPanelProps } from "./types";
 
 const TabPanel = ({ idPrefix, value, children }: TabPanelProps) => {
