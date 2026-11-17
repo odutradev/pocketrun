@@ -1,7 +1,7 @@
 import { Switch } from "@radix-ui/themes";
 
 import { brandOpticalSizes, brandSymbolParts } from "@assets/data";
-import BrandSymbol from "@components/brandSymbol";
+import BrandMark from "@components/brandMark";
 import { symbolBlades, symbolHandle, symbolPivot } from "@utils/functions/brandAssets";
 
 import useBrandPage from "../../hook";
@@ -30,7 +30,7 @@ const SymbolSection: React.FC = () => {
             Mostrar guias e grid 96 × 96
           </GuidesToggle>
           <Figure>
-            <BrandSymbol size={360} frame="full" title="Símbolo do PocketRun" />
+            <BrandMark kind="symbol" size={360} frame="full" title="Símbolo do PocketRun" />
             {isGuidesVisible && (
               <Guides viewBox="0 0 96 96" aria-hidden>
                 {gridLines.map((position) => (
@@ -90,7 +90,7 @@ const SymbolSection: React.FC = () => {
         {brandOpticalSizes.map((optical) => (
           <Panel key={optical.variant}>
             <Stage $tone="dark">
-              <BrandSymbol size={optical.size} variant={optical.variant} />
+              <BrandMark kind="symbol" size={optical.size} variant={optical.variant} />
             </Stage>
             <PanelText>{optical.label}</PanelText>
           </Panel>

@@ -2,7 +2,7 @@ import { ArrowDownIcon, DownloadIcon } from "@radix-ui/react-icons";
 import { Button as RadixButton, SegmentedControl } from "@radix-ui/themes";
 
 import { brandContextOptions, defaultLogoConfig } from "@assets/data";
-import BrandLogo from "@components/brandLogo";
+import BrandMark from "@components/brandMark";
 import Button from "@components/button";
 
 import useBrandPage from "../../hook";
@@ -48,7 +48,7 @@ const Hero: React.FC = () => {
       </Intro>
       <Showcase>
         <ShowcaseStage $context={heroContext}>
-          <BrandLogo size={34} layout="stacked" context={heroContext} />
+          <BrandMark kind="stacked" size={34} context={heroContext} motion="intro" />
         </ShowcaseStage>
         <ControlScroller>
           <SegmentedControl.Root value={heroContext} onValueChange={handleContextChange} size="2">

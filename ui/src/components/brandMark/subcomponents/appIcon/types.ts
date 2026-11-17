@@ -1,6 +1,8 @@
 import type { BrandContext, LogoPalette } from "@utils/types/brand";
 
-export interface AppIconProps {
+import type { SymbolMotionProps } from "../symbol/types";
+
+export interface AppIconProps extends SymbolMotionProps {
   size: number;
   palette?: LogoPalette;
   context?: BrandContext;

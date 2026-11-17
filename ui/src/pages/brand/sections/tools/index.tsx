@@ -1,5 +1,5 @@
 import { brandTools } from "@assets/data";
-import BrandLogo from "@components/brandLogo";
+import BrandMark from "@components/brandMark";
 
 import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Mono, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
@@ -16,7 +16,7 @@ const ToolsSection: React.FC = () => (
       {brandTools.map((tool) => (
         <ToolPanel key={tool.tool} $tool={tool.tool}>
           <Stage $tone="dark">
-            <BrandLogo size={14} context={tool.tool} />
+            <BrandMark size={14} context={tool.tool} />
           </Stage>
           <ToolHeader>
             <PanelTitle>{tool.name}</PanelTitle>
@@ -38,7 +38,7 @@ const ToolsSection: React.FC = () => (
       </Panel>
       <Panel>
         <Stage $tone="dark">
-          <BrandLogo size={14} context="content" />
+          <BrandMark size={14} context="content" />
         </Stage>
         <PanelText>No logo: a marca inteira na cor da ferramenta, sem escrever o nome dela.</PanelText>
       </Panel>

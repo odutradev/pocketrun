@@ -120,3 +120,27 @@ export interface QuickKitItem {
   description: string;
   config: LogoConfig;
 }
+
+export type SymbolPose = "open" | "closed" | "spread";
+
+export type SymbolMotion = "none" | "intro" | "loop";
+
+export type SymbolStatus = "online" | "offline";
+
+export type MotionDemoId = "intro" | "wordmark" | "loader" | "hover" | "context" | "status" | "snap" | "appIcon";
+
+export interface MotionDemo {
+  id: MotionDemoId;
+  title: string;
+  description: string;
+  usage: string;
+  timing: string;
+  easing: string;
+  hasReplay?: boolean;
+}
+
+export interface MotionToken {
+  token: string;
+  value: string;
+  usage: string;
+}

@@ -1,7 +1,7 @@
 import { Cross2Icon } from "@radix-ui/react-icons";
 
 import { brandDonts, brandUsageRules } from "@assets/data";
-import BrandLogo from "@components/brandLogo";
+import BrandMark from "@components/brandMark";
 
 import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Panel, PanelText, PanelTitle, Section } from "../../styles";
@@ -25,7 +25,7 @@ const UsageSection: React.FC = () => (
     <Protection>
       <ProtectionStage>
         <ProtectionArea>
-          <BrandLogo size={20} />
+          <BrandMark size={20} />
         </ProtectionArea>
       </ProtectionStage>
       <PanelText>Área de proteção = altura do cabo do símbolo, nos quatro lados.</PanelText>

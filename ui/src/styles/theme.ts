@@ -60,6 +60,19 @@ export const theme = {
     tightLetterSpacing: "-0.02em"
   },
   blur: "blur(16px)",
+  // Durações em milissegundos.
+  motion: {
+    fast: 150,
+    base: 250,
+    expressive: 560,
+    stagger: 90,
+    loop: 1400,
+    pulse: 2000,
+    easing: {
+      snap: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      standard: "cubic-bezier(0.2, 0, 0, 1)"
+    }
+  },
   brand: {
     graphite: "#111111",
     surface: "#191919",

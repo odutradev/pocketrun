@@ -1,7 +1,6 @@
 import { brandContextOptions, logoKindOptions } from "@assets/data";
-import BrandLogo from "@components/brandLogo";
-import BrandSymbol from "@components/brandSymbol";
-import type { LogoKind, LogoPalette } from "@utils/types/brand";
+import BrandMark from "@components/brandMark";
+import type { LogoKind } from "@utils/types/brand";
 
 import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Lead, Panel, PanelText, PanelTitle, Section, Stage } from "../../styles";
@@ -9,12 +8,8 @@ import { ContextPanel, Stages } from "./styles";
 
 const versionKinds: LogoKind[] = ["horizontal", "stacked", "symbol", "wordmark"];
 
-const renderVersion = (kind: LogoKind, palette: LogoPalette) => {
-  if (kind === "symbol") return <BrandSymbol size={64} palette={palette} />;
-  if (kind === "stacked") return <BrandLogo size={18} layout="stacked" palette={palette} />;
-  if (kind === "wordmark") return <BrandLogo size={22} layout="wordmark" palette={palette} />;
-  return <BrandLogo size={18} palette={palette} />;
-};
+// Tamanho de cada versão para que todas ocupem o palco de forma parecida.
+const versionSizes: Record<LogoKind, number> = { horizontal: 18, stacked: 18, symbol: 64, wordmark: 22, appIcon: 96 };
 
 const LogoSection: React.FC = () => (
   <Section id="logotipo">
@@ -31,8 +26,8 @@ const LogoSection: React.FC = () => (
             <PanelTitle>{option?.label}</PanelTitle>
             <PanelText>{option?.description}</PanelText>
             <Stages>
-              <Stage $tone="dark">{renderVersion(kind, "dark")}</Stage>
-              <Stage $tone="light">{renderVersion(kind, "light")}</Stage>
+              <Stage $tone="dark"><BrandMark kind={kind} size={versionSizes[kind]} palette="dark" /></Stage>
+              <Stage $tone="light"><BrandMark kind={kind} size={versionSizes[kind]} palette="light" /></Stage>
             </Stages>
           </Panel>
         );
@@ -47,7 +42,7 @@ const LogoSection: React.FC = () => (
       {brandContextOptions.map((option) => (
         <ContextPanel key={option.value} $context={option.value}>
           <Stage $tone="dark">
-            <BrandLogo size={14} context={option.value} />
+            <BrandMark size={14} context={option.value} />
           </Stage>
           <PanelTitle>{option.label}</PanelTitle>
           <PanelText>{option.description}</PanelText>

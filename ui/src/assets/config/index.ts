@@ -28,3 +28,10 @@ export const brandWordmark = {
   letterSpacing: -3.5,
   fallbackWidth: 720
 } as const;
+
+export const symbolMotion = {
+  spreadDegrees: 10,
+  spreadTilt: 4,
+  snapDegrees: 16,
+  savedFeedbackDuration: 1400
+} as const;

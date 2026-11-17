@@ -3,8 +3,9 @@ import { DownloadIcon } from "@radix-ui/react-icons";
 import { brandFaviconPack, brandIconPalettes } from "@assets/data";
 import Button from "@components/button";
 
+import BrandMark from "@components/brandMark";
+
 import useBrandPage from "../../hook";
-import AppIcon from "../../subcomponents/appIcon";
 import SectionHeading from "../../subcomponents/sectionHeading";
 import { Grid, Label, Lead, Mono, Panel, PanelText, PanelTitle, Section } from "../../styles";
 import { FileInfo, FileRow, IconStage, SizeItem, Sizes } from "./styles";
@@ -25,7 +26,7 @@ const IconSection: React.FC = () => {
         {brandIconPalettes.map((item) => (
           <Panel key={item.palette}>
             <IconStage>
-              <AppIcon size={112} palette={item.palette} />
+              <BrandMark kind="appIcon" size={112} palette={item.palette} />
             </IconStage>
             <PanelTitle>{item.name}</PanelTitle>
             <PanelText>{item.description}</PanelText>
@@ -37,7 +38,7 @@ const IconSection: React.FC = () => {
         <Sizes>
           {realSizes.map((size) => (
             <SizeItem key={size}>
-              <AppIcon size={size} />
+              <BrandMark kind="appIcon" size={size} />
               <Mono>{size} px</Mono>
             </SizeItem>
           ))}

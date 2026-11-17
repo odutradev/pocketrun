@@ -3,7 +3,7 @@ import { Button } from "@radix-ui/themes";
 import { Link } from "react-router-dom";
 
 import { brandSections } from "@assets/data";
-import BrandLogo from "@components/brandLogo";
+import BrandMark from "@components/brandMark";
 
 import { Actions, Bar, Container, NavLink, NavList, Top } from "./styles";
 
@@ -12,7 +12,7 @@ const BrandHeader: React.FC = () => (
     <Container>
       <Top>
         <Link to="/" aria-label="Ir para o painel do PocketRun">
-          <BrandLogo size={17} />
+          <BrandMark size={17} />
         </Link>
         <Actions>
           <Button asChild variant="soft" color="gray" highContrast>
