@@ -1,53 +1,67 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useParams, useSearchParams } from "react-router-dom";
 
-import { createLocalLogger, getErrorMessage } from "@utils/functions";
-import { getLink, listLinkGroups } from "@actions/links";
+import { linkEditorTabs } from "@assets/data";
+import useLinkEditorStore from "./store";
 
-import type { Link, LinkGroup } from "@utils/types/link";
+import type { HistoryFilter, LinkEditorTab, LinkEvent } from "@utils/types/link";
 import type { UseLinkEditorPageReturn } from "./types";
 
-const logger = createLocalLogger("linkEditorPage");
+const toTab = (value: string | null, isEditing: boolean): LinkEditorTab => {
+  const match = linkEditorTabs.find((tab) => tab.value === value);
+  return isEditing && match ? match.value : "settings";
+};
+
+const actorKey = (event: LinkEvent) => event.actor.id ?? "system";
+
+const matchesFilter = (event: LinkEvent, filter: HistoryFilter, actor: string) => {
+  const isSystem = event.actor.id === null;
+  if (filter === "people" && isSystem) return false;
+  if (filter === "system" && !isSystem) return false;
+  return actor === "all" || actorKey(event) === actor;
+};
 
 const useLinkEditorPage = (): UseLinkEditorPageReturn => {
   const { linkId } = useParams();
-  const [link, setLink] = useState<Link | null>(null);
-  const [groups, setGroups] = useState<LinkGroup[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasFailed, setHasFailed] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const store = useLinkEditorStore();
+  const tab = toTab(searchParams.get("tab"), Boolean(linkId));
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const actorOptions = [
+    { value: "all", label: "Todas as pessoas" },
+    ...Array.from(new Map(store.events.map((event) => [actorKey(event), event.actor.name])).entries()).map(
+      ([value, label]) => ({ value, label })
+    )
+  ];
 
-    const load = async () => {
-      setIsLoading(true);
-      setHasFailed(false);
-      try {
-        const [loadedGroups, loadedLink] = await Promise.all([
-          listLinkGroups(controller.signal),
-          linkId ? getLink(linkId, controller.signal) : Promise.resolve(null)
-        ]);
-        setGroups(loadedGroups);
-        setLink(loadedLink);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        logger.error(error);
-        setHasFailed(true);
-        toast.error(getErrorMessage(error, "Não foi possível carregar o link"));
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    };
-
-    load();
-    return () => controller.abort();
-  }, [linkId]);
-
-  const handleGroupCreated = (group: LinkGroup) =>
-    setGroups((current) => [...current, group].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
-
-  return { linkId, link, groups, isLoading, hasFailed, handleGroupCreated };
+  return {
+    linkId,
+    link: store.link,
+    groups: store.groups,
+    groupNames: Object.fromEntries(store.groups.map((group) => [group.id, group.name])),
+    isLoading: store.isLoading,
+    hasFailed: store.hasFailed,
+    tab,
+    events: store.events,
+    visibleEvents: store.events.filter((event) => matchesFilter(event, store.historyFilter, store.historyActor)),
+    actorOptions,
+    nextCursor: store.nextCursor,
+    hasLoadedHistory: store.hasLoadedHistory,
+    isHistoryLoading: store.isHistoryLoading,
+    isHistoryLoadingMore: store.isHistoryLoadingMore,
+    historyFilter: store.historyFilter,
+    historyActor: store.historyActor,
+    range: store.range,
+    analytics: store.analytics,
+    isAnalyticsLoading: store.isAnalyticsLoading,
+    load: store.load,
+    loadHistory: store.loadHistory,
+    loadAnalytics: store.loadAnalytics,
+    handleGroupCreated: store.addGroup,
+    handleTabChange: (next) => setSearchParams(next === "settings" ? {} : { tab: next }, { replace: true }),
+    handleRangeChange: store.setRange,
+    handleHistoryFilterChange: store.setHistoryFilter,
+    handleHistoryActorChange: store.setHistoryActor
+  };
 };
 
 export default useLinkEditorPage;

@@ -1,22 +1,50 @@
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { Suspense, lazy, useEffect } from "react";
 
 import ContentNavbar from "@components/contentNavbar";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
 import LinkForm from "./subcomponents/linkForm";
+import { Container, TabArea } from "./styles";
+import { linkEditorTabs } from "@assets/data";
+import TabPanel from "@components/tabPanel";
+import HistoryTab from "./tabs/history";
 import Loader from "@components/loader";
+import TabNav from "@components/tabNav";
 import useLinkEditorPage from "./hook";
-import { Container } from "./styles";
+
+import type { LinkEditorTab } from "@utils/types/link";
+import type { ReactNode } from "react";
+
+const tabIdPrefix = "link-editor";
+
+const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 
 const LinkEditorPage = () => {
-  const { linkId, link, groups, isLoading, hasFailed, handleGroupCreated } = useLinkEditorPage();
+  const { linkId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleTabChange } =
+    useLinkEditorPage();
   const isEditing = Boolean(linkId);
+
+  useEffect(() => {
+    load(linkId);
+  }, [linkId, load]);
+
+  const form = <LinkForm key={link?.id ?? "new"} link={link} groups={groups} onGroupCreated={handleGroupCreated} />;
+  const tabContent: Record<LinkEditorTab, ReactNode> = {
+    settings: form,
+    analytics: (
+      <Suspense fallback={<Loader label="Carregando a análise" isCentered />}>
+        <AnalyticsTab />
+      </Suspense>
+    ),
+    history: <HistoryTab />
+  };
 
   return (
     <Container>
       <ContentNavbar
-        title={isEditing ? "Editar link" : "Novo link"}
-        info="O slug é o endereço curto do link. Ele é único entre links e páginas, e aceita só letras minúsculas, números e hífen."
+        title={isEditing ? link?.title ?? "Editar link" : "Novo link"}
+        info="O slug é o endereço curto do link. Ele é único entre links e páginas, e aceita só letras minúsculas, números e hífen. Na edição, as abas mostram a análise de acessos e o histórico de alterações."
         actions={
           <LinkButton to="/links" leftIcon={<ArrowLeftIcon />}>
             Voltar
@@ -31,7 +59,15 @@ const LinkEditorPage = () => {
           actions={<LinkButton to="/links">Ir para os links</LinkButton>}
         />
       )}
-      {!isLoading && !hasFailed && <LinkForm key={link?.id ?? "new"} link={link} groups={groups} onGroupCreated={handleGroupCreated} />}
+      {!isLoading && !hasFailed && !isEditing && form}
+      {!isLoading && !hasFailed && isEditing && (
+        <TabArea>
+          <TabNav label="Seções do link" idPrefix={tabIdPrefix} items={linkEditorTabs} value={tab} onValueChange={handleTabChange} />
+          <TabPanel idPrefix={tabIdPrefix} value={tab}>
+            {tabContent[tab]}
+          </TabPanel>
+        </TabArea>
+      )}
     </Container>
   );
 };
