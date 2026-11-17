@@ -29,6 +29,12 @@ The root of `src` splits code by role: API actions, components, hooks, pages, ro
 - Each page lives in `src/pages/<page>` and declares its layout metadata (title, permissions).
 - Global state lives in `src/stores/<store>`. Local state stays in the component.
 - Helpers, types and validations live in `src/utils/functions`, `src/utils/types` and `src/utils/validations`.
+- Type declarations (`interface` and `type`) live only in `types.ts` files, never in `index.ts(x)`, `store.ts`, `table.tsx` or `theme.ts`:
+  - Components, subcomponents, tabs and sections: `types.ts` in their own folder.
+  - Pages: `hook/types.ts`, including the page store's shape. Types of `table.tsx` go in the page's `types.ts`.
+  - Global stores: `src/stores/<store>/types.ts`. Theme: `src/styles/types.ts`.
+  - Domain types shared across folders, and types inferred from Zod schemas (`z.infer`), live in `src/utils/types/<domain>`. Validation files hold only schemas.
+  - The only exception is a type that depends on a function's generic parameter and cannot exist outside it.
 
 **Folder structure:**
 
@@ -76,11 +82,14 @@ The root of `src` splits code by role: API actions, components, hooks, pages, ro
     │   └── index.tsx  # rotas e proteção
     ├── stores/
     │   ├── system/
-    │   │   └── index.ts  # tema e permissões
+    │   │   ├── index.ts  # tema e permissões
+    │   │   └── types.ts
     │   └── user/
-    │       └── index.ts  # estado global
+    │       ├── index.ts  # estado global
+    │       └── types.ts  # formato da store
     ├── styles/
-    │   └── theme.ts
+    │   ├── theme.ts
+    │   └── types.ts
     └── utils/
         ├── functions/
         │   └── index.ts
@@ -105,6 +114,7 @@ The root of `src` splits code by role: API actions, components, hooks, pages, ro
 - Each page has a `hook/` folder with `index.ts` and `types.ts`. The hook (`useUsersPage`) orchestrates the page: state, API calls, derived values and handlers.
 - The page index and its local subcomponents consume that hook instead of drilling state through props. State shared between them lives in a page store or context read by the hook, so all of them see the same value.
 - When a page grows, split it as needed into folders such as `tabs/` and `sections/` (or `steps/`, `modals/`), one folder per part, with the same structure as a component. Don't create these folders before you need them.
+- `sections/` is only for long pages read top to bottom, split into many titled content blocks that the page index renders in sequence (like the brand guide). Pieces of UI such as forms, cards, lists and modals go in `subcomponents/`, even when they fill a block of the page. A page with only a few blocks uses `subcomponents/`.
 - The loading state lives in `skeleton.tsx`, next to the index, not inside the component.
 - Columns, formatting and table setup live in `table.tsx`, next to the index.
 
@@ -478,12 +488,7 @@ export const updateUser = async (userId: string, data: Partial<User>) => {
 import { persist } from "zustand/middleware";
 import { create } from "zustand";
 
-import type { User } from "@utils/types/user";
-
-interface UserStore {
-  user: User | null;
-  setUser: (user: User | null) => void;
-}
+import type { UserStore } from "./types";
 
 const useUserStore = create<UserStore>()(
   persist(
@@ -498,10 +503,23 @@ const useUserStore = create<UserStore>()(
 export default useUserStore;
 ```
 
+### `src/stores/user/types.ts`
+
+```typescript
+import type { User } from "@utils/types/user";
+
+export interface UserStore {
+  user: User | null;
+  setUser: (user: User | null) => void;
+}
+```
+
 ## 15. Checklist before delivering
 
 - [ ] Names follow the naming table and are in English.
 - [ ] Files are in the right folder for the architecture.
+- [ ] Every `interface` and `type` lives in a `types.ts` file (or `src/utils/types`).
+- [ ] `sections/` is used only for long pages of titled blocks; UI pieces are in `subcomponents/`.
 - [ ] Local code stays inside its page or component, and shared code lives in the global folders.
 - [ ] Components follow "Folder with index, styles and types" and "Arrow with typed props".
 - [ ] Props and state are typed, with no `any`.
