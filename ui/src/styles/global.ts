@@ -28,8 +28,9 @@ const GlobalStyles = createGlobalStyle`
     }
 
     .rt-TooltipContent {
+      padding: ${theme.spacing(2.5)} ${theme.spacing(3)};
       border: 1px solid ${theme.brand.border};
-      border-radius: ${theme.radii.tight};
+      border-radius: ${theme.radii.control};
       background-color: ${theme.brand.raised};
     }
 

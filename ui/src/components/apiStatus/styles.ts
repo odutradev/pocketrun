@@ -78,12 +78,22 @@ export const Address = styled.span`
 `;
 
 export const TooltipBody = styled.span`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(0.5)};
-  padding: ${({ theme }) => theme.spacing(1)} 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: ${({ theme }) => theme.spacing(1.5)} ${({ theme }) => theme.spacing(4)};
 `;
 
-export const TooltipLine = styled.span`
-  font-size: 13px;
+export const TooltipLabel = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.brand.steelMuted};
+`;
+
+export const TooltipValue = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steel};
 `;
