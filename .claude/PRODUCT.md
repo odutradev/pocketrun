@@ -50,7 +50,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 ### 5.1 Plataforma (pronto)
 
 - Setup inicial que cria o primeiro gestor.
-- Login, cadastro e sessão do gestor (`/auth/*`).
+- Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
 - Aplicações: criar, listar, ver detalhes, editar, excluir (`/apps/*`).
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
