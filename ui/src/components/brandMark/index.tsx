@@ -44,14 +44,17 @@ const BrandMark: React.FC<BrandMarkProps> = ({
     }
   }
 
+  // A última lâmina termina de fechar em base + stagger; o canivete fica um instante fechado antes de reabrir.
+  const closedHold = timing.base + timing.stagger * 2;
+
   useEffect(() => {
     if (!isClosing) return undefined;
     const timeout = window.setTimeout(() => {
       setShownContext(targetContext);
       setIsClosing(false);
-    }, timing.base + timing.stagger);
+    }, closedHold);
     return () => window.clearTimeout(timeout);
-  }, [isClosing, targetContext, timing.base, timing.stagger]);
+  }, [isClosing, targetContext, closedHold]);
 
   const resolvePose = (): SymbolPose => {
     if (isClosing) return "closed";

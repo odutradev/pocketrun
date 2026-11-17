@@ -44,8 +44,11 @@ export const Svg = styled.svg`
   overflow: visible;
 `;
 
+// `$openAngle` é fixo por lâmina: a abertura e o loop dependem só dele, então trocar a pose
+// (fechar, abrir mais no hover, trocar de contexto) não recria a animação e a transição fica suave.
 export const Blade = styled.g<{
   $rotation: number;
+  $openAngle: number;
   $order: number;
   $pose: SymbolPose;
   $motion: SymbolMotion;
@@ -67,17 +70,17 @@ export const Blade = styled.g<{
     transition: fill ${({ theme }) => `${theme.motion.fast}ms ${theme.motion.easing.standard}`};
   }
 
-  ${({ theme, $motion, $rotation, $order, $delay }) =>
+  ${({ theme, $motion, $openAngle, $order, $delay }) =>
     $motion === "intro" &&
     css`
-      animation: ${bladeOpen($rotation)} ${theme.motion.expressive}ms ${theme.motion.easing.snap}
+      animation: ${bladeOpen($openAngle)} ${theme.motion.expressive}ms ${theme.motion.easing.snap}
         ${$delay + $order * theme.motion.stagger}ms backwards;
     `}
 
-  ${({ theme, $motion, $rotation, $order }) =>
+  ${({ theme, $motion, $openAngle, $order }) =>
     $motion === "loop" &&
     css`
-      animation: ${bladeLoop($rotation)} ${theme.motion.loop}ms ${theme.motion.easing.standard}
+      animation: ${bladeLoop($openAngle)} ${theme.motion.loop}ms ${theme.motion.easing.standard}
         ${$order * theme.motion.stagger}ms infinite both;
     `}
 

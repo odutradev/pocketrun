@@ -71,6 +71,7 @@ const BrandSymbol: React.FC<BrandSymbolProps> = ({
             <Blade
               key={isSnapping ? `${tool}-${snapKey}` : tool}
               $rotation={rotationFor(pose, angle, index)}
+              $openAngle={angle}
               $order={bladeOrder.indexOf(tool)}
               $pose={pose}
               $motion={motion}
