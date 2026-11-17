@@ -1,31 +1,47 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
-export const Grid = styled.ul`
-  display: grid;
-  gap: ${({ theme }) => theme.spacing(4)};
-  margin: 0;
-  padding: 0;
-  list-style: none;
+export const Grid = styled.ul<{ $isCompact: boolean }>`
+  ${({ theme, $isCompact }) => css`
+    display: grid;
+    gap: ${$isCompact ? 0 : theme.spacing(4)};
+    margin: 0;
+    padding: 0;
+    list-style: none;
 
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
+    ${$isCompact &&
+    css`
+      overflow: hidden;
+      border: 1px solid ${theme.brand.border};
+      border-radius: ${theme.radii.box};
+      background-color: ${theme.brand.surface};
+    `}
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      grid-template-columns: ${$isCompact ? "1fr" : "repeat(auto-fill, minmax(300px, 1fr))"};
+    }
+  `}
 `;
 
-export const CardItem = styled.li`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
-  min-width: 0;
-  padding: ${({ theme }) => theme.spacing(5)};
-  border: 1px solid ${({ theme }) => theme.brand.border};
-  border-radius: ${({ theme }) => theme.radii.box};
-  background-color: ${({ theme }) => theme.brand.surface};
-  transition: border-color ${({ theme }) => `${theme.motion.fast}ms ${theme.motion.easing.standard}`};
+export const CardItem = styled.li<{ $isCompact: boolean }>`
+  ${({ theme, $isCompact }) => css`
+    display: flex;
+    flex-direction: column;
+    gap: ${theme.spacing($isCompact ? 2 : 3)};
+    min-width: 0;
+    padding: ${$isCompact ? `${theme.spacing(3.5)} ${theme.spacing(4)}` : theme.spacing(5)};
+    border: ${$isCompact ? 0 : `1px solid ${theme.brand.border}`};
+    border-radius: ${$isCompact ? 0 : theme.radii.box};
+    background-color: ${theme.brand.surface};
+    transition: border-color ${theme.motion.fast}ms ${theme.motion.easing.standard};
 
-  &:hover {
-    border-color: ${({ theme }) => theme.brand.strongBorder};
-  }
+    & + & {
+      border-top: ${$isCompact ? `1px solid ${theme.brand.border}` : undefined};
+    }
+
+    &:hover {
+      border-color: ${theme.brand.strongBorder};
+    }
+  `}
 `;
 
 export const Header = styled.div`
@@ -33,9 +49,24 @@ export const Header = styled.div`
   align-items: flex-start;
   justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(3)};
+
+  > :last-child {
+    flex-shrink: 0;
+  }
+`;
+
+export const Usage = styled.div<{ $isCompact: boolean }>`
+  display: flex;
+  flex-direction: ${({ $isCompact }) => ($isCompact ? "row" : "column")};
+  flex-wrap: wrap;
+  align-items: ${({ $isCompact }) => ($isCompact ? "baseline" : "flex-start")};
+  gap: ${({ theme, $isCompact }) => ($isCompact ? theme.spacing(2) : 0)};
+  min-width: 0;
 `;
 
 export const Title = styled.h3`
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   margin: 0;
   font-size: 16px;
@@ -79,20 +110,23 @@ export const Group = styled.span`
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
-export const Footer = styled.div`
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-top: auto;
-  padding-top: ${({ theme }) => theme.spacing(3)};
-  border-top: 1px solid ${({ theme }) => theme.brand.border};
+export const Footer = styled.div<{ $isCompact: boolean }>`
+  ${({ theme, $isCompact }) => css`
+    display: flex;
+    align-items: ${$isCompact ? "center" : "flex-end"};
+    justify-content: space-between;
+    gap: ${theme.spacing(3)};
+    margin-top: auto;
+    padding-top: ${$isCompact ? 0 : theme.spacing(3)};
+    border-top: ${$isCompact ? 0 : `1px solid ${theme.brand.border}`};
+  `}
 `;
 
-export const Clicks = styled.p`
+export const Clicks = styled.p<{ $isCompact: boolean }>`
   margin: 0;
   font-family: ${({ theme }) => theme.brand.fonts.display};
-  font-size: 22px;
+  margin-bottom: ${({ theme, $isCompact }) => ($isCompact ? 0 : theme.spacing(1))};
+  font-size: ${({ $isCompact }) => ($isCompact ? "15px" : "22px")};
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 `;
@@ -103,7 +137,7 @@ export const ClicksLabel = styled.span`
 `;
 
 export const Rule = styled.p`
-  margin: ${({ theme }) => theme.spacing(1)} 0 0;
+  margin: 0;
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;

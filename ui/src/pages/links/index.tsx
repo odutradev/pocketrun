@@ -1,5 +1,6 @@
 import { DashboardIcon, ListBulletIcon, MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "styled-components";
 import { useEffect } from "react";
 
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
@@ -9,6 +10,7 @@ import { Container, GroupFilter, Toolbar } from "./styles";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
 import LinkCards from "./subcomponents/linkCards";
+import useMediaQuery from "@hooks/useMediaQuery";
 import EmptyState from "@components/emptyState";
 import useClipboard from "@hooks/useClipboard";
 import DataTable from "@components/dataTable";
@@ -24,6 +26,8 @@ import type { Link, LinksView } from "@utils/types/link";
 
 const LinksPage = () => {
   const navigate = useNavigate();
+  const { breakpoints } = useTheme();
+  const isMobile = !useMediaQuery(`(min-width: ${breakpoints.md})`);
   const { copy, isCopied } = useClipboard();
   const {
     view,
@@ -123,8 +127,8 @@ const LinksPage = () => {
           </Toolbar>
           {filteredLinks.length === 0 ? (
             <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca e o grupo escolhidos." />
-          ) : view === "cards" ? (
-            <LinkCards links={filteredLinks} {...linkOptions} />
+          ) : view === "cards" || isMobile ? (
+            <LinkCards links={filteredLinks} isCompact={view === "list"} {...linkOptions} />
           ) : (
             <DataTable
               caption={`Links, ${pluralize(filteredLinks.length, "item", "itens")}`}
