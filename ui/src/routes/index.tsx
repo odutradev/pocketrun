@@ -8,6 +8,9 @@ import appDetailsMetadata from "@pages/appDetails/metadata";
 import authMetadata from "@pages/auth/metadata";
 import brandMetadata from "@pages/brand/metadata";
 import homeMetadata from "@pages/home/metadata";
+import kvMetadata from "@pages/kv/metadata";
+import linksMetadata from "@pages/links/metadata";
+import pagesMetadata from "@pages/pages/metadata";
 import profileMetadata from "@pages/profile/metadata";
 import setupMetadata from "@pages/setup/metadata";
 import usersMetadata from "@pages/users/metadata";
@@ -20,6 +23,9 @@ const AppDetailsPage = lazy(() => import("@pages/appDetails"));
 const BrandPage = lazy(() => import("@pages/brand"));
 const UsersPage = lazy(() => import("@pages/users"));
 const ProfilePage = lazy(() => import("@pages/profile"));
+const KvPage = lazy(() => import("@pages/kv"));
+const PagesPage = lazy(() => import("@pages/pages"));
+const LinksPage = lazy(() => import("@pages/links"));
 
 const pageRoute = (path: string, Page: LazyExoticComponent<ComponentType>, metadata: PageMetadata) => ({
   path,
@@ -41,6 +47,9 @@ const router = createBrowserRouter([
       pageRoute("/auth", AuthPage, authMetadata),
       pageRoute("/setup", SetupPage, setupMetadata),
       pageRoute("/apps/:applicationId", AppDetailsPage, appDetailsMetadata),
+      pageRoute("/kv", KvPage, kvMetadata),
+      pageRoute("/pages", PagesPage, pagesMetadata),
+      pageRoute("/links", LinksPage, linksMetadata),
       pageRoute("/users", UsersPage, usersMetadata),
       pageRoute("/profile", ProfilePage, profileMetadata),
       { path: "*", element: <Navigate to="/" replace /> }
