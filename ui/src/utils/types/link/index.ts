@@ -5,6 +5,14 @@ export type LinkMode = "active" | "inactive" | "period" | "clicks";
 
 export type LinkState = "active" | "inactive" | "scheduled" | "expired" | "exhausted";
 
+export type PeriodPreset = "1h" | "1d" | "7d" | "30d" | "custom";
+
+export interface PeriodPresetOption {
+  value: PeriodPreset;
+  label: string;
+  hours: number | null;
+}
+
 export type SlugUnavailableReason = "invalid" | "reserved" | "taken";
 
 export interface Link {

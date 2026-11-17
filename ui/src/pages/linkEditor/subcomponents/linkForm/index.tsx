@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 
-import { fromDateTimeInput, randomSlug, toDateTimeInput } from "@utils/functions";
+import { fromDateTimeInput, hoursFromNow, randomSlug, toDateTimeInput } from "@utils/functions";
+import { clickLimitRange, defaultPeriodHours, randomSlugLength } from "@assets/config";
 import { Actions, Form, Legend, ModeHint, Pair, Section } from "./styles";
 import SegmentedControl from "@components/segmentedControl";
 import { linkFormSchema } from "@utils/validations/link";
 import { createLink, updateLink } from "@actions/links";
-import { randomSlugLength } from "@assets/config";
+import PeriodPicker from "./subcomponents/periodPicker";
 import SlugField from "./subcomponents/slugField";
 import LinkButton from "@components/linkButton";
+import RangeField from "@components/rangeField";
 import { linkModeOptions } from "@assets/data";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
@@ -63,7 +65,7 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
       mode: link?.mode ?? "active",
       startsAt: link?.startsAt ? toDateTimeInput(link.startsAt) : "",
       endsAt: link?.endsAt ? toDateTimeInput(link.endsAt) : "",
-      maxClicks: link?.maxClicks ? String(link.maxClicks) : ""
+      maxClicks: String(link?.maxClicks ?? clickLimitRange.initial)
     },
     onSubmit: (formValues: LinkFormValues) => execute(toPayload(formValues))
   });
@@ -121,41 +123,37 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
           label="Estado do link"
           options={linkModeOptions}
           value={values.mode}
-          onValueChange={(mode) => setFieldValue("mode", mode)}
+          onValueChange={(mode) => {
+            setFieldValue("mode", mode);
+            if (mode === "period" && !values.endsAt) {
+              setFieldValue("endsAt", hoursFromNow(defaultPeriodHours));
+            }
+          }}
           isFullWidth
         />
         <ModeHint>{modeHints[values.mode]}</ModeHint>
         {values.mode === "period" && (
-          <Pair>
-            <Input
-              label="Início (opcional)"
-              name="startsAt"
-              type="datetime-local"
-              value={values.startsAt}
-              onChange={handleChange}
-              error={errors.startsAt}
-            />
-            <Input
-              label="Fim"
-              name="endsAt"
-              type="datetime-local"
-              value={values.endsAt}
-              onChange={handleChange}
-              error={errors.endsAt}
-            />
-          </Pair>
+          <PeriodPicker
+            startsAt={values.startsAt}
+            endsAt={values.endsAt}
+            initialPreset={link?.mode === "period" ? "custom" : "7d"}
+            startsAtError={errors.startsAt}
+            endsAtError={errors.endsAt}
+            onChange={({ startsAt, endsAt }) => {
+              setFieldValue("startsAt", startsAt);
+              setFieldValue("endsAt", endsAt);
+            }}
+          />
         )}
         {values.mode === "clicks" && (
-          <Input
+          <RangeField
             label="Limite de acessos"
-            name="maxClicks"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            placeholder="100"
-            hint={link ? `Este link já teve ${link.clicks} ${link.clicks === 1 ? "acesso" : "acessos"}.` : undefined}
-            value={values.maxClicks}
-            onChange={handleChange}
+            min={clickLimitRange.min}
+            max={clickLimitRange.max}
+            unit="acessos"
+            value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
+            onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
+            hint={`Arraste até ${clickLimitRange.max} ou digite qualquer valor no campo ao lado, inclusive acima de ${clickLimitRange.max}.${link ? ` Este link já teve ${link.clicks} ${link.clicks === 1 ? "acesso" : "acessos"}.` : ""}`}
             error={errors.maxClicks}
           />
         )}

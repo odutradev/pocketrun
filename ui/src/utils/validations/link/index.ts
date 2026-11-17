@@ -31,7 +31,7 @@ export const linkFormSchema = z
       }
     }
     if (values.mode === "clicks" && !(Number.parseInt(values.maxClicks, 10) >= 1)) {
-      context.addIssue({ code: "custom", path: ["maxClicks"], message: "Informe quantos acessos o link aceita" });
+      context.addIssue({ code: "custom", path: ["maxClicks"], message: "O limite precisa ser de pelo menos 1 acesso" });
     }
   });
 

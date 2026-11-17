@@ -44,6 +44,11 @@ export const toDateTimeInput = (value: string): string => {
 
 export const fromDateTimeInput = (value: string): string => new Date(value).toISOString();
 
+export const hoursFromNow = (hours: number): string => toDateTimeInput(new Date(Date.now() + hours * 3600000).toISOString());
+
+export const formatPeriodDate = (value: string): string =>
+  new Date(value).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
 export const publicLinkUrl = (slug: string): string => `${apiUrl}/${slug}`;
 
 export const parseOrigins = (value: string): string[] => {

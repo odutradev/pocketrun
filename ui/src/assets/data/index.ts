@@ -1,7 +1,7 @@
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { LinkMode, LinkState, SlugUnavailableReason } from "@utils/types/link";
+import type { LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -561,3 +561,11 @@ export const slugReasonMessages: Record<SlugUnavailableReason, string> = {
   reserved: "Esse slug é reservado pelo sistema.",
   taken: "Esse slug já está em uso por outro link ou página."
 };
+
+export const periodPresetOptions: PeriodPresetOption[] = [
+  { value: "1h", label: "1 hora", hours: 1 },
+  { value: "1d", label: "24 horas", hours: 24 },
+  { value: "7d", label: "7 dias", hours: 168 },
+  { value: "30d", label: "30 dias", hours: 720 },
+  { value: "custom", label: "Escolher datas", hours: null }
+];
