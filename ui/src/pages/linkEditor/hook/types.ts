@@ -6,4 +6,5 @@ export interface UseLinkEditorPageReturn {
   groups: LinkGroup[];
   isLoading: boolean;
   hasFailed: boolean;
+  handleGroupCreated: (group: LinkGroup) => void;
 }

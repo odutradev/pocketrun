@@ -9,7 +9,7 @@ import useLinkEditorPage from "./hook";
 import { Container } from "./styles";
 
 const LinkEditorPage = () => {
-  const { linkId, link, groups, isLoading, hasFailed } = useLinkEditorPage();
+  const { linkId, link, groups, isLoading, hasFailed, handleGroupCreated } = useLinkEditorPage();
   const isEditing = Boolean(linkId);
 
   return (
@@ -31,7 +31,7 @@ const LinkEditorPage = () => {
           actions={<LinkButton to="/links">Ir para os links</LinkButton>}
         />
       )}
-      {!isLoading && !hasFailed && <LinkForm key={link?.id ?? "new"} link={link} groups={groups} />}
+      {!isLoading && !hasFailed && <LinkForm key={link?.id ?? "new"} link={link} groups={groups} onGroupCreated={handleGroupCreated} />}
     </Container>
   );
 };

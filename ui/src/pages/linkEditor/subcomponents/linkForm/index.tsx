@@ -1,9 +1,12 @@
+import { PlusIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 
-import { fromDateTimeInput, hoursFromNow, randomSlug, toDateTimeInput } from "@utils/functions";
-import { clickLimitRange, defaultPeriodHours, randomSlugLength } from "@assets/config";
-import { Actions, Form, Legend, ModeHint, Pair, Section } from "./styles";
+import { Actions, Form, GroupAction, GroupPicker, Legend, ModeHint, Pair, Section } from "./styles";
+import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
+import { clickLimitRange, defaultPeriodHours } from "@assets/config";
+import CreateGroupDialog from "./subcomponents/createGroupDialog";
+import DestinationField from "./subcomponents/destinationField";
 import SegmentedControl from "@components/segmentedControl";
 import { linkFormSchema } from "@utils/validations/link";
 import { createLink, updateLink } from "@actions/links";
@@ -40,7 +43,8 @@ const toPayload = (values: LinkFormValues): LinkPayload => ({
   maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
 });
 
-const LinkForm = ({ link, groups }: LinkFormProps) => {
+const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const navigate = useNavigate();
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ status: "idle" });
   const handleSlugCheck = useCallback((check: SlugCheck) => setSlugCheck(check), []);
@@ -59,7 +63,7 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
     schema: linkFormSchema,
     initialValues: {
       title: link?.title ?? "",
-      slug: link?.slug ?? randomSlug(randomSlugLength),
+      slug: link?.slug ?? "",
       url: link?.url ?? "",
       groupId: link?.groupId ?? "",
       mode: link?.mode ?? "active",
@@ -88,13 +92,20 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
             onChange={handleChange}
             error={errors.title}
           />
-          <Select
-            label="Grupo"
-            options={groupOptions}
-            value={values.groupId}
-            hint="Crie e renomeie grupos pelo botão Grupos na lista de links."
-            onValueChange={(groupId) => setFieldValue("groupId", groupId)}
-          />
+          <GroupPicker>
+            <Select
+              label="Grupo"
+              options={groupOptions}
+              value={values.groupId}
+              hint="Opcional. Só organiza a lista de links."
+              onValueChange={(groupId) => setFieldValue("groupId", groupId)}
+            />
+            <GroupAction>
+              <Button variant="secondary" leftIcon={<PlusIcon />} onClick={() => setIsCreatingGroup(true)}>
+                Novo grupo
+              </Button>
+            </GroupAction>
+          </GroupPicker>
         </Pair>
         <Pair>
           <SlugField
@@ -104,17 +115,7 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
             onChange={(slug) => setFieldValue("slug", slug)}
             onCheckChange={handleSlugCheck}
           />
-          <Input
-            label="URL de destino"
-            name="url"
-            type="url"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="https://exemplo.com/promo"
-            value={values.url}
-            onChange={handleChange}
-            error={errors.url}
-          />
+          <DestinationField value={values.url} error={errors.url} onChange={(url) => setFieldValue("url", url)} />
         </Pair>
       </Section>
       <Section>
@@ -169,6 +170,14 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
           {link ? "Salvar alterações" : "Criar link"}
         </Button>
       </Actions>
+      <CreateGroupDialog
+        isOpen={isCreatingGroup}
+        onClose={() => setIsCreatingGroup(false)}
+        onCreated={(group) => {
+          onGroupCreated(group);
+          setFieldValue("groupId", group.id);
+        }}
+      />
     </Form>
   );
 };

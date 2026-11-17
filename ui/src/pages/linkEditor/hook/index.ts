@@ -44,7 +44,10 @@ const useLinkEditorPage = (): UseLinkEditorPageReturn => {
     return () => controller.abort();
   }, [linkId]);
 
-  return { linkId, link, groups, isLoading, hasFailed };
+  const handleGroupCreated = (group: LinkGroup) =>
+    setGroups((current) => [...current, group].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+
+  return { linkId, link, groups, isLoading, hasFailed, handleGroupCreated };
 };
 
 export default useLinkEditorPage;
