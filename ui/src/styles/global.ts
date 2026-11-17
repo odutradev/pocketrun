@@ -5,6 +5,8 @@ const GlobalStyles = createGlobalStyle`
   ${({ theme }) => `
     html {
       color-scheme: dark;
+      /* Reserva o espaço da barra de rolagem para a borda das páginas não mudar entre telas curtas e longas. */
+      scrollbar-gutter: stable;
     }
 
     body {
