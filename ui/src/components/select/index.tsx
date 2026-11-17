@@ -15,13 +15,13 @@ const toItemValue = (value: string) => (value === "" ? emptyValue : value);
 
 const fromItemValue = (value: string) => (value === emptyValue ? "" : value);
 
-const Select = ({ label, options, value, onValueChange, name, id, placeholder, disabled, hint, error, action }: SelectProps) => {
+const Select = ({ label, isLabelHidden, options, value, onValueChange, name, id, placeholder, disabled, hint, error, action }: SelectProps) => {
   const generatedId = useId();
   const selectId = id ?? generatedId;
   const { describedBy } = getFieldIds(selectId, { hasHint: Boolean(hint), hasError: Boolean(error) });
 
   return (
-    <FormField controlId={selectId} label={label} hint={hint} error={error}>
+    <FormField controlId={selectId} label={label} isLabelHidden={isLabelHidden} hint={hint} error={error}>
       <Control $hasError={Boolean(error)}>
         <RadixSelect.Root
           name={name}

@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
+
 export interface SegmentedOption<TValue extends string> {
   value: TValue;
   label: string;
+  icon?: ReactNode;
 }
 
 export interface SegmentedControlProps<TValue extends string> {
@@ -9,4 +12,5 @@ export interface SegmentedControlProps<TValue extends string> {
   value: TValue;
   onValueChange: (value: TValue) => void;
   isFullWidth?: boolean;
+  isIconOnly?: boolean;
 }

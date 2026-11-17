@@ -13,6 +13,7 @@ export interface SelectAction {
 
 export interface SelectProps {
   label: string;
+  isLabelHidden?: boolean;
   options: SelectOption[];
   value: string;
   onValueChange: (value: string) => void;

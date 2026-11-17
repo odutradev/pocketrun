@@ -7,7 +7,8 @@ const SegmentedControl = <TValue extends string>({
   options,
   value,
   onValueChange,
-  isFullWidth = false
+  isFullWidth = false,
+  isIconOnly = false
 }: SegmentedControlProps<TValue>): React.ReactElement => (
   <Group role="group" aria-label={label} $isFullWidth={isFullWidth}>
     {options.map((option) => (
@@ -15,11 +16,15 @@ const SegmentedControl = <TValue extends string>({
         key={option.value}
         type="button"
         aria-pressed={option.value === value}
+        aria-label={isIconOnly ? option.label : undefined}
+        title={isIconOnly ? option.label : undefined}
         onClick={() => onValueChange(option.value)}
         $isActive={option.value === value}
         $isFullWidth={isFullWidth}
+        $isIconOnly={isIconOnly}
       >
-        {option.label}
+        {option.icon}
+        {!isIconOnly && option.label}
       </Segment>
     ))}
   </Group>
