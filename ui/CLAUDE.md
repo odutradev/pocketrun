@@ -4,6 +4,8 @@ This guide defines this frontend's architecture, component, state and code rules
 
 **Directive:** before creating or refactoring pages, components, hooks or stores, read this guide and follow exactly the structure and standards described here. Before creating a component or hook, look for an existing equivalent in the project.
 
+**Design:** `ui/DESIGN.md` defines how the panel looks: principles, theme tokens, component rules, per-tool context and the component inventory. Read it before designing or changing any screen, section or component.
+
 ## 1. Stack
 
 | Item | Choice |
@@ -519,4 +521,5 @@ export default useUserStore;
 - [ ] Principle "Mobile-first" applied.
 - [ ] Principle "Accessibility (WCAG)" applied.
 - [ ] Principle "Theme colors and spacing" applied.
+- [ ] UI follows `ui/DESIGN.md`, and new shared components were added to its inventory.
 - [ ] Principle "Persisted stores" applied.
