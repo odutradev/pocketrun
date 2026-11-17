@@ -76,6 +76,14 @@ npm run dev
 
 Use `npm run dev:api` ou `npm run dev:web` para subir um app só, e `npm run build` para compilar os dois.
 
+### Resetando o banco
+
+```bash
+npm run reset
+```
+
+Apaga todo o banco definido em `MONGODB_NAME` e recria os índices. Com `npm run reset:admin` (ou `npm run reset -- --admin`), também cria o superadmin `admin@pocketrun.local` com senha `1234`, pulando o setup. O comando se recusa a rodar com `APP_ENV=production`.
+
 ### Rodando com Docker Compose
 
 ```bash
