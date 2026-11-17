@@ -1,10 +1,24 @@
 import styled from "styled-components";
 
+// No celular a barra do topo fica acima do conteúdo; a partir do desktop, o menu lateral fica à esquerda.
 export const Shell = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background-color: ${({ theme }) => theme.brand.graphite};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+`;
+
+export const Content = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 `;
 
 export const Main = styled.main`
@@ -18,6 +32,6 @@ export const Main = styled.main`
   padding: ${({ theme }) => `${theme.spacing(8)} ${theme.spacing(4)} ${theme.spacing(16)}`};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: ${({ theme }) => `${theme.spacing(10)} ${theme.spacing(6)} ${theme.spacing(20)}`};
+    padding: ${({ theme }) => `${theme.spacing(10)} ${theme.spacing(8)} ${theme.spacing(20)}`};
   }
 `;

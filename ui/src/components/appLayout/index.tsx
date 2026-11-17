@@ -6,12 +6,12 @@ import { ping } from "@actions/health";
 import { getSetupStatus } from "@actions/setup";
 import { healthCheckInterval } from "@assets/config";
 import Alert from "@components/alert";
-import Navbar from "@components/navbar";
+import Sidebar from "@components/sidebar";
 import useSystemStore from "@stores/system";
 import { withContext } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
 
-import { Main, Shell } from "./styles";
+import { Content, Main, Shell } from "./styles";
 import type { RouteMatchHandle } from "./types";
 
 const logger = createLocalLogger("appLayout");
@@ -61,15 +61,17 @@ const AppLayout: React.FC = () => {
   return (
     <ThemeProvider theme={contextTheme}>
       <Shell>
-        <Navbar />
-        {apiStatus === "offline" && (
-          <Alert tone="error" title="A API não responde." isBanner>
-            Nova tentativa a cada {healthCheckInterval / 1000} segundos. Até lá, nada é salvo.
-          </Alert>
-        )}
-        <Main>
-          <Outlet />
-        </Main>
+        <Sidebar />
+        <Content>
+          {apiStatus === "offline" && (
+            <Alert tone="error" title="A API não responde." isBanner>
+              Nova tentativa a cada {healthCheckInterval / 1000} segundos. Até lá, nada é salvo.
+            </Alert>
+          )}
+          <Main>
+            <Outlet />
+          </Main>
+        </Content>
       </Shell>
     </ThemeProvider>
   );
