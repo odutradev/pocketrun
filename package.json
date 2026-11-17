@@ -20,7 +20,9 @@
     "build:api": "cd api && go build -o bin/api ./cmd/api",
     "build:web": "npm --prefix ui run build",
     "lint": "npm --prefix ui run lint",
-    "up": "docker compose up -d --build"
+    "up": "docker compose up -d --build",
+    "reset": "cd api && go run ./cmd/reset",
+    "reset:admin": "cd api && go run ./cmd/reset --admin"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"
