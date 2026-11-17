@@ -2,8 +2,8 @@ import { PlusIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 
-import { Actions, Form, GroupAction, GroupPicker, Legend, ModeHint, Pair, Section } from "./styles";
 import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
+import { Actions, Form, Legend, ModeHint, Pair, Section } from "./styles";
 import { clickLimitRange, defaultPeriodHours } from "@assets/config";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import DestinationField from "./subcomponents/destinationField";
@@ -92,19 +92,13 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
             onChange={handleChange}
             error={errors.title}
           />
-          <GroupPicker>
-            <Select
-              label="Grupo *"
-              options={groupOptions}
-              value={values.groupId}
-              onValueChange={(groupId) => setFieldValue("groupId", groupId)}
-            />
-            <GroupAction>
-              <Button variant="secondary" leftIcon={<PlusIcon />} onClick={() => setIsCreatingGroup(true)}>
-                Novo grupo
-              </Button>
-            </GroupAction>
-          </GroupPicker>
+          <Select
+            label="Grupo *"
+            options={groupOptions}
+            value={values.groupId}
+            onValueChange={(groupId) => setFieldValue("groupId", groupId)}
+            action={{ label: "Novo grupo", icon: <PlusIcon />, onSelect: () => setIsCreatingGroup(true) }}
+          />
         </Pair>
         <Pair>
           <SlugField

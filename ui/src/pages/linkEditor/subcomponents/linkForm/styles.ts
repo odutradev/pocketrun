@@ -51,13 +51,3 @@ export const Actions = styled.div`
   gap: ${({ theme }) => theme.spacing(2)};
 `;
 
-export const GroupPicker = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: ${({ theme }) => theme.spacing(2)};
-`;
-
-export const GroupAction = styled.div`
-  padding-top: 27px;
-`;
