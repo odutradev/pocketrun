@@ -60,6 +60,15 @@ export const Field = styled.input`
   &:disabled {
     cursor: not-allowed;
   }
+
+  /* O autofill do navegador pinta o campo de azul; a transição longa segura o fundo transparente da moldura. */
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: ${({ theme }) => theme.brand.steel};
+    caret-color: ${({ theme }) => theme.brand.steel};
+    transition: background-color 600000s 0s, color 600000s 0s;
+  }
 `;
 
 export const Trailing = styled.span`
