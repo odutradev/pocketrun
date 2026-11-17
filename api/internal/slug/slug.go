@@ -35,21 +35,6 @@ var (
 
 var pattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
-var reserved = map[string]bool{
-	"admin":    true,
-	"api":      true,
-	"apps":     true,
-	"auth":     true,
-	"healthz":  true,
-	"kv":       true,
-	"links":    true,
-	"pages":    true,
-	"ping":     true,
-	"setup":    true,
-	"static":   true,
-	"validate": true,
-}
-
 type Entry struct {
 	Slug      string        `bson:"_id"`
 	Kind      Kind          `bson:"kind"`
@@ -67,8 +52,17 @@ func Validate(value string) error {
 	if len(value) == 0 || len(value) > MaxLength || !pattern.MatchString(value) {
 		return ErrInvalidSlug
 	}
-	if reserved[value] {
+	if isReserved(value) {
 		return ErrReservedSlug
 	}
 	return nil
+}
+
+func isReserved(value string) bool {
+	switch value {
+	case "admin", "api", "apps", "auth", "healthz", "kv", "links", "pages", "ping", "setup", "static", "validate":
+		return true
+	default:
+		return false
+	}
 }
