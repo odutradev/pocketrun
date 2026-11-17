@@ -64,7 +64,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - The sorted column is marked with `aria-sort`.
   - A selected row uses a soft tint plus a 3 px inset stroke.
   - Bulk actions appear in a bar while rows are selected.
-  - Charts use the tool color with a soft area fill. Other series use neutral steel lines. Every chart has a text `aria-label`.
+  - Charts use Recharts, loaded lazily with the screen that needs them. Series colors come from `brand.chart` (clicks green, visitors blue, devices green/blue/pink in fixed order), validated for color blindness on the dark surface; a color follows its entity, never its rank. The first series gets a soft area fill, the rest are 2 px lines. Two or more series always have a legend, tooltips use the raised surface, and grids are dashed and recessive. Rankings use horizontal share bars instead of pies; the donut is only for a small fixed set (devices). Every chart has a text `aria-label` or a legend that names it.
 - **Navigation:**
   - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
   - Tool tabs are underline tabs; inside a tool the active underline uses the tool color.
@@ -117,7 +117,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Select (themed dropdown on Radix; never a native `<select>`, whose list the OS paints white) | `@components/select` |
 | Number with a slider across the field and an exact-value input at the end (a manual value above the max stretches the slider; dragging it down brings back the default range) | `@components/rangeField` |
 | Settings row with switch | `@components/switchField` |
-| 2–4 views of the same content | `@components/segmentedControl` |
+| 2–4 views of the same content (with `isIconOnly` and an `icon` per option for a two-icon view toggle such as list or cards) | `@components/segmentedControl` |
 | Custom field (label, hint, error frame) | `@components/formField` |
 | Status or info pill | `@components/badge` |
 | Token or document validity | `@components/expiryBadge` |

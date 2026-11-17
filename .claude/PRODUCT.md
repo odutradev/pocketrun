@@ -82,8 +82,11 @@ Ainda não trazido do PocketDB: upload de arquivos.
 
 Links (pronto):
 
-- Lista global de links com busca, filtro por grupo, estado, contagem de acessos, cópia da URL pública e exclusão.
-- Uma só página para criar e editar (`/links/new` e `/links/{id}/edit`): título, slug, URL de destino, grupo e ativação.
+- Lista global de links com busca, filtro por grupo, estado, contagem de acessos, cópia da URL pública e exclusão. Mostra em lista ou em cards, num seletor de dois ícones que fica lembrado no navegador.
+- Uma só página para criar e editar (`/links/new` e `/links/{id}/edit`): título, slug, URL de destino, grupo e ativação. Na edição, abas **Configuração**, **Análise** e **Histórico** (a aba fica na URL, `?tab=`).
+- Histórico de alterações: toda criação, edição e exclusão grava quem alterou (nome e e-mail copiados no momento) e o antes e depois de cada campo. O sistema também assina eventos: fim do período, limite de acessos atingido e saída do grupo quando ele é excluído. O histórico continua depois que o link é excluído.
+- Análise de acessos: cada abertura grava data, origem (só o domínio), dispositivo, sistema, navegador e um visitante anônimo (hash de IP e navegador com um sal que troca todo dia; o IP nunca é guardado). Robôs e prévias de link (WhatsApp, Slack e afins) ficam fora dos números. As aberturas são guardadas por 12 meses e somem quando o link é excluído.
+- Painel de análise com período (24h, 7, 30, 90 dias ou tudo): cliques, visitantes únicos e média por dia comparados ao período anterior, último clique, progresso do limite ou do período, gráfico de cliques com marcas nas alterações do link, mapa de calor por dia e hora, origens, dispositivos, sistemas, navegadores e exportação em CSV. O contador de acessos que limita o link continua contando todas as aberturas, robôs incluídos.
 - Slug personalizado ou id aleatório (botão de sortear). A disponibilidade é verificada sozinha, com um pequeno atraso depois que o gestor para de digitar.
 - Ativação: **ativo**, **desativado**, **por período** (fim obrigatório, início opcional) ou **por acessos** (ativo até atingir o número de aberturas). Fora da regra, o link responde 404 e o slug continua reservado.
 - Grupos de links criados, renomeados e excluídos pelo botão Grupos da lista.
@@ -96,7 +99,7 @@ Páginas (planejado):
 - Grupos de páginas próprios, com a mesma regra dos grupos de links.
 - Ativar ou desativar uma página na hora.
 
-Analytics:
+Analytics de páginas (planejado):
 
 - Visualizações por dia nos últimos 14 dias (gráfico de área).
 - Tempo médio e total na página, a partir de pings de atividade enviados pela página publicada.
