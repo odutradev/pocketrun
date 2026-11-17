@@ -29,6 +29,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 │   └── src  # frontend code
 ├── .env.example
 ├── docker-compose.yml
+├── docker-compose.override.yml
 └── package.json
 ```
 
@@ -85,11 +86,12 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 
 ### docker-compose
 
-- One `docker-compose.yml` at the root, with one service per app plus the support services.
+- One `docker-compose.yml` at the root, with one service per app plus the support services. It is the file Dokploy deploys (`-f docker-compose.yml`).
 
 - Every service uses `restart: unless-stopped` and the same `app-network` bridge network.
 - Inside the network, apps reach services by name (`redis://redis:6379`), never `localhost`.
-- Published ports use a variable with a default: `"${PORT:-5000}:80"`. Secrets have no default.
+- `docker-compose.yml` never publishes host ports: services use `expose: ["80"]` and Traefik routes by domain. Publishing a host port in production collides with other services on the server (`port is already allocated`).
+- Host ports for local runs live only in `docker-compose.override.yml`, which `docker compose up` loads automatically and Dokploy ignores. They use a variable with a default: `"${PORT:-5000}:80"`. Secrets have no default.
 - `depends_on` sets the startup order: support services before the API and the API before the frontend.
 - Every new variable goes into `.env.example` and into the compose service in the same commit.
 
@@ -182,8 +184,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - "${PORT:-5000}:80"
+    expose:
+      - "80"
     environment:
       - PORT=80
       - APP_ENV=production
@@ -195,8 +197,8 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
+    expose:
+      - "80"
     depends_on:
       - api
     networks:
@@ -205,6 +207,18 @@ services:
 networks:
   app-network:
     driver: bridge
+```
+
+#### `docker-compose.override.yml`
+
+```yaml
+services:
+  api:
+    ports:
+      - "${PORT:-5000}:80"
+  ui:
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
 ```
 
 #### `ui/nginx.conf`
