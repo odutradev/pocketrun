@@ -4,6 +4,8 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 
 **Directive:** before changing an app, read its guide: `api/CLAUDE.md` for the API and `ui/CLAUDE.md` for the frontend. Each app's code, architecture and naming rules live there.
 
+**Product:** `.claude/PRODUCT.md` describes what PocketRun is, its concepts, modules and roadmap. Read it before designing a feature or writing user-facing text.
+
 **Reply language:** always talk to the user in Brazilian Portuguese (pt-BR): answers, explanations, questions, plans and summaries. This guide is written in English only because AI models follow English instructions more reliably. Code, identifiers and commit messages follow the rules below.
 
 ## 1. Repository structure
