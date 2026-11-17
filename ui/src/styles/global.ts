@@ -9,6 +9,39 @@ const GlobalStyles = createGlobalStyle`
       scrollbar-gutter: stable;
     }
 
+    :root {
+      --scrollbar-thumb: color-mix(in srgb, ${theme.accent.base} 40%, transparent);
+      --scrollbar-thumb-hover: color-mix(in srgb, ${theme.accent.base} 65%, transparent);
+    }
+
+    /* Barra fina: trilho na cor do fundo e polegar na cor do contexto, translúcido. */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background-color: ${theme.brand.graphite};
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: ${theme.radii.pill};
+      background-color: var(--scrollbar-thumb);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    /* Firefox não tem os pseudo-elementos acima; o Chromium ignora-os se scrollbar-color existir. */
+    @supports (-moz-appearance: none) {
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) ${theme.brand.graphite};
+      }
+    }
+
     body {
       margin: 0;
       background-color: ${theme.brand.graphite};

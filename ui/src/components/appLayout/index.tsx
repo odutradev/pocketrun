@@ -8,6 +8,7 @@ import { healthCheckInterval } from "@assets/config";
 import Alert from "@components/alert";
 import Sidebar from "@components/sidebar";
 import useSystemStore from "@stores/system";
+import ContextStyles from "@styles/context";
 import { withContext } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
 
@@ -53,6 +54,7 @@ const AppLayout: React.FC = () => {
   if (metadata?.layout === "bare") {
     return (
       <ThemeProvider theme={contextTheme}>
+        <ContextStyles />
         <Outlet />
       </ThemeProvider>
     );
@@ -60,6 +62,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <ThemeProvider theme={contextTheme}>
+      <ContextStyles />
       <Shell>
         <Sidebar />
         <Content>
