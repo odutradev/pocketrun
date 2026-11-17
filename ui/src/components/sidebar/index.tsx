@@ -102,7 +102,7 @@ const Sidebar: React.FC = () => {
     <>
       <MobileBar>
         <LogoLink to="/" aria-label="PocketRun, ir para as aplicações">
-          <BrandMark kind="horizontal" size={14} context={context} />
+          <BrandMark kind="horizontal" size={14} context={context} hasContextTransition />
         </LogoLink>
         <IconButton
           label="Abrir o menu"
@@ -125,7 +125,14 @@ const Sidebar: React.FC = () => {
         <Top>
           <Brand>
             <LogoLink to="/" aria-label="PocketRun, ir para as aplicações">
-              <BrandMark kind="horizontal" size={15} context={context} />
+              <BrandMark
+                kind="horizontal"
+                size={15}
+                context={context}
+                motion="intro"
+                hasContextTransition
+                isHoverable
+              />
             </LogoLink>
             <CloseSlot>
               <IconButton label="Fechar o menu" icon={<Cross2Icon />} size="sm" onClick={() => setIsOpen(false)} />
