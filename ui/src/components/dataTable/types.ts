@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 export type ColumnAlign = "left" | "center" | "right";
 
+export type CellRole = "title" | "field" | "actions";
+
 export interface DataTableColumn<TRow> {
   key: string;
   header: string;

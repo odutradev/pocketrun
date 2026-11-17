@@ -49,8 +49,13 @@ const DataTable = <TRow,>({
                 $isSelected={isSelected}
                 $isSelectable={isSelectable}
               >
-                {columns.map((column) => (
-                  <Cell key={column.key} $align={column.align ?? "left"}>
+                {columns.map((column, index) => (
+                  <Cell
+                    key={column.key}
+                    data-label={index === 0 || column.isHeaderHidden ? undefined : column.header}
+                    $align={column.align ?? "left"}
+                    $role={index === 0 ? "title" : column.isHeaderHidden ? "actions" : "field"}
+                  >
                     {column.render(row)}
                   </Cell>
                 ))}
