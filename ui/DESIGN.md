@@ -64,7 +64,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - Bulk actions appear in a bar while rows are selected.
   - Charts use the tool color with a soft area fill. Other series use neutral steel lines. Every chart has a text `aria-label`.
 - **Navigation:**
-  - Side menu (`sidebar`): logo and the panel areas on top, grouped by area with a mono label; API status and the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
+  - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
   - Tool tabs are underline tabs; inside a tool the active underline uses the tool color.
   - Inside a page, a local side menu groups items by area. "Zona de perigo" is always last and always in error text.
   - Breadcrumbs appear on pages deeper than one level.
@@ -101,7 +101,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Logo, symbol, app icon, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`, `hasContextTransition`, `isHoverable`) |
 | Page loader (symbol loop) | `@components/loader` |
 | Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
-| API status pill or panel line | `@components/apiStatus` |
+| API status pill, panel line or pulsing dot with tooltip (address and version) | `@components/apiStatus` |
 | Page title with eyebrow, description and actions | `@components/pageHeader` |
 | Section or panel title (h2) with actions | `@components/sectionHeader` |
 | Path on pages deeper than one level | `@components/breadcrumbs` |
