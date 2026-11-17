@@ -112,7 +112,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Icon-only button (label required) | `@components/iconButton` |
 | Text field with label, hint, error, prefix, mono | `@components/input` |
 | Multi-line field | `@components/textArea` |
-| Select | `@components/select` |
+| Select (themed dropdown on Radix; never a native `<select>`, whose list the OS paints white) | `@components/select` |
 | Number with a slider across the field and an exact-value input at the end (manual value may go past the slider max) | `@components/rangeField` |
 | Settings row with switch | `@components/switchField` |
 | 2–4 views of the same content | `@components/segmentedControl` |
