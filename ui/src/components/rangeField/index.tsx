@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 
-import { Bound, Manual, ManualInput, ManualLabel, Row, Slider, Track } from "./styles";
+import { Bound, Manual, ManualInput, Row, Slider, Track } from "./styles";
 import { getFieldIds } from "@utils/functions";
 import FormField from "@components/formField";
 
@@ -52,10 +52,11 @@ const RangeField = ({ label, value, onValueChange, min = 0, max = 100, step = 1,
           <Bound aria-hidden="true">{sliderMax}</Bound>
         </Track>
         <Manual $hasError={Boolean(error)}>
-          <ManualLabel>Valor exato</ManualLabel>
           <ManualInput
             type="number"
             inputMode="numeric"
+            placeholder="Valor exato"
+            aria-label={`${label}, valor exato`}
             min={min}
             step={step}
             value={Number.isNaN(value) ? "" : value}

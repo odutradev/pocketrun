@@ -93,7 +93,7 @@ export const Manual = styled.label<{ $hasError: boolean }>`
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    width: 184px;
+    width: 132px;
     height: 100%;
     box-sizing: border-box;
     overflow: hidden;
@@ -114,22 +114,6 @@ export const Manual = styled.label<{ $hasError: boolean }>`
   `}
 `;
 
-export const ManualLabel = styled.span`
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  height: 100%;
-  padding: 0 ${({ theme }) => theme.spacing(3)};
-  border-right: 1px solid ${({ theme }) => theme.brand.border};
-  background-color: ${({ theme }) => theme.brand.raised};
-  font-family: ${({ theme }) => theme.brand.fonts.mono};
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.brand.steelMuted};
-  white-space: nowrap;
-`;
-
 export const ManualInput = styled.input`
   ${({ theme }) => css`
     flex: 1;
@@ -145,6 +129,13 @@ export const ManualInput = styled.input`
     text-align: center;
     outline: none;
     appearance: textfield;
+
+    &::placeholder {
+      color: ${theme.brand.steelMuted};
+      font-family: ${theme.brand.fonts.body};
+      font-size: 14px;
+      opacity: 0.7;
+    }
 
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
