@@ -67,10 +67,10 @@ func run(logger *slog.Logger) error {
 	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
-	userService := user.NewService(userRepository, signer)
-	setupService := setup.NewService(userService, logger)
 	documentService := kv.NewService(documentRepository)
 	applicationService := application.NewService(applicationRepository, documentService)
+	userService := user.NewService(userRepository, signer, applicationService)
+	setupService := setup.NewService(userService, logger)
 
 	if err := setupService.ReportStatus(startupContext); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)

@@ -67,3 +67,42 @@ func (r *MongoRepository) findOne(ctx context.Context, filter bson.M) (*User, er
 	}
 	return &user, nil
 }
+
+func (r *MongoRepository) FindAll(ctx context.Context) ([]User, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{}, options.Find().SetSort(bson.D{{Key: "createdAt", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("find users: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	users := []User{}
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, fmt.Errorf("decode users: %w", err)
+	}
+	return users, nil
+}
+
+func (r *MongoRepository) Update(ctx context.Context, id bson.ObjectID, fields bson.M) error {
+	result, err := r.collection.UpdateByID(ctx, id, bson.M{"$set": fields})
+	if mongo.IsDuplicateKeyError(err) {
+		return ErrEmailTaken
+	}
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *MongoRepository) Delete(ctx context.Context, id bson.ObjectID) error {
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return fmt.Errorf("delete user: %w", err)
+	}
+	if result.DeletedCount == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}

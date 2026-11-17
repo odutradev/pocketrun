@@ -65,11 +65,9 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	logger.InfoContext(ctx, "database dropped", "database", cfg.MongoName)
 
 	userRepository := user.NewMongoRepository(mongo.Collection("users"))
-	indexers := []indexer{
-		userRepository,
-		application.NewMongoRepository(mongo.Collection("applications")),
-		kv.NewMongoRepository(mongo.Collection("kvDocuments")),
-	}
+	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
+	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
+	indexers := []indexer{userRepository, applicationRepository, documentRepository}
 	for _, target := range indexers {
 		if err := target.EnsureIndexes(ctx); err != nil {
 			return fmt.Errorf("ensure indexes: %w", err)
@@ -80,7 +78,8 @@ func run(logger *slog.Logger, withAdmin bool) error {
 		return nil
 	}
 
-	userService := user.NewService(userRepository, user.NewTokenSigner(cfg.JWTSecret))
+	applicationService := application.NewService(applicationRepository, kv.NewService(documentRepository))
+	userService := user.NewService(userRepository, user.NewTokenSigner(cfg.JWTSecret), applicationService)
 	input := user.CreateInput{Name: adminName, Email: adminEmail, Password: adminPassword}
 	if _, err := userService.Create(ctx, input, user.RoleSuperadmin); err != nil {
 		return err
