@@ -6,7 +6,7 @@ import type { AppIconProps } from "./types";
 
 const variantForSize = (size: number): SymbolVariant => (size <= 32 ? "tiny" : size <= 64 ? "bold" : "full");
 
-const AppIcon: React.FC<AppIconProps> = ({ size, palette = "dark", context = "geral" }) => (
+const AppIcon: React.FC<AppIconProps> = ({ size, palette = "dark", context = "general" }) => (
   <Tile $size={size} $palette={palette}>
     <BrandSymbol size={size * 0.5} palette={palette} context={context} variant={variantForSize(size)} />
   </Tile>

@@ -17,5 +17,5 @@ export const Stages = styled.div`
 
 export const ContextPanel = styled(Panel)<{ $context: BrandContext }>`
   box-shadow: inset 0 3px 0
-    ${({ theme, $context }) => ($context === "geral" ? theme.brand.border : theme.brand.tools[$context].base)};
+    ${({ theme, $context }) => ($context === "general" ? theme.brand.border : theme.brand.tools[$context].base)};
 `;

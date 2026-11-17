@@ -1,6 +1,6 @@
-export type BrandTool = "dados" | "conteudos" | "links";
+export type BrandTool = "data" | "content" | "links";
 
-export type BrandContext = "geral" | BrandTool;
+export type BrandContext = "general" | BrandTool;
 
 export type SymbolVariant = "full" | "bold" | "tiny";
 

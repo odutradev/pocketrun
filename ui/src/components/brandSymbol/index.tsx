@@ -17,7 +17,7 @@ const fullFrame = { x: 0, y: 0, width: 96, height: 96 };
 
 const BrandSymbol: React.FC<BrandSymbolProps> = ({
   size,
-  context = "geral",
+  context = "general",
   palette = "dark",
   variant = "full",
   frame = "tight",

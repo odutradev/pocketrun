@@ -21,8 +21,8 @@ export const symbolPivot = { x: 24, y: 70 } as const;
 // Da lâmina mais curta (desenhada primeiro) para a mais longa.
 export const symbolBlades: { tool: BrandTool; angle: number; length: number }[] = [
   { tool: "links", angle: -82, length: 46 },
-  { tool: "conteudos", angle: -52, length: 54 },
-  { tool: "dados", angle: -22, length: 60 }
+  { tool: "content", angle: -52, length: 54 },
+  { tool: "data", angle: -22, length: 60 }
 ];
 
 export const symbolBladeThickness: Record<SymbolVariant, number> = { full: 12, bold: 14, tiny: 18 };
@@ -95,24 +95,24 @@ export const getReadableTextColor = (hex: string): string => {
 export const getSymbolColors = (context: BrandContext, palette: LogoPalette): SymbolColors => {
   if (palette === "monoWhite" || palette === "monoInk") {
     const color = palette === "monoWhite" ? brand.white : brand.ink;
-    return { blades: { dados: color, conteudos: color, links: color }, handle: color, word: color, run: [color, color, color] };
+    return { blades: { data: color, content: color, links: color }, handle: color, word: color, run: [color, color, color] };
   }
 
   const neutral = palette === "dark" ? brand.steel : brand.ink;
   const textTone = (tool: BrandTool) => (palette === "dark" ? brand.tools[tool].base : brand.tools[tool].logoOnLight);
 
-  if (context === "geral") {
+  if (context === "general") {
     return {
-      blades: { dados: brand.tools.dados.base, conteudos: brand.tools.conteudos.base, links: brand.tools.links.base },
+      blades: { data: brand.tools.data.base, content: brand.tools.content.base, links: brand.tools.links.base },
       handle: neutral,
       word: neutral,
-      run: [textTone("dados"), textTone("conteudos"), textTone("links")]
+      run: [textTone("data"), textTone("content"), textTone("links")]
     };
   }
 
   const base = brand.tools[context].base;
   const tone = textTone(context);
-  return { blades: { dados: base, conteudos: base, links: base }, handle: neutral, word: neutral, run: [tone, tone, tone] };
+  return { blades: { data: base, content: base, links: base }, handle: neutral, word: neutral, run: [tone, tone, tone] };
 };
 
 export const buildSymbolMarkup = (colors: SymbolColors, variant: SymbolVariant, id: string): string => {
@@ -210,7 +210,7 @@ export const buildLogoSvg = (config: LogoConfig, wordWidth: number, fontCss = ""
 // Favicons pequenos usam desenhos óticos mais grossos.
 export const buildFaviconSvg = (size: number, id = "pocketrun-favicon"): BuiltSvg => {
   const variant: SymbolVariant = size <= 32 ? "tiny" : size <= 64 ? "bold" : "full";
-  const colors = getSymbolColors("geral", "dark");
+  const colors = getSymbolColors("general", "dark");
   const body = buildAppIconMarkup(colors, "dark", variant, id, 512);
   return { svg: wrapSvg(512, 512, body, ""), width: 512, height: 512 };
 };

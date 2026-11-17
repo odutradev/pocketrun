@@ -75,7 +75,7 @@ export const theme = {
     inkMuted: "#646464",
     white: "#FFFFFF",
     tools: {
-      dados: {
+      data: {
         base: "#3E63DD",
         text: "#9EB1FF",
         textOnLight: "#3A5BC7",
@@ -83,7 +83,7 @@ export const theme = {
         contrast: "#FFFFFF",
         soft: "rgba(62, 99, 221, 0.18)"
       },
-      conteudos: {
+      content: {
         base: "#FFC53D",
         text: "#FFCA16",
         textOnLight: "#AB6400",

@@ -29,7 +29,7 @@ interface BrandStore {
 }
 
 const useBrandStore = create<BrandStore>()((set, get) => ({
-  heroContext: "geral",
+  heroContext: "general",
   isGuidesVisible: false,
   playgroundText: "Uma ferramenta de bolso. Dados, conteúdos e links no mesmo cabo.",
   playgroundFamily: "display",

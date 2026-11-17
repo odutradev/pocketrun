@@ -6,7 +6,7 @@ import type { BrandLogoProps } from "./types";
 
 const runLetters = ["R", "U", "N"] as const;
 
-const BrandLogo: React.FC<BrandLogoProps> = ({ size, layout = "horizontal", context = "geral", palette = "dark" }) => {
+const BrandLogo: React.FC<BrandLogoProps> = ({ size, layout = "horizontal", context = "general", palette = "dark" }) => {
   const colors = getSymbolColors(context, palette);
   const symbolSize = layout === "stacked" ? size * 1.8 : size * 1.28;
 

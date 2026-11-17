@@ -74,9 +74,9 @@ export const brandSections: BrandSection[] = [
 ];
 
 export const brandContextOptions: BrandOption<BrandContext>[] = [
-  { value: "geral", label: "Geral", description: "Início, login, configurações e materiais da marca." },
-  { value: "dados", label: "Dados", description: "Dentro de Dados, lâminas e RUN ficam azuis." },
-  { value: "conteudos", label: "Conteúdos", description: "Dentro de Conteúdos, lâminas e RUN ficam em latão." },
+  { value: "general", label: "Geral", description: "Início, login, configurações e materiais da marca." },
+  { value: "data", label: "Dados", description: "Dentro de Dados, lâminas e RUN ficam azuis." },
+  { value: "content", label: "Conteúdos", description: "Dentro de Conteúdos, lâminas e RUN ficam em latão." },
   { value: "links", label: "Links", description: "Dentro de Links, lâminas e RUN ficam em oliva." }
 ];
 
@@ -99,14 +99,14 @@ export const brandSymbolParts: SymbolPart[] = [
     name: "Lâmina longa · Dados",
     spec: "60 × 12 · −22°",
     description: "O coração do produto: coleções de JSON. A maior lâmina, em azul anodizado.",
-    tool: "dados"
+    tool: "data"
   },
   {
     number: "03",
     name: "Lâmina do meio · Conteúdos",
     spec: "54 × 12 · −52°",
     description: "Micro-páginas em HTML, CSS e JS. Quente e visível como um cartaz, em latão.",
-    tool: "conteudos"
+    tool: "content"
   },
   {
     number: "04",
@@ -131,7 +131,7 @@ export const brandIconPalettes: IconPaletteInfo[] = [
 
 export const brandTools: BrandToolInfo[] = [
   {
-    tool: "dados",
+    tool: "data",
     name: "Dados",
     colorName: "Azul anodizado",
     route: "/kv/:collection",
@@ -140,7 +140,7 @@ export const brandTools: BrandToolInfo[] = [
     description: "Coleções de JSON livre, com filtros, paginação e validade por documento."
   },
   {
-    tool: "conteudos",
+    tool: "content",
     name: "Conteúdos",
     colorName: "Latão",
     route: "/p/:slug",
@@ -162,15 +162,15 @@ export const brandTools: BrandToolInfo[] = [
 export const brandToolColors: BrandColor[] = [
   {
     name: "Azul anodizado",
-    hex: brand.tools.dados.base,
-    token: "--pr-dados",
+    hex: brand.tools.data.base,
+    token: "--pr-data",
     role: "Dados · indigo-9",
     description: "Dados é a parte que não pode falhar. O azul passa confiança e cara de infraestrutura."
   },
   {
     name: "Latão",
-    hex: brand.tools.conteudos.base,
-    token: "--pr-conteudos",
+    hex: brand.tools.content.base,
+    token: "--pr-content",
     role: "Conteúdos · amber-9",
     description: "Conteúdos é o que aparece para o mundo. Quente e chamativo como um cartaz, artesanal como HTML escrito à mão."
   },
@@ -259,8 +259,8 @@ export const brandTokens: BrandToken[] = [
   { token: "--pr-border", dark: brand.border, light: brand.paperBorder },
   { token: "--pr-text", dark: brand.steel, light: brand.ink },
   { token: "--pr-text-muted", dark: brand.steelMuted, light: brand.inkMuted },
-  { token: "--pr-dados", dark: brand.tools.dados.text, light: brand.tools.dados.textOnLight },
-  { token: "--pr-conteudos", dark: brand.tools.conteudos.text, light: brand.tools.conteudos.textOnLight },
+  { token: "--pr-data", dark: brand.tools.data.text, light: brand.tools.data.textOnLight },
+  { token: "--pr-content", dark: brand.tools.content.text, light: brand.tools.content.textOnLight },
   { token: "--pr-links", dark: brand.tools.links.text, light: brand.tools.links.textOnLight }
 ];
 
@@ -398,7 +398,7 @@ export const brandFaviconPack: FaviconItem[] = [
 
 export const defaultLogoConfig: LogoConfig = {
   kind: "horizontal",
-  context: "geral",
+  context: "general",
   palette: "dark",
   background: "transparent",
   aspect: "original",

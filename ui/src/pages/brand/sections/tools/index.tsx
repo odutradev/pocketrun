@@ -38,7 +38,7 @@ const ToolsSection: React.FC = () => (
       </Panel>
       <Panel>
         <Stage $tone="dark">
-          <BrandLogo size={14} context="conteudos" />
+          <BrandLogo size={14} context="content" />
         </Stage>
         <PanelText>No logo: a marca inteira na cor da ferramenta, sem escrever o nome dela.</PanelText>
       </Panel>
