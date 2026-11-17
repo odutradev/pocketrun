@@ -4,8 +4,6 @@ This guide defines this frontend's architecture, component, state and code rules
 
 **Directive:** before creating or refactoring pages, components, hooks or stores, read this guide and follow exactly the structure and standards described here. Before creating a component or hook, look for an existing equivalent in the project.
 
-**Design:** `ui/DESIGN.md` defines how the panel looks: principles, theme tokens, component rules, per-tool context and the component inventory. Read it before designing or changing any screen, section or component.
-
 ## 1. Stack
 
 | Item | Choice |
@@ -13,7 +11,6 @@ This guide defines this frontend's architecture, component, state and code rules
 | Framework | React + Vite |
 | Language | TypeScript (100% typed) |
 | Base components | @radix-ui/themes |
-| Icons | @radix-ui/react-icons |
 | Styling | Styled Components |
 | Global state | Zustand |
 | Requests | Axios |
@@ -148,12 +145,11 @@ const UserFilters = () => {
 
 ## 4. Components
 
-- **Declaration:** Arrow with React.FC. Arrow function typed with `React.FC<Props>`.
+- **Declaration:** Arrow with typed props. Arrow function with the type on the props.
 - **Structure:** Folder with index, styles and types. One component per folder with `index.tsx`, `styles.ts` and `types.ts`.
 - **Exports:** Mixed. Default for the file's main component, hook or store and named for types and API functions. One component per file.
 - **Props:** always typed in the component's types file.
 - **Base components:** @radix-ui/themes.
-- **Icons:** @radix-ui/react-icons only, imported by name (`import { TrashIcon } from "@radix-ui/react-icons"`). Never add another icon library (lucide-react, react-icons, heroicons). When an icon does not exist in the set, use the closest one available instead of mixing libraries.
 - **Styles:** Styled Components. Styles in `styles.ts` with access to the theme.
 
 ```text
@@ -197,10 +193,10 @@ const userSchema = z.object({ name: z.string().min(1) })
 ## 8. Code style
 
 - **Imports:** Alias per folder. One alias for each root folder of the project.
-- **Import organization:** Free. No ordering rule; left to the formatter.
+- **Import organization:** 3 blocks, longest to shortest. External, internal and `import type`, separated by a blank line and sorted from longest to shortest. Destructuring always on one line.
 - **Semicolons:** Semicolons.
 - **Quotes:** Double quotes. JSX attributes always use double quotes.
-- **Comments:** Free. Comments when they help explain why.
+- **Comments:** Zero comments. `//`, `/* */` and JSDoc are forbidden. Code must explain itself.
 
 ## 9. Required principles
 
@@ -363,7 +359,7 @@ No hard-coded colors or spacing: use the theme.
 
 ✅ Do:
 ```typescript
-color: ${({ theme }) => theme.brand.steel};
+color: ${({ theme }) => theme.palette.primary.main};
 ```
 
 ❌ Don't:
@@ -408,12 +404,14 @@ Use these files as a template. They follow every rule above.
 
 ```tsx
 import { Button, Typography } from "@mui/material";
-import { Container } from "./styles";
-import type { UserCardProps } from "./types";
-import useAction from "@hooks/useAction";
-import { updateUser } from "@actions/user";
 
-const UserCard: React.FC<UserCardProps> = ({ userId, name, onSaved }) => {
+import { updateUser } from "@actions/user";
+import useAction from "@hooks/useAction";
+import { Container } from "./styles";
+
+import type { UserCardProps } from "./types";
+
+const UserCard = ({ userId, name, onSaved }: UserCardProps) => {
   const handleSave = () =>
     useAction({
       action: async () => await updateUser(userId, { name }),
@@ -464,8 +462,9 @@ export interface UserCardProps {
 ### `src/actions/user/index.ts`
 
 ```typescript
-import type { User } from "@utils/types/user";
 import api from "@utils/api";
+
+import type { User } from "@utils/types/user";
 
 export const updateUser = async (userId: string, data: Partial<User>) => {
   const response = await api.patch<User>(`/users/${userId}`, data);
@@ -476,9 +475,10 @@ export const updateUser = async (userId: string, data: Partial<User>) => {
 ### `src/stores/user/index.ts`
 
 ```typescript
-import type { User } from "@utils/types/user";
-import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { create } from "zustand";
+
+import type { User } from "@utils/types/user";
 
 interface UserStore {
   user: User | null;
@@ -503,11 +503,10 @@ export default useUserStore;
 - [ ] Names follow the naming table and are in English.
 - [ ] Files are in the right folder for the architecture.
 - [ ] Local code stays inside its page or component, and shared code lives in the global folders.
-- [ ] Components follow "Folder with index, styles and types" and "Arrow with React.FC".
+- [ ] Components follow "Folder with index, styles and types" and "Arrow with typed props".
 - [ ] Props and state are typed, with no `any`.
 - [ ] API calls go through "actions/ folder" and use "useAction hook".
 - [ ] Styles use Styled Components with theme tokens.
-- [ ] Icons come from @radix-ui/react-icons.
 - [ ] Imports follow "Alias per folder".
 - [ ] Principle "Early returns" applied.
 - [ ] Principle "Immutability" applied.
@@ -521,5 +520,4 @@ export default useUserStore;
 - [ ] Principle "Mobile-first" applied.
 - [ ] Principle "Accessibility (WCAG)" applied.
 - [ ] Principle "Theme colors and spacing" applied.
-- [ ] UI follows `ui/DESIGN.md`, and new shared components were added to its inventory.
 - [ ] Principle "Persisted stores" applied.
