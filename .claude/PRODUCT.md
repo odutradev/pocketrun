@@ -54,7 +54,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 - Aplicações: criar, listar, ver detalhes, editar, excluir (`/apps/*`).
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
-- Dois modos de deploy com uma só imagem: `public` (tráfego dos clientes) e `admin` (tráfego do painel).
+- Uma API só, numa porta só: rotas públicas na raiz (tráfego dos clientes) e rotas do painel sob `/admin`, cada grupo com seu CORS.
 
 ### 5.2 Dados, antigo PocketDB (pronto)
 
@@ -95,7 +95,7 @@ Administração:
 Diferenças em relação ao Shareds que o tornam robusto:
 
 - O acesso é o login do gestor, não um PIN no env do frontend.
-- Nenhum token de aplicação vai para um bundle de navegador: o painel usa a API admin.
+- Nenhum token de aplicação vai para um bundle de navegador: o painel usa as rotas `/admin` com o login do gestor.
 - Páginas e links pertencem a uma aplicação, assim como as collections.
 - Servir páginas, redirecionar e contar visualizações é trabalho da API, não de um app React separado.
 

@@ -6,15 +6,15 @@ Monorepo da aplicação PocketRun contendo a API backend em Go, a UI frontend em
 
 ## 🧩 Serviços
 
-A mesma imagem da API roda em dois modos, escolhidos pela variável `API_MODE`:
+Uma API só, numa porta só, com dois grupos de rotas:
 
-| Serviço | `API_MODE` | Rotas | Autenticação |
+| Serviço | Rotas | Autenticação | CORS |
 | :--- | :--- | :--- | :--- |
-| `api` | `public` | `/kv/*`, `/validate/*`, `/ping` | Token da aplicação (`pk_live_...`) |
-| `admin` | `admin` | `/setup/*`, `/auth/*`, `/apps/*`, `/ping` | JWT do gestor |
-| `ui` | — | Painel web (nginx) | — |
+| `api` | `/kv/*`, `/validate/*`, `/ping` | Token da aplicação (`pk_live_...`) | `CORS_ALLOWED_ORIGINS` |
+| `api` | `/admin/setup/*`, `/admin/auth/*`, `/admin/apps/*`, `/admin/ping` | JWT do gestor | `ADMIN_CORS_ALLOWED_ORIGINS` |
+| `ui` | Painel web (nginx) | — | — |
 
-Todo container escuta na porta `80`. No desenvolvimento local, `API_MODE=all` sobe os dois servidores no mesmo processo, em `PORT` (pública) e `ADMIN_PORT` (admin).
+Todo container escuta na porta `80`.
 
 ---
 
@@ -43,7 +43,7 @@ As imagens são compiladas e publicadas no **Docker Hub** pelo GitHub Actions a 
 │   ├── nginx.conf        # SPA fallback, gzip, cache e headers de segurança
 │   └── .dockerignore
 ├── .env.example          # Variáveis de todos os apps e do compose
-├── docker-compose.yml    # Serviços api, admin e ui
+├── docker-compose.yml    # Serviços api e ui
 └── package.json          # Scripts de orquestração
 ```
 
@@ -61,7 +61,7 @@ As imagens são compiladas e publicadas no **Docker Hub** pelo GitHub Actions a 
 cp .env.example .env
 ```
 
-Um único `.env` na raiz é lido pelo docker-compose, pela API e pelo Vite.
+O `.env` da raiz é lido pelo docker-compose. Para rodar os apps direto, copie também `api/.env.example` para `api/.env` e `ui/.env.example` para `ui/.env`.
 
 ### Rodando diretamente
 
@@ -72,8 +72,7 @@ npm run dev
 ```
 
 - UI: `http://localhost:3000`
-- API pública: `http://localhost:5000/ping`
-- API admin: `http://localhost:5001/ping`
+- API: `http://localhost:5000/ping` (rotas do painel em `http://localhost:5000/admin`)
 
 Use `npm run dev:api` ou `npm run dev:web` para subir um app só, e `npm run build` para compilar os dois.
 
@@ -83,7 +82,7 @@ Use `npm run dev:api` ou `npm run dev:web` para subir um app só, e `npm run bui
 npm run up
 ```
 
-As portas publicadas vêm de `PORT`, `ADMIN_PORT` e `FRONTEND_PORT`.
+As portas publicadas vêm de `PORT` e `FRONTEND_PORT`.
 
 ---
 
@@ -111,26 +110,6 @@ services:
       - "80"
     environment:
       - PORT=80
-      - API_MODE=public
-      - APP_ENV=production
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
-      - MONGODB_URI=${MONGODB_URI}
-      - MONGODB_NAME=${MONGODB_NAME}
-      - JWT_SECRET=${JWT_SECRET}
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    networks:
-      - app-network
-
-  admin:
-    image: darknx/pocketrun-api:latest
-    restart: unless-stopped
-    expose:
-      - "80"
-    environment:
-      - ADMIN_PORT=80
-      - API_MODE=admin
       - APP_ENV=production
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
@@ -150,7 +129,6 @@ services:
       - "80"
     depends_on:
       - api
-      - admin
     networks:
       - app-network
 
@@ -159,13 +137,14 @@ networks:
     driver: bridge
 ```
 
-> A imagem da UI publicada pelo CI é compilada sem `VITE_API_URL` e `VITE_PUBLIC_API_URL` e usa os valores padrão do código. Para apontar para outros domínios, gere a imagem com `--build-arg VITE_API_URL=...` (API admin) e `--build-arg VITE_PUBLIC_API_URL=...` (API pública, usada nos exemplos de código).
+> A imagem da UI publicada pelo CI é compilada sem `VITE_API_URL` e usa o valor padrão do código. Para apontar para outro domínio, gere a imagem com `--build-arg VITE_API_URL=...`.
 
 ### Passo 2: Variáveis (aba Environment)
 
 ```env
+VITE_API_URL=https://api-pocketrun.odutra.com
 CORS_ALLOWED_ORIGINS=*
-ADMIN_CORS_ALLOWED_ORIGINS=*
+ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.odutra.com
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
 JWT_SECRET=gere_uma_chave_secreta_forte_aqui
@@ -178,7 +157,6 @@ Todos os serviços usam **Container Port `80`** e HTTPS ativado:
 | Serviço | Host |
 | :--- | :--- |
 | `ui` | `pocketrun.odutra.com` |
-| `api` | `api.pocketrun.odutra.com` |
-| `admin` | `admin.pocketrun.odutra.com` |
+| `api` | `api-pocketrun.odutra.com` |
 
 Clique em **Save** e faça o **Deploy**.
