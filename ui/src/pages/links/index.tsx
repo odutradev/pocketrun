@@ -1,14 +1,16 @@
-import { MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
+import { DashboardIcon, ListBulletIcon, MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import { publicLinkUrl, pluralize } from "@utils/functions";
+import SegmentedControl from "@components/segmentedControl";
+import { Container, GroupFilter, Toolbar } from "./styles";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
+import LinkCards from "./subcomponents/linkCards";
 import EmptyState from "@components/emptyState";
 import useClipboard from "@hooks/useClipboard";
-import { Container, Toolbar } from "./styles";
 import DataTable from "@components/dataTable";
 import { getLinkColumns } from "./table";
 import Button from "@components/button";
@@ -17,10 +19,14 @@ import LinksSkeleton from "./skeleton";
 import Input from "@components/input";
 import useLinksPage from "./hook";
 
+import type { SegmentedOption } from "@components/segmentedControl/types";
+import type { Link, LinksView } from "@utils/types/link";
+
 const LinksPage = () => {
   const navigate = useNavigate();
   const { copy, isCopied } = useClipboard();
   const {
+    view,
     links,
     filteredLinks,
     groups,
@@ -33,20 +39,26 @@ const LinksPage = () => {
     handleSearchChange,
     handleGroupFilterChange,
     handleOpenGroups,
-    handleOpenRemove
+    handleOpenRemove,
+    handleViewChange
   } = useLinksPage();
 
   useEffect(() => {
     loadLinks();
   }, [loadLinks]);
 
-  const columns = getLinkColumns({
+  const linkOptions = {
     groupNames,
     isCopied,
-    onCopy: (link) => copy(publicLinkUrl(link.slug), link.id),
-    onEdit: (link) => navigate(`/links/${link.id}/edit`),
+    onCopy: (link: Link) => copy(publicLinkUrl(link.slug), link.id),
+    onEdit: (link: Link) => navigate(`/links/${link.id}/edit`),
     onRemove: handleOpenRemove
-  });
+  };
+
+  const viewOptions: SegmentedOption<LinksView>[] = [
+    { value: "list", label: "Ver em lista", icon: <ListBulletIcon /> },
+    { value: "cards", label: "Ver em cards", icon: <DashboardIcon /> }
+  ];
 
   const groupOptions = [
     { value: "all", label: "Todos os grupos" },
@@ -92,17 +104,34 @@ const LinksPage = () => {
               value={search}
               onChange={(event) => handleSearchChange(event.target.value)}
             />
-            <Select label="Grupo" options={groupOptions} value={groupFilter} onValueChange={handleGroupFilterChange} />
+            <GroupFilter>
+              <Select
+                label="Grupo"
+                isLabelHidden
+                options={groupOptions}
+                value={groupFilter}
+                onValueChange={handleGroupFilterChange}
+              />
+            </GroupFilter>
+            <SegmentedControl
+              label="Visualização"
+              options={viewOptions}
+              value={view}
+              onValueChange={handleViewChange}
+              isIconOnly
+            />
           </Toolbar>
           {filteredLinks.length === 0 ? (
             <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca e o grupo escolhidos." />
+          ) : view === "cards" ? (
+            <LinkCards links={filteredLinks} {...linkOptions} />
           ) : (
             <DataTable
               caption={`Links, ${pluralize(filteredLinks.length, "item", "itens")}`}
-              columns={columns}
+              columns={getLinkColumns(linkOptions)}
               rows={filteredLinks}
               getRowKey={(link) => link.id}
-              minWidth="880px"
+              minWidth="720px"
             />
           )}
         </>

@@ -4,6 +4,7 @@ import { isApiError } from "@utils/api";
 
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
+import type { Link } from "@utils/types/link";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -67,6 +68,24 @@ export const cancelFrame = (frameRef: { current: number | null }) => {
 };
 
 export const publicLinkUrl = (slug: string): string => `${apiUrl}/${slug}`;
+
+export const formatShortDateTime = (value: string): string =>
+  new Date(value).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+export const urlHost = (value: string): string => {
+  try {
+    return new URL(value).host.replace(/^www\./, "");
+  } catch {
+    return value;
+  }
+};
+
+export const describeLinkRule = (link: Link): string | null => {
+  if (link.mode !== "period") return null;
+  if (link.state === "scheduled" && link.startsAt) return `Começa ${formatShortDateTime(link.startsAt)}`;
+  if (!link.endsAt) return null;
+  return link.state === "expired" ? `Terminou ${formatShortDateTime(link.endsAt)}` : `Até ${formatShortDateTime(link.endsAt)}`;
+};
 
 export const parseOrigins = (value: string): string[] => {
   const origins = value

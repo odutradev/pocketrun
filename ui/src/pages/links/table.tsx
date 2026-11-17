@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
-import { Destination, Muted, RowActions, Slug, StateCell, StateDetail, Title, TitleCell } from "./styles";
-import { formatDateTime, pluralize } from "@utils/functions";
+import { Clicks, ClicksLimit, Group, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
+import { describeLinkRule, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
@@ -9,13 +9,6 @@ import Badge from "@components/badge";
 import type { DataTableColumn } from "@components/dataTable/types";
 import type { LinkColumnsOptions } from "./types";
 import type { Link } from "@utils/types/link";
-
-const describeRule = (link: Link) => {
-  if (link.mode === "clicks" && link.maxClicks !== null) return `${link.clicks} de ${link.maxClicks} acessos`;
-  if (link.mode !== "period") return null;
-  if (link.state === "scheduled" && link.startsAt) return `Começa em ${formatDateTime(link.startsAt)}`;
-  return link.endsAt ? `Até ${formatDateTime(link.endsAt)}` : null;
-};
 
 export const getLinkColumns = ({
   groupNames,
@@ -25,26 +18,24 @@ export const getLinkColumns = ({
   onRemove
 }: LinkColumnsOptions): DataTableColumn<Link>[] => [
   {
-    key: "title",
+    key: "link",
     header: "Link",
     render: (link) => (
-      <TitleCell>
+      <LinkCell>
         <Title>{link.title}</Title>
-        <Slug>/{link.slug}</Slug>
-      </TitleCell>
+        <Meta>
+          <Slug>/{link.slug}</Slug>
+          <Host title={link.url}>{urlHost(link.url)}</Host>
+          {link.groupId && groupNames[link.groupId] && <Group>{groupNames[link.groupId]}</Group>}
+        </Meta>
+      </LinkCell>
     )
-  },
-  { key: "url", header: "Destino", render: (link) => <Destination title={link.url}>{link.url}</Destination> },
-  {
-    key: "group",
-    header: "Grupo",
-    render: (link) => (link.groupId && groupNames[link.groupId] ? groupNames[link.groupId] : <Muted>Sem grupo</Muted>)
   },
   {
     key: "state",
     header: "Estado",
     render: (link) => {
-      const rule = describeRule(link);
+      const rule = describeLinkRule(link);
       return (
         <StateCell>
           <Badge tone={linkStateLabels[link.state].tone} hasDot>
@@ -55,7 +46,19 @@ export const getLinkColumns = ({
       );
     }
   },
-  { key: "clicks", header: "Acessos", align: "right", render: (link) => pluralize(link.clicks, "acesso", "acessos") },
+  {
+    key: "clicks",
+    header: "Acessos",
+    align: "right",
+    render: (link) => (
+      <Clicks>
+        {link.clicks.toLocaleString("pt-BR")}
+        {link.mode === "clicks" && link.maxClicks !== null && (
+          <ClicksLimit> / {link.maxClicks.toLocaleString("pt-BR")}</ClicksLimit>
+        )}
+      </Clicks>
+    )
+  },
   {
     key: "actions",
     header: "Ações",

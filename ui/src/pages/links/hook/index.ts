@@ -17,6 +17,7 @@ const matchesGroup = (link: Link, groupFilter: GroupFilter) => {
 
 const useLinksPage = (): UseLinksPageReturn => {
   const {
+    view,
     links,
     groups,
     isLoading,
@@ -29,10 +30,12 @@ const useLinksPage = (): UseLinksPageReturn => {
     setSearch,
     setGroupFilter,
     setGroupsOpen,
-    setRemoveTarget
+    setRemoveTarget,
+    setView
   } = useLinksStore();
 
   return {
+    view,
     links,
     filteredLinks: links.filter((link) => matchesGroup(link, groupFilter) && matchesSearch(link, search)),
     groups,
@@ -49,7 +52,8 @@ const useLinksPage = (): UseLinksPageReturn => {
     handleOpenGroups: () => setGroupsOpen(true),
     handleCloseGroups: () => setGroupsOpen(false),
     handleOpenRemove: setRemoveTarget,
-    handleCloseRemove: () => setRemoveTarget(null)
+    handleCloseRemove: () => setRemoveTarget(null),
+    handleViewChange: setView
   };
 };
 

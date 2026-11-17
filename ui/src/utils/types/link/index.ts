@@ -13,6 +13,8 @@ export interface PeriodPresetOption {
   hours: number | null;
 }
 
+export type LinksView = "list" | "cards";
+
 export type UrlProtocol = "https" | "http" | "manual";
 
 export interface UrlProtocolOption {

@@ -9,39 +9,73 @@ export const Container = styled.div`
 
 export const Toolbar = styled.div`
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: ${({ theme }) => theme.spacing(3)};
-  align-items: end;
+  align-items: center;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) 220px auto;
   }
 `;
 
-export const TitleCell = styled.span`
+export const GroupFilter = styled.div`
+  grid-column: 1 / -1;
+  grid-row: 2;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+`;
+
+export const LinkCell = styled.span`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(1)};
   min-width: 0;
+  max-width: 520px;
 `;
 
 export const Title = styled.span`
+  overflow: hidden;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const Meta = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => `${theme.spacing(1)} ${theme.spacing(2)}`};
+  min-width: 0;
+  font-size: 13px;
 `;
 
 export const Slug = styled.span`
   font-family: ${({ theme }) => theme.brand.fonts.mono};
-  font-size: 13px;
   color: ${({ theme }) => theme.accent.text};
 `;
 
-export const Destination = styled.span`
-  display: block;
-  max-width: 280px;
+export const Host = styled.span`
   overflow: hidden;
-  font-size: 14px;
+  max-width: 240px;
   color: ${({ theme }) => theme.brand.steelMuted};
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &::before {
+    content: "→ ";
+  }
+`;
+
+export const Group = styled.span`
+  padding: 0 ${({ theme }) => theme.spacing(2)};
+  border: 1px solid ${({ theme }) => theme.brand.border};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  font-size: 12px;
+  line-height: 20px;
+  color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
 export const StateCell = styled.span`
@@ -54,9 +88,17 @@ export const StateCell = styled.span`
 export const StateDetail = styled.span`
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};
+  white-space: nowrap;
 `;
 
-export const Muted = styled.span`
+export const Clicks = styled.span`
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+`;
+
+export const ClicksLimit = styled.span`
+  font-weight: 400;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
