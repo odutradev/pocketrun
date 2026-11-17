@@ -1,13 +1,14 @@
-import { CheckCircledIcon, CrossCircledIcon, ReloadIcon, ShuffleIcon } from "@radix-ui/react-icons";
+import { CheckCircledIcon, CheckIcon, CopyIcon, CrossCircledIcon, ReloadIcon, ShuffleIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 
+import { CopyButton, DiceSlot, PublicUrl, PublicUrlLine, Row, StatusIcon } from "./styles";
 import { publicLinkUrl, randomSlug, toSlug } from "@utils/functions";
 import { randomSlugLength, slugCheckDelay } from "@assets/config";
-import { DiceSlot, PublicUrl, Row, StatusIcon } from "./styles";
 import { slugPattern } from "@utils/validations/link";
 import { slugReasonMessages } from "@assets/data";
 import IconButton from "@components/iconButton";
 import { checkLinkSlug } from "@actions/links";
+import useClipboard from "@hooks/useClipboard";
 import Input from "@components/input";
 
 import type { SlugCheck, SlugFieldProps } from "./types";
@@ -21,6 +22,7 @@ const statusLabels = {
 
 const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldProps) => {
   const [check, setCheck] = useState<SlugCheck>({ status: "idle" });
+  const { copy, isCopied } = useClipboard();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -72,7 +74,21 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
         value={value}
         onChange={(event) => onChange(toSlug(event.target.value))}
         error={error ?? unavailableMessage}
-        hint={value ? <PublicUrl>{publicLinkUrl(value)}</PublicUrl> : undefined}
+        hint={
+          value ? (
+            <PublicUrlLine>
+              <PublicUrl>{publicLinkUrl(value)}</PublicUrl>
+              <CopyButton
+                type="button"
+                aria-label={isCopied() ? "URL copiada" : "Copiar a URL pública"}
+                title={isCopied() ? "URL copiada" : "Copiar"}
+                onClick={() => copy(publicLinkUrl(value))}
+              >
+                {isCopied() ? <CheckIcon /> : <CopyIcon />}
+              </CopyButton>
+            </PublicUrlLine>
+          ) : undefined
+        }
         trailing={
           statusIcon && (
             <StatusIcon $status={check.status} role="status" aria-label={statusLabels[check.status as keyof typeof statusLabels]}>

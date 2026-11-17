@@ -51,3 +51,43 @@ export const PublicUrl = styled.span`
   font-family: ${({ theme }) => theme.brand.fonts.mono};
   overflow-wrap: anywhere;
 `;
+
+export const PublicUrlLine = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1.5)};
+  max-width: 100%;
+`;
+
+export const CopyButton = styled.button`
+  ${({ theme }) => css`
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    border-radius: ${theme.radii.small};
+    background: transparent;
+    color: ${theme.brand.steelMuted};
+    cursor: pointer;
+    transition: color ${theme.motion.fast}ms ${theme.motion.easing.standard};
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      background-color: ${theme.brand.raised};
+      color: ${theme.brand.steel};
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${theme.accent.base};
+      outline-offset: 1px;
+    }
+  `}
+`;
