@@ -1,15 +1,19 @@
-import type { ReactNode, SelectHTMLAttributes } from "react";
+import type { ReactNode } from "react";
 
 export interface SelectOption {
   value: string;
   label: string;
 }
 
-export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, "onChange" | "value"> {
+export interface SelectProps {
   label: string;
   options: SelectOption[];
   value: string;
   onValueChange: (value: string) => void;
+  name?: string;
+  id?: string;
+  placeholder?: string;
+  disabled?: boolean;
   hint?: ReactNode;
   error?: string;
 }

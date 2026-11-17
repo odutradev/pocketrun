@@ -1,13 +1,19 @@
-import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { Select as RadixSelect } from "@radix-ui/themes";
 import { useId } from "react";
 
-import { Chevron, Control, Field } from "./styles";
+import { Content, Control, Item, Trigger } from "./styles";
 import { getFieldIds } from "@utils/functions";
 import FormField from "@components/formField";
 
 import type { SelectProps } from "./types";
 
-const Select = ({ label, options, value, onValueChange, hint, error, id, ...props }: SelectProps) => {
+const emptyValue = "__empty__";
+
+const toItemValue = (value: string) => (value === "" ? emptyValue : value);
+
+const fromItemValue = (value: string) => (value === emptyValue ? "" : value);
+
+const Select = ({ label, options, value, onValueChange, name, id, placeholder, disabled, hint, error }: SelectProps) => {
   const generatedId = useId();
   const selectId = id ?? generatedId;
   const { describedBy } = getFieldIds(selectId, { hasHint: Boolean(hint), hasError: Boolean(error) });
@@ -15,23 +21,27 @@ const Select = ({ label, options, value, onValueChange, hint, error, id, ...prop
   return (
     <FormField controlId={selectId} label={label} hint={hint} error={error}>
       <Control $hasError={Boolean(error)}>
-        <Field
-          id={selectId}
-          value={value}
-          onChange={(event) => onValueChange(event.target.value)}
-          aria-invalid={Boolean(error) || undefined}
-          aria-describedby={describedBy}
-          {...props}
+        <RadixSelect.Root
+          name={name}
+          value={toItemValue(value)}
+          disabled={disabled}
+          onValueChange={(next) => onValueChange(fromItemValue(next))}
         >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </Field>
-        <Chevron aria-hidden="true">
-          <ChevronDownIcon />
-        </Chevron>
+          <Trigger
+            id={selectId}
+            variant="ghost"
+            placeholder={placeholder}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={describedBy}
+          />
+          <Content position="popper" sideOffset={6}>
+            {options.map((option) => (
+              <Item key={option.value} value={toItemValue(option.value)}>
+                {option.label}
+              </Item>
+            ))}
+          </Content>
+        </RadixSelect.Root>
       </Control>
     </FormField>
   );
