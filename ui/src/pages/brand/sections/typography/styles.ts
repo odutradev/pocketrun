@@ -4,8 +4,6 @@ import { Panel } from "../../styles";
 
 import type { TypeFamily } from "@utils/types/brand";
 
-
-
 export const Specimen = styled.p<{ $family: TypeFamily }>`
   margin: 0;
   font-family: ${({ theme, $family }) => theme.brand.fonts[$family]};

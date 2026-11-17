@@ -3,8 +3,6 @@ import SectionHeading from "../../subcomponents/sectionHeading";
 import { Paragraphs, Quote, Text } from "./styles";
 import { brandPersonality } from "@assets/data";
 
-
-
 const Concept = () => (
   <Section id="conceito">
     <SectionHeading number="01" title="O conceito" />

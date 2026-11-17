@@ -6,8 +6,6 @@ import { Demo } from "../../styles";
 
 import type { SymbolStatus } from "@utils/types/brand";
 
-
-
 const statusOptions: { value: SymbolStatus; label: string }[] = [
   { value: "online", label: "API no ar" },
   { value: "offline", label: "API fora" }

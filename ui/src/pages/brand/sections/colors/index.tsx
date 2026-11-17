@@ -4,8 +4,6 @@ import { Grid, Label, Lead, Mono, Panel, PanelText, Section } from "../../styles
 import SectionHeading from "../../subcomponents/sectionHeading";
 import ColorSwatch from "../../subcomponents/colorSwatch";
 
-
-
 const radixSnippet = [
   "// painel inteiro: neutro, botões globais em aço",
   '<Theme accentColor="gray" grayColor="gray">',

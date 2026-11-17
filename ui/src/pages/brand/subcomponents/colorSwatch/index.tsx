@@ -5,8 +5,6 @@ import useBrandPage from "../../hook";
 
 import type { ColorSwatchProps } from "./types";
 
-
-
 const ColorSwatch = ({ color, size = "regular" }: ColorSwatchProps) => {
   const { handleCopyColor, isCopied } = useBrandPage();
   const copied = isCopied(color.hex);

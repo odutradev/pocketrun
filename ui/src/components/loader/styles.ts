@@ -1,7 +1,5 @@
 import styled from "styled-components";
 
-
-
 export const Container = styled.div<{ $isCentered: boolean }>`
   display: flex;
   justify-content: center;

@@ -1,7 +1,5 @@
 import type { BrandContext, BuiltSvg, FaviconItem, LogoConfig, TypeFamily } from "@utils/types/brand";
 
-
-
 export interface UseBrandPageReturn {
   heroContext: BrandContext;
   isGuidesVisible: boolean;

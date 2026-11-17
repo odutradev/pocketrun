@@ -1,7 +1,5 @@
 import styled from "styled-components";
 
-
-
 export const IconStage = styled.div`
   display: flex;
   align-items: center;

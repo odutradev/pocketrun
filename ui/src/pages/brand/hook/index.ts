@@ -8,8 +8,6 @@ import useBrandStore from "./store";
 import type { FaviconItem, LogoConfig } from "@utils/types/brand";
 import type { UseBrandPageReturn } from "./types";
 
-
-
 const rasterToastMessages = {
   pending: "Gerando a imagem...",
   success: "Imagem baixada",

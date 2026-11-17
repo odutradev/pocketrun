@@ -6,8 +6,6 @@ import LinkButton from "@components/linkButton";
 import BrandMark from "@components/brandMark";
 import { brandSections } from "@assets/data";
 
-
-
 const BrandHeader = () => (
   <Bar>
     <Container>

@@ -1,7 +1,5 @@
 import { brandFontCssUrl } from "@assets/config";
 
-
-
 const blobToDataUrl = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();

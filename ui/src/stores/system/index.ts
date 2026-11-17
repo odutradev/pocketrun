@@ -4,8 +4,6 @@ import { rolePermissions } from "@assets/data";
 
 import type { SystemStore } from "./types";
 
-
-
 const useSystemStore = create<SystemStore>()((set) => ({
   apiStatus: "online",
   isSetupRequired: null,

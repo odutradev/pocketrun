@@ -1,8 +1,6 @@
 import type { BrandContext } from "@utils/types/brand";
 import type { Permission } from "@utils/types/user";
 
-
-
 export type PageLayout = "panel" | "bare";
 
 export interface PageMetadata {

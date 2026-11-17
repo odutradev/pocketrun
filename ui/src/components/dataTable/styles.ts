@@ -2,8 +2,6 @@ import styled, { css } from "styled-components";
 
 import type { ColumnAlign } from "./types";
 
-
-
 export const ScrollBox = styled.div`
   overflow-x: auto;
   border: 1px solid ${({ theme }) => theme.brand.border};

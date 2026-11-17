@@ -10,8 +10,6 @@ import GlobalStyles from "@styles/global";
 import useAuthStore from "@stores/auth";
 import AppRouter from "@routes/index";
 
-
-
 const logger = createLocalLogger("appProviders");
 
 const AppProviders = () => {

@@ -8,8 +8,6 @@ import OptionSelect from "../../subcomponents/optionSelect";
 import Button from "@components/button";
 import useBrandPage from "../../hook";
 
-
-
 const DownloadsSection = () => {
   const {
     generatorConfig,

@@ -16,8 +16,6 @@ import LogoSection from "./sections/logo";
 import Hero from "./sections/hero";
 import useBrandPage from "./hook";
 
-
-
 const BrandPage = () => {
   const { prepareAssets } = useBrandPage();
 

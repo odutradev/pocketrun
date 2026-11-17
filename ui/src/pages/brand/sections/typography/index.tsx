@@ -9,8 +9,6 @@ import useBrandPage from "../../hook";
 
 import type { BrandOption } from "@utils/types/brand";
 
-
-
 const alphabet = "Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz 0123456789";
 
 const Typography = () => {

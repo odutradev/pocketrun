@@ -1,7 +1,5 @@
 import styled from "styled-components";
 
-
-
 export const Target = styled.div`
   display: inline-flex;
   padding: ${({ theme }) => theme.spacing(4)};

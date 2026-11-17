@@ -7,8 +7,6 @@ import IconButton from "@components/iconButton";
 
 import type { MotionCardProps } from "./types";
 
-
-
 const MotionCard = ({ demo, children }: MotionCardProps) => {
   const [playCount, setPlayCount] = useState(0);
 

@@ -4,8 +4,6 @@ import { getReadableTextColor } from "@utils/functions/brandAssets";
 
 import type { SwatchSize } from "./types";
 
-
-
 export const SwatchButton = styled.button`
   display: flex;
   flex-direction: column;

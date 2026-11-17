@@ -12,8 +12,6 @@ import BrandMark from "@components/brandMark";
 import type { MotionDemoId } from "@utils/types/brand";
 import type { ReactNode } from "react";
 
-
-
 const demoContent: Record<MotionDemoId, ReactNode> = {
   intro: <BrandMark kind="symbol" size={120} motion="intro" motionDelay={200} />,
   wordmark: <BrandMark size={26} motion="intro" />,

@@ -6,8 +6,6 @@ import BrandMark from "@components/brandMark";
 import Button from "@components/button";
 import { Demo } from "../../styles";
 
-
-
 const SnapDemo = () => {
   const [snapKey, setSnapKey] = useState(0);
   const [isSaved, setIsSaved] = useState(false);

@@ -4,8 +4,6 @@ import { Field, FieldLabel } from "./styles";
 
 import type { OptionSelectProps } from "./types";
 
-
-
 const OptionSelect = <T extends string | number>({ label, value, options, onChange }: OptionSelectProps<T>) => {
   const handleChange = (raw: string) => {
     const option = options.find((item) => String(item.value) === raw);

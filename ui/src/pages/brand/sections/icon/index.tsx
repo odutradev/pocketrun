@@ -8,8 +8,6 @@ import BrandMark from "@components/brandMark";
 import Button from "@components/button";
 import useBrandPage from "../../hook";
 
-
-
 const realSizes = [16, 32, 48, 64, 128];
 
 const IconSection = () => {

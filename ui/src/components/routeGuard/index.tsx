@@ -7,8 +7,6 @@ import useAuthStore from "@stores/auth";
 
 import type { RouteGuardProps } from "./types";
 
-
-
 const RouteGuard = ({ metadata, children }: RouteGuardProps) => {
   const { token, user } = useAuthStore();
   const { apiStatus, isSetupRequired, hasPermissions } = useSystemStore();

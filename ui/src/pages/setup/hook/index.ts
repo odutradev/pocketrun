@@ -10,8 +10,6 @@ import useForm from "@hooks/useForm";
 import type { SetupValues } from "@utils/types/auth";
 import type { UseSetupPageReturn } from "./types";
 
-
-
 const initialValues = { name: "", email: "", password: "", confirmPassword: "" };
 
 const useSetupPage = (): UseSetupPageReturn => {

@@ -2,8 +2,6 @@ import styled from "styled-components";
 
 import type { BrandTool } from "@utils/types/brand";
 
-
-
 export const Layout = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);

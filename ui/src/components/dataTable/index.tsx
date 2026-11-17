@@ -4,8 +4,6 @@ import VisuallyHidden from "@components/visuallyHidden";
 import type { DataTableProps } from "./types";
 import type { KeyboardEvent } from "react";
 
-
-
 const DataTable = <TRow,>({
   caption,
   columns,

@@ -5,8 +5,6 @@ import VisuallyHidden from "@components/visuallyHidden";
 
 import type { SetupStep } from "./types";
 
-
-
 const steps: SetupStep[] = [
   { label: "API conectada", state: "done" },
   { label: "Primeiro gestor", state: "current" },

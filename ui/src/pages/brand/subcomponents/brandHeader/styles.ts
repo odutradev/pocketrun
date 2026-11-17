@@ -1,7 +1,5 @@
 import styled from "styled-components";
 
-
-
 export const Bar = styled.header`
   position: sticky;
   top: 0;
