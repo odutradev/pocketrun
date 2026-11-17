@@ -39,7 +39,7 @@ func (s *Service) CreateAdmin(ctx context.Context, input user.CreateInput) (*use
 
 	status, err := s.GetStatus(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create admin: %w", err)
 	}
 
 	if status.HasUsers {

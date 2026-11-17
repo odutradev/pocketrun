@@ -61,7 +61,7 @@ func run(logger *slog.Logger) error {
 
 	validate := httpx.NewValidator()
 	if err := user.RegisterValidations(validate); err != nil {
-		return err
+		return fmt.Errorf("register validations: %w", err)
 	}
 
 	userRepository := user.NewMongoRepository(mongo.Collection("users"))

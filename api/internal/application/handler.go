@@ -2,6 +2,7 @@ package application
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -194,12 +195,12 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 func parseIDs(r *http.Request) (bson.ObjectID, bson.ObjectID, error) {
 	managerID, err := user.ManagerIDFromContext(r.Context())
 	if err != nil {
-		return bson.ObjectID{}, bson.ObjectID{}, err
+		return bson.ObjectID{}, bson.ObjectID{}, fmt.Errorf("parse manager id: %w", err)
 	}
 
 	id, err := ParseID(r.PathValue("id"))
 	if err != nil {
-		return bson.ObjectID{}, bson.ObjectID{}, err
+		return bson.ObjectID{}, bson.ObjectID{}, fmt.Errorf("parse application id: %w", err)
 	}
 	return managerID, id, nil
 }

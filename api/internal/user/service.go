@@ -97,7 +97,7 @@ func (s *Service) GetUserByID(ctx context.Context, id bson.ObjectID) (*User, err
 
 func (s *Service) List(ctx context.Context, actorID bson.ObjectID) ([]User, error) {
 	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("list users: %w", err)
 	}
 
 	users, err := s.repository.FindAll(ctx)
@@ -109,7 +109,7 @@ func (s *Service) List(ctx context.Context, actorID bson.ObjectID) ([]User, erro
 
 func (s *Service) CreateByManager(ctx context.Context, actorID bson.ObjectID, input ManageInput) (*User, error) {
 	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create user: %w", err)
 	}
 	return s.Create(ctx, CreateInput{Name: input.Name, Email: input.Email, Password: input.Password}, input.Role)
 }
@@ -117,7 +117,7 @@ func (s *Service) CreateByManager(ctx context.Context, actorID bson.ObjectID, in
 func (s *Service) UpdateByManager(ctx context.Context, actorID, id bson.ObjectID, input UpdateInput) (*User, error) {
 	actor, err := s.requireSuperadmin(ctx, actorID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update user %s: %w", id.Hex(), err)
 	}
 
 	if id == actorID && input.Role != actor.Role {
@@ -141,7 +141,7 @@ func (s *Service) UpdateByManager(ctx context.Context, actorID, id bson.ObjectID
 
 func (s *Service) Remove(ctx context.Context, actorID, id bson.ObjectID) error {
 	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
-		return err
+		return fmt.Errorf("remove user %s: %w", id.Hex(), err)
 	}
 
 	if id == actorID {
@@ -174,7 +174,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id bson.ObjectID, input Pro
 func (s *Service) ChangePassword(ctx context.Context, id bson.ObjectID, input PasswordInput) error {
 	user, err := s.GetUserByID(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("change password: %w", err)
 	}
 
 	if !checkPassword(input.CurrentPassword, user.PasswordHash) {
@@ -196,7 +196,7 @@ func (s *Service) ChangePassword(ctx context.Context, id bson.ObjectID, input Pa
 func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) (*User, error) {
 	actor, err := s.GetUserByID(ctx, actorID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("require superadmin: %w", err)
 	}
 
 	if actor.Role != RoleSuperadmin {

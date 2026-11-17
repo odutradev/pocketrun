@@ -50,7 +50,7 @@ func loadFile(path string) error {
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("open %s: %w", path, err)
 	}
 	defer file.Close()
 

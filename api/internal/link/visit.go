@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -74,7 +75,7 @@ func NewVisitorHasher() *VisitorHasher {
 func (h *VisitorHasher) Hash(visit Visit, at time.Time) (string, error) {
 	salt, err := h.saltFor(at.UTC().Format(time.DateOnly))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("hash visitor: %w", err)
 	}
 
 	digest := sha256.New()
@@ -95,7 +96,7 @@ func (h *VisitorHasher) saltFor(day string) ([]byte, error) {
 
 	salt := make([]byte, 32)
 	if _, err := rand.Read(salt); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("generate visitor salt: %w", err)
 	}
 	h.day = day
 	h.salt = salt

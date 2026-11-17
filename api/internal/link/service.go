@@ -121,7 +121,7 @@ func (s *Service) CheckSlug(ctx context.Context, value string, ownerID *bson.Obj
 func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Input) (*Link, error) {
 	groupID, err := s.prepareInput(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create link: %w", err)
 	}
 
 	now := time.Now()
@@ -141,7 +141,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 
 	link.Slug, err = s.reserveSlug(ctx, input.Slug, link.ID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create link: %w", err)
 	}
 
 	if err := s.repository.Insert(ctx, link); err != nil {
@@ -161,7 +161,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*L
 
 	groupID, err := s.prepareInput(ctx, input)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update link %s: %w", id.Hex(), err)
 	}
 
 	previous := *link
@@ -330,7 +330,7 @@ func (s *Service) Open(ctx context.Context, value string, visit Visit) (*Link, e
 
 func (s *Service) prepareInput(ctx context.Context, input Input) (*bson.ObjectID, error) {
 	if err := input.CheckSchedule(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("check link schedule: %w", err)
 	}
 
 	if input.GroupID == "" {
@@ -339,7 +339,7 @@ func (s *Service) prepareInput(ctx context.Context, input Input) (*bson.ObjectID
 
 	groupID, err := group.ParseID(input.GroupID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse link group id: %w", err)
 	}
 
 	if err := s.groups.Ensure(ctx, group.KindLinks, groupID); err != nil {

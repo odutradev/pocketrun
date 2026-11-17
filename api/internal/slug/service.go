@@ -66,7 +66,7 @@ func (s *Service) Find(ctx context.Context, value string) (*Entry, error) {
 
 func (s *Service) Reserve(ctx context.Context, value string, kind Kind, targetID bson.ObjectID) error {
 	if err := Validate(value); err != nil {
-		return err
+		return fmt.Errorf("reserve slug %s: %w", value, err)
 	}
 
 	entry := &Entry{Slug: value, Kind: kind, TargetID: targetID, CreatedAt: time.Now()}
@@ -80,7 +80,7 @@ func (s *Service) ReserveRandom(ctx context.Context, kind Kind, targetID bson.Ob
 	for range randomAttempts {
 		value, err := Random()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("generate random slug: %w", err)
 		}
 
 		err = s.Reserve(ctx, value, kind, targetID)
@@ -88,7 +88,7 @@ func (s *Service) ReserveRandom(ctx context.Context, kind Kind, targetID bson.Ob
 			continue
 		}
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("reserve random slug: %w", err)
 		}
 		return value, nil
 	}

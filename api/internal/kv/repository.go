@@ -51,7 +51,7 @@ func (r *MongoRepository) Find(ctx context.Context, applicationID bson.ObjectID,
 	documents := []Document{}
 	total, err := r.findPage(ctx, filter, findOptions, &documents)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("find documents: %w", err)
 	}
 	return documents, total, nil
 }
@@ -65,7 +65,7 @@ func (r *MongoRepository) FindRaw(ctx context.Context, applicationID bson.Object
 	documents := []bson.M{}
 	total, err := r.findPage(ctx, collectionFilter(applicationID, collectionName), findOptions, &documents)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("find raw documents: %w", err)
 	}
 	return documents, total, nil
 }

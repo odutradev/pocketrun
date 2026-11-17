@@ -60,7 +60,7 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	defer mongo.Close(ctx)
 
 	if err := mongo.Drop(ctx); err != nil {
-		return err
+		return fmt.Errorf("drop database: %w", err)
 	}
 	logger.InfoContext(ctx, "database dropped", "database", cfg.MongoName)
 
@@ -82,7 +82,7 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	userService := user.NewService(userRepository, user.NewTokenSigner(cfg.JWTSecret), applicationService)
 	input := user.CreateInput{Name: adminName, Email: adminEmail, Password: adminPassword}
 	if _, err := userService.Create(ctx, input, user.RoleSuperadmin); err != nil {
-		return err
+		return fmt.Errorf("create superadmin: %w", err)
 	}
 	logger.InfoContext(ctx, "superadmin created", "email", adminEmail, "password", adminPassword)
 	return nil
