@@ -13,6 +13,13 @@ export interface PeriodPresetOption {
   hours: number | null;
 }
 
+export type UrlProtocol = "https" | "http" | "manual";
+
+export interface UrlProtocolOption {
+  value: UrlProtocol;
+  label: string;
+}
+
 export type SlugUnavailableReason = "invalid" | "reserved" | "taken";
 
 export interface Link {
