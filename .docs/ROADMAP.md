@@ -21,7 +21,7 @@ Lista do que falta construir para o PocketRun cumprir a visão descrita em `.cla
 Itens de conversa, não de código: discutir com o dono e registrar a decisão em `.claude/PRODUCT.md` (seção 7).
 
 - **1.1** ⬜ Registrar em `.claude/PRODUCT.md` onde páginas e links são servidos. Direção já escolhida pelo dono: domínio dedicado, servido pela mesma API (ver a regra na seção 3).
-- **1.2** ⬜ Registrar em `.claude/PRODUCT.md` a regra do slug. Decisão já tomada pelo dono: o slug é único na instância inteira e o acesso é sempre `dominio.com/{slug}`, sem prefixo `/p` ou `/l` (ver a regra na seção 3).
+- **1.2** ✅ Feito. Registrar em `.claude/PRODUCT.md` a regra do slug. Decisão já tomada pelo dono: o slug é único na instância inteira e o acesso é sempre `dominio.com/{slug}`, sem prefixo `/p` ou `/l` (ver a regra na seção 3).
 - **1.3** ⬜ Definir como importar os dados atuais do Shareds (collections do PocketDB).
 - **1.4** ⬜ Definir se o upload de arquivos volta e onde os arquivos ficam guardados (MongoDB GridFS, disco, S3 compatível).
 
@@ -55,12 +55,12 @@ Depende de 1.1 e 1.2.
 - O CSS e o JS da página vão embutidos no HTML entregue, sem rota própria para arquivos.
 
 - **3.1** ⬜ Criar o domínio de páginas: modelo (slug, HTML, CSS, JS, ativo, datas) e repositório, vinculado à aplicação, e a coleção única de slugs compartilhada com os links, com índice único.
-- **3.2** ⬜ Criar o domínio de links: modelo (slug, URL de destino, ativo, datas) e repositório, vinculado à aplicação, registrando o slug na mesma coleção única do 3.1.
+- **3.2** ✅ Feito. Criar o domínio de links: modelo (slug, URL de destino, ativo, datas) e repositório, registrando o slug na coleção única de slugs. Decisão do dono: links são globais da instância (não pertencem a aplicações) e se organizam em grupos de links.
 - **3.3** ⬜ Rotas admin de páginas: listar, criar, ver, editar, excluir, ativar e desativar.
-- **3.4** ⬜ Rotas admin de links: listar, criar, ver, editar, excluir, ativar e desativar.
-- **3.5** ⬜ Geração de slug aleatório e validação de slug personalizado: formato (minúsculas, números e hífen), nomes reservados da raiz e unicidade entre páginas e links da instância inteira.
+- **3.4** ✅ Feito. Rotas admin de links: listar, criar, ver, editar, excluir, ativar e desativar.
+- **3.5** ✅ Feito. Geração de slug aleatório e validação de slug personalizado: formato (minúsculas, números e hífen), nomes reservados da raiz e unicidade entre páginas e links da instância inteira.
 - **3.6** ⬜ Rota `/{slug}` no domínio de páginas: busca o slug na coleção única e, se for página, entrega o HTML com CSS e JS embutidos, cache e headers de segurança.
-- **3.7** ⬜ Na mesma rota `/{slug}`, se o slug for link, responde `302` para a URL de destino.
+- **3.7** ✅ Feito. Na mesma rota `/{slug}`, se o slug for link, responde `302` para a URL de destino. Por enquanto na raiz da API pública, até o 3.8.
 - **3.8** ⬜ Roteamento por host na API: variável de ambiente com o domínio de páginas e links (em `.env.example` e no compose), grupo de rotas servido só nesse domínio, decisão do que a raiz `/` mostra (404 ou redirect para um site configurado) e o passo a passo do domínio extra no Dokploy no `README.md`.
 
 ## 4. Páginas & Links: painel
@@ -69,7 +69,7 @@ Depende dos itens da seção 3 correspondentes.
 
 - **4.1** ⬜ Aba de páginas e links nos detalhes da aplicação, com listagem, status e ações.
 - **4.2** ⬜ Editor de página com Monaco (abas HTML, CSS e JS) e pré-visualização.
-- **4.3** ⬜ Formulário de criação e edição de link.
+- **4.3** ✅ Feito. Formulário de criação e edição de link.
 - **4.4** ⬜ Ativar e desativar página ou link direto da listagem, e copiar a URL pública.
 
 ## 5. Analytics

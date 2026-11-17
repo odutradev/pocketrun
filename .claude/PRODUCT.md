@@ -37,13 +37,15 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 | Conceito | Significado |
 | :--- | :--- |
 | **Gestor** | Pessoa que entra no painel (JWT). O primeiro gestor é criado pelo fluxo de setup (`/setup/*`) como superadmin. Um gestor é dono de aplicações. Cargos: **Gestor** (`admin`) cuida das próprias aplicações; **Superadmin** (`superadmin`) também gerencia os usuários. |
-| **Aplicação** | Um projeto. Tem nome, `projectId` único, descrição, origens permitidas e tokens de acesso. Todos os dados, páginas e links pertencem a exatamente uma aplicação e são invisíveis para as outras. |
+| **Aplicação** | Um projeto do KV. Tem nome, `projectId` único, descrição, origens permitidas e tokens de acesso. A aplicação existe só para o KV: as collections e os documentos pertencem a exatamente uma aplicação e são invisíveis para as outras. Páginas e links não pertencem a aplicações. |
 | **Token de acesso** | Segredo usado por um app cliente para chamar a API pública. Formato `pk_live_...`, guardado só como hash, exibido uma única vez na criação, validade opcional, revogável, com registro de último uso. Enviado como `controlAccess`, `X-Pocket-Token` ou `Authorization: Bearer`. |
 | **Origens permitidas** | Lista de CORS por aplicação. Chamadas de navegador de outras origens são recusadas. Chamadas sem header `Origin` só passam se a aplicação liberar requisições fora do navegador. |
 | **Collection** | Grupo nomeado de documentos dentro de uma aplicação, como uma tabela. É criada na primeira escrita, sem schema. |
 | **Documento** | Um objeto JSON livre (`data`) dentro de uma collection, com id, datas e validade opcional (`expiresInDays`), após a qual é apagado. |
-| **Página** *(planejado)* | Uma micro-página feita de HTML, CSS e JS, publicada num slug. |
-| **Link** *(planejado)* | Um slug curto que redireciona para uma URL externa. |
+| **Página** *(planejado)* | Uma micro-página feita de HTML, CSS e JS, publicada num slug. Global da instância, como os links. |
+| **Link** | Um slug curto que redireciona (`302`) para uma URL externa. Global da instância: todo gestor vê e edita todos os links. |
+| **Grupo** | Pasta que só organiza a lista de um serviço. Links têm os seus grupos e páginas terão os seus; um grupo não isola nada, não tem token e não é uma aplicação. Excluir um grupo deixa os itens sem grupo. |
+| **Slug** | O endereço curto de um link ou página: letras minúsculas, números e hífen. Único na instância inteira, compartilhado entre links e páginas, numa coleção própria com índice único. |
 
 ## 5. Módulos e status
 
@@ -53,8 +55,8 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 - Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
 - Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
 - Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
-- Painel com menu lateral: Aplicações e Usuários em cima, um grupo **Serviços** separado com KV, Páginas e Links (cada um na cor da sua ferramenta; Páginas e Links marcados "Em breve" até o módulo chegar), perfil e saída embaixo.
-- Aplicações: criar, listar, ver detalhes, editar, excluir (`/apps/*`).
+- Painel com menu lateral: o grupo **Serviços** primeiro, com KV, Páginas e Links (cada um na cor da sua ferramenta; Páginas marcada "Em breve" até o módulo chegar), depois o grupo **Painel** com Usuários, e perfil e saída embaixo. A raiz `/` abre o KV.
+- Aplicações, dentro do KV: criar, listar, ver detalhes, editar, excluir (`/apps/*`). A gestão de aplicações fica na página do KV, porque a aplicação é exclusiva dele.
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
 - Uma API só, numa porta só: rotas públicas na raiz (tráfego dos clientes) e rotas do painel sob `/admin`, cada grupo com seu CORS.
@@ -76,14 +78,23 @@ No painel, por aplicação: **explorador** de dados (collections e documentos), 
 
 Ainda não trazido do PocketDB: upload de arquivos.
 
-### 5.3 Páginas & Links, antigo Shareds (planejado)
+### 5.3 Páginas & Links, antigo Shareds (links prontos, páginas planejadas)
 
-Conteúdo:
+Links (pronto):
+
+- Lista global de links com busca, filtro por grupo, estado, contagem de acessos, cópia da URL pública e exclusão.
+- Uma só página para criar e editar (`/links/new` e `/links/{id}/edit`): título, slug, URL de destino, grupo e ativação.
+- Slug personalizado ou id aleatório (botão de sortear). A disponibilidade é verificada sozinha, com um pequeno atraso depois que o gestor para de digitar.
+- Ativação: **ativo**, **desativado**, **por período** (fim obrigatório, início opcional) ou **por acessos** (ativo até atingir o número de aberturas). Fora da regra, o link responde 404 e o slug continua reservado.
+- Grupos de links criados, renomeados e excluídos pelo botão Grupos da lista.
+- Redirect público em `GET /{slug}` na raiz da API, com `302`, `Cache-Control: no-store` e contagem atômica de acessos. O domínio dedicado (roadmap 3.8) fica para depois.
+
+Páginas (planejado):
 
 - Páginas com HTML, CSS e JS editados num editor de código (Monaco) dentro do painel.
-- Links de redirecionamento para URLs externas.
-- Slug personalizado ou id aleatório para cada página ou link.
-- Ativar ou desativar uma página ou link na hora.
+- Slug personalizado ou id aleatório, no mesmo espaço de slugs dos links.
+- Grupos de páginas próprios, com a mesma regra dos grupos de links.
+- Ativar ou desativar uma página na hora.
 
 Analytics:
 
@@ -93,13 +104,13 @@ Analytics:
 
 Administração:
 
-- Exportar todas as páginas, links e métricas de uma aplicação em JSON e restaurar a partir desse arquivo.
+- Exportar todas as páginas, links e métricas em JSON e restaurar a partir desse arquivo.
 
 Diferenças em relação ao Shareds que o tornam robusto:
 
 - O acesso é o login do gestor, não um PIN no env do frontend.
 - Nenhum token de aplicação vai para um bundle de navegador: o painel usa as rotas `/admin` com o login do gestor.
-- Páginas e links pertencem a uma aplicação, assim como as collections.
+- Páginas e links são globais da instância e se organizam em grupos por serviço; aplicações ficam só no KV.
 - Servir páginas, redirecionar e contar visualizações é trabalho da API, não de um app React separado.
 
 ## 6. Princípios do produto
@@ -116,7 +127,6 @@ Diferenças em relação ao Shareds que o tornam robusto:
 
 Resolver com o usuário antes de construir Páginas & Links:
 
-- Onde páginas e links são servidos: um caminho na API pública (`/p/{slug}`), um domínio dedicado ou os dois.
-- Se o slug é único por aplicação ou na instância inteira (um domínio curto exige slug único na instância).
+- Onde páginas e links são servidos: por enquanto na raiz da API pública (`/{slug}`); a direção é um domínio dedicado servido pela mesma API.
 - Como importar os dados atuais do Shareds (hoje eles vivem em collections do PocketDB).
 - Se o upload de arquivos do PocketDB volta e onde os arquivos ficam guardados.
