@@ -1,0 +1,58 @@
+package link
+
+import (
+	"context"
+	"fmt"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+)
+
+type MongoEventRepository struct {
+	collection *mongo.Collection
+}
+
+func NewMongoEventRepository(collection *mongo.Collection) *MongoEventRepository {
+	return &MongoEventRepository{collection: collection}
+}
+
+func (r *MongoEventRepository) EnsureIndexes(ctx context.Context) error {
+	_, err := r.collection.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{{Key: "linkId", Value: 1}, {Key: "at", Value: -1}},
+	})
+	if err != nil {
+		return fmt.Errorf("create link events indexes: %w", err)
+	}
+	return nil
+}
+
+func (r *MongoEventRepository) InsertEvent(ctx context.Context, event *Event) error {
+	if _, err := r.collection.InsertOne(ctx, event); err != nil {
+		return fmt.Errorf("insert link event: %w", err)
+	}
+	return nil
+}
+
+func (r *MongoEventRepository) FindEvents(ctx context.Context, linkID bson.ObjectID, query HistoryQuery) ([]Event, error) {
+	filter := bson.M{"linkId": linkID}
+	if query.Before != nil {
+		filter["at"] = bson.M{"$lt": *query.Before}
+	}
+
+	findOptions := options.Find().
+		SetSort(bson.D{{Key: "at", Value: -1}, {Key: "_id", Value: -1}}).
+		SetLimit(int64(query.Limit))
+
+	cursor, err := r.collection.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, fmt.Errorf("find link events: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	events := []Event{}
+	if err := cursor.All(ctx, &events); err != nil {
+		return nil, fmt.Errorf("decode link events: %w", err)
+	}
+	return events, nil
+}

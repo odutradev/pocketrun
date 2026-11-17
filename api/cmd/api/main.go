@@ -70,7 +70,9 @@ func run(logger *slog.Logger) error {
 	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
-	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository, slugRepository, groupRepository, linkRepository)
+	linkEventRepository := link.NewMongoEventRepository(mongo.Collection("linkEvents"))
+	linkOpenRepository := link.NewMongoOpenRepository(mongo.Collection("linkOpens"))
+	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository, slugRepository, groupRepository, linkRepository, linkEventRepository, linkOpenRepository)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
@@ -79,7 +81,15 @@ func run(logger *slog.Logger) error {
 	setupService := setup.NewService(userService, logger)
 	slugService := slug.NewService(slugRepository)
 	groupService := group.NewService(groupRepository)
-	linkService := link.NewService(linkRepository, slugService, groupService)
+	linkService := link.NewService(link.Dependencies{
+		Repository: linkRepository,
+		Events:     linkEventRepository,
+		Opens:      linkOpenRepository,
+		Slugs:      slugService,
+		Groups:     groupService,
+		Actors:     userService,
+		Logger:     logger,
+	})
 
 	if err := setupService.ReportStatus(startupContext); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)
