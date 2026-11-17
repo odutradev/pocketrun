@@ -15,6 +15,8 @@ import type {
   LogoConfig,
   LogoKind,
   LogoPalette,
+  MotionDemo,
+  MotionToken,
   OpticalSize,
   QuickKitItem,
   RasterFormat,
@@ -24,7 +26,7 @@ import type {
 } from "@utils/types/brand";
 import type { Permission, UserRole } from "@utils/types/user";
 
-const { brand } = theme;
+const { brand, motion } = theme;
 
 export const errorMessages: Record<ApiErrorCode, string> = {
   validation_failed: "Alguns campos estão inválidos.",
@@ -70,7 +72,8 @@ export const brandSections: BrandSection[] = [
   { id: "icone", number: "06", label: "Ícone" },
   { id: "ferramentas", number: "07", label: "Ferramentas" },
   { id: "usos", number: "08", label: "Usos" },
-  { id: "downloads", number: "09", label: "Downloads" }
+  { id: "movimento", number: "09", label: "Movimento" },
+  { id: "downloads", number: "10", label: "Downloads" }
 ];
 
 export const brandContextOptions: BrandOption<BrandContext>[] = [
@@ -454,5 +457,84 @@ export const brandQuickKit: QuickKitItem[] = [
     title: "Card social · escuro",
     description: "1,91:1 sobre grafite. Para links, posts e Open Graph.",
     config: { ...defaultLogoConfig, aspect: "1.91:1", background: "graphite", size: 1024 }
+  }
+];
+
+export const brandMotionTokens: MotionToken[] = [
+  { token: "motion.fast", value: `${motion.fast}ms`, usage: "Hover, foco e troca de cor" },
+  { token: "motion.base", value: `${motion.base}ms`, usage: "Fechar lâmina e mudar de estado" },
+  { token: "motion.expressive", value: `${motion.expressive}ms`, usage: "Abrir lâmina e entrada da marca" },
+  { token: "motion.stagger", value: `${motion.stagger}ms`, usage: "Intervalo entre lâminas e letras" },
+  { token: "motion.easing.snap", value: motion.easing.snap, usage: "Lâmina abrindo e travando: passa do ponto e volta" },
+  { token: "motion.easing.standard", value: motion.easing.standard, usage: "Fechar, sair e trocar de cor" }
+];
+
+export const brandMotionDemos: MotionDemo[] = [
+  {
+    id: "intro",
+    title: "Abertura do canivete",
+    description: "O cabo entra e as lâminas abrem uma a uma, da mais curta para a mais longa, travando com um leve rebote.",
+    usage: "Hero do manual, tela de login e abertura do app",
+    timing: "560 ms por lâmina, 90 ms entre elas",
+    easing: "snap",
+    hasReplay: true
+  },
+  {
+    id: "wordmark",
+    title: "Logo com RUN sincronizado",
+    description: "POCKET sobe letra a letra. Cada letra de RUN acende junto com a lâmina da sua cor: R com Dados, U com Conteúdos e N com Links.",
+    usage: "Cabeçalho na primeira carga, vídeos e apresentações",
+    timing: "Cerca de 1,2 s no total",
+    easing: "standard nas letras, snap nas lâminas",
+    hasReplay: true
+  },
+  {
+    id: "loader",
+    title: "Loader de lâminas",
+    description: "As lâminas abrem e fecham em onda, sem parar. Substitui o spinner genérico e já fala a língua da marca.",
+    usage: "Páginas carregando, explorer de documentos e envios",
+    timing: "1,4 s por ciclo, 90 ms entre lâminas",
+    easing: "standard"
+  },
+  {
+    id: "hover",
+    title: "Hover que abre mais",
+    description: "Ao passar o mouse ou focar, as lâminas se afastam alguns graus, como se o canivete fosse puxado. Ao sair, voltam ao lugar.",
+    usage: "Logo do cabeçalho e atalhos das ferramentas",
+    timing: "250 ms para abrir e para voltar",
+    easing: "snap na entrada, standard na saída"
+  },
+  {
+    id: "context",
+    title: "Troca de contexto",
+    description: "Ao mudar de ferramenta, as lâminas fecham, trocam de cor e reabrem. No contexto de uma ferramenta, as três lâminas e o RUN assumem a cor dela.",
+    usage: "Seletor de contexto e troca entre módulos do painel",
+    timing: "250 ms fechando, 560 ms abrindo",
+    easing: "standard, depois snap"
+  },
+  {
+    id: "status",
+    title: "Rebite de status",
+    description: "Com a API no ar, um anel pulsa a partir do rebite. Quando ela cai, as lâminas se recolhem e o anel fica vermelho: canivete fechado é sistema parado.",
+    usage: "Indicador de saúde da API no cabeçalho",
+    timing: "Pulso de 2 s, recolhe em 250 ms",
+    easing: "standard"
+  },
+  {
+    id: "snap",
+    title: "Trava de confirmação",
+    description: "Depois de salvar, a lâmina dá um estalo curto, como quem trava o canivete. Discreto o bastante para repetir sempre.",
+    usage: "Criar app, gerar token e salvar documento",
+    timing: "560 ms",
+    easing: "snap"
+  },
+  {
+    id: "appIcon",
+    title: "Ícone do app",
+    description: "O bloco cresce do centro e o canivete abre dentro dele. Serve de tela de abertura enquanto o app carrega.",
+    usage: "Antes do React montar, PWA e vídeos curtos",
+    timing: "Cerca de 1 s no total",
+    easing: "standard no bloco, snap nas lâminas",
+    hasReplay: true
   }
 ];

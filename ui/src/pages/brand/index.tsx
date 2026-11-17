@@ -9,6 +9,7 @@ import DownloadsSection from "./sections/downloads";
 import Hero from "./sections/hero";
 import IconSection from "./sections/icon";
 import LogoSection from "./sections/logo";
+import MotionSection from "./sections/motion";
 import SymbolSection from "./sections/symbol";
 import ToolsSection from "./sections/tools";
 import TypographySection from "./sections/typography";
@@ -38,6 +39,7 @@ const BrandPage: React.FC = () => {
           <IconSection />
           <ToolsSection />
           <UsageSection />
+          <MotionSection />
           <DownloadsSection />
           <Footer>
             <span>Identidade visual · PocketRun</span>

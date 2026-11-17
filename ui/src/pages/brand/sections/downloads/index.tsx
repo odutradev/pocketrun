@@ -42,7 +42,7 @@ const DownloadsSection: React.FC = () => {
   return (
     <Section id="downloads">
       <SectionHeading
-        number="09"
+        number="10"
         title="Central de downloads"
         lead="Monte qualquer versão da marca: tipo, contexto, cores, fundo, proporção, tamanho e formato. Os SVGs levam a fonte embutida e funcionam sem ela instalada."
       />
