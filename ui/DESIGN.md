@@ -36,7 +36,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
 
 - **Fonts:** `brand.fonts.display` (Unbounded 800) for page titles, big numbers and section labels; `brand.fonts.body` (Hanken Grotesk) for UI; `brand.fonts.mono` (Space Mono) per principle 3.
 - **Spacing:** `theme.spacing(n)` on a 4 px grid. Sections 56 px apart, card padding 24–28 px.
-- **Page area:** every panel page uses the same area, owned by `appLayout`'s `Main`: up to `layout.maxWidth` (1280 px), centered, with 16 px side gutters on mobile and 32 px from `md` (top 32/40 px, bottom 64/80 px). A page's root container is `width: 100%` with no `max-width`, padding or margin of its own; only forms or text blocks inside a section may be narrower.
+- **Page area:** every panel page uses the same area, owned by `appLayout`'s `Main`: up to `layout.maxWidth` (1280 px), centered, with 16 px side gutters on mobile and 32 px from `md` (top 32/40 px, bottom 64/80 px). A page's root container is `width: 100%` with no `max-width`, padding or margin of its own. Everything inside it follows the same width: forms, form panels (`fieldset`), cards, tables and editors stretch to the full page width, and so do create and edit pages. Never put a `max-width` on a form or a section to make it look narrower; to group fields, use a grid inside the full-width panel (two columns from `md`). The only things allowed to be narrower are a paragraph of running text (`max-width` around 640 px for line length), a search field inside a toolbar, and dialogs.
 - **Scrollbar:** thin (6 px) everywhere, set in `styles/global.ts`: the track is `brand.graphite` and the thumb is the context color (`accent.base`) at 40 % opacity, 65 % on hover. The color comes from the `--scrollbar-thumb` variable, which `appLayout` updates per page through `styles/context.ts`. Scroll areas that hide their bar (tab rows) keep `scrollbar-width: none`.
 - **Radius:** `radii.tight` (4 px) on side menu items, so the context stroke stays straight; `radii.control` (10 px) on controls, `radii.box` (12 px) on boxes inside cards, `radii.panel` (16 px) on panels, `radii.card` (20 px) on large cards and dialogs, `radii.pill` on badges and chips.
 - **Motion:** `motion.fast` for hover and color, `motion.base` for state changes and closing, `motion.expressive` with `easing.snap` for opening. Loader is the symbol's `motion="loop"`. A logo that follows the tool context uses `hasContextTransition` (blades close, swap color, reopen); a logo that is a link uses `isHoverable` (blades spread on hover). The side menu logo uses both, plus `motion="intro"` on first load.
@@ -144,6 +144,7 @@ Components shown in the style guide but not built yet (bulk action bar, command 
 - [ ] Tool color appears only on the five context points, and only one tool per screen.
 - [ ] Machine values in mono; numbers in display.
 - [ ] Every state has text or an icon, not color only; contrast 4.5:1 for text.
+- [ ] The page and every form, panel and table inside it use the full page area; no `max-width` except on running text, toolbar search fields and dialogs.
 - [ ] Controls ≥ 40 px (44 px on mobile), visible focus, labels and `aria-label` on icon buttons.
 - [ ] Reused a component from the inventory, or added the new one to it.
 - [ ] Motion uses `theme.motion` and respects `prefers-reduced-motion`.
