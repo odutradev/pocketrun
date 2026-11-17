@@ -38,3 +38,7 @@ export const symbolMotion = {
 } as const;
 
 export const expiryWarningDays = 14;
+
+export const slugCheckDelay = 500;
+
+export const randomSlugLength = 8;

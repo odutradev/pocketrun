@@ -18,7 +18,16 @@ export type ApiErrorCode =
   | "invalid_user_id"
   | "self_action_forbidden"
   | "user_has_applications"
-  | "invalid_current_password";
+  | "invalid_current_password"
+  | "invalid_link_id"
+  | "link_not_found"
+  | "invalid_group_id"
+  | "group_not_found"
+  | "group_name_taken"
+  | "invalid_schedule"
+  | "invalid_slug"
+  | "reserved_slug"
+  | "slug_taken";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

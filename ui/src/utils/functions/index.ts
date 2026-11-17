@@ -1,4 +1,4 @@
-import { expiryWarningDays } from "@assets/config";
+import { expiryWarningDays, apiUrl } from "@assets/config";
 import { errorMessages } from "@assets/data";
 import { isApiError } from "@utils/api";
 
@@ -21,6 +21,30 @@ export const formatDate = (value: string): string => new Date(value).toLocaleDat
 export const formatDateTime = (value: string): string => new Date(value).toLocaleString("pt-BR");
 
 export const toProjectId = (value: string): string => value.toLowerCase().trim().replace(/[^a-z0-9-]/g, "-");
+
+export const toSlug = (value: string): string =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-{2,}/g, "-");
+
+export const randomSlug = (length: number): string => {
+  const alphabet = "abcdefghijkmnpqrstuvwxyz23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+};
+
+export const toDateTimeInput = (value: string): string => {
+  const date = new Date(value);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
+export const fromDateTimeInput = (value: string): string => new Date(value).toISOString();
+
+export const publicLinkUrl = (slug: string): string => `${apiUrl}/${slug}`;
 
 export const parseOrigins = (value: string): string[] => {
   const origins = value

@@ -1,7 +1,9 @@
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
+import type { LinkMode, LinkState, SlugUnavailableReason } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
+import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
 
 const { brand, motion } = theme;
@@ -26,7 +28,16 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_user_id: "Usuário inválido.",
   self_action_forbidden: "Você não pode mudar o próprio cargo nem remover a própria conta.",
   user_has_applications: "Este usuário ainda tem aplicações. Remova-as antes de excluir a conta.",
-  invalid_current_password: "A senha atual está incorreta."
+  invalid_current_password: "A senha atual está incorreta.",
+  invalid_link_id: "Link inválido.",
+  link_not_found: "Link não encontrado.",
+  invalid_group_id: "Grupo inválido.",
+  group_not_found: "Grupo não encontrado.",
+  group_name_taken: "Já existe um grupo com esse nome.",
+  invalid_schedule: "A regra de ativação está incompleta.",
+  invalid_slug: "Use só letras minúsculas, números e hífen no slug.",
+  reserved_slug: "Esse slug é reservado pelo sistema.",
+  slug_taken: "Esse slug já está em uso."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
@@ -529,3 +540,24 @@ export const brandMotionDemos: MotionDemo[] = [
     hasReplay: true
   }
 ];
+
+export const linkModeOptions: { value: LinkMode; label: string }[] = [
+  { value: "active", label: "Ativo" },
+  { value: "inactive", label: "Desativado" },
+  { value: "period", label: "Por período" },
+  { value: "clicks", label: "Por acessos" }
+];
+
+export const linkStateLabels: Record<LinkState, { label: string; tone: BadgeTone }> = {
+  active: { label: "Ativo", tone: "success" },
+  inactive: { label: "Desativado", tone: "neutral" },
+  scheduled: { label: "Agendado", tone: "accent" },
+  expired: { label: "Expirado", tone: "warning" },
+  exhausted: { label: "Esgotado", tone: "warning" }
+};
+
+export const slugReasonMessages: Record<SlugUnavailableReason, string> = {
+  invalid: "Use só letras minúsculas, números e hífen.",
+  reserved: "Esse slug é reservado pelo sistema.",
+  taken: "Esse slug já está em uso por outro link ou página."
+};
