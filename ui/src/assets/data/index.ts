@@ -43,13 +43,28 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_application_id: "Aplicação inválida.",
   application_not_found: "Aplicação não encontrada.",
   token_not_found: "Token não encontrado.",
-  project_id_taken: "Este Project ID já está em uso."
+  project_id_taken: "Este Project ID já está em uso.",
+  forbidden: "Sua conta não tem permissão para esta ação.",
+  invalid_user_id: "Usuário inválido.",
+  self_action_forbidden: "Você não pode mudar o próprio cargo nem remover a própria conta.",
+  user_has_applications: "Este usuário ainda tem aplicações. Remova-as antes de excluir a conta.",
+  invalid_current_password: "A senha atual está incorreta."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
-  superadmin: ["manage_apps"],
+  superadmin: ["manage_apps", "manage_users"],
   admin: ["manage_apps"]
 };
+
+export const roleLabels: Record<UserRole, string> = {
+  superadmin: "Superadmin",
+  admin: "Gestor"
+};
+
+export const roleOptions: { value: UserRole; label: string }[] = [
+  { value: "admin", label: "Gestor · cria e gerencia as próprias aplicações" },
+  { value: "superadmin", label: "Superadmin · também gerencia os usuários" }
+];
 
 export const tokenValidityOptions = [
   { value: 30, label: "30 dias" },

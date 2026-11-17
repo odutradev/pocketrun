@@ -13,7 +13,12 @@ export type ApiErrorCode =
   | "invalid_application_id"
   | "application_not_found"
   | "token_not_found"
-  | "project_id_taken";
+  | "project_id_taken"
+  | "forbidden"
+  | "invalid_user_id"
+  | "self_action_forbidden"
+  | "user_has_applications"
+  | "invalid_current_password";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;
