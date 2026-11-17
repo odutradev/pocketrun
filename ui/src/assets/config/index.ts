@@ -14,3 +14,17 @@ export const healthCheckInterval = 20000;
 export const explorerPageSize = 15;
 
 export const copyFeedbackDuration = 2000;
+
+export const brandFontCssUrl =
+  "https://fonts.googleapis.com/css2?family=Unbounded:wght@800&text=POCKETRUN&display=block";
+
+export const brandFontTimeout = 8000;
+
+export const brandWordmark = {
+  text: "POCKETRUN",
+  font: "800 100px Unbounded, sans-serif",
+  fontSize: 100,
+  capHeight: 72,
+  letterSpacing: -3.5,
+  fallbackWidth: 720
+} as const;

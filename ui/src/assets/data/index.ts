@@ -1,5 +1,30 @@
+import theme from "@styles/theme";
 import type { ApiErrorCode } from "@utils/types/api";
+import type {
+  BrandColor,
+  BrandContext,
+  BrandOption,
+  BrandSection,
+  BrandToken,
+  BrandToolInfo,
+  BrandTypeStep,
+  FaviconItem,
+  IconPaletteInfo,
+  LogoAspect,
+  LogoBackground,
+  LogoConfig,
+  LogoKind,
+  LogoPalette,
+  OpticalSize,
+  QuickKitItem,
+  RasterFormat,
+  RasterSize,
+  SymbolPart,
+  TypeFamily
+} from "@utils/types/brand";
 import type { Permission, UserRole } from "@utils/types/user";
+
+const { brand } = theme;
 
 export const errorMessages: Record<ApiErrorCode, string> = {
   validation_failed: "Alguns campos estão inválidos.",
@@ -35,3 +60,399 @@ export const tokenValidityOptions = [
 ] as const;
 
 export const defaultTokenValidity = 365;
+
+export const brandSections: BrandSection[] = [
+  { id: "conceito", number: "01", label: "Conceito" },
+  { id: "simbolo", number: "02", label: "Símbolo" },
+  { id: "logotipo", number: "03", label: "Logotipo" },
+  { id: "cores", number: "04", label: "Cores" },
+  { id: "tipografia", number: "05", label: "Tipografia" },
+  { id: "icone", number: "06", label: "Ícone" },
+  { id: "ferramentas", number: "07", label: "Ferramentas" },
+  { id: "usos", number: "08", label: "Usos" },
+  { id: "downloads", number: "09", label: "Downloads" }
+];
+
+export const brandContextOptions: BrandOption<BrandContext>[] = [
+  { value: "geral", label: "Geral", description: "Início, login, configurações e materiais da marca." },
+  { value: "dados", label: "Dados", description: "Dentro de Dados, lâminas e RUN ficam azuis." },
+  { value: "conteudos", label: "Conteúdos", description: "Dentro de Conteúdos, lâminas e RUN ficam em latão." },
+  { value: "links", label: "Links", description: "Dentro de Links, lâminas e RUN ficam em oliva." }
+];
+
+export const brandPersonality = [
+  { title: "Prática", description: "Uma ferramenta de bolso: resolve o backend e sai da frente do seu projeto." },
+  { title: "Sua", description: "Self-hosted. Roda no seu servidor, com os seus dados, sem depender de ninguém." },
+  { title: "Versátil", description: "Dados, conteúdos e links no mesmo cabo. Você abre só a lâmina que precisa." },
+  { title: "Brasileira", description: "Nome curto e global, com interface e tom em português." }
+];
+
+export const brandSymbolParts: SymbolPart[] = [
+  {
+    number: "01",
+    name: "Cabo · a instância",
+    spec: "74 × 20 · rebite r 4,5 em (24, 70)",
+    description: "Um PocketRun só, no seu servidor. É de onde tudo sai, por isso é neutro e nunca muda: aço no escuro, tinta no claro."
+  },
+  {
+    number: "02",
+    name: "Lâmina longa · Dados",
+    spec: "60 × 12 · −22°",
+    description: "O coração do produto: coleções de JSON. A maior lâmina, em azul anodizado.",
+    tool: "dados"
+  },
+  {
+    number: "03",
+    name: "Lâmina do meio · Conteúdos",
+    spec: "54 × 12 · −52°",
+    description: "Micro-páginas em HTML, CSS e JS. Quente e visível como um cartaz, em latão.",
+    tool: "conteudos"
+  },
+  {
+    number: "04",
+    name: "Lâmina curta · Links",
+    spec: "46 × 12 · −82°",
+    description: "Links curtos que levam a outro lugar. Verde de caminho, oliva de campo.",
+    tool: "links"
+  }
+];
+
+export const brandOpticalSizes: OpticalSize[] = [
+  { size: 64, variant: "full", label: "64 px ou mais · desenho completo, com rebite" },
+  { size: 32, variant: "bold", label: "24 a 48 px · lâminas e cabo mais grossos" },
+  { size: 16, variant: "tiny", label: "16 px · o cabo vira um círculo" }
+];
+
+export const brandIconPalettes: IconPaletteInfo[] = [
+  { palette: "dark", name: "Grafite (principal)", description: "Favicon, ícone do app, PWA e avatar da organização." },
+  { palette: "light", name: "Papel", description: "Documentação e materiais em fundo claro." },
+  { palette: "monoWhite", name: "Tinta e branco", description: "Carimbos, gravações e peças de uma cor." }
+];
+
+export const brandTools: BrandToolInfo[] = [
+  {
+    tool: "dados",
+    name: "Dados",
+    colorName: "Azul anodizado",
+    route: "/kv/:collection",
+    status: "live",
+    origin: "O antigo PocketDB",
+    description: "Coleções de JSON livre, com filtros, paginação e validade por documento."
+  },
+  {
+    tool: "conteudos",
+    name: "Conteúdos",
+    colorName: "Latão",
+    route: "/p/:slug",
+    status: "planned",
+    origin: "Vem do Shareds",
+    description: "Micro-páginas em HTML, CSS e JS, com editor no painel e métricas de acesso."
+  },
+  {
+    tool: "links",
+    name: "Links",
+    colorName: "Oliva de campo",
+    route: "/l/:slug",
+    status: "planned",
+    origin: "Vem do Shareds",
+    description: "Links curtos que redirecionam para qualquer endereço, com contagem de acessos."
+  }
+];
+
+export const brandToolColors: BrandColor[] = [
+  {
+    name: "Azul anodizado",
+    hex: brand.tools.dados.base,
+    token: "--pr-dados",
+    role: "Dados · indigo-9",
+    description: "Dados é a parte que não pode falhar. O azul passa confiança e cara de infraestrutura."
+  },
+  {
+    name: "Latão",
+    hex: brand.tools.conteudos.base,
+    token: "--pr-conteudos",
+    role: "Conteúdos · amber-9",
+    description: "Conteúdos é o que aparece para o mundo. Quente e chamativo como um cartaz, artesanal como HTML escrito à mão."
+  },
+  {
+    name: "Oliva de campo",
+    hex: brand.tools.links.base,
+    token: "--pr-links",
+    role: "Links · grass-9",
+    description: "Links levam a pessoa para outro lugar. Verde de caminho e de “pode ir”, robusto como o canivete."
+  }
+];
+
+export const brandNeutralColors: BrandColor[] = [
+  {
+    name: "Grafite",
+    hex: brand.graphite,
+    token: "--pr-bg",
+    role: "Fundo escuro · gray-1",
+    description: "Base do tema escuro. Cinza puro, sem tom, para não puxar nenhuma das três cores."
+  },
+  {
+    name: "Superfície",
+    hex: brand.surface,
+    token: "--pr-surface",
+    role: "Cards e painéis · gray-2",
+    description: "Um degrau acima do fundo para separar áreas sem bordas fortes."
+  },
+  {
+    name: "Aço",
+    hex: brand.steel,
+    token: "--pr-text",
+    role: "Texto e cabo · gray-12",
+    description: "Texto principal, cabo do símbolo e botões globais no tema escuro."
+  },
+  {
+    name: "Aço escovado",
+    hex: brand.steelMuted,
+    token: "--pr-text-muted",
+    role: "Texto suave · gray-11",
+    description: "Rótulos, descrições e itens inativos."
+  },
+  {
+    name: "Papel",
+    hex: brand.paper,
+    token: "--pr-bg (claro)",
+    role: "Fundo claro · gray-1",
+    description: "Base do tema claro e dos materiais impressos."
+  },
+  {
+    name: "Tinta",
+    hex: brand.ink,
+    token: "--pr-text (claro)",
+    role: "Texto e cabo no claro · gray-12",
+    description: "Texto, cabo e botões globais sobre fundo claro."
+  }
+];
+
+export const brandStateColors: BrandColor[] = [
+  {
+    name: "Sucesso",
+    hex: brand.states.success,
+    token: "--pr-success",
+    role: "teal-9",
+    description: "Verde-azulado, longe do oliva de Links. Também marca a API no ar."
+  },
+  {
+    name: "Aviso",
+    hex: brand.states.warning,
+    token: "--pr-warning",
+    role: "orange-9",
+    description: "Laranja, para não se misturar com o latão de Conteúdos."
+  },
+  {
+    name: "Erro",
+    hex: brand.states.error,
+    token: "--pr-error",
+    role: "red-9",
+    description: "Vermelho puro, sem concorrência na paleta."
+  }
+];
+
+export const brandTokens: BrandToken[] = [
+  { token: "--pr-bg", dark: brand.graphite, light: brand.paper },
+  { token: "--pr-surface", dark: brand.surface, light: brand.white },
+  { token: "--pr-surface-2", dark: brand.raised, light: brand.paperRaised },
+  { token: "--pr-border", dark: brand.border, light: brand.paperBorder },
+  { token: "--pr-text", dark: brand.steel, light: brand.ink },
+  { token: "--pr-text-muted", dark: brand.steelMuted, light: brand.inkMuted },
+  { token: "--pr-dados", dark: brand.tools.dados.text, light: brand.tools.dados.textOnLight },
+  { token: "--pr-conteudos", dark: brand.tools.conteudos.text, light: brand.tools.conteudos.textOnLight },
+  { token: "--pr-links", dark: brand.tools.links.text, light: brand.tools.links.textOnLight }
+];
+
+export const brandTypeFamilies: { family: TypeFamily; name: string; role: string; description: string; weights: number[] }[] = [
+  {
+    family: "display",
+    name: "Unbounded",
+    role: "Logotipo, títulos e números",
+    description: "Larga e geométrica: ocupa espaço com confiança, como um nome gravado no cabo. Sempre em 700 ou 800.",
+    weights: [500, 700, 800]
+  },
+  {
+    family: "body",
+    name: "Hanken Grotesk",
+    role: "Interface e textos",
+    description: "Neutra e legível, equilibra a largura da Unbounded. 400 para leitura, 600 para rótulos e botões.",
+    weights: [400, 500, 600, 700]
+  },
+  {
+    family: "mono",
+    name: "Space Mono",
+    role: "Código, rotas e tokens",
+    description: "Monoespaçada com personalidade, combina com o desenho geométrico da Unbounded.",
+    weights: [400, 700]
+  }
+];
+
+export const brandTypeScale: BrandTypeStep[] = [
+  { label: "Display · 56 / 1.0 · 800", family: "display", size: 56, lineHeight: 1, weight: 800, sample: "POCKETRUN" },
+  { label: "Título 1 · 32 / 1.1 · 800", family: "display", size: 32, lineHeight: 1.1, weight: 800, sample: "Suas aplicações" },
+  { label: "Título 2 · 20 / 1.2 · 700", family: "display", size: 20, lineHeight: 1.2, weight: 700, sample: "Chaves de acesso" },
+  {
+    label: "Rótulo · 12 · 800 · +14%",
+    family: "display",
+    size: 12,
+    lineHeight: 1.2,
+    weight: 800,
+    sample: "Coleções",
+    uppercase: true
+  },
+  {
+    label: "Corpo · 16 / 1.55 · 400",
+    family: "body",
+    size: 16,
+    lineHeight: 1.55,
+    weight: 400,
+    sample: "Tokens, CORS e dados isolados por projeto, sem escrever servidor."
+  },
+  { label: "Pequeno · 14 / 1.45 · 500", family: "body", size: 14, lineHeight: 1.45, weight: 500, sample: "Chave usada há 2 min" },
+  { label: "Código · 14 / 1.7 · 400", family: "mono", size: 14, lineHeight: 1.7, weight: 400, sample: "GET /kv/tasks/get-all" }
+];
+
+export const brandUsageRules = [
+  {
+    title: "Área de proteção",
+    description: "Deixe livre em volta da marca um espaço igual à altura do cabo do símbolo. Nada de texto, borda ou imagem dentro dela."
+  },
+  {
+    title: "Tamanho mínimo",
+    description: "Logo horizontal com 120 px de largura. Abaixo de 48 px de altura use o ícone do app; abaixo de 24 px, a versão de favicon."
+  },
+  {
+    title: "Contexto",
+    description: "No geral, o RUN usa as três cores. Dentro de uma ferramenta, as três lâminas e o RUN ficam da cor dela. O cabo é sempre aço ou tinta."
+  },
+  {
+    title: "Escrita do nome",
+    description: "No logotipo, sempre POCKETRUN em caixa alta. Em texto corrido, PocketRun, junto e com P e R maiúsculos."
+  }
+];
+
+export const brandDonts = [
+  "Não troque a ordem das cores: azul, latão e oliva",
+  "Não pinte o cabo com uma das cores das ferramentas",
+  "Não misture contextos: lâminas de uma cor e RUN de outra",
+  "Não use o RUN de três cores dentro de uma ferramenta",
+  "Não aplique sombra, brilho ou gradiente",
+  "Não escreva Pocket Run nem pocketRun"
+];
+
+export const logoKindOptions: BrandOption<LogoKind>[] = [
+  { value: "horizontal", label: "Horizontal (símbolo + nome)", description: "Versão principal: navbar, site, README e assinaturas." },
+  { value: "stacked", label: "Empilhada", description: "Para espaços estreitos e verticais: capas, crachás e totens." },
+  { value: "symbol", label: "Símbolo", description: "Só o canivete: avatares, carimbos e elementos gráficos." },
+  { value: "wordmark", label: "Logotipo (só o nome)", description: "Quando o símbolo já aparece por perto." },
+  { value: "appIcon", label: "Ícone do app", description: "O símbolo num bloco de cantos arredondados: favicon, PWA e perfis." }
+];
+
+export const logoPaletteOptions: BrandOption<LogoPalette>[] = [
+  { value: "dark", label: "Padrão escuro", description: "Cabo e nome em aço, para fundos escuros." },
+  { value: "light", label: "Padrão claro", description: "Cabo e nome em tinta, para fundos claros." },
+  { value: "monoWhite", label: "Monocromático branco", description: "100% branco. Marca d'água para fotos e vídeos." },
+  { value: "monoInk", label: "Monocromático tinta", description: "100% tinta. Para documentos e impressão em 1 cor." }
+];
+
+export const logoBackgroundOptions: BrandOption<LogoBackground>[] = [
+  { value: "transparent", label: "Transparente" },
+  { value: "graphite", label: `Grafite ${brand.graphite}` },
+  { value: "paper", label: `Papel ${brand.paper}` },
+  { value: "white", label: `Branco ${brand.white}` }
+];
+
+export const logoAspectOptions: BrandOption<LogoAspect>[] = [
+  { value: "original", label: "Original (recorte justo)" },
+  { value: "1:1", label: "1:1 · avatar e post" },
+  { value: "4:5", label: "4:5 · feed vertical" },
+  { value: "16:9", label: "16:9 · tela e vídeo" },
+  { value: "1.91:1", label: "1,91:1 · link e Open Graph" },
+  { value: "9:16", label: "9:16 · stories" },
+  { value: "3:1", label: "3:1 · banner e capa" }
+];
+
+export const rasterSizeOptions: BrandOption<RasterSize>[] = [
+  { value: 512, label: "512 px no lado maior" },
+  { value: 1024, label: "1024 px no lado maior" },
+  { value: 2048, label: "2048 px no lado maior" },
+  { value: 4096, label: "4096 px no lado maior" }
+];
+
+export const rasterFormatOptions: BrandOption<RasterFormat>[] = [
+  { value: "png", label: "PNG" },
+  { value: "webp", label: "WEBP" },
+  { value: "jpg", label: "JPG" }
+];
+
+export const brandFaviconPack: FaviconItem[] = [
+  { fileName: "favicon.svg", size: 512, format: "svg", usage: "Navegadores modernos" },
+  { fileName: "favicon-16.png", size: 16, format: "png", usage: "Aba do navegador" },
+  { fileName: "favicon-32.png", size: 32, format: "png", usage: "Aba em telas retina" },
+  { fileName: "favicon-48.png", size: 48, format: "png", usage: "Atalhos do Windows" },
+  { fileName: "apple-touch-icon.png", size: 180, format: "png", usage: "Tela inicial do iOS" },
+  { fileName: "icon-192.png", size: 192, format: "png", usage: "PWA e Android" },
+  { fileName: "icon-512.png", size: 512, format: "png", usage: "PWA e lojas" }
+];
+
+export const defaultLogoConfig: LogoConfig = {
+  kind: "horizontal",
+  context: "geral",
+  palette: "dark",
+  background: "transparent",
+  aspect: "original",
+  size: 2048,
+  format: "png"
+};
+
+export const brandQuickKit: QuickKitItem[] = [
+  {
+    id: "horizontal-dark",
+    title: "Logo horizontal · escuro",
+    description: "Aço e as três cores sobre transparente. Para o tema escuro e telas.",
+    config: { ...defaultLogoConfig }
+  },
+  {
+    id: "horizontal-light",
+    title: "Logo horizontal · claro",
+    description: "Tinta e as três cores sobre transparente. Para web e peças claras.",
+    config: { ...defaultLogoConfig, palette: "light" }
+  },
+  {
+    id: "stacked-dark",
+    title: "Logo empilhada · escuro",
+    description: "Para capas e espaços estreitos em fundo escuro.",
+    config: { ...defaultLogoConfig, kind: "stacked" }
+  },
+  {
+    id: "symbol-dark",
+    title: "Símbolo · escuro",
+    description: "O canivete sozinho, para fundos escuros.",
+    config: { ...defaultLogoConfig, kind: "symbol", size: 1024 }
+  },
+  {
+    id: "app-icon",
+    title: "Ícone do app",
+    description: "Bloco grafite 1:1, para GitHub, npm, PWA e redes sociais.",
+    config: { ...defaultLogoConfig, kind: "appIcon", size: 1024 }
+  },
+  {
+    id: "mono-white",
+    title: "Monocromático branco",
+    description: "100% branco. Marca d'água para fotos e vídeos.",
+    config: { ...defaultLogoConfig, palette: "monoWhite" }
+  },
+  {
+    id: "mono-ink",
+    title: "Monocromático tinta",
+    description: "100% tinta. Para documentos e impressão em 1 cor.",
+    config: { ...defaultLogoConfig, palette: "monoInk" }
+  },
+  {
+    id: "social-card",
+    title: "Card social · escuro",
+    description: "1,91:1 sobre grafite. Para links, posts e Open Graph.",
+    config: { ...defaultLogoConfig, aspect: "1.91:1", background: "graphite", size: 1024 }
+  }
+];

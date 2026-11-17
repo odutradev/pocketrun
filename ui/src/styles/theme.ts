@@ -59,7 +59,58 @@ export const theme = {
     codeSize: "12px",
     tightLetterSpacing: "-0.02em"
   },
-  blur: "blur(16px)"
+  blur: "blur(16px)",
+  brand: {
+    graphite: "#111111",
+    surface: "#191919",
+    raised: "#222222",
+    border: "#3A3A3A",
+    strongBorder: "#484848",
+    steel: "#EEEEEE",
+    steelMuted: "#B4B4B4",
+    paper: "#FCFCFC",
+    paperRaised: "#F0F0F0",
+    paperBorder: "#D9D9D9",
+    ink: "#202020",
+    inkMuted: "#646464",
+    white: "#FFFFFF",
+    tools: {
+      dados: {
+        base: "#3E63DD",
+        text: "#9EB1FF",
+        textOnLight: "#3A5BC7",
+        contrast: "#FFFFFF",
+        soft: "rgba(62, 99, 221, 0.18)"
+      },
+      conteudos: {
+        base: "#FFC53D",
+        text: "#FFCA16",
+        textOnLight: "#AB6400",
+        contrast: "#21201C",
+        soft: "rgba(255, 197, 61, 0.16)"
+      },
+      links: {
+        base: "#46A758",
+        text: "#71D083",
+        textOnLight: "#2A7E3B",
+        contrast: "#111111",
+        soft: "rgba(70, 167, 88, 0.18)"
+      }
+    },
+    states: {
+      success: "#12A594",
+      successText: "#0BD8B6",
+      warning: "#F76B15",
+      warningText: "#FFA057",
+      error: "#E5484D",
+      errorText: "#FF9592"
+    },
+    fonts: {
+      display: "'Unbounded', sans-serif",
+      body: "'Hanken Grotesk', sans-serif",
+      mono: "'Space Mono', monospace"
+    }
+  }
 };
 
 export type AppTheme = typeof theme;
