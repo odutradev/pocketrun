@@ -13,4 +13,5 @@ export interface SegmentedControlProps<TValue extends string> {
   onValueChange: (value: TValue) => void;
   isFullWidth?: boolean;
   isIconOnly?: boolean;
+  mobileColumns?: number;
 }

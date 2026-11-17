@@ -5,6 +5,7 @@ export const List = styled.div`
   gap: ${({ theme }) => theme.spacing(1)};
   border-bottom: 1px solid ${({ theme }) => theme.brand.border};
   overflow-x: auto;
+  scroll-padding-inline: ${({ theme }) => theme.spacing(6)};
   scrollbar-width: none;
 `;
 
@@ -14,17 +15,23 @@ export const Tab = styled.button<{ $isActive: boolean; $isDanger: boolean }>`
     align-items: center;
     gap: ${theme.spacing(2)};
     flex-shrink: 0;
-    height: 48px;
-    padding: 0 ${theme.spacing(4)};
+    height: 46px;
+    padding: 0 ${theme.spacing(3)};
     border: 0;
     background: transparent;
     box-shadow: ${$isActive ? `inset 0 -2px 0 ${$isDanger ? theme.brand.states.error : theme.accent.base}` : "none"};
     color: ${$isDanger ? theme.brand.states.errorText : $isActive ? theme.brand.steel : theme.brand.steelMuted};
     font-family: ${theme.brand.fonts.body};
-    font-size: 15px;
+    font-size: 14px;
     font-weight: ${$isActive ? 700 : 500};
     white-space: nowrap;
     cursor: pointer;
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      height: 48px;
+      padding: 0 ${theme.spacing(4)};
+      font-size: 15px;
+    }
     transition:
       color ${theme.motion.fast}ms ${theme.motion.easing.standard},
       box-shadow ${theme.motion.base}ms ${theme.motion.easing.standard};

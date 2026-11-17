@@ -2,13 +2,13 @@ import { Container, Header, Hint, Label, Value } from "./styles";
 
 import type { StatCardProps } from "./types";
 
-const StatCard = ({ label, value, hint, icon }: StatCardProps) => (
+const StatCard = ({ label, value, hint, icon, isTextValue = false }: StatCardProps) => (
   <Container>
     <Header>
       <Label>{label}</Label>
       {icon && <span aria-hidden="true">{icon}</span>}
     </Header>
-    <Value>{value}</Value>
+    <Value $isText={isTextValue}>{value}</Value>
     {hint && <Hint>{hint}</Hint>}
   </Container>
 );

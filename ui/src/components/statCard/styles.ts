@@ -1,13 +1,18 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(2)};
-  padding: ${({ theme }) => theme.spacing(5)};
+  min-width: 0;
+  padding: ${({ theme }) => theme.spacing(4)};
   border: 1px solid ${({ theme }) => theme.brand.border};
   border-radius: ${({ theme }) => theme.radii.panel};
   background-color: ${({ theme }) => theme.brand.surface};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: ${({ theme }) => theme.spacing(5)};
+  }
 `;
 
 export const Header = styled.div`
@@ -23,13 +28,19 @@ export const Label = styled.span`
   font-weight: 600;
 `;
 
-export const Value = styled.span`
-  font-family: ${({ theme }) => theme.brand.fonts.display};
-  font-weight: 800;
-  font-size: 32px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: ${({ theme }) => theme.brand.steel};
+export const Value = styled.span<{ $isText: boolean }>`
+  ${({ theme, $isText }) => css`
+    font-family: ${theme.brand.fonts.display};
+    font-weight: ${$isText ? 600 : 800};
+    font-size: ${$isText ? "17px" : "26px"};
+    line-height: ${$isText ? 1.25 : 1};
+    letter-spacing: ${$isText ? "-0.01em" : "-0.04em"};
+    color: ${theme.brand.steel};
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      font-size: ${$isText ? "20px" : "32px"};
+    }
+  `}
 `;
 
 export const Hint = styled.span`

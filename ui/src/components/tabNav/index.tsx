@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { getTabIds } from "@utils/functions";
 import { Count, List, Tab } from "./styles";
 
@@ -11,6 +13,10 @@ const TabNav = <TValue extends string>({
   value,
   onValueChange
 }: TabNavProps<TValue>): React.ReactElement => {
+  useEffect(() => {
+    document.getElementById(getTabIds(idPrefix, value).tabId)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [idPrefix, value]);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const currentIndex = items.findIndex((item) => item.value === value);
     const targets: Record<string, number> = {

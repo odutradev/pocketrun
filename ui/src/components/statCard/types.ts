@@ -5,4 +5,5 @@ export interface StatCardProps {
   value: ReactNode;
   hint?: ReactNode;
   icon?: ReactNode;
+  isTextValue?: boolean;
 }
