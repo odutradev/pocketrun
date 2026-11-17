@@ -43,6 +43,6 @@ export const slugCheckDelay = 500;
 
 export const randomSlugLength = 8;
 
-export const clickLimitRange = { min: 0, max: 150, initial: 100 } as const;
+export const clickLimitRange = { min: 1, max: 150, initial: 100 } as const;
 
 export const defaultPeriodHours = 168;
