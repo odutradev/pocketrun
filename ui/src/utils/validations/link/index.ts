@@ -1,5 +1,16 @@
 import { z } from "zod";
 
+const isValidUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    const isWebProtocol = url.protocol === "http:" || url.protocol === "https:";
+    const hasHost = url.hostname === "localhost" || /^[^.\s]+(\.[^.\s]+)+$/.test(url.hostname);
+    return isWebProtocol && hasHost && !/\s/.test(value);
+  } catch {
+    return false;
+  }
+};
+
 export const slugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export const linkFormSchema = z
@@ -8,14 +19,15 @@ export const linkFormSchema = z
     slug: z
       .string()
       .trim()
+      .min(1, "Defina um slug ou sorteie um")
       .max(64, "Slug muito longo")
-      .refine((slug) => slug === "" || slugPattern.test(slug), "Use só letras minúsculas, números e hífen"),
+      .regex(slugPattern, "Use só letras minúsculas, números e hífen"),
     url: z
       .string()
       .trim()
       .min(1, "Informe a URL de destino")
       .max(2048, "URL muito longa")
-      .regex(/^https?:\/\/\S+$/i, "Use uma URL completa, começando com http:// ou https://"),
+      .refine(isValidUrl, "Informe uma URL válida, como https://exemplo.com"),
     groupId: z.string(),
     mode: z.enum(["active", "inactive", "period", "clicks"]),
     startsAt: z.string(),

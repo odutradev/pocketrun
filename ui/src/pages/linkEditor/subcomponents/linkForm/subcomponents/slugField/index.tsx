@@ -62,7 +62,7 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
   return (
     <Row>
       <Input
-        label="Slug *"
+        label="Slug"
         name="slug"
         autoComplete="off"
         spellCheck={false}
