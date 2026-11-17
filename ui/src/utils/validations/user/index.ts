@@ -33,8 +33,3 @@ export const changePasswordSchema = z
     message: "As senhas não coincidem",
     path: ["confirmPassword"]
   });
-
-export type UserFormValues = z.infer<typeof userFormSchema>;
-export type ProfileValues = z.infer<typeof profileSchema>;
-export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
-export type ChangePasswordPayload = Omit<ChangePasswordValues, "confirmPassword">;

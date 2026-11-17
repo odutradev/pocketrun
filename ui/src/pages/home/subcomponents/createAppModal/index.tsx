@@ -13,7 +13,7 @@ import Input from "@components/input";
 import useForm from "@hooks/useForm";
 import useHomePage from "../../hook";
 
-import type { CreateApplicationValues } from "@utils/validations/application";
+import type { CreateApplicationValues } from "@utils/types/application";
 
 const initialValues = { name: "", projectId: "", origins: "*", description: "" };
 

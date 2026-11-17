@@ -14,3 +14,14 @@ export interface UseHomePageReturn {
   handleOpenCreate: () => void;
   handleCloseCreate: () => void;
 }
+
+export interface HomeStore {
+  applications: Application[];
+  isLoading: boolean;
+  isRefreshing: boolean;
+  search: string;
+  isCreateModalOpen: boolean;
+  loadApplications: () => Promise<void>;
+  setSearch: (search: string) => void;
+  setCreateModalOpen: (isOpen: boolean) => void;
+}

@@ -4,20 +4,9 @@ import { create } from "zustand";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { listApplications } from "@actions/apps";
 
-import type { Application } from "@utils/types/application";
+import type { HomeStore } from "./types";
 
 const logger = createLocalLogger("homePage");
-
-interface HomeStore {
-  applications: Application[];
-  isLoading: boolean;
-  isRefreshing: boolean;
-  search: string;
-  isCreateModalOpen: boolean;
-  loadApplications: () => Promise<void>;
-  setSearch: (search: string) => void;
-  setCreateModalOpen: (isOpen: boolean) => void;
-}
 
 const useHomeStore = create<HomeStore>()((set, get) => ({
   applications: [],

@@ -13,7 +13,7 @@ import Select from "@components/select";
 import Input from "@components/input";
 import useForm from "@hooks/useForm";
 
-import type { CreateTokenValues } from "@utils/validations/application";
+import type { CreateTokenValues } from "@utils/types/application";
 
 const initialValues = { name: "", validityDays: defaultTokenValidity };
 

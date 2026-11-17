@@ -4,21 +4,9 @@ import { create } from "zustand";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { listUsers } from "@actions/users";
 
-import type { User } from "@utils/types/user";
-import type { UserFormTarget } from "./types";
+import type { UsersStore } from "./types";
 
 const logger = createLocalLogger("usersPage");
-
-interface UsersStore {
-  users: User[];
-  isLoading: boolean;
-  isRefreshing: boolean;
-  formTarget: UserFormTarget | null;
-  removeTarget: User | null;
-  loadUsers: () => Promise<void>;
-  setFormTarget: (target: UserFormTarget | null) => void;
-  setRemoveTarget: (user: User | null) => void;
-}
 
 const useUsersStore = create<UsersStore>()((set, get) => ({
   users: [],

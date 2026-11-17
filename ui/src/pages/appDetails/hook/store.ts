@@ -4,21 +4,9 @@ import { create } from "zustand";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { getApplication } from "@actions/apps";
 
-import type { Application } from "@utils/types/application";
-import type { DetailsTab } from "./types";
+import type { AppDetailsStore, DetailsTab } from "./types";
 
 const logger = createLocalLogger("appDetailsPage");
-
-interface AppDetailsStore {
-  application: Application | null;
-  isLoading: boolean;
-  activeTab: DetailsTab;
-  isTokenModalOpen: boolean;
-  loadApplication: (applicationId: string, signal?: AbortSignal) => Promise<void>;
-  setActiveTab: (tab: DetailsTab) => void;
-  setTokenModalOpen: (isOpen: boolean) => void;
-  reset: () => void;
-}
 
 const initialState = {
   application: null,

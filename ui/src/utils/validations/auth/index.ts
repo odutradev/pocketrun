@@ -24,7 +24,3 @@ export const setupSchema = signUpSchema
     message: "As senhas não coincidem",
     path: ["confirmPassword"]
   });
-
-export type SignInValues = z.infer<typeof signInSchema>;
-export type SignUpValues = z.infer<typeof signUpSchema>;
-export type SetupValues = z.infer<typeof setupSchema>;

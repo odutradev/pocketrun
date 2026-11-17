@@ -29,3 +29,22 @@ export interface UseBrandPageReturn {
   handleCopyColor: (hex: string) => void;
   isCopied: (key: string) => boolean;
 }
+
+export interface BrandStore {
+  heroContext: BrandContext;
+  isGuidesVisible: boolean;
+  playgroundText: string;
+  playgroundFamily: TypeFamily;
+  playgroundWeight: number;
+  generatorConfig: LogoConfig;
+  wordWidth: number;
+  fontCss: string;
+  isAssetsReady: boolean;
+  setHeroContext: (context: BrandContext) => void;
+  setGuidesVisible: (isVisible: boolean) => void;
+  setPlaygroundText: (text: string) => void;
+  setPlaygroundFamily: (family: TypeFamily) => void;
+  setPlaygroundWeight: (weight: number) => void;
+  updateGeneratorConfig: (patch: Partial<LogoConfig>) => void;
+  prepareAssets: () => Promise<void>;
+}

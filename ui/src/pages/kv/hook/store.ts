@@ -4,15 +4,9 @@ import { create } from "zustand";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { listApplications } from "@actions/apps";
 
-import type { Application } from "@utils/types/application";
+import type { KvStore } from "./types";
 
 const logger = createLocalLogger("kvPage");
-
-interface KvStore {
-  applications: Application[];
-  isLoading: boolean;
-  loadApplications: () => Promise<void>;
-}
 
 const useKvStore = create<KvStore>()((set) => ({
   applications: [],

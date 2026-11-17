@@ -2,18 +2,9 @@ import { create } from "zustand";
 
 import { rolePermissions } from "@assets/data";
 
-import type { Permission, UserRole } from "@utils/types/user";
-import type { ApiHealthStatus } from "@utils/types/api";
+import type { SystemStore } from "./types";
 
 
-
-interface SystemStore {
-  apiStatus: ApiHealthStatus;
-  isSetupRequired: boolean | null;
-  setApiStatus: (apiStatus: ApiHealthStatus) => void;
-  setSetupRequired: (isSetupRequired: boolean) => void;
-  hasPermissions: (role: UserRole | undefined, required: Permission[]) => boolean;
-}
 
 const useSystemStore = create<SystemStore>()((set) => ({
   apiStatus: "online",

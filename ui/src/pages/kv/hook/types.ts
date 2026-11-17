@@ -5,3 +5,9 @@ export interface UseKvPageReturn {
   isLoading: boolean;
   loadApplications: () => Promise<void>;
 }
+
+export interface KvStore {
+  applications: Application[];
+  isLoading: boolean;
+  loadApplications: () => Promise<void>;
+}

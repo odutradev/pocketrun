@@ -3,15 +3,7 @@ import { create } from "zustand";
 
 import { storageKeys } from "@assets/config";
 
-import type { Session, User } from "@utils/types/user";
-
-interface AuthStore {
-  token: string | null;
-  user: User | null;
-  setSession: (session: Session) => void;
-  setUser: (user: User) => void;
-  clearSession: () => void;
-}
+import type { AuthStore } from "./types";
 
 const useAuthStore = create<AuthStore>()(
   persist(

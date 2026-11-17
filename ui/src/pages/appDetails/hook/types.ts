@@ -15,3 +15,14 @@ export interface UseAppDetailsPageReturn {
   handleOpenTokenModal: () => void;
   handleCloseTokenModal: () => void;
 }
+
+export interface AppDetailsStore {
+  application: Application | null;
+  isLoading: boolean;
+  activeTab: DetailsTab;
+  isTokenModalOpen: boolean;
+  loadApplication: (applicationId: string, signal?: AbortSignal) => Promise<void>;
+  setActiveTab: (tab: DetailsTab) => void;
+  setTokenModalOpen: (isOpen: boolean) => void;
+  reset: () => void;
+}

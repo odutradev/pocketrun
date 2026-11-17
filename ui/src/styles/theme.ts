@@ -1,5 +1,6 @@
 import type { BrandContext } from "@utils/types/brand";
 import type { ThemeProps } from "@radix-ui/themes";
+import type { AccentColors } from "./types";
 
 export const radixTheme: ThemeProps = {
   appearance: "dark",
@@ -9,13 +10,6 @@ export const radixTheme: ThemeProps = {
   scaling: "100%",
   hasBackground: false
 };
-
-export interface AccentColors {
-  base: string;
-  text: string;
-  soft: string;
-  contrast: string;
-}
 
 const generalAccent: AccentColors = {
   base: "#EEEEEE",
@@ -128,7 +122,5 @@ const pickAccent = (context: BrandContext): AccentColors =>
 export const withContext = (context: BrandContext) => ({ ...baseTheme, context, accent: pickAccent(context) });
 
 export const theme = withContext("general");
-
-export type AppTheme = typeof theme;
 
 export default theme;

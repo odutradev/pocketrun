@@ -34,7 +34,3 @@ export const createTokenSchema = z.object({
   name: z.string().trim().min(1, "Identificador é obrigatório").max(100, "Identificador muito longo"),
   validityDays: z.number().int().min(0).max(3650)
 });
-
-export type CreateApplicationValues = z.infer<typeof createApplicationSchema>;
-export type SecuritySettingsValues = z.infer<typeof securitySettingsSchema>;
-export type CreateTokenValues = z.infer<typeof createTokenSchema>;

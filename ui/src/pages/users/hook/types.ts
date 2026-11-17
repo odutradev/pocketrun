@@ -16,3 +16,14 @@ export interface UseUsersPageReturn {
   handleOpenRemove: (user: User) => void;
   handleCloseRemove: () => void;
 }
+
+export interface UsersStore {
+  users: User[];
+  isLoading: boolean;
+  isRefreshing: boolean;
+  formTarget: UserFormTarget | null;
+  removeTarget: User | null;
+  loadUsers: () => Promise<void>;
+  setFormTarget: (target: UserFormTarget | null) => void;
+  setRemoveTarget: (user: User | null) => void;
+}

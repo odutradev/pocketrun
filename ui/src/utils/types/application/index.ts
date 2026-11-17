@@ -1,3 +1,6 @@
+import type { createApplicationSchema, securitySettingsSchema, createTokenSchema } from "@utils/validations/application";
+import type { z } from "zod";
+
 export interface ApiToken {
   id: string;
   name: string;
@@ -49,3 +52,7 @@ export interface CreatedToken {
   token: ApiToken;
   rawToken: string;
 }
+
+export type CreateApplicationValues = z.infer<typeof createApplicationSchema>;
+export type SecuritySettingsValues = z.infer<typeof securitySettingsSchema>;
+export type CreateTokenValues = z.infer<typeof createTokenSchema>;

@@ -7,13 +7,8 @@ import { roleLabels } from "@assets/data";
 import Badge from "@components/badge";
 
 import type { DataTableColumn } from "@components/dataTable/types";
+import type { UserColumnsOptions } from "./types";
 import type { User } from "@utils/types/user";
-
-interface UserColumnsOptions {
-  currentUserId: string | undefined;
-  onEdit: (user: User) => void;
-  onRemove: (user: User) => void;
-}
 
 export const getUserColumns = ({ currentUserId, onEdit, onRemove }: UserColumnsOptions): DataTableColumn<User>[] => [
   {

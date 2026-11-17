@@ -8,7 +8,7 @@ import Input from "@components/input";
 import useForm from "@hooks/useForm";
 import Card from "@components/card";
 
-import type { ChangePasswordValues } from "@utils/validations/user";
+import type { ChangePasswordValues } from "@utils/types/user";
 
 const initialValues = { currentPassword: "", newPassword: "", confirmPassword: "" };
 

@@ -6,28 +6,9 @@ import { createLocalLogger } from "@utils/functions";
 import { getEmbeddedFontCss } from "@actions/brand";
 import { defaultLogoConfig } from "@assets/data";
 
-import type { BrandContext, LogoConfig, TypeFamily } from "@utils/types/brand";
+import type { BrandStore } from "./types";
 
 const logger = createLocalLogger("brandPage");
-
-interface BrandStore {
-  heroContext: BrandContext;
-  isGuidesVisible: boolean;
-  playgroundText: string;
-  playgroundFamily: TypeFamily;
-  playgroundWeight: number;
-  generatorConfig: LogoConfig;
-  wordWidth: number;
-  fontCss: string;
-  isAssetsReady: boolean;
-  setHeroContext: (context: BrandContext) => void;
-  setGuidesVisible: (isVisible: boolean) => void;
-  setPlaygroundText: (text: string) => void;
-  setPlaygroundFamily: (family: TypeFamily) => void;
-  setPlaygroundWeight: (weight: number) => void;
-  updateGeneratorConfig: (patch: Partial<LogoConfig>) => void;
-  prepareAssets: () => Promise<void>;
-}
 
 const useBrandStore = create<BrandStore>()((set, get) => ({
   heroContext: "general",

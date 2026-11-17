@@ -11,8 +11,7 @@ import Input from "@components/input";
 import useUsersPage from "../../hook";
 import useForm from "@hooks/useForm";
 
-import type { UserFormValues } from "@utils/validations/user";
-import type { User, UserRole } from "@utils/types/user";
+import type { User, UserRole, UserFormValues } from "@utils/types/user";
 
 const UserFormModal = () => {
   const { formTarget, currentUserId, handleCloseForm, loadUsers } = useUsersPage();

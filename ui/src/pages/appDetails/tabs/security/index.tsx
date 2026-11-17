@@ -17,8 +17,7 @@ import Input from "@components/input";
 import useForm from "@hooks/useForm";
 import Card from "@components/card";
 
-import type { SecuritySettingsValues } from "@utils/validations/application";
-import type { Application } from "@utils/types/application";
+import type { SecuritySettingsValues, Application } from "@utils/types/application";
 import type { KeyboardEvent } from "react";
 
 const newOriginId = "security-new-origin";

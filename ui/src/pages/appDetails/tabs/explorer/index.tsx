@@ -19,13 +19,9 @@ import Input from "@components/input";
 import Card from "@components/card";
 
 import type { ExplorerDocument, Page } from "@utils/types/explorer";
+import type { LoadedState } from "./types";
 
 const logger = createLocalLogger("explorerTab");
-
-interface LoadedState<T> {
-  key: string;
-  value: T;
-}
 
 const reportError = (signal: AbortSignal, fallback: string) => (error: unknown) => {
   if (signal.aborted) return;

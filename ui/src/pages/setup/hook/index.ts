@@ -7,7 +7,7 @@ import useAction from "@hooks/useAction";
 import useAuthStore from "@stores/auth";
 import useForm from "@hooks/useForm";
 
-import type { SetupValues } from "@utils/validations/auth";
+import type { SetupValues } from "@utils/types/auth";
 import type { UseSetupPageReturn } from "./types";
 
 
