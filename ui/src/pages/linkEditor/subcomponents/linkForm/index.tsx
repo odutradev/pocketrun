@@ -28,7 +28,7 @@ import type { LinkFormProps } from "./types";
 const modeHints: Record<LinkMode, string> = {
   active: "O link redireciona sempre, até você mudar o estado.",
   inactive: "O link para de redirecionar e responde 404. O slug continua reservado.",
-  period: "O link redireciona só dentro do período. Sem início, vale a partir de agora.",
+  period: "O link redireciona só dentro do período escolhido.",
   clicks: "O link redireciona até atingir o limite de acessos, e depois responde 404."
 };
 

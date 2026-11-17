@@ -3,35 +3,60 @@ import styled from "styled-components";
 export const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
+  gap: ${({ theme }) => theme.spacing(4)};
 `;
 
-export const Presets = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${({ theme }) => theme.spacing(2)};
-`;
-
-export const Summary = styled.p`
-  display: flex;
-  flex-wrap: wrap;
+export const Timeline = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
-  margin: 0;
-  font-size: 14px;
-  color: ${({ theme }) => theme.brand.steelMuted};
+  gap: ${({ theme }) => theme.spacing(4)};
+  padding: ${({ theme }) => `${theme.spacing(3.5)} ${theme.spacing(4)}`};
+  border: 1px solid ${({ theme }) => theme.brand.border};
+  border-radius: ${({ theme }) => theme.radii.box};
+  background-color: ${({ theme }) => theme.brand.graphite};
+`;
 
-  svg {
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    color: ${({ theme }) => theme.accent.text};
+export const Point = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(1)};
+  min-width: 0;
+
+  &:last-child {
+    text-align: right;
   }
 `;
 
-export const Strong = styled.strong`
+export const PointLabel = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.brand.steelMuted};
+`;
+
+export const PointValue = styled.span`
+  font-size: 15px;
   font-weight: 600;
   color: ${({ theme }) => theme.brand.steel};
+  overflow-wrap: anywhere;
+`;
+
+export const Arrow = styled.span`
+  display: inline-flex;
+  color: ${({ theme }) => theme.accent.text};
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
+export const ErrorText = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: ${({ theme }) => theme.brand.states.errorText};
 `;
 
 export const Dates = styled.div`

@@ -1,45 +1,48 @@
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
-import { Container, Dates, Presets, Strong, Summary } from "./styles";
+import { Arrow, Container, Dates, ErrorText, Point, PointLabel, PointValue, Timeline } from "./styles";
 import { formatPeriodDate, hoursFromNow } from "@utils/functions";
+import SegmentedControl from "@components/segmentedControl";
 import { periodPresetOptions } from "@assets/data";
-import Button from "@components/button";
 import Input from "@components/input";
 
-import type { PeriodPreset, PeriodPresetOption } from "@utils/types/link";
+import type { PeriodPreset } from "@utils/types/link";
 import type { PeriodPickerProps } from "./types";
 
 const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtError, onChange }: PeriodPickerProps) => {
   const [preset, setPreset] = useState<PeriodPreset>(initialPreset);
 
-  const handlePreset = (option: PeriodPresetOption) => {
-    setPreset(option.value);
-    if (option.hours === null) return;
-    onChange({ startsAt: "", endsAt: hoursFromNow(option.hours) });
+  const handlePreset = (value: PeriodPreset) => {
+    setPreset(value);
+    const hours = periodPresetOptions.find((option) => option.value === value)?.hours ?? null;
+    if (hours === null) return;
+    onChange({ startsAt: "", endsAt: hoursFromNow(hours) });
   };
 
   return (
     <Container>
-      <Presets role="group" aria-label="Duração do link">
-        {periodPresetOptions.map((option) => (
-          <Button
-            key={option.value}
-            size="sm"
-            variant={preset === option.value ? "primary" : "secondary"}
-            aria-pressed={preset === option.value}
-            onClick={() => handlePreset(option)}
-          >
-            {option.label}
-          </Button>
-        ))}
-      </Presets>
+      <SegmentedControl
+        label="Duração do link"
+        options={periodPresetOptions}
+        value={preset}
+        onValueChange={handlePreset}
+        isFullWidth
+      />
       {endsAt && (
-        <Summary>
-          <CalendarIcon aria-hidden="true" />
-          Ativo de <Strong>{startsAt ? formatPeriodDate(startsAt) : "agora"}</Strong> até{" "}
-          <Strong>{formatPeriodDate(endsAt)}</Strong>
-        </Summary>
+        <Timeline>
+          <Point>
+            <PointLabel>Começa</PointLabel>
+            <PointValue>{startsAt ? formatPeriodDate(startsAt) : "Agora"}</PointValue>
+          </Point>
+          <Arrow aria-hidden="true">
+            <ArrowRightIcon />
+          </Arrow>
+          <Point>
+            <PointLabel>Termina</PointLabel>
+            <PointValue>{formatPeriodDate(endsAt)}</PointValue>
+          </Point>
+        </Timeline>
       )}
       {preset === "custom" && (
         <Dates>
@@ -59,7 +62,7 @@ const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtEr
           />
         </Dates>
       )}
-      {preset !== "custom" && endsAtError && <Summary role="alert">{endsAtError}</Summary>}
+      {preset !== "custom" && endsAtError && <ErrorText role="alert">{endsAtError}</ErrorText>}
     </Container>
   );
 };
