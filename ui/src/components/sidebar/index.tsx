@@ -1,4 +1,4 @@
-import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, LayersIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
+import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
@@ -16,16 +16,9 @@ import type { SidebarGroup, SidebarItem } from "./types";
 
 const groups: SidebarGroup[] = [
   {
-    label: "Painel",
-    items: [
-      { label: "Aplicações", to: "/", icon: <LayersIcon />, matches: ["/", "/apps"], requiredPermissions: ["manage_apps"] },
-      { label: "Usuários", to: "/users", icon: <PersonIcon />, matches: ["/users"], requiredPermissions: ["manage_users"] }
-    ]
-  },
-  {
     label: "Serviços",
     items: [
-      { label: "KV", to: "/kv", icon: <StackIcon />, matches: ["/kv"], requiredPermissions: ["manage_apps"] },
+      { label: "KV", to: "/kv", icon: <StackIcon />, matches: ["/kv", "/apps"], requiredPermissions: ["manage_apps"] },
       {
         label: "Páginas",
         to: "/pages",
@@ -34,14 +27,13 @@ const groups: SidebarGroup[] = [
         requiredPermissions: ["manage_apps"],
         badge: "Em breve"
       },
-      {
-        label: "Links",
-        to: "/links",
-        icon: <Link2Icon />,
-        matches: ["/links"],
-        requiredPermissions: ["manage_apps"],
-        badge: "Em breve"
-      }
+      { label: "Links", to: "/links", icon: <Link2Icon />, matches: ["/links"], requiredPermissions: ["manage_apps"] }
+    ]
+  },
+  {
+    label: "Painel",
+    items: [
+      { label: "Usuários", to: "/users", icon: <PersonIcon />, matches: ["/users"], requiredPermissions: ["manage_users"] }
     ]
   }
 ];
@@ -77,7 +69,7 @@ const Sidebar = () => {
   return (
     <>
       <MobileBar>
-        <LogoLink to="/" aria-label="PocketRun, ir para as aplicações">
+        <LogoLink to="/" aria-label="PocketRun, ir para o início">
           <BrandMark kind="horizontal" size={14} context={context} hasContextTransition />
         </LogoLink>
         <IconButton
@@ -99,7 +91,7 @@ const Sidebar = () => {
       >
         <Top>
           <Brand>
-            <LogoLink to="/" aria-label="PocketRun, ir para as aplicações">
+            <LogoLink to="/" aria-label="PocketRun, ir para o início">
               <BrandMark
                 kind="horizontal"
                 size={15}
