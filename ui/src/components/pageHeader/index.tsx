@@ -1,7 +1,6 @@
 import { Actions, Container, Description, Eyebrow, Text, Title } from "./styles";
 import type { PageHeaderProps } from "./types";
 
-// Topo de página: título em display, contexto curto e a ação principal à direita.
 const PageHeader = ({ title, eyebrow, description, actions, children }: PageHeaderProps) => (
   <Container>
     <Text>

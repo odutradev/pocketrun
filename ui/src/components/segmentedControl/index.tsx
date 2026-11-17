@@ -1,7 +1,6 @@
 import { Group, Segment } from "./styles";
 import type { SegmentedControlProps } from "./types";
 
-// De 2 a 4 visões do mesmo conteúdo. Genérico para manter o tipo do valor escolhido.
 const SegmentedControl = <TValue extends string>({
   label,
   options,

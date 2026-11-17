@@ -7,7 +7,6 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `;
 
-// Altura no celular (alvo de toque) e a partir do tablet.
 const sizes: Record<ButtonSize, { mobile: string; desktop: string; padding: string; font: string }> = {
   sm: { mobile: "36px", desktop: "32px", padding: "0 12px", font: "13px" },
   md: { mobile: "44px", desktop: "40px", padding: "0 16px", font: "14px" },
@@ -62,7 +61,6 @@ const variants = (theme: DefaultTheme): Record<ButtonVariant, ReturnType<typeof 
   `
 });
 
-// Compartilhado com o linkButton, para links com cara de botão.
 export const buttonStyles = css<ButtonStyleProps>`
   ${({ theme, $variant, $size, $isFullWidth }) => css`
     display: inline-flex;

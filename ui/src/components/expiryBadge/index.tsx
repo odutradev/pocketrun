@@ -4,7 +4,6 @@ import { formatDate, getExpiryInfo, pluralize } from "@utils/functions";
 import { MutedText } from "./styles";
 import type { ExpiryBadgeProps } from "./types";
 
-// Situação de validade: perto de expirar em laranja, expirado em vermelho, sempre com texto.
 const ExpiryBadge = ({ expiresAt, noneLabel, isStatus = false }: ExpiryBadgeProps) => {
   const { state, days = 0 } = getExpiryInfo(expiresAt);
 

@@ -4,7 +4,6 @@ import useAction from "@hooks/useAction";
 
 import useUsersPage from "../../hook";
 
-// Remover é definitivo; a API recusa se o usuário ainda tiver aplicações.
 const RemoveUserDialog = () => {
   const { removeTarget, handleCloseRemove, loadUsers } = useUsersPage();
 

@@ -9,7 +9,6 @@ export interface CodeToken {
 
 export interface CodeBlockProps {
   code: string;
-  // "json" destaca chaves, textos e literais.
   language?: CodeLanguage;
   title?: string;
   isCopyable?: boolean;

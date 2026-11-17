@@ -8,8 +8,6 @@ const blobToDataUrl = (blob: Blob) =>
     reader.readAsDataURL(blob);
   });
 
-// Baixa o CSS do Google Fonts e troca as URLs dos arquivos por data URLs,
-// para que o SVG exportado carregue a fonte sem depender da internet.
 export const getEmbeddedFontCss = async (signal?: AbortSignal): Promise<string> => {
   const cssResponse = await fetch(brandFontCssUrl, { signal });
   const css = await cssResponse.text();

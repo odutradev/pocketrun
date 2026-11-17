@@ -26,7 +26,6 @@ export const Description = styled.span`
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
-// Ligado usa o verde de sucesso: é estado, não ferramenta.
 export const Track = styled.button<{ $isChecked: boolean }>`
   ${({ theme, $isChecked }) => css`
     position: relative;

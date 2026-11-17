@@ -4,7 +4,6 @@ export interface SegmentedOption<TValue extends string> {
 }
 
 export interface SegmentedControlProps<TValue extends string> {
-  // Nome do grupo para leitores de tela.
   label: string;
   options: SegmentedOption<TValue>[];
   value: TValue;

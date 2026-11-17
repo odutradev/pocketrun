@@ -50,7 +50,6 @@ const AppLayout = () => {
     };
   }, [navigate, pathname, setApiStatus, setSetupRequired]);
 
-  // Telas "bare" (login e setup) ocupam a janela inteira e mostram o estado da API por conta própria.
   if (metadata?.layout === "bare") {
     return (
       <ThemeProvider theme={contextTheme}>

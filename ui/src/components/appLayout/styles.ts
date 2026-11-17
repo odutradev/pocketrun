@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-// No celular a barra do topo fica acima do conteúdo; a partir do desktop, o menu lateral fica à esquerda.
 export const Shell = styled.div`
   min-height: 100vh;
   display: flex;

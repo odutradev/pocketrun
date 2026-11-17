@@ -1,11 +1,9 @@
 const trimTrailingSlash = (url: string) => url.replace(/\/+$/, "");
 
-// Uma API só: as rotas públicas ficam na raiz e as do painel sob /admin.
 export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://localhost:5000");
 
 export const adminApiUrl = `${apiUrl}/admin`;
 
-// Versão geral do projeto (package.json da raiz), injetada na build pelo Vite.
 export const appVersion = __APP_VERSION__;
 
 export const storageKeys = {
@@ -39,5 +37,4 @@ export const symbolMotion = {
   savedFeedbackDuration: 1400
 } as const;
 
-// Prazo, em dias, a partir do qual tokens e documentos passam a mostrar o aviso de expiração.
 export const expiryWarningDays = 14;

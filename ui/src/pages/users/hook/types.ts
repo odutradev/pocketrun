@@ -1,6 +1,5 @@
 import type { User } from "@utils/types/user";
 
-// O mesmo diálogo cria um usuário novo ou edita um existente.
 export type UserFormTarget = { mode: "create" } | { mode: "edit"; user: User };
 
 export interface UseUsersPageReturn {

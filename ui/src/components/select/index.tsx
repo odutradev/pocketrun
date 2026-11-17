@@ -7,7 +7,6 @@ import { getFieldIds } from "@utils/functions";
 import { Chevron, Control, Field } from "./styles";
 import type { SelectProps } from "./types";
 
-// Select nativo com a moldura dos campos: acessível no teclado e no leitor de tela sem esforço extra.
 const Select = ({ label, options, value, onValueChange, hint, error, id, ...props }: SelectProps) => {
   const generatedId = useId();
   const selectId = id ?? generatedId;

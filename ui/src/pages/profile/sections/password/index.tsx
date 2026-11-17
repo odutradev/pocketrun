@@ -12,7 +12,6 @@ import { Actions, FieldRow, Form, Section } from "../../styles";
 
 const initialValues = { currentPassword: "", newPassword: "", confirmPassword: "" };
 
-// Troca de senha: pede a atual antes de aceitar a nova.
 const PasswordSection = () => {
   const { execute } = useAction({
     action: ({ currentPassword, newPassword }: ChangePasswordValues) => changePassword({ currentPassword, newPassword }),

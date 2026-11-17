@@ -6,10 +6,8 @@ export interface SidebarItem {
   label: string;
   to: string;
   icon: ReactNode;
-  // Prefixos de rota em que o item conta como ativo.
   matches: string[];
   requiredPermissions?: Permission[];
-  // Selo curto à direita, como "Em breve" num serviço ainda não lançado.
   badge?: string;
 }
 

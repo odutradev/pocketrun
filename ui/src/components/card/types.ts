@@ -11,6 +11,5 @@ export interface CardProps extends HTMLAttributes<HTMLElement> {
   tone?: CardTone;
   padding?: CardPadding;
   as?: CardElement;
-  // Com `to`, o card inteiro vira um link para a rota.
   to?: string;
 }

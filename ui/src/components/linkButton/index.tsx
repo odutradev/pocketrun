@@ -1,7 +1,6 @@
 import { Anchor, RouterLink } from "./styles";
 import type { LinkButtonProps } from "./types";
 
-// Link com a aparência de botão: para navegar, não para executar ações.
 const LinkButton = ({
   children,
   to,

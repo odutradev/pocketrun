@@ -22,7 +22,6 @@ export const Container = styled.section`
   }
 `;
 
-// A proposta e o símbolo grande só aparecem quando há espaço; no celular fica só o logo.
 export const Pitch = styled.div`
   display: none;
   flex-direction: column;

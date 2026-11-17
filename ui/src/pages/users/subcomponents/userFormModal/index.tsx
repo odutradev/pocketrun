@@ -14,8 +14,6 @@ import type { UserFormValues } from "@utils/validations/user";
 import useUsersPage from "../../hook";
 import { Actions, Form } from "./styles";
 
-// Cria um usuário novo ou edita um existente. A página monta este diálogo com uma `key`
-// por alvo, então o formulário sempre começa com os valores certos.
 const UserFormModal = () => {
   const { formTarget, currentUserId, handleCloseForm, loadUsers } = useUsersPage();
   const { setUser } = useAuthStore();

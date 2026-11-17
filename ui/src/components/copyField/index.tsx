@@ -6,7 +6,6 @@ import useClipboard from "@hooks/useClipboard";
 import { Container, Value } from "./styles";
 import type { CopyFieldProps } from "./types";
 
-// Valor de máquina em mono com botão de copiar ao lado.
 const CopyField = ({ value, label }: CopyFieldProps) => {
   const { copy, isCopied } = useClipboard();
 

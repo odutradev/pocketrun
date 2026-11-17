@@ -3,7 +3,6 @@ import ApiStatus from "@components/apiStatus";
 import LoginForm from "../loginForm";
 import { Container, Eyebrow, Heading, Subtitle, Title } from "./styles";
 
-// Só login: o único cadastro aberto é o setup inicial; outros gestores são criados por dentro.
 const AuthForm = () => (
   <Container>
     <Heading>

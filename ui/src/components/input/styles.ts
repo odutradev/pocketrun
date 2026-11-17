@@ -61,7 +61,6 @@ export const Field = styled.input`
     cursor: not-allowed;
   }
 
-  /* O autofill do navegador pinta o campo de azul; a transição longa segura o fundo transparente da moldura. */
   &:-webkit-autofill,
   &:-webkit-autofill:hover,
   &:-webkit-autofill:focus {

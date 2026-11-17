@@ -3,7 +3,6 @@ import Skeleton from "@components/skeleton";
 import { Container } from "./styles";
 import { Layout } from "./tabs/explorer/styles";
 
-// Mesma forma da tela pronta: caminho, título, abas e o explorador.
 const AppDetailsSkeleton = () => (
   <Container aria-busy="true">
     <Skeleton width="200px" height="18px" radius="small" />

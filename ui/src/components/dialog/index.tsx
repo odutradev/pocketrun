@@ -6,7 +6,6 @@ import IconButton from "@components/iconButton";
 import { Content, Description, Eyebrow, Footer, Header, Heading, Title } from "./styles";
 import type { DialogProps } from "./types";
 
-// Diálogo para confirmação e segredos de uma vez só. O fundo escurece a 66%.
 const Dialog = ({
   isOpen,
   onClose,
@@ -18,7 +17,6 @@ const Dialog = ({
   maxWidth = "520px"
 }: DialogProps) => (
   <RadixDialog.Root open={isOpen} onOpenChange={(isNextOpen) => !isNextOpen && onClose()}>
-    {/* Sem descrição, o `aria-describedby` vazio avisa o Radix de que ela é dispensável. */}
     <Content maxWidth={maxWidth} {...(description ? {} : { "aria-describedby": undefined })}>
       <Header>
         <Heading>

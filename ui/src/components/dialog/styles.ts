@@ -1,7 +1,6 @@
 import { Dialog } from "@radix-ui/themes";
 import styled from "styled-components";
 
-// Os `&&` vencem a especificidade das classes do Radix Themes.
 export const Content = styled(Dialog.Content)`
   && {
     display: flex;

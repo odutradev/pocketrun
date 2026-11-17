@@ -26,7 +26,6 @@ const useUsersStore = create<UsersStore>()((set, get) => ({
   isRefreshing: false,
   formTarget: null,
   removeTarget: null,
-  // A primeira carga mostra o esqueleto; as seguintes só giram o botão de atualizar.
   loadUsers: async () => {
     const isFirstLoad = get().users.length === 0;
     set(isFirstLoad ? { isLoading: true } : { isRefreshing: true });

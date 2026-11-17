@@ -65,7 +65,6 @@ export const FieldLabel = styled.label`
   font-weight: 600;
 `;
 
-// Rótulo fora da linha para o botão alinhar com o campo mesmo quando aparece um erro embaixo.
 export const AddRow = styled.div`
   display: flex;
   align-items: flex-start;

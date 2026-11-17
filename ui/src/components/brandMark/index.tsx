@@ -12,8 +12,6 @@ import type { BrandMarkProps } from "./types";
 const prefersReducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Ponto único da identidade visual: símbolo, logos horizontal, empilhado e só texto, e ícone do app,
-// em qualquer contexto, paleta e animação.
 const BrandMark = ({
   kind = "horizontal",
   size,
@@ -34,7 +32,6 @@ const BrandMark = ({
   const [isClosing, setIsClosing] = useState(false);
   const [isSpread, setIsSpread] = useState(false);
 
-  // Contexto novo: com a transição ligada, fecha primeiro e só troca a cor com as lâminas escondidas.
   if (context !== targetContext) {
     setTargetContext(context);
     if (hasContextTransition && !prefersReducedMotion()) {
@@ -44,7 +41,6 @@ const BrandMark = ({
     }
   }
 
-  // A última lâmina termina de fechar em base + stagger; o canivete fica um instante fechado antes de reabrir.
   const closedHold = timing.base + timing.stagger * 2;
 
   useEffect(() => {
@@ -68,7 +64,6 @@ const BrandMark = ({
     palette,
     pose: resolvePose(),
     motion,
-    // O hover abre todas as lâminas juntas, como na demo da identidade visual.
     isStaggered: isSpread && !isClosing ? false : isStaggered,
     snapKey,
     status

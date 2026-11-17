@@ -7,7 +7,6 @@ import useClipboard from "@hooks/useClipboard";
 import { Container, Label, Secret, SecretBox } from "./styles";
 import type { SecretRevealProps } from "./types";
 
-// Segredo mostrado uma única vez: valor em mono, botão de copiar e o aviso de que ele não volta.
 const SecretReveal = ({ secret, label, confirmLabel, onConfirm }: SecretRevealProps) => {
   const { copy, isCopied } = useClipboard();
 

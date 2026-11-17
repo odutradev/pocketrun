@@ -7,6 +7,5 @@ export interface AlertProps {
   tone?: AlertTone;
   title?: string;
   action?: ReactNode;
-  // Faixa de largura total no topo da página, para problemas do sistema inteiro.
   isBanner?: boolean;
 }

@@ -3,7 +3,6 @@ import styled, { css } from "styled-components";
 
 const sidebarWidth = "264px";
 
-// Ponto de contexto 1: dentro de uma ferramenta, a barra ganha o traço de 3 px no topo.
 const contextStroke = css`
   box-shadow: ${({ theme }) => (theme.context === "general" ? "none" : `inset 0 3px 0 ${theme.accent.base}`)};
 `;
@@ -149,7 +148,6 @@ export const GroupLabel = styled.span`
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
-// Ponto de contexto 3: o item ativo ganha o traço à esquerda na cor do contexto.
 export const NavLink = styled(Link)<{ $isActive: boolean }>`
   ${({ theme, $isActive }) => css`
     display: flex;

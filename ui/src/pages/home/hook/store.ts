@@ -24,7 +24,6 @@ const useHomeStore = create<HomeStore>()((set, get) => ({
   isRefreshing: false,
   search: "",
   isCreateModalOpen: false,
-  // A primeira carga mostra o esqueleto; as seguintes só giram o botão de atualizar.
   loadApplications: async () => {
     const isFirstLoad = get().applications.length === 0;
     set(isFirstLoad ? { isLoading: true } : { isRefreshing: true });

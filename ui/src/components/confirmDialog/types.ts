@@ -8,6 +8,5 @@ export interface ConfirmDialogProps {
   description: ReactNode;
   confirmLabel: string;
   isPending?: boolean;
-  // Quando informado, o usuário digita este texto (o Project ID) para liberar o botão final.
   confirmationText?: string;
 }

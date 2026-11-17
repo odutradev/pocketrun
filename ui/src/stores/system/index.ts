@@ -6,7 +6,6 @@ import type { Permission, UserRole } from "@utils/types/user";
 
 interface SystemStore {
   apiStatus: ApiHealthStatus;
-  // null enquanto a API ainda não respondeu se a instância precisa de setup.
   isSetupRequired: boolean | null;
   setApiStatus: (apiStatus: ApiHealthStatus) => void;
   setSetupRequired: (isSetupRequired: boolean) => void;

@@ -17,14 +17,11 @@ export interface BrandSymbolProps {
   variant?: SymbolVariant;
   frame?: SymbolFrame;
   title?: string;
-  // Posição das lâminas; trocar o valor anima a mudança.
   pose?: SymbolPose;
-  // "intro" abre o canivete ao montar; "loop" abre e fecha sem parar.
   motion?: SymbolMotion;
   motionDelay?: number;
   bladeOrder?: BrandTool[];
   isStaggered?: boolean;
-  // Cada incremento faz a lâmina de Dados dar um estalo.
   snapKey?: number;
   status?: SymbolStatus;
 }

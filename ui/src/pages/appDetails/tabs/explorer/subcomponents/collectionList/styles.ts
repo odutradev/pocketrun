@@ -30,7 +30,6 @@ export const List = styled.ul`
   list-style: none;
 `;
 
-// Item ativo: tinta suave da ferramenta (ponto de contexto 5).
 export const Item = styled.button<{ $isActive: boolean }>`
   ${({ theme, $isActive }) => css`
     display: flex;

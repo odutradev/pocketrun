@@ -8,9 +8,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   hint?: ReactNode;
   error?: string;
   leftIcon?: ReactNode;
-  // Trecho fixo antes do valor, como `https://` ou `/p/`.
   prefix?: string;
-  // Valores de máquina (Project ID, origens, filtros) usam a fonte mono.
   isMono?: boolean;
   size?: InputSize;
 }

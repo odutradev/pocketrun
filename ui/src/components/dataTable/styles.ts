@@ -2,7 +2,6 @@ import styled, { css } from "styled-components";
 
 import type { ColumnAlign } from "./types";
 
-// Caixa com rolagem horizontal: em telas pequenas a tabela rola em vez de quebrar.
 export const ScrollBox = styled.div`
   overflow-x: auto;
   border: 1px solid ${({ theme }) => theme.brand.border};
@@ -34,7 +33,6 @@ export const HeaderCell = styled.th<{ $align: ColumnAlign }>`
   white-space: nowrap;
 `;
 
-// Linha selecionada: tinta suave mais um traço interno de 3 px na cor do contexto.
 export const Row = styled.tr<{ $isSelected: boolean; $isSelectable: boolean }>`
   ${({ theme, $isSelected, $isSelectable }) => css`
     border-top: 1px solid ${theme.brand.border};

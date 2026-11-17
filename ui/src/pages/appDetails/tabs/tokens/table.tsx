@@ -8,7 +8,6 @@ import type { ApiToken } from "@utils/types/application";
 
 import { MutedText, Name, Prefix } from "./styles";
 
-// A coluna de ações precisa do handler da aba, por isso as colunas saem de uma função.
 export const getTokenColumns = (onRevoke: (token: ApiToken) => void): DataTableColumn<ApiToken>[] => [
   {
     key: "name",

@@ -44,8 +44,6 @@ export const Svg = styled.svg`
   overflow: visible;
 `;
 
-// `$openAngle` é fixo por lâmina: a abertura e o loop dependem só dele, então trocar a pose
-// (fechar, abrir mais no hover, trocar de contexto) não recria a animação e a transição fica suave.
 export const Blade = styled.g<{
   $rotation: number;
   $openAngle: number;

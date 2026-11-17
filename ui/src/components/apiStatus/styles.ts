@@ -2,7 +2,6 @@ import styled, { css, keyframes } from "styled-components";
 
 import type { ApiStatusVariant } from "./types";
 
-// O halo cresce e some; o ponto em si fica parado para o estado continuar legível.
 const halo = keyframes`
   0% { transform: scale(1); opacity: 0.9; }
   70%, 100% { transform: scale(2.6); opacity: 0; }

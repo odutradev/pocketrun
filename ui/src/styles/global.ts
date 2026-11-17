@@ -1,11 +1,9 @@
 import { createGlobalStyle } from "styled-components";
 
-// Base escura do painel e ajuste das primitivas do Radix e dos toasts à identidade visual.
 const GlobalStyles = createGlobalStyle`
   ${({ theme }) => `
     html {
       color-scheme: dark;
-      /* Reserva o espaço da barra de rolagem para a borda das páginas não mudar entre telas curtas e longas. */
       scrollbar-gutter: stable;
     }
 
@@ -14,7 +12,6 @@ const GlobalStyles = createGlobalStyle`
       --scrollbar-thumb-hover: color-mix(in srgb, ${theme.accent.base} 65%, transparent);
     }
 
-    /* Barra fina: trilho na cor do fundo e polegar na cor do contexto, translúcido. */
     ::-webkit-scrollbar {
       width: 6px;
       height: 6px;
@@ -34,7 +31,6 @@ const GlobalStyles = createGlobalStyle`
       background-color: var(--scrollbar-thumb-hover);
     }
 
-    /* Firefox não tem os pseudo-elementos acima; o Chromium ignora-os se scrollbar-color existir. */
     @supports (-moz-appearance: none) {
       * {
         scrollbar-width: thin;

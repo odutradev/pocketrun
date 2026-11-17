@@ -12,7 +12,6 @@ export const List = styled.ul`
   background-color: ${({ theme }) => theme.brand.surface};
 `;
 
-// Só a ferramenta ativa leva cor; as outras ficam em aço para não haver duas cores de ferramenta na tela.
 export const Item = styled.li<{ $isActive: boolean }>`
   ${({ theme, $isActive }) => css`
     display: inline-flex;

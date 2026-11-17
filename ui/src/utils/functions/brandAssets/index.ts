@@ -18,7 +18,6 @@ const { brand } = theme;
 
 export const symbolPivot = { x: 24, y: 70 } as const;
 
-// Da lâmina mais curta (desenhada primeiro) para a mais longa.
 export const symbolBlades: { tool: BrandTool; angle: number; length: number }[] = [
   { tool: "links", angle: -82, length: 46 },
   { tool: "content", angle: -52, length: 54 },
@@ -85,7 +84,6 @@ const toLinear = (channel: number) => {
   return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
 };
 
-// Escolhe tinta ou branco para o texto que vai por cima de uma cor.
 export const getReadableTextColor = (hex: string): string => {
   const [red, green, blue] = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
   const luminance = 0.2126 * toLinear(red) + 0.7152 * toLinear(green) + 0.0722 * toLinear(blue);
@@ -207,7 +205,6 @@ export const buildLogoSvg = (config: LogoConfig, wordWidth: number, fontCss = ""
   return { svg: wrapSvg(width, height, body, fontCss), width, height };
 };
 
-// Favicons pequenos usam desenhos óticos mais grossos.
 export const buildFaviconSvg = (size: number, id = "pocketrun-favicon"): BuiltSvg => {
   const variant: SymbolVariant = size <= 32 ? "tiny" : size <= 64 ? "bold" : "full";
   const colors = getSymbolColors("general", "dark");
@@ -270,6 +267,5 @@ export const measureWordmarkWidth = async (): Promise<number> => {
   if (!context) return brandWordmark.fallbackWidth;
   context.font = brandWordmark.font;
   const naturalWidth = context.measureText(brandWordmark.text).width;
-  // Folga de 2% para o arredondamento do texto não cortar a última letra.
   return (naturalWidth + brandWordmark.text.length * brandWordmark.letterSpacing) * 1.02;
 };

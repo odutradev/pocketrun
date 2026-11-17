@@ -14,7 +14,6 @@ const RouteGuard = ({ metadata, children }: RouteGuardProps) => {
   if (metadata.privateRoute && !token) return <Navigate to="/auth" replace />;
   if (metadata.publicOnly && token) return <Navigate to="/" replace />;
   if (metadata.setupOnly && isSetupRequired === false) return <Navigate to="/auth" replace />;
-  // Sem a resposta do status, o setup espera; com a API fora do ar, abre para mostrar o aviso.
   if (metadata.setupOnly && isSetupRequired === null && apiStatus !== "offline") {
     return <Loader label="Verificando a instância" isCentered />;
   }

@@ -1,7 +1,6 @@
 import { Crumb, Current, Item, List } from "./styles";
 import type { BreadcrumbsProps } from "./types";
 
-// Caminho para páginas a mais de um nível do início.
 const Breadcrumbs = ({ items }: BreadcrumbsProps) => (
   <nav aria-label="Caminho">
     <List>

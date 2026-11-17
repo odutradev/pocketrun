@@ -5,7 +5,6 @@ import { getTabIds } from "@utils/functions";
 import { Count, List, Tab } from "./styles";
 import type { TabNavProps } from "./types";
 
-// Abas sublinhadas. As setas, Home e End movem o foco entre elas, como pede o padrão de abas.
 const TabNav = <TValue extends string>({
   label,
   idPrefix,

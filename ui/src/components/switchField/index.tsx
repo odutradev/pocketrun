@@ -3,7 +3,6 @@ import { useId } from "react";
 import { Description, Label, Row, Text, Thumb, Track } from "./styles";
 import type { SwitchFieldProps } from "./types";
 
-// Linha de configuração com rótulo visível, descrição e interruptor.
 const SwitchField = ({
   label,
   description,

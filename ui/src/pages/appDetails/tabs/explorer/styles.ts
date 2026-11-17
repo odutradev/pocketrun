@@ -1,6 +1,5 @@
 import styled from "styled-components";
 
-// Coleções, documentos e o documento aberto. No tablet o painel do documento desce para baixo da tabela.
 export const Layout = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -11,7 +11,6 @@ const pocketLetters = ["P", "O", "C", "K", "E", "T"] as const;
 
 const runLetters = ["R", "U", "N"] as const;
 
-// R abre com Dados, U com Conteúdos e N com Links.
 const runBladeOrder: BrandTool[] = ["data", "content", "links"];
 
 const BrandLogo = ({
@@ -42,7 +41,6 @@ const BrandLogo = ({
         />
       )}
       <Wordmark $size={size} $color={colors.word} aria-hidden>
-        {/* Letras separadas só quando animam, para não mexer no kerning do logo estático. */}
         {motion !== "intro"
           ? pocketLetters.join("")
           : pocketLetters.map((letter, index) => (

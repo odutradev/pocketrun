@@ -30,7 +30,6 @@ const useSetupPage = (): UseSetupPageReturn => {
     }
   });
 
-  // Se o envio falhar, confere de novo: outro gestor pode ter sido criado, e o guard manda para o login.
   const submit = async (values: SetupValues) => {
     const session = await execute(values);
     if (session) return;

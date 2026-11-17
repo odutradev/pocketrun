@@ -13,7 +13,6 @@ const MotionCard = ({ demo, children }: MotionCardProps) => {
   return (
     <Panel>
       <CardStage $tone="dark">
-        {/* Trocar a key remonta a demo e toca a animação de novo. */}
         <Fragment key={playCount}>{children}</Fragment>
         {demo.hasReplay && (
           <ReplayButton>

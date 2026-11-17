@@ -7,7 +7,6 @@ import Input from "@components/input";
 import { Code } from "./styles";
 import type { ConfirmDialogProps } from "./types";
 
-// Confirmação de ação destrutiva. O botão sólido de erro aparece só neste passo final.
 const ConfirmDialog = ({
   isOpen,
   onClose,

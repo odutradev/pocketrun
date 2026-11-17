@@ -38,7 +38,6 @@ const pageRoute = (path: string, Page: LazyExoticComponent<ComponentType>, metad
 });
 
 const router = createBrowserRouter([
-  // Manual de marca público, fora do layout do painel.
   pageRoute("/id", BrandPage, brandMetadata),
   {
     element: <AppLayout />,

@@ -5,7 +5,6 @@ import VisuallyHidden from "@components/visuallyHidden";
 import { Caption, Cell, HeaderCell, Row, ScrollBox, Table } from "./styles";
 import type { DataTableProps } from "./types";
 
-// Tabela de dados com cabeçalho elevado, rolagem em telas pequenas e seleção opcional de linha.
 const DataTable = <TRow,>({
   caption,
   columns,

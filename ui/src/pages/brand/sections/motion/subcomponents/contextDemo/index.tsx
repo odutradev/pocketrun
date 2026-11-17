@@ -8,7 +8,6 @@ import type { BrandContext } from "@utils/types/brand";
 import { ControlScroller } from "../../../../styles";
 import { Demo } from "../../styles";
 
-// A animação mora no BrandMark (`hasContextTransition`), a mesma usada no logo do menu do painel.
 const ContextDemo = () => {
   const [context, setContext] = useState<BrandContext>("general");
 

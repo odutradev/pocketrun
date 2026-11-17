@@ -2,8 +2,6 @@ import type { ThemeProps } from "@radix-ui/themes";
 
 import type { BrandContext } from "@utils/types/brand";
 
-// O painel é sempre escuro. O Radix entra só com as primitivas (diálogo, menu),
-// e as cores dele são reescritas pelos estilos globais.
 export const radixTheme: ThemeProps = {
   appearance: "dark",
   accentColor: "gray",
@@ -49,7 +47,6 @@ const baseTheme = {
     formWidth: "420px",
     setupWidth: "520px"
   },
-  // Durações em milissegundos.
   motion: {
     fast: 150,
     base: 250,
@@ -126,7 +123,6 @@ const baseTheme = {
   }
 };
 
-// Contexto de ferramenta: define a cor dos cinco pontos que mudam dentro de Dados, Conteúdos ou Links.
 const pickAccent = (context: BrandContext): AccentColors =>
   context === "general" ? generalAccent : baseTheme.brand.tools[context];
 

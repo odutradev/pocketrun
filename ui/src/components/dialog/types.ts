@@ -7,7 +7,6 @@ export interface DialogProps {
   eyebrow?: string;
   description?: ReactNode;
   children?: ReactNode;
-  // Botões alinhados à direita no rodapé.
   footer?: ReactNode;
   maxWidth?: string;
 }

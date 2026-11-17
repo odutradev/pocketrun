@@ -29,7 +29,6 @@ export const CardGrid = styled.div`
   gap: ${({ theme }) => theme.spacing(4)};
 `;
 
-// Atalho de criação no fim da grade: tracejado, como um espaço ainda vazio.
 export const CreateTile = styled.button`
   display: flex;
   flex-direction: column;

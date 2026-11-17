@@ -11,7 +11,6 @@ const icons: Record<AlertTone, ReactNode> = {
   error: <CrossCircledIcon />
 };
 
-// Aviso na própria tela. Erro é anunciado na hora; os outros tons, com educação.
 const Alert = ({ children, tone = "neutral", title, action, isBanner = false }: AlertProps) => (
   <Root role={tone === "error" ? "alert" : "status"} $tone={tone} $isBanner={isBanner}>
     <Icon $tone={tone} aria-hidden="true">

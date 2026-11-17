@@ -6,7 +6,6 @@ const nameSchema = z.string().trim().min(2, "Nome deve ter no mínimo 2 caracter
 const emailSchema = z.string().trim().min(1, "E-mail é obrigatório").email("Informe um e-mail válido");
 const roleSchema = z.enum(["superadmin", "admin"]);
 
-// Na edição a senha é opcional: vazia, o usuário continua com a atual.
 export const userFormSchema = z.object({
   name: nameSchema,
   email: emailSchema,
@@ -14,7 +13,6 @@ export const userFormSchema = z.object({
   password: z.union([z.literal(""), passwordSchema])
 });
 
-// Na criação a senha inicial é obrigatória.
 export const newUserFormSchema = userFormSchema.refine((values) => values.password !== "", {
   message: "Defina uma senha inicial",
   path: ["password"]

@@ -72,8 +72,6 @@ const groups: SidebarGroup[] = [
 const isItemActive = (item: SidebarItem, pathname: string) =>
   item.matches.some((match) => (match === "/" ? pathname === "/" : pathname.startsWith(match)));
 
-// Menu lateral: logo com o estado da API e áreas do painel em cima, o perfil do gestor embaixo.
-// No celular vira uma gaveta aberta pela barra do topo.
 const Sidebar = () => {
   const { pathname } = useLocation();
   const { context } = useTheme();
@@ -114,7 +112,6 @@ const Sidebar = () => {
         />
       </MobileBar>
       <Backdrop $isOpen={isOpen} aria-hidden="true" onClick={() => setIsOpen(false)} />
-      {/* Qualquer link clicado dentro do menu fecha a gaveta no celular. */}
       <Aside
         id="panel-sidebar"
         $isOpen={isOpen}

@@ -8,7 +8,6 @@ export const List = styled.div`
   scrollbar-width: none;
 `;
 
-// O sublinhado da aba ativa é um dos cinco pontos que seguem a cor da ferramenta.
 export const Tab = styled.button<{ $isActive: boolean; $isDanger: boolean }>`
   ${({ theme, $isActive, $isDanger }) => css`
     display: inline-flex;

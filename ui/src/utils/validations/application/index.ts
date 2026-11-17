@@ -12,7 +12,6 @@ export const createApplicationSchema = z.object({
   description: z.string().max(500, "Descrição muito longa")
 });
 
-// Origem de navegador: protocolo e host, com porta opcional, sem caminho nem barra final.
 export const originSchema = z
   .string()
   .trim()

@@ -47,7 +47,6 @@ export const ErrorText = styled.p`
   }
 `;
 
-// Moldura comum a input, textarea e select: borda forte, foco de 2 px com anel suave na cor do contexto.
 export const fieldControlStyles = css<FieldControlStyleProps>`
   ${({ theme, $hasError, $isMono }) => css`
     box-sizing: border-box;

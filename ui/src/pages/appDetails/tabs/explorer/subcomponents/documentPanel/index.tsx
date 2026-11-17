@@ -8,7 +8,6 @@ import { formatDateTime } from "@utils/functions";
 import { Body, Details, Header, Mono, Title } from "./styles";
 import type { DocumentPanelProps } from "./types";
 
-// Documento aberto: id copiável, JSON completo e os metadados de leitura.
 const DocumentPanel = ({ document }: DocumentPanelProps) => (
   <Card as="section" padding="sm" aria-label="Documento aberto">
     {!document ? (

@@ -5,8 +5,6 @@ import { getFieldIds } from "@utils/functions";
 import { Container, ErrorText, Hint, Label } from "./styles";
 import type { FormFieldProps } from "./types";
 
-// Rótulo acima, ajuda abaixo e erro abaixo dela. Os ids batem com os de `getFieldIds`,
-// que o controle usa em `aria-describedby`.
 const FormField = ({ controlId, label, isLabelHidden = false, hint, error, children }: FormFieldProps) => {
   const { hintId, errorId } = getFieldIds(controlId);
 
