@@ -4,7 +4,6 @@ import {
   HamburgerMenuIcon,
   LayersIcon,
   Link2Icon,
-  MixIcon,
   PersonIcon,
   StackIcon
 } from "@radix-ui/react-icons";
@@ -66,10 +65,6 @@ const groups: SidebarGroup[] = [
         badge: "Em breve"
       }
     ]
-  },
-  {
-    label: "Marca",
-    items: [{ label: "Identidade visual", to: "/id", icon: <MixIcon />, matches: ["/id"] }]
   }
 ];
 

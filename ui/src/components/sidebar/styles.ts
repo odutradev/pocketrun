@@ -151,7 +151,7 @@ export const NavLink = styled(Link)<{ $isActive: boolean }>`
     gap: ${theme.spacing(3)};
     min-height: 44px;
     padding: 0 ${theme.spacing(3)};
-    border-radius: ${theme.radii.control};
+    border-radius: ${theme.radii.tight};
     background-color: ${$isActive ? theme.brand.raised : "transparent"};
     box-shadow: ${$isActive ? `inset 3px 0 0 ${theme.accent.base}` : "none"};
     color: ${$isActive ? theme.brand.steel : theme.brand.steelMuted};

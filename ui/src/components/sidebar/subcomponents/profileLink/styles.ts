@@ -16,7 +16,7 @@ export const Profile = styled(Link)<{ $isActive: boolean }>`
     align-items: center;
     gap: ${theme.spacing(3)};
     padding: ${theme.spacing(2)};
-    border-radius: ${theme.radii.control};
+    border-radius: ${theme.radii.tight};
     background-color: ${$isActive ? theme.brand.raised : "transparent"};
     box-shadow: ${$isActive ? `inset 3px 0 0 ${theme.accent.base}` : "none"};
     color: ${theme.brand.steel};

@@ -30,6 +30,7 @@ const generalAccent: AccentColors = {
 const baseTheme = {
   spacing: (factor: number) => `${factor * 4}px`,
   radii: {
+    tight: "4px",
     small: "8px",
     control: "10px",
     box: "12px",
