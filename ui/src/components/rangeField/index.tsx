@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 
-import { Manual, ManualInput, ManualLabel, Row, Scale, Slider, Track } from "./styles";
+import { Bound, Manual, ManualInput, ManualLabel, Row, Slider, Track } from "./styles";
 import { getFieldIds } from "@utils/functions";
 import FormField from "@components/formField";
 
@@ -36,6 +36,7 @@ const RangeField = ({ label, value, onValueChange, min = 0, max = 100, step = 1,
     <FormField controlId={sliderId} label={label} hint={hint} error={error}>
       <Row>
         <Track>
+          <Bound aria-hidden="true">{min}</Bound>
           <Slider
             id={sliderId}
             type="range"
@@ -48,12 +49,9 @@ const RangeField = ({ label, value, onValueChange, min = 0, max = 100, step = 1,
             onChange={(event) => handleSliderChange(Number(event.target.value))}
             $fill={fill}
           />
-          <Scale aria-hidden="true">
-            <span>{min}</span>
-            <span>{sliderMax}</span>
-          </Scale>
+          <Bound aria-hidden="true">{sliderMax}</Bound>
         </Track>
-        <Manual>
+        <Manual $hasError={Boolean(error)}>
           <ManualLabel>Valor exato</ManualLabel>
           <ManualInput
             type="number"
@@ -64,7 +62,6 @@ const RangeField = ({ label, value, onValueChange, min = 0, max = 100, step = 1,
             aria-invalid={Boolean(error) || undefined}
             aria-describedby={describedBy}
             onChange={(event) => handleManualChange(event.target.value)}
-            $hasError={Boolean(error)}
           />
         </Manual>
       </Row>

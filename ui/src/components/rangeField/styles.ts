@@ -14,14 +14,29 @@ export const Row = styled.div`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(4)};
+  height: 44px;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    height: 40px;
+  }
 `;
 
 export const Track = styled.div`
   display: flex;
   flex: 1;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(1)};
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+  height: 100%;
   min-width: 0;
+`;
+
+export const Bound = styled.span`
+  flex-shrink: 0;
+  min-width: 2ch;
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+  text-align: center;
 `;
 
 export const Slider = styled.input<{ $fill: number }>`
@@ -73,62 +88,68 @@ export const Slider = styled.input<{ $fill: number }>`
   `}
 `;
 
-export const Scale = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-family: ${({ theme }) => theme.brand.fonts.mono};
-  font-size: 12px;
-  color: ${({ theme }) => theme.brand.steelMuted};
-`;
+export const Manual = styled.label<{ $hasError: boolean }>`
+  ${({ theme, $hasError }) => css`
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    width: 184px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid ${$hasError ? theme.brand.states.error : theme.brand.strongBorder};
+    border-radius: ${theme.radii.control};
+    background-color: ${theme.brand.graphite};
+    cursor: text;
+    transition: border-color ${theme.motion.fast}ms ${theme.motion.easing.standard};
 
-export const Manual = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(1)};
-  flex-shrink: 0;
-  width: 112px;
+    &:hover {
+      border-color: ${$hasError ? theme.brand.states.error : theme.brand.steelMuted};
+    }
+
+    &:focus-within {
+      border-color: ${$hasError ? theme.brand.states.error : theme.accent.base};
+      box-shadow: 0 0 0 3px ${$hasError ? theme.brand.states.errorSoft : theme.accent.soft};
+    }
+  `}
 `;
 
 export const ManualLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 ${({ theme }) => theme.spacing(3)};
+  border-right: 1px solid ${({ theme }) => theme.brand.border};
+  background-color: ${({ theme }) => theme.brand.raised};
   font-family: ${({ theme }) => theme.brand.fonts.mono};
   font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: ${({ theme }) => theme.brand.steelMuted};
+  white-space: nowrap;
 `;
 
-export const ManualInput = styled.input<{ $hasError: boolean }>`
-  ${({ theme, $hasError }) => css`
+export const ManualInput = styled.input`
+  ${({ theme }) => css`
+    flex: 1;
     width: 100%;
-    height: 44px;
+    min-width: 0;
+    height: 100%;
     padding: 0 ${theme.spacing(3)};
-    border: 1px solid ${$hasError ? theme.brand.states.error : theme.brand.border};
-    border-radius: ${theme.radii.control};
-    background-color: ${theme.brand.surface};
+    border: 0;
+    background: transparent;
     color: ${theme.brand.steel};
     font-family: ${theme.brand.fonts.display};
     font-size: 16px;
     text-align: center;
-    box-sizing: border-box;
+    outline: none;
     appearance: textfield;
 
     &::-webkit-outer-spin-button,
     &::-webkit-inner-spin-button {
       margin: 0;
       appearance: none;
-    }
-
-    &:hover {
-      border-color: ${theme.brand.steelMuted};
-    }
-
-    &:focus-visible {
-      outline: 2px solid ${theme.accent.base};
-      outline-offset: 2px;
-    }
-
-    @media (min-width: ${theme.breakpoints.md}) {
-      height: 40px;
     }
   `}
 `;
