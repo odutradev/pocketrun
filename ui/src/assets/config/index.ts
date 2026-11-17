@@ -46,3 +46,5 @@ export const randomSlugLength = 8;
 export const clickLimitRange = { min: 1, max: 150, initial: 100 } as const;
 
 export const defaultPeriodHours = 168;
+
+export const customPeriodHours = 24;

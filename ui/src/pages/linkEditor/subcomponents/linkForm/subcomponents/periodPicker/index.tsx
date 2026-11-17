@@ -1,10 +1,13 @@
-import { ArrowRightIcon } from "@radix-ui/react-icons";
+import { ArrowRightIcon, Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
-import { Arrow, Container, Dates, ErrorText, Point, PointLabel, PointValue, Timeline } from "./styles";
-import { formatPeriodDate, hoursFromNow } from "@utils/functions";
+import { Arrow, Container, Dates, ErrorText, Point, PointLabel, PointValue, StartToggle, Timeline } from "./styles";
+import { formatPeriodDate, hoursFromNow, roundedHourFromNow } from "@utils/functions";
 import SegmentedControl from "@components/segmentedControl";
+import { customPeriodHours } from "@assets/config";
 import { periodPresetOptions } from "@assets/data";
+import IconButton from "@components/iconButton";
+import Button from "@components/button";
 import Input from "@components/input";
 
 import type { PeriodPreset } from "@utils/types/link";
@@ -12,12 +15,13 @@ import type { PeriodPickerProps } from "./types";
 
 const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtError, onChange }: PeriodPickerProps) => {
   const [preset, setPreset] = useState<PeriodPreset>(initialPreset);
+  const [hasStart, setHasStart] = useState(Boolean(startsAt));
 
   const handlePreset = (value: PeriodPreset) => {
     setPreset(value);
     const hours = periodPresetOptions.find((option) => option.value === value)?.hours ?? null;
-    if (hours === null) return;
-    onChange({ startsAt: "", endsAt: hoursFromNow(hours) });
+    setHasStart(false);
+    onChange({ startsAt: "", endsAt: hours === null ? roundedHourFromNow(customPeriodHours) : hoursFromNow(hours) });
   };
 
   return (
@@ -29,7 +33,7 @@ const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtEr
         onValueChange={handlePreset}
         isFullWidth
       />
-      {endsAt && (
+      {preset !== "custom" && endsAt && (
         <Timeline>
           <Point>
             <PointLabel>Começa</PointLabel>
@@ -46,13 +50,39 @@ const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtEr
       )}
       {preset === "custom" && (
         <Dates>
-          <Input
-            label="Começa em *"
-            type="datetime-local"
-            value={startsAt}
-            onChange={(event) => onChange({ startsAt: event.target.value, endsAt })}
-            error={startsAtError}
-          />
+          {hasStart ? (
+            <Input
+              label="Começa em"
+              type="datetime-local"
+              value={startsAt}
+              onChange={(event) => onChange({ startsAt: event.target.value, endsAt })}
+              error={startsAtError}
+              trailing={
+                <IconButton
+                  size="sm"
+                  label="Remover o início"
+                  icon={<Cross2Icon />}
+                  onClick={() => {
+                    setHasStart(false);
+                    onChange({ startsAt: "", endsAt });
+                  }}
+                />
+              }
+            />
+          ) : (
+            <StartToggle>
+              <Button
+                variant="ghost"
+                leftIcon={<PlusIcon />}
+                onClick={() => {
+                  setHasStart(true);
+                  onChange({ startsAt: roundedHourFromNow(1), endsAt });
+                }}
+              >
+                Definir início
+              </Button>
+            </StartToggle>
+          )}
           <Input
             label="Termina em"
             type="datetime-local"

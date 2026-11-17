@@ -46,6 +46,12 @@ export const fromDateTimeInput = (value: string): string => new Date(value).toIS
 
 export const hoursFromNow = (hours: number): string => toDateTimeInput(new Date(Date.now() + hours * 3600000).toISOString());
 
+export const roundedHourFromNow = (hours: number): string => {
+  const date = new Date(Date.now() + hours * 3600000);
+  date.setMinutes(0, 0, 0);
+  return toDateTimeInput(date.toISOString());
+};
+
 export const formatPeriodDate = (value: string): string =>
   new Date(value).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 

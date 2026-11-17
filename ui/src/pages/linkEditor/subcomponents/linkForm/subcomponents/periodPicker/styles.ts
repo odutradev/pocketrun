@@ -68,3 +68,12 @@ export const Dates = styled.div`
     grid-template-columns: 1fr 1fr;
   }
 `;
+
+export const StartToggle = styled.div`
+  display: flex;
+  align-items: flex-end;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding-top: 27px;
+  }
+`;
