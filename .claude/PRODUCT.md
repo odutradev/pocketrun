@@ -36,7 +36,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 
 | Conceito | Significado |
 | :--- | :--- |
-| **Gestor** | Pessoa que entra no painel (JWT). O primeiro gestor é criado pelo fluxo de setup (`/setup/*`). Um gestor é dono de aplicações. |
+| **Gestor** | Pessoa que entra no painel (JWT). O primeiro gestor é criado pelo fluxo de setup (`/setup/*`) como superadmin. Um gestor é dono de aplicações. Cargos: **Gestor** (`admin`) cuida das próprias aplicações; **Superadmin** (`superadmin`) também gerencia os usuários. |
 | **Aplicação** | Um projeto. Tem nome, `projectId` único, descrição, origens permitidas e tokens de acesso. Todos os dados, páginas e links pertencem a exatamente uma aplicação e são invisíveis para as outras. |
 | **Token de acesso** | Segredo usado por um app cliente para chamar a API pública. Formato `pk_live_...`, guardado só como hash, exibido uma única vez na criação, validade opcional, revogável, com registro de último uso. Enviado como `controlAccess`, `X-Pocket-Token` ou `Authorization: Bearer`. |
 | **Origens permitidas** | Lista de CORS por aplicação. Chamadas de navegador de outras origens são recusadas. Chamadas sem header `Origin` só passam se a aplicação liberar requisições fora do navegador. |
@@ -51,6 +51,9 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 
 - Setup inicial que cria o primeiro gestor.
 - Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
+- Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
+- Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
+- Painel com menu lateral: Aplicações e Usuários em cima, perfil e saída embaixo.
 - Aplicações: criar, listar, ver detalhes, editar, excluir (`/apps/*`).
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.

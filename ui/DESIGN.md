@@ -64,9 +64,9 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - Bulk actions appear in a bar while rows are selected.
   - Charts use the tool color with a soft area fill. Other series use neutral steel lines. Every chart has a text `aria-label`.
 - **Navigation:**
-  - Top bar: logo, main nav and API status.
+  - Side menu (`sidebar`): logo and the panel areas on top, grouped by area with a mono label; API status and the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
   - Tool tabs are underline tabs; inside a tool the active underline uses the tool color.
-  - The side menu groups items by area. "Zona de perigo" is always last and always in error text.
+  - Inside a page, a local side menu groups items by area. "Zona de perigo" is always last and always in error text.
   - Breadcrumbs appear on pages deeper than one level.
 - **Overlays:**
   - The backdrop is black at 66%.
@@ -78,7 +78,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
 
 The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every other screen is `general`. A page declares it in its metadata (`context: "data"`) and `appLayout` provides the matching theme, so components read `theme.accent` and `theme.context`. Only these five points change with the context:
 
-1. A 3 px top stroke on the header.
+1. A 3 px top stroke on the side menu and on the mobile top bar.
 2. The logo: `BrandMark` with `context={tool}`.
 3. The active nav item or tab stroke.
 4. The primary action button.
@@ -100,7 +100,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | :--- | :--- |
 | Logo, symbol, app icon, status rivet | `@components/brandMark` (`kind`, `context`, `pose`, `motion`, `status`, `snapKey`) |
 | Page loader (symbol loop) | `@components/loader` |
-| Page shell: top bar, offline banner, tool context | `@components/appLayout` with `@components/navbar` |
+| Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
 | API status pill or panel line | `@components/apiStatus` |
 | Page title with eyebrow, description and actions | `@components/pageHeader` |
 | Section or panel title (h2) with actions | `@components/sectionHeader` |
@@ -134,7 +134,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Async action with toasts | `@hooks/useAction` |
 | Copy with feedback | `@hooks/useClipboard` |
 
-Components shown in the style guide but not built yet (side menu, bulk action bar, command palette, drawer, chart) are created as global components when the first screen needs them, following this guide.
+Components shown in the style guide but not built yet (bulk action bar, command palette, drawer, chart) are created as global components when the first screen needs them, following this guide.
 
 ## 7. Checklist
 
