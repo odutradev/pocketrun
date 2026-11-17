@@ -1,8 +1,9 @@
+import { PlusIcon } from "@radix-ui/react-icons";
 import { useEffect } from "react";
 
+import ContentNavbar from "@components/contentNavbar";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
-import PageHeader from "@components/pageHeader";
 import DataTable from "@components/dataTable";
 import { applicationColumns } from "./table";
 import { Container } from "./styles";
@@ -18,10 +19,12 @@ const KvPage = () => {
 
   return (
     <Container>
-      <PageHeader
-        eyebrow="Serviço"
+      <ContentNavbar
         title="KV"
-        description="Coleções de JSON livre, isoladas por aplicação. Escolha uma aplicação para abrir o explorador de dados."
+        info="Coleções de JSON livre, isoladas por aplicação. Escolha uma aplicação para abrir o explorador de dados."
+        onReload={loadApplications}
+        isReloading={isLoading}
+        action={{ label: "Nova aplicação", icon: <PlusIcon />, to: "/" }}
       />
       {isLoading && <KvSkeleton />}
       {!isLoading && applications.length === 0 && (

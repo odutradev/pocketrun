@@ -1,13 +1,15 @@
+import { PlusIcon } from "@radix-ui/react-icons";
+
+import ContentNavbar from "@components/contentNavbar";
 import EmptyState from "@components/emptyState";
-import PageHeader from "@components/pageHeader";
 import { Container } from "./styles";
 
 const LinksPage = () => (
   <Container>
-    <PageHeader
-      eyebrow="Serviço"
+    <ContentNavbar
       title="Links"
-      description="Endereços curtos que redirecionam para qualquer URL, com contagem de acessos."
+      info="Endereços curtos que redirecionam para qualquer URL, com contagem de acessos."
+      action={{ label: "Novo link", icon: <PlusIcon />, isDisabled: true }}
     />
     <EmptyState
       title="Em breve"
