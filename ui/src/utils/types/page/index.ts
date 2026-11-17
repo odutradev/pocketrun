@@ -11,5 +11,7 @@ export interface PageMetadata {
   context?: BrandContext;
   privateRoute?: boolean;
   publicOnly?: boolean;
+  // Só abre enquanto a instância não tem gestor; depois disso manda para o login.
+  setupOnly?: boolean;
   requiredPermissions?: Permission[];
 }

@@ -6,7 +6,8 @@ import type { Permission, UserRole } from "@utils/types/user";
 
 interface SystemStore {
   apiStatus: ApiHealthStatus;
-  isSetupRequired: boolean;
+  // null enquanto a API ainda não respondeu se a instância precisa de setup.
+  isSetupRequired: boolean | null;
   setApiStatus: (apiStatus: ApiHealthStatus) => void;
   setSetupRequired: (isSetupRequired: boolean) => void;
   hasPermissions: (role: UserRole | undefined, required: Permission[]) => boolean;
@@ -14,7 +15,7 @@ interface SystemStore {
 
 const useSystemStore = create<SystemStore>()((set) => ({
   apiStatus: "online",
-  isSetupRequired: false,
+  isSetupRequired: null,
   setApiStatus: (apiStatus) => set({ apiStatus }),
   setSetupRequired: (isSetupRequired) => set({ isSetupRequired }),
   hasPermissions: (role, required) => {
