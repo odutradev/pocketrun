@@ -27,6 +27,20 @@ const GlobalStyles = createGlobalStyle`
       --cursor-menu-item: pointer;
     }
 
+    .rt-TooltipContent {
+      border: 1px solid ${theme.brand.border};
+      border-radius: ${theme.radii.tight};
+      background-color: ${theme.brand.raised};
+    }
+
+    .rt-TooltipText {
+      color: ${theme.brand.steel};
+    }
+
+    .rt-TooltipArrow {
+      fill: ${theme.brand.raised};
+    }
+
     ::selection {
       background-color: ${theme.accent.soft};
     }

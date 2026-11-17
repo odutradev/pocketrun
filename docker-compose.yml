@@ -19,6 +19,8 @@ services:
   ui:
     build:
       context: ./ui
+      additional_contexts:
+        project: .
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
     restart: unless-stopped

@@ -1,10 +1,22 @@
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const sourceFolder = (folder: string) => path.resolve(import.meta.dirname, "./src", folder);
 
+// A versão geral mora no package.json da raiz. No Docker ele chega pelo contexto extra "project".
+const readProjectVersion = () => {
+  const file = path.resolve(import.meta.dirname, "../package.json");
+  if (!existsSync(file)) return "";
+  const { version } = JSON.parse(readFileSync(file, "utf8")) as { version?: string };
+  return version ?? "";
+};
+
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(readProjectVersion())
+  },
   plugins: [react()],
   resolve: {
     alias: {

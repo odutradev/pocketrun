@@ -5,6 +5,7 @@ ENV VITE_API_URL=$VITE_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
+COPY --from=project package.json /package.json
 RUN npm run build
 
 FROM nginx:alpine AS runner

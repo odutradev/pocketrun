@@ -5,6 +5,9 @@ export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://
 
 export const adminApiUrl = `${apiUrl}/admin`;
 
+// Versão geral do projeto (package.json da raiz), injetada na build pelo Vite.
+export const appVersion = __APP_VERSION__;
+
 export const storageKeys = {
   auth: "pocketrun_auth"
 } as const;
