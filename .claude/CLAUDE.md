@@ -6,6 +6,8 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 
 **Product:** `.claude/PRODUCT.md` describes what PocketRun is, its concepts, modules and roadmap. Read it before designing a feature or writing user-facing text.
 
+**Roadmap:** `.docs/ROADMAP.md` lists planned work as numbered items. Only the user decides what runs: never start, continue or suggest-and-do a roadmap item unless the user asks for it by number in their message. Doing one item never authorizes another, dependencies included. When an item is done, mark it `✅ Feito` in that file in the same work.
+
 **Reply language:** always talk to the user in Brazilian Portuguese (pt-BR): answers, explanations, questions, plans and summaries. This guide is written in English only because AI models follow English instructions more reliably. Code, identifiers and commit messages follow the rules below.
 
 ## 1. Repository structure
