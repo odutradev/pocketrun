@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 
-import { createSuperadmin } from "@actions/setup";
+import { createSuperadmin, getSetupStatus } from "@actions/setup";
 import useAction from "@hooks/useAction";
 import useForm from "@hooks/useForm";
 import useAuthStore from "@stores/auth";
+import useSystemStore from "@stores/system";
 import { setupSchema } from "@utils/validations/auth";
 import type { SetupValues } from "@utils/validations/auth";
 
@@ -14,6 +15,7 @@ const initialValues = { name: "", email: "", password: "", confirmPassword: "" }
 const useSetupPage = (): UseSetupPageReturn => {
   const navigate = useNavigate();
   const { setSession } = useAuthStore();
+  const { setSetupRequired } = useSystemStore();
 
   const { execute } = useAction({
     action: ({ name, email, password }: SetupValues) => createSuperadmin({ name, email, password }),
@@ -28,7 +30,15 @@ const useSetupPage = (): UseSetupPageReturn => {
     }
   });
 
-  const form = useForm({ schema: setupSchema, initialValues, onSubmit: execute });
+  // Se o envio falhar, confere de novo: outro gestor pode ter sido criado, e o guard manda para o login.
+  const submit = async (values: SetupValues) => {
+    const session = await execute(values);
+    if (session) return;
+    const status = await getSetupStatus().catch(() => undefined);
+    if (status) setSetupRequired(status.setupRequired);
+  };
+
+  const form = useForm({ schema: setupSchema, initialValues, onSubmit: submit });
 
   return { form };
 };
