@@ -37,8 +37,6 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_authorization: "Sessão inválida. Entre novamente.",
   invalid_token: "Sessão expirada. Entre novamente.",
   invalid_credentials: "E-mail ou senha inválidos.",
-  registration_disabled: "O cadastro público está desativado. Fale com o administrador.",
-  setup_required: "Configuração inicial pendente. Use o assistente de setup.",
   setup_completed: "A configuração inicial já foi concluída.",
   user_not_found: "Usuário não encontrado.",
   email_taken: "Este e-mail já está em uso.",
