@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom"
 import { lazy } from "react";
 
 import appDetailsMetadata from "@pages/appDetails/metadata";
+import linkEditorMetadata from "@pages/linkEditor/metadata";
 import profileMetadata from "@pages/profile/metadata";
 import brandMetadata from "@pages/brand/metadata";
 import linksMetadata from "@pages/links/metadata";
@@ -25,6 +26,7 @@ const ProfilePage = lazy(() => import("@pages/profile"));
 const KvPage = lazy(() => import("@pages/kv"));
 const PagesPage = lazy(() => import("@pages/pages"));
 const LinksPage = lazy(() => import("@pages/links"));
+const LinkEditorPage = lazy(() => import("@pages/linkEditor"));
 
 const pageRoute = (path: string, Page: LazyExoticComponent<ComponentType>, metadata: PageMetadata) => ({
   path,
@@ -48,6 +50,8 @@ const router = createBrowserRouter([
       pageRoute("/kv", KvPage, kvMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
       pageRoute("/links", LinksPage, linksMetadata),
+      pageRoute("/links/new", LinkEditorPage, linkEditorMetadata),
+      pageRoute("/links/:linkId/edit", LinkEditorPage, linkEditorMetadata),
       pageRoute("/users", UsersPage, usersMetadata),
       pageRoute("/profile", ProfilePage, profileMetadata),
       { path: "*", element: <Navigate to="/" replace /> }
