@@ -1,7 +1,7 @@
 import { ExitIcon } from "@radix-ui/react-icons";
 
-import IdentitySection from "./sections/identity";
-import PasswordSection from "./sections/password";
+import IdentitySection from "./subcomponents/identity";
+import PasswordSection from "./subcomponents/password";
 import PageHeader from "@components/pageHeader";
 import { formatDate } from "@utils/functions";
 import { roleLabels } from "@assets/data";
