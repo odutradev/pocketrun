@@ -75,41 +75,45 @@ const LinkForm = ({ link, groups }: LinkFormProps) => {
     <Form onSubmit={handleSubmit} noValidate>
       <Section>
         <Legend>Link</Legend>
-        <Input
-          label="Título"
-          name="title"
-          autoComplete="off"
-          placeholder="Promoção de dezembro"
-          hint="Só aparece no painel, para você achar o link."
-          value={values.title}
-          onChange={handleChange}
-          error={errors.title}
-        />
-        <SlugField
-          value={values.slug}
-          linkId={link?.id}
-          error={errors.slug}
-          onChange={(slug) => setFieldValue("slug", slug)}
-          onCheckChange={handleSlugCheck}
-        />
-        <Input
-          label="URL de destino"
-          name="url"
-          type="url"
-          autoComplete="off"
-          spellCheck={false}
-          placeholder="https://exemplo.com/promo"
-          value={values.url}
-          onChange={handleChange}
-          error={errors.url}
-        />
-        <Select
-          label="Grupo"
-          options={groupOptions}
-          value={values.groupId}
-          hint="Crie e renomeie grupos pelo botão Grupos na lista de links."
-          onValueChange={(groupId) => setFieldValue("groupId", groupId)}
-        />
+        <Pair>
+          <Input
+            label="Título"
+            name="title"
+            autoComplete="off"
+            placeholder="Promoção de dezembro"
+            hint="Só aparece no painel, para você achar o link."
+            value={values.title}
+            onChange={handleChange}
+            error={errors.title}
+          />
+          <Select
+            label="Grupo"
+            options={groupOptions}
+            value={values.groupId}
+            hint="Crie e renomeie grupos pelo botão Grupos na lista de links."
+            onValueChange={(groupId) => setFieldValue("groupId", groupId)}
+          />
+        </Pair>
+        <Pair>
+          <SlugField
+            value={values.slug}
+            linkId={link?.id}
+            error={errors.slug}
+            onChange={(slug) => setFieldValue("slug", slug)}
+            onCheckChange={handleSlugCheck}
+          />
+          <Input
+            label="URL de destino"
+            name="url"
+            type="url"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="https://exemplo.com/promo"
+            value={values.url}
+            onChange={handleChange}
+            error={errors.url}
+          />
+        </Pair>
       </Section>
       <Section>
         <Legend>Ativação</Legend>

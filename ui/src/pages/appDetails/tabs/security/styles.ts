@@ -4,7 +4,6 @@ export const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(5)};
-  max-width: 760px;
 `;
 
 export const OriginList = styled.ul`

@@ -5,7 +5,6 @@ export const Form = styled.form`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(5)};
   width: 100%;
-  max-width: 720px;
 `;
 
 export const Section = styled.fieldset`
@@ -30,6 +29,7 @@ export const Legend = styled.legend`
 
 export const Pair = styled.div`
   display: grid;
+  align-items: start;
   gap: ${({ theme }) => theme.spacing(4)};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
