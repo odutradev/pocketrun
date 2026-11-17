@@ -87,6 +87,63 @@ export const describeLinkRule = (link: Link): string | null => {
   return link.state === "expired" ? `Terminou ${formatShortDateTime(link.endsAt)}` : `Até ${formatShortDateTime(link.endsAt)}`;
 };
 
+export const currentTimestamp = (): number => Date.now();
+
+export const formatRelativeTime = (value: string, now: number): string => {
+  const seconds = Math.round((new Date(value).getTime() - now) / 1000);
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ["year", 31536000],
+    ["month", 2592000],
+    ["week", 604800],
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60]
+  ];
+  const [unit, size] = units.find(([, length]) => Math.abs(seconds) >= length) ?? ["second", 1];
+  if (unit === "second") return "agora mesmo";
+  return new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" }).format(Math.round(seconds / size), unit);
+};
+
+export const formatTime = (value: string): string =>
+  new Date(value).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+export const toDayKey = (value: string): string => new Date(value).toLocaleDateString("sv-SE");
+
+export const formatDayHeading = (value: string, now: number): string => {
+  const today = toDayKey(new Date(now).toISOString());
+  const yesterday = toDayKey(new Date(now - 86400000).toISOString());
+  const key = toDayKey(value);
+  if (key === today) return "Hoje";
+  if (key === yesterday) return "Ontem";
+  return new Date(value).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+};
+
+export const getInitials = (name: string): string =>
+  name
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
+export const formatPercentChange = (current: number, previous: number | null): string | null => {
+  if (previous === null) return null;
+  if (previous === 0) return current === 0 ? "Igual ao período anterior" : "Sem acessos no período anterior";
+  const change = Math.round(((current - previous) / previous) * 100);
+  if (change === 0) return "Igual ao período anterior";
+  return `${change > 0 ? "+" : ""}${change}% vs. período anterior`;
+};
+
+export const downloadCsv = (fileName: string, rows: (string | number)[][]): void => {
+  const content = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([`﻿${content}`], { type: "text/csv;charset=utf-8" }));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+};
+
 export const parseOrigins = (value: string): string[] => {
   const origins = value
     .split(",")

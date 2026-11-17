@@ -27,7 +27,11 @@ export type ApiErrorCode =
   | "invalid_schedule"
   | "invalid_slug"
   | "reserved_slug"
-  | "slug_taken";
+  | "slug_taken"
+  | "invalid_range"
+  | "invalid_timezone"
+  | "invalid_cursor"
+  | "invalid_limit";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

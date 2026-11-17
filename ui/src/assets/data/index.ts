@@ -1,7 +1,7 @@
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
+import type { AnalyticsRange, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -37,7 +37,11 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_schedule: "A regra de ativação está incompleta.",
   invalid_slug: "Use só letras minúsculas, números e hífen no slug.",
   reserved_slug: "Esse slug é reservado pelo sistema.",
-  slug_taken: "Esse slug já está em uso."
+  slug_taken: "Esse slug já está em uso.",
+  invalid_range: "Período de análise inválido.",
+  invalid_timezone: "Fuso horário inválido.",
+  invalid_cursor: "Não foi possível carregar mais itens do histórico.",
+  invalid_limit: "Não foi possível carregar mais itens do histórico."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
@@ -575,3 +579,51 @@ export const urlProtocolOptions: UrlProtocolOption[] = [
   { value: "http", label: "http://" },
   { value: "manual", label: "Manual" }
 ];
+
+export const linkEditorTabs: { value: LinkEditorTab; label: string }[] = [
+  { value: "settings", label: "Configuração" },
+  { value: "analytics", label: "Análise" },
+  { value: "history", label: "Histórico" }
+];
+
+export const analyticsRangeOptions: { value: AnalyticsRange; label: string; days: number | null }[] = [
+  { value: "24h", label: "24h", days: 1 },
+  { value: "7d", label: "7 dias", days: 7 },
+  { value: "30d", label: "30 dias", days: 30 },
+  { value: "90d", label: "90 dias", days: 90 },
+  { value: "all", label: "Tudo", days: null }
+];
+
+export const linkEventLabels: Record<LinkEventType, string> = {
+  created: "criou o link",
+  updated: "editou o link",
+  deleted: "excluiu o link",
+  expired: "encerrou o link no fim do período",
+  exhausted: "encerrou o link ao atingir o limite de acessos",
+  group_detached: "removeu o link do grupo ao excluir o grupo"
+};
+
+export const linkChangeLabels: Record<LinkChangeField, string> = {
+  title: "Título",
+  slug: "Slug",
+  url: "Destino",
+  groupId: "Grupo",
+  mode: "Ativação",
+  startsAt: "Início",
+  endsAt: "Fim",
+  maxClicks: "Limite de acessos"
+};
+
+export const historyFilterOptions: { value: HistoryFilter; label: string }[] = [
+  { value: "all", label: "Tudo" },
+  { value: "people", label: "Pessoas" },
+  { value: "system", label: "Sistema" }
+];
+
+export const deviceLabels: Record<string, string> = {
+  desktop: "Computador",
+  mobile: "Celular",
+  tablet: "Tablet"
+};
+
+export const weekdayShortLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

@@ -106,6 +106,16 @@ const baseTheme = {
       errorTint: "#FFD1CF"
     },
     general: generalAccent,
+    chart: {
+      clicks: "#46A758",
+      visitors: "#5B7BE6",
+      marker: "#B4B4B4",
+      devices: {
+        desktop: "#46A758",
+        mobile: "#5B7BE6",
+        tablet: "#D6409F"
+      } as Record<string, string>
+    },
     overlay: "rgba(0, 0, 0, 0.66)",
     overlayShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
     fonts: {
