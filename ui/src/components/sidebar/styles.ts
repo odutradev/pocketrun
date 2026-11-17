@@ -102,6 +102,12 @@ export const Brand = styled.div`
   padding: 0 ${({ theme }) => theme.spacing(2)};
 `;
 
+export const BrandEnd = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1)};
+`;
+
 export const CloseSlot = styled.span`
   display: inline-flex;
 

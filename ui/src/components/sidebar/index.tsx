@@ -23,6 +23,7 @@ import {
   Backdrop,
   Bottom,
   Brand,
+  BrandEnd,
   CloseSlot,
   GroupLabel,
   ItemBadge,
@@ -71,7 +72,7 @@ const groups: SidebarGroup[] = [
 const isItemActive = (item: SidebarItem, pathname: string) =>
   item.matches.some((match) => (match === "/" ? pathname === "/" : pathname.startsWith(match)));
 
-// Menu lateral: logo e áreas do painel em cima, estado da API e o perfil do gestor embaixo.
+// Menu lateral: logo com o estado da API e áreas do painel em cima, o perfil do gestor embaixo.
 // No celular vira uma gaveta aberta pela barra do topo.
 const Sidebar: React.FC = () => {
   const { pathname } = useLocation();
@@ -134,9 +135,12 @@ const Sidebar: React.FC = () => {
                 isHoverable
               />
             </LogoLink>
-            <CloseSlot>
-              <IconButton label="Fechar o menu" icon={<Cross2Icon />} size="sm" onClick={() => setIsOpen(false)} />
-            </CloseSlot>
+            <BrandEnd>
+              <ApiStatus variant="dot" />
+              <CloseSlot>
+                <IconButton label="Fechar o menu" icon={<Cross2Icon />} size="sm" onClick={() => setIsOpen(false)} />
+              </CloseSlot>
+            </BrandEnd>
           </Brand>
           <Nav aria-label="Navegação principal">
             {visibleGroups.map((group) => (
@@ -162,7 +166,6 @@ const Sidebar: React.FC = () => {
               Configuração pendente
             </Badge>
           )}
-          <ApiStatus />
           {user && <ProfileLink user={user} isActive={pathname.startsWith("/profile")} />}
         </Bottom>
       </Aside>
