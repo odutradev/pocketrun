@@ -60,7 +60,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
 - **Badges:** status badges are pills with a dot plus text: Ativo, Publicado, Expira em N dias, Rascunho, Desativado, Revogado. HTTP method tags use the mono font.
 - **Data:**
   - Numbers use the display font; raw values use mono.
-  - Tables live in a scroll box on small screens.
+  - Below `md`, `dataTable` stacks each row as a card: the first column is the title, hidden-header columns (actions) sit top right, and the others become label and value lines. Never make the page scroll sideways; a selector with many options uses `mobileColumns` on `segmentedControl`.
   - The sorted column is marked with `aria-sort`.
   - A selected row uses a soft tint plus a 3 px inset stroke.
   - Bulk actions appear in a bar while rows are selected.
