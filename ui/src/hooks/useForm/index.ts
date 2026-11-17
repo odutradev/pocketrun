@@ -35,6 +35,7 @@ const useForm = <TSchema extends FormSchema>({
   const handleSubmit = useCallback(
     async (event?: FormEvent) => {
       event?.preventDefault();
+      event?.stopPropagation();
       const result = schema.safeParse(values);
       if (!result.success) {
         setErrors(toFieldErrors<Values>(result.error.issues));
