@@ -6,7 +6,6 @@ const sourceFolder = (folder: string) => path.resolve(import.meta.dirname, "./sr
 
 export default defineConfig({
   plugins: [react()],
-  envDir: path.resolve(import.meta.dirname, ".."),
   resolve: {
     alias: {
       "@actions": sourceFolder("actions"),
