@@ -50,8 +50,8 @@ const DestinationField = ({ value, error, onChange }: DestinationFieldProps) => 
       placeholder={protocol === "manual" ? "https://exemplo.com/promo" : "exemplo.com/promo"}
       hint={
         protocol === "manual"
-          ? "Modo manual: escreva a URL completa, com o protocolo."
-          : "Escolha o protocolo ao lado. Colar uma URL completa troca o protocolo sozinho."
+          ? "Escreva a URL completa, com o protocolo."
+          : "Colar uma URL completa ajusta o protocolo."
       }
       value={address}
       onChange={(event) => handleAddressChange(event.target.value)}

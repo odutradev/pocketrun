@@ -62,7 +62,7 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
   return (
     <Row>
       <Input
-        label="Slug"
+        label="Slug *"
         name="slug"
         autoComplete="off"
         spellCheck={false}
@@ -72,15 +72,7 @@ const SlugField = ({ value, linkId, error, onChange, onCheckChange }: SlugFieldP
         value={value}
         onChange={(event) => onChange(toSlug(event.target.value))}
         error={error ?? unavailableMessage}
-        hint={
-          value ? (
-            <>
-              Endereço público: <PublicUrl>{publicLinkUrl(value)}</PublicUrl>
-            </>
-          ) : (
-            "Opcional. Vazio, um id aleatório é gerado ao salvar. Use letras minúsculas, números e hífen."
-          )
-        }
+        hint={value ? <PublicUrl>{publicLinkUrl(value)}</PublicUrl> : undefined}
         trailing={
           statusIcon && (
             <StatusIcon $status={check.status} role="status" aria-label={statusLabels[check.status as keyof typeof statusLabels]}>

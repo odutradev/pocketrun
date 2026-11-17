@@ -94,10 +94,9 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
           />
           <GroupPicker>
             <Select
-              label="Grupo"
+              label="Grupo *"
               options={groupOptions}
               value={values.groupId}
-              hint="Opcional. Só organiza a lista de links."
               onValueChange={(groupId) => setFieldValue("groupId", groupId)}
             />
             <GroupAction>
@@ -154,7 +153,6 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
             unit="acessos"
             value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
             onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
-            hint={`Arraste até ${clickLimitRange.max} ou digite qualquer valor no campo ao lado, inclusive acima de ${clickLimitRange.max}.${link ? ` Este link já teve ${link.clicks} ${link.clicks === 1 ? "acesso" : "acessos"}.` : ""}`}
             error={errors.maxClicks}
           />
         )}

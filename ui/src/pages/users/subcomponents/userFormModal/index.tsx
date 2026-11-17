@@ -87,7 +87,7 @@ const UserFormModal = () => {
           error={errors.role}
         />
         <Input
-          label={editedUser ? "Nova senha (opcional)" : "Senha inicial"}
+          label={editedUser ? "Nova senha *" : "Senha inicial"}
           name="password"
           type="password"
           autoComplete="new-password"

@@ -110,7 +110,7 @@ const CreateAppModal = () => {
           error={errors.origins}
         />
         <TextArea
-          label="Descrição (opcional)"
+          label="Descrição *"
           name="description"
           rows={2}
           placeholder="Para que serve esta aplicação"

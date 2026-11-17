@@ -44,9 +44,8 @@ const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtEr
       {preset === "custom" && (
         <Dates>
           <Input
-            label="Começa em"
+            label="Começa em *"
             type="datetime-local"
-            hint="Deixe vazio para valer a partir de agora."
             value={startsAt}
             onChange={(event) => onChange({ startsAt: event.target.value, endsAt })}
             error={startsAtError}
