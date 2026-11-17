@@ -1,7 +1,5 @@
 import type { PageMetadata } from "@utils/types/page";
 
-const metadata: PageMetadata = {
-  title: "Identidade visual"
-};
+const metadata: PageMetadata = {};
 
 export default metadata;

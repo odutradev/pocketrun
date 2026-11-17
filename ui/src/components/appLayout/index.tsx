@@ -26,10 +26,6 @@ const AppLayout: React.FC = () => {
   const contextTheme = useMemo(() => withContext(context), [context]);
 
   useEffect(() => {
-    document.title = metadata ? `${metadata.title} | PocketRun` : "PocketRun";
-  }, [metadata]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     const verify = async () => {

@@ -2,7 +2,6 @@ import { Theme } from "@radix-ui/themes";
 import { useEffect } from "react";
 
 import useBrandPage from "./hook";
-import metadata from "./metadata";
 import ColorsSection from "./sections/colors";
 import ConceptSection from "./sections/concept";
 import DownloadsSection from "./sections/downloads";
@@ -21,7 +20,6 @@ const BrandPage: React.FC = () => {
   const { prepareAssets } = useBrandPage();
 
   useEffect(() => {
-    document.title = `${metadata.title} | PocketRun`;
     prepareAssets();
   }, [prepareAssets]);
 
