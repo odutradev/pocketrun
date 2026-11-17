@@ -49,6 +49,17 @@ export const hoursFromNow = (hours: number): string => toDateTimeInput(new Date(
 export const formatPeriodDate = (value: string): string =>
   new Date(value).toLocaleString("pt-BR", { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
+export const prefersReducedMotion = (): boolean =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+export const easeOutCubic = (progress: number): number => 1 - (1 - progress) ** 3;
+
+export const cancelFrame = (frameRef: { current: number | null }) => {
+  if (frameRef.current === null) return;
+  window.cancelAnimationFrame(frameRef.current);
+  frameRef.current = null;
+};
+
 export const publicLinkUrl = (slug: string): string => `${apiUrl}/${slug}`;
 
 export const parseOrigins = (value: string): string[] => {

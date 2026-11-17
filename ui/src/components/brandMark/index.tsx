@@ -1,6 +1,7 @@
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
 
+import { prefersReducedMotion } from "@utils/functions";
 import BrandSymbol from "./subcomponents/symbol";
 import AppIcon from "./subcomponents/appIcon";
 import BrandLogo from "./subcomponents/logo";
@@ -8,9 +9,6 @@ import { HoverArea } from "./styles";
 
 import type { BrandContext, SymbolPose } from "@utils/types/brand";
 import type { BrandMarkProps } from "./types";
-
-const prefersReducedMotion = () =>
-  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const BrandMark = ({
   kind = "horizontal",
