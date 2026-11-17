@@ -6,10 +6,6 @@ services:
     ports:
       - "${PORT:-5000}:80"
 
-  admin:
-    ports:
-      - "${ADMIN_PORT:-5001}:80"
-
   ui:
     ports:
       - "${FRONTEND_PORT:-3000}:80"
