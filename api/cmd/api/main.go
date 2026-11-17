@@ -12,11 +12,14 @@ import (
 
 	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/config"
+	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/health"
 	"pocketrun-api/internal/kv"
+	"pocketrun-api/internal/link"
 	"pocketrun-api/internal/platform/database"
 	"pocketrun-api/internal/platform/httpx"
 	"pocketrun-api/internal/setup"
+	"pocketrun-api/internal/slug"
 	"pocketrun-api/internal/user"
 )
 
@@ -64,13 +67,19 @@ func run(logger *slog.Logger) error {
 	userRepository := user.NewMongoRepository(mongo.Collection("users"))
 	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
-	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository)
+	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
+	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
+	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
+	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository, slugRepository, groupRepository, linkRepository)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
 	applicationService := application.NewService(applicationRepository, documentService)
 	userService := user.NewService(userRepository, signer, applicationService)
 	setupService := setup.NewService(userService, logger)
+	slugService := slug.NewService(slugRepository)
+	groupService := group.NewService(groupRepository)
+	linkService := link.NewService(linkRepository, slugService, groupService)
 
 	if err := setupService.ReportStatus(startupContext); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)
@@ -81,6 +90,8 @@ func run(logger *slog.Logger) error {
 	setupHandler := setup.NewHandler(setupService, validate, logger)
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
 	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
+	groupHandler := group.NewHandler(groupService, validate, logger)
+	linkHandler := link.NewHandler(linkService, validate, logger)
 
 	adminMux := http.NewServeMux()
 	authenticateManager := user.Authenticate(signer)
@@ -89,14 +100,16 @@ func run(logger *slog.Logger) error {
 	userHandler.Register(adminMux, authenticateManager)
 	applicationHandler.RegisterAdmin(adminMux, authenticateManager)
 	documentHandler.RegisterAdmin(adminMux, authenticateManager)
+	groupHandler.Register(adminMux, authenticateManager, "/links/groups", group.KindLinks, linkService)
+	linkHandler.RegisterAdmin(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)
 	healthHandler.Register(publicMux)
 	applicationHandler.RegisterPublic(publicMux, authenticateApplication)
 	documentHandler.RegisterPublic(publicMux, authenticateApplication)
+	linkHandler.RegisterPublic(publicMux)
 
-	// Uma porta só: as rotas do painel ficam sob /admin, com CORS próprio, e o resto é a API pública.
 	root := http.NewServeMux()
 	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins)(adminMux)))
 	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins)(publicMux))
