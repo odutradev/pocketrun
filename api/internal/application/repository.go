@@ -45,6 +45,14 @@ func (r *MongoRepository) FindByManagerID(ctx context.Context, managerID bson.Ob
 	return applications, nil
 }
 
+func (r *MongoRepository) CountByManagerID(ctx context.Context, managerID bson.ObjectID) (int64, error) {
+	count, err := r.collection.CountDocuments(ctx, bson.M{"managerId": managerID})
+	if err != nil {
+		return 0, fmt.Errorf("count applications: %w", err)
+	}
+	return count, nil
+}
+
 func (r *MongoRepository) Insert(ctx context.Context, application *Application) error {
 	_, err := r.collection.InsertOne(ctx, application)
 	if mongo.IsDuplicateKeyError(err) {

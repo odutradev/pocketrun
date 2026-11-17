@@ -11,6 +11,7 @@ import (
 
 type Repository interface {
 	FindByManagerID(ctx context.Context, managerID bson.ObjectID) ([]Application, error)
+	CountByManagerID(ctx context.Context, managerID bson.ObjectID) (int64, error)
 	Insert(ctx context.Context, application *Application) error
 	FindByID(ctx context.Context, managerID, id bson.ObjectID) (*Application, error)
 	FindByTokenHash(ctx context.Context, hash string) (*Application, error)
@@ -40,6 +41,14 @@ func (s *Service) List(ctx context.Context, managerID bson.ObjectID) ([]Applicat
 		return nil, fmt.Errorf("list applications of manager %s: %w", managerID.Hex(), err)
 	}
 	return applications, nil
+}
+
+func (s *Service) CountByManager(ctx context.Context, managerID bson.ObjectID) (int64, error) {
+	count, err := s.repository.CountByManagerID(ctx, managerID)
+	if err != nil {
+		return 0, fmt.Errorf("count applications of manager %s: %w", managerID.Hex(), err)
+	}
+	return count, nil
 }
 
 func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input CreateInput) (*Created, error) {
