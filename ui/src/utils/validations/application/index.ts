@@ -12,10 +12,22 @@ export const createApplicationSchema = z.object({
   description: z.string().max(500, "Descrição muito longa")
 });
 
-export const securitySettingsSchema = z.object({
-  origins: z.string(),
-  allowNonBrowserRequests: z.boolean()
-});
+// Origem de navegador: protocolo e host, com porta opcional, sem caminho nem barra final.
+export const originSchema = z
+  .string()
+  .trim()
+  .regex(/^https?:\/\/[^\s/]+$/, "Use o formato https://app.exemplo.com, sem caminho nem barra no final");
+
+export const securitySettingsSchema = z
+  .object({
+    origins: z.array(z.string()),
+    allowAnyOrigin: z.boolean(),
+    allowNonBrowserRequests: z.boolean()
+  })
+  .refine((values) => values.allowAnyOrigin || values.origins.length > 0, {
+    message: "Adicione ao menos uma origem ou ligue a origem global",
+    path: ["origins"]
+  });
 
 export const createTokenSchema = z.object({
   name: z.string().trim().min(1, "Identificador é obrigatório").max(100, "Identificador muito longo"),

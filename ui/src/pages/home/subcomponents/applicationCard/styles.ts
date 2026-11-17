@@ -1,36 +1,63 @@
-import { Text } from "@radix-ui/themes";
 import styled from "styled-components";
 
 export const Body = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-`;
-
-export const Row = styled.div`
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(3)};
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(4)};
 `;
 
-export const Description = styled(Text)`
+export const Identity = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(1.5)};
+  min-width: 0;
+`;
+
+export const Name = styled.h3`
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.brand.steel};
+  overflow-wrap: anywhere;
+`;
+
+export const ProjectId = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 13px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+  overflow-wrap: anywhere;
+`;
+
+export const Description = styled.p`
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.brand.steelMuted};
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
 
-export const Footer = styled(Row)`
-  border-top: 1px solid ${({ theme }) => theme.palette.gray.border};
-  padding-top: ${({ theme }) => theme.spacing(3)};
-`;
-
-export const Stats = styled.div`
+export const Badges = styled.div`
   display: flex;
-  gap: ${({ theme }) => theme.spacing(3)};
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing(2)};
 `;
 
-export const Stat = styled(Text)`
-  display: inline-flex;
+export const Footer = styled.div`
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(1)};
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-top: ${({ theme }) => theme.spacing(5)};
+  padding-top: ${({ theme }) => theme.spacing(3.5)};
+  border-top: 1px solid ${({ theme }) => theme.brand.border};
+  font-size: 13px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+
+  svg {
+    flex-shrink: 0;
+  }
 `;

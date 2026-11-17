@@ -1,8 +1,8 @@
-import type { TextArea } from "@radix-ui/themes";
-import type { ComponentProps } from "react";
+import type { ReactNode, TextareaHTMLAttributes } from "react";
 
-export interface TextAreaProps extends ComponentProps<typeof TextArea> {
+export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;
-  hint?: React.ReactNode;
+  hint?: ReactNode;
   error?: string;
+  isMono?: boolean;
 }

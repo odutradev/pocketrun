@@ -20,7 +20,7 @@ const SnapDemo: React.FC = () => {
   return (
     <Demo>
       <BrandMark kind="symbol" size={90} snapKey={snapKey} />
-      <Button variant="soft" color="gray" highContrast leftIcon={isSaved ? <CheckIcon /> : undefined} onClick={handleSave}>
+      <Button variant="secondary" leftIcon={isSaved ? <CheckIcon /> : undefined} onClick={handleSave}>
         {isSaved ? "Salvo" : "Salvar"}
       </Button>
     </Demo>

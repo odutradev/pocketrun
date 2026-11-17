@@ -1,16 +1,15 @@
-import { Select, Text } from "@radix-ui/themes";
 import styled from "styled-components";
 
 export const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(3)};
+  gap: ${({ theme }) => theme.spacing(4)};
 `;
 
-export const Label = styled(Text)`
-  display: block;
-`;
-
-export const SelectTrigger = styled(Select.Trigger)`
-  width: 100%;
+export const Actions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.spacing(2)};
+  margin-top: ${({ theme }) => theme.spacing(2)};
 `;

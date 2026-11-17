@@ -1,68 +1,56 @@
-import { ArrowRightIcon, EnvelopeClosedIcon, LockClosedIcon, PersonIcon } from "@radix-ui/react-icons";
+import { ArrowRightIcon } from "@radix-ui/react-icons";
 
 import Button from "@components/button";
 import Input from "@components/input";
 
 import useSetupPage from "../../hook";
-import { Form } from "./styles";
+import { Actions, Description, Form, Heading, Title } from "./styles";
 
 const SetupForm: React.FC = () => {
   const { form } = useSetupPage();
   const { values, errors, isSubmitting, handleChange, handleSubmit } = form;
 
   return (
-    <Form onSubmit={handleSubmit} noValidate>
-      <Input
-        label="Nome"
-        name="name"
-        placeholder="Ex: Administrador PocketRun"
-        value={values.name}
-        onChange={handleChange}
-        error={errors.name}
-        leftIcon={<PersonIcon />}
-      />
+    <Form onSubmit={handleSubmit} noValidate aria-labelledby="setup-title">
+      <Heading>
+        <Title id="setup-title">Crie o primeiro gestor</Title>
+        <Description>Ele é dono das aplicações desta instância. Este passo só aparece uma vez.</Description>
+      </Heading>
+      <Input label="Nome" name="name" autoComplete="name" value={values.name} onChange={handleChange} error={errors.name} />
       <Input
         label="E-mail"
         name="email"
         type="email"
-        placeholder="admin@seudominio.com"
+        autoComplete="email"
+        placeholder="gestor@exemplo.com"
         value={values.email}
         onChange={handleChange}
         error={errors.email}
-        leftIcon={<EnvelopeClosedIcon />}
       />
       <Input
         label="Senha"
         name="password"
         type="password"
-        placeholder="Mínimo de 8 caracteres"
+        autoComplete="new-password"
+        hint="Mínimo de 8 caracteres, com letras e ao menos um número ou símbolo."
         value={values.password}
         onChange={handleChange}
         error={errors.password}
-        leftIcon={<LockClosedIcon />}
       />
       <Input
-        label="Confirmar senha"
+        label="Confirme a senha"
         name="confirmPassword"
         type="password"
-        placeholder="Repita a senha digitada"
+        autoComplete="new-password"
         value={values.confirmPassword}
         onChange={handleChange}
         error={errors.confirmPassword}
-        leftIcon={<LockClosedIcon />}
       />
-      <Button
-        type="submit"
-        variant="solid"
-        color="mint"
-        size="3"
-        loading={isSubmitting}
-        rightIcon={<ArrowRightIcon />}
-        mt="2"
-        fullWidth
-      >
-        Concluir Configuração e Entrar
-      </Button>
+      <Actions>
+        <Button type="submit" isLoading={isSubmitting} loadingLabel="Criando…" rightIcon={<ArrowRightIcon />}>
+          Criar gestor e continuar
+        </Button>
+      </Actions>
     </Form>
   );
 };

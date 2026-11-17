@@ -1,9 +1,9 @@
 import { ArrowRightIcon, DownloadIcon } from "@radix-ui/react-icons";
-import { Button } from "@radix-ui/themes";
 import { Link } from "react-router-dom";
 
 import { brandSections } from "@assets/data";
 import BrandMark from "@components/brandMark";
+import LinkButton from "@components/linkButton";
 
 import { Actions, Bar, Container, NavLink, NavList, Top } from "./styles";
 
@@ -15,18 +15,12 @@ const BrandHeader: React.FC = () => (
           <BrandMark size={17} />
         </Link>
         <Actions>
-          <Button asChild variant="soft" color="gray" highContrast>
-            <a href="#downloads">
-              <DownloadIcon />
-              Baixar logos
-            </a>
-          </Button>
-          <Button asChild highContrast>
-            <Link to="/">
-              Abrir o painel
-              <ArrowRightIcon />
-            </Link>
-          </Button>
+          <LinkButton href="#downloads" leftIcon={<DownloadIcon />}>
+            Baixar logos
+          </LinkButton>
+          <LinkButton to="/" variant="primary" rightIcon={<ArrowRightIcon />}>
+            Abrir o painel
+          </LinkButton>
         </Actions>
       </Top>
       <NavList aria-label="Seções do manual de marca">

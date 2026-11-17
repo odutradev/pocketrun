@@ -1,40 +1,30 @@
-import { Code, Text } from "@radix-ui/themes";
-import type { ReactNode } from "react";
-
-import { formatDateTime } from "@utils/functions";
+import type { DataTableColumn } from "@components/dataTable/types";
+import ExpiryBadge from "@components/expiryBadge";
+import { formatDate, shortenId } from "@utils/functions";
 import type { ExplorerDocument } from "@utils/types/explorer";
 
-import { Summary } from "./styles";
+import { DataSummary, IdText, MutedText } from "./styles";
 
-export interface DocumentColumn {
-  key: string;
-  header: string;
-  render: (document: ExplorerDocument) => ReactNode;
-}
-
-export const documentColumns: DocumentColumn[] = [
+export const documentColumns: DataTableColumn<ExplorerDocument>[] = [
   {
     key: "id",
-    header: "ID",
-    render: (document) => <Code size="1">{document._id.slice(0, 10)}...</Code>
+    header: "Id",
+    render: (document) => <IdText title={document._id}>{shortenId(document._id)}</IdText>
+  },
+  {
+    key: "data",
+    header: "Dados",
+    render: (document) => <DataSummary>{JSON.stringify(document.data)}</DataSummary>
   },
   {
     key: "createdAt",
     header: "Criado em",
-    render: (document) => (
-      <Text size="1" color="gray">
-        {formatDateTime(document.createdAt)}
-      </Text>
-    )
+    render: (document) => <MutedText>{formatDate(document.createdAt)}</MutedText>
   },
   {
-    key: "data",
-    header: "Resumo de Dados",
-    render: (document) => (
-      <Summary size="1" color="gray">
-        {JSON.stringify(document.data)}
-      </Summary>
-    )
+    key: "expiresAt",
+    header: "Validade",
+    render: (document) => <ExpiryBadge expiresAt={document.expiresAt} noneLabel="Sem validade" />
   }
 ];
 

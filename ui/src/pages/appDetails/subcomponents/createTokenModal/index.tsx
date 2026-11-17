@@ -1,31 +1,31 @@
-import { LockOpen1Icon } from "@radix-ui/react-icons";
-import { Dialog, Select } from "@radix-ui/themes";
-import { useId, useState } from "react";
+import { useState } from "react";
 
 import { createToken } from "@actions/apps";
 import { defaultTokenValidity, tokenValidityOptions } from "@assets/data";
 import Button from "@components/button";
-import DialogHeader from "@components/dialogHeader";
+import Dialog from "@components/dialog";
 import Input from "@components/input";
 import SecretReveal from "@components/secretReveal";
+import Select from "@components/select";
 import useAction from "@hooks/useAction";
 import useForm from "@hooks/useForm";
 import { createTokenSchema } from "@utils/validations/application";
 import type { CreateTokenValues } from "@utils/validations/application";
 
 import useAppDetailsPage from "../../hook";
-import { Form, Label, SelectTrigger } from "./styles";
+import { Actions, Form } from "./styles";
 
 const initialValues = { name: "", validityDays: defaultTokenValidity };
+
+const validityOptions = tokenValidityOptions.map((option) => ({ value: String(option.value), label: option.label }));
 
 const CreateTokenModal: React.FC = () => {
   const { applicationId, isTokenModalOpen, handleCloseTokenModal, handleRefresh } = useAppDetailsPage();
   const [rawToken, setRawToken] = useState<string | null>(null);
-  const validityId = useId();
 
   const { execute } = useAction({
     action: (data: CreateTokenValues) => createToken(applicationId, data),
-    toastMessages: { pending: "Gerando token...", success: "Token gerado!", error: "Erro ao gerar token" },
+    toastMessages: { pending: "Gerando o token…", success: "Token gerado", error: "Não foi possível gerar o token" },
     callback: (created) => setRawToken(created.rawToken)
   });
 
@@ -42,66 +42,56 @@ const CreateTokenModal: React.FC = () => {
     handleCloseTokenModal();
   };
 
+  if (rawToken) {
+    return (
+      <Dialog
+        isOpen={isTokenModalOpen}
+        onClose={handleDone}
+        eyebrow="Novo token"
+        title="Token gerado"
+        description="Copie agora: por segurança, o valor completo não aparece de novo."
+      >
+        <SecretReveal secret={rawToken} label="Token de acesso" confirmLabel="Já guardei o token" onConfirm={handleDone} />
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog.Root open={isTokenModalOpen} onOpenChange={(isOpen) => !isOpen && handleDone()}>
-      <Dialog.Content maxWidth="480px">
-        <DialogHeader icon={<LockOpen1Icon />} label="Novo Token de Acesso" onClose={handleDone} />
-
-        {rawToken ? (
-          <SecretReveal
-            icon={<LockOpen1Icon />}
-            title="Token Criado com Sucesso!"
-            description="Copie o token abaixo agora. Por motivos de segurança, você não poderá vê-lo novamente."
-            secret={rawToken}
-            confirmLabel="Fechar e Concluir"
-            onConfirm={handleDone}
-          />
-        ) : (
-          <>
-            <Dialog.Title size="5" weight="bold" mb="1">
-              Gerar Novo Token
-            </Dialog.Title>
-            <Dialog.Description size="2" color="gray" mb="4">
-              Crie um novo token de autenticação (Bearer API Key) para conectar suas aplicações.
-            </Dialog.Description>
-
-            <Form onSubmit={handleSubmit} noValidate>
-              <Input
-                label="Identificador do Token"
-                name="name"
-                placeholder="ex: Backend Produção, Frontend Vercel"
-                value={values.name}
-                onChange={handleChange}
-                error={errors.name}
-                leftIcon={<LockOpen1Icon />}
-              />
-              <div>
-                <Label as="label" size="2" weight="medium" mb="1" htmlFor={validityId}>
-                  Validade do Token
-                </Label>
-                <Select.Root
-                  value={String(values.validityDays)}
-                  onValueChange={(value) => setFieldValue("validityDays", Number(value))}
-                  size="3"
-                >
-                  <SelectTrigger id={validityId} />
-                  <Select.Content position="popper">
-                    {tokenValidityOptions.map((option) => (
-                      <Select.Item key={option.value} value={String(option.value)}>
-                        {option.label}
-                      </Select.Item>
-                    ))}
-                  </Select.Content>
-                </Select.Root>
-              </div>
-              <Button type="submit" size="3" color="mint" variant="solid" loading={isSubmitting} mt="2" fullWidth>
-                Gerar Token de Acesso
-              </Button>
-            </Form>
-          </>
-        )}
-      </Dialog.Content>
-    </Dialog.Root>
+    <Dialog
+      isOpen={isTokenModalOpen}
+      onClose={handleDone}
+      eyebrow="Novo token"
+      title="Gerar token de acesso"
+      description="Cada cliente da API (site, app, script) deve ter o seu, para revogar um sem afetar os outros."
+      maxWidth="480px"
+    >
+      <Form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Nome do token"
+          name="name"
+          placeholder="Site em produção"
+          hint="Só para você reconhecer o token na lista."
+          value={values.name}
+          onChange={handleChange}
+          error={errors.name}
+        />
+        <Select
+          label="Validade"
+          options={validityOptions}
+          value={String(values.validityDays)}
+          onValueChange={(value) => setFieldValue("validityDays", Number(value))}
+          error={errors.validityDays}
+        />
+        <Actions>
+          <Button variant="secondary" onClick={handleDone}>
+            Cancelar
+          </Button>
+          <Button type="submit" isLoading={isSubmitting} loadingLabel="Gerando…">
+            Gerar token
+          </Button>
+        </Actions>
+      </Form>
+    </Dialog>
   );
 };
 

@@ -1,57 +1,56 @@
 import { EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
-import { TextField } from "@radix-ui/themes";
 import { useId, useState } from "react";
 
-import { Container, ErrorText, Label, ToggleButton } from "./styles";
+import FormField from "@components/formField";
+import IconButton from "@components/iconButton";
+import { getFieldIds } from "@utils/functions";
+
+import { Control, Field, Icon, Prefix, Trailing } from "./styles";
 import type { InputProps } from "./types";
 
-const Input: React.FC<InputProps> = ({ label, error, leftIcon, type = "text", id, size = "2", ...props }) => {
+const Input: React.FC<InputProps> = ({
+  label,
+  isLabelHidden,
+  hint,
+  error,
+  leftIcon,
+  prefix,
+  isMono = false,
+  size = "md",
+  type = "text",
+  id,
+  ...props
+}) => {
   const generatedId = useId();
   const inputId = id ?? generatedId;
-  const errorId = `${inputId}-error`;
+  const { describedBy } = getFieldIds(inputId, { hasHint: Boolean(hint), hasError: Boolean(error) });
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPasswordField = type === "password";
-  const resolvedType = isPasswordField && isPasswordVisible ? "text" : type;
 
   return (
-    <Container>
-      {label && (
-        <Label as="label" size="2" weight="medium" mb="1" htmlFor={inputId}>
-          {label}
-        </Label>
-      )}
-
-      <TextField.Root
-        id={inputId}
-        size={size}
-        type={resolvedType}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        {...props}
-      >
-        {leftIcon && <TextField.Slot>{leftIcon}</TextField.Slot>}
+    <FormField controlId={inputId} label={label} isLabelHidden={isLabelHidden} hint={hint} error={error}>
+      <Control $hasError={Boolean(error)} $isMono={isMono} $size={size}>
+        {prefix && <Prefix aria-hidden="true">{prefix}</Prefix>}
+        {leftIcon && <Icon aria-hidden="true">{leftIcon}</Icon>}
+        <Field
+          id={inputId}
+          type={isPasswordField && isPasswordVisible ? "text" : type}
+          aria-invalid={Boolean(error) || undefined}
+          aria-describedby={describedBy}
+          {...props}
+        />
         {isPasswordField && (
-          <TextField.Slot side="right">
-            <ToggleButton
-              size="1"
-              variant="ghost"
-              color="gray"
-              type="button"
-              aria-label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+          <Trailing>
+            <IconButton
+              size="sm"
+              label={isPasswordVisible ? "Ocultar senha" : "Mostrar senha"}
+              icon={isPasswordVisible ? <EyeClosedIcon /> : <EyeOpenIcon />}
               onClick={() => setIsPasswordVisible((current) => !current)}
-            >
-              {isPasswordVisible ? <EyeClosedIcon /> : <EyeOpenIcon />}
-            </ToggleButton>
-          </TextField.Slot>
+            />
+          </Trailing>
         )}
-      </TextField.Root>
-
-      {error && (
-        <ErrorText id={errorId} size="1" color="red" mt="1">
-          {error}
-        </ErrorText>
-      )}
-    </Container>
+      </Control>
+    </FormField>
   );
 };
 

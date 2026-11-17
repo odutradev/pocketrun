@@ -6,14 +6,13 @@ import { ThemeProvider } from "styled-components";
 import { getProfile } from "@actions/auth";
 import AppRouter from "@routes/index";
 import useAuthStore from "@stores/auth";
-import useSystemStore from "@stores/system";
+import GlobalStyles from "@styles/global";
 import theme, { radixTheme } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
 
 const logger = createLocalLogger("appProviders");
 
 const AppProviders: React.FC = () => {
-  const { theme: appearance } = useSystemStore();
   const { token, setUser } = useAuthStore();
 
   useEffect(() => {
@@ -23,10 +22,11 @@ const AppProviders: React.FC = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Theme appearance={appearance} {...radixTheme}>
+      <GlobalStyles />
+      <Theme {...radixTheme}>
         <AppRouter />
       </Theme>
-      <ToastContainer position="bottom-right" theme={appearance} newestOnTop />
+      <ToastContainer position="bottom-right" theme="dark" newestOnTop />
     </ThemeProvider>
   );
 };

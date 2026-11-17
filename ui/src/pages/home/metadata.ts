@@ -1,7 +1,9 @@
 import type { PageMetadata } from "@utils/types/page";
 
 const metadata: PageMetadata = {
-  title: "Painel do Gestor"
+  title: "Aplicações",
+  privateRoute: true,
+  requiredPermissions: ["manage_apps"]
 };
 
 export default metadata;

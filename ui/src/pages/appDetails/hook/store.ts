@@ -23,7 +23,7 @@ interface AppDetailsStore {
 const initialState = {
   application: null,
   isLoading: true,
-  activeTab: "security" as DetailsTab,
+  activeTab: "explorer" as DetailsTab,
   isTokenModalOpen: false
 };
 
@@ -35,7 +35,7 @@ const useAppDetailsStore = create<AppDetailsStore>()((set) => ({
     } catch (error) {
       if (signal?.aborted) return;
       logger.error(error);
-      toast.error(getErrorMessage(error, "Falha ao carregar aplicação"));
+      toast.error(getErrorMessage(error, "Não foi possível carregar a aplicação"));
       set({ isLoading: false });
     }
   },

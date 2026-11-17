@@ -10,31 +10,35 @@ const logger = createLocalLogger("homePage");
 interface HomeStore {
   applications: Application[];
   isLoading: boolean;
+  isRefreshing: boolean;
+  search: string;
   isCreateModalOpen: boolean;
-  isAuthModalOpen: boolean;
   loadApplications: () => Promise<void>;
+  setSearch: (search: string) => void;
   setCreateModalOpen: (isOpen: boolean) => void;
-  setAuthModalOpen: (isOpen: boolean) => void;
 }
 
-const useHomeStore = create<HomeStore>()((set) => ({
+const useHomeStore = create<HomeStore>()((set, get) => ({
   applications: [],
   isLoading: true,
+  isRefreshing: false,
+  search: "",
   isCreateModalOpen: false,
-  isAuthModalOpen: false,
+  // A primeira carga mostra o esqueleto; as seguintes só giram o botão de atualizar.
   loadApplications: async () => {
-    set({ isLoading: true });
+    const isFirstLoad = get().applications.length === 0;
+    set(isFirstLoad ? { isLoading: true } : { isRefreshing: true });
     try {
       set({ applications: await listApplications() });
     } catch (error) {
       logger.error(error);
-      toast.error(getErrorMessage(error, "Falha ao carregar aplicações"));
+      toast.error(getErrorMessage(error, "Não foi possível carregar as aplicações"));
     } finally {
-      set({ isLoading: false });
+      set({ isLoading: false, isRefreshing: false });
     }
   },
-  setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen }),
-  setAuthModalOpen: (isAuthModalOpen) => set({ isAuthModalOpen })
+  setSearch: (search) => set({ search }),
+  setCreateModalOpen: (isCreateModalOpen) => set({ isCreateModalOpen })
 }));
 
 export default useHomeStore;

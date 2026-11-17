@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useMatches, useNavigate } from "react-router-dom";
+import { ThemeProvider } from "styled-components";
 
 import { ping } from "@actions/health";
 import { getSetupStatus } from "@actions/setup";
 import { healthCheckInterval } from "@assets/config";
+import Alert from "@components/alert";
 import Navbar from "@components/navbar";
-import type { ApiHealthStatus } from "@components/navbar/types";
+import useSystemStore from "@stores/system";
+import { withContext } from "@styles/theme";
 import { createLocalLogger } from "@utils/functions";
 
-import { Background, Main } from "./styles";
+import { Main, Shell } from "./styles";
 import type { RouteMatchHandle } from "./types";
 
 const logger = createLocalLogger("appLayout");
@@ -18,8 +21,9 @@ const AppLayout: React.FC = () => {
   const { pathname } = useLocation();
   const matches = useMatches();
   const metadata = (matches.at(-1)?.handle as RouteMatchHandle | undefined)?.metadata;
-  const [apiStatus, setApiStatus] = useState<ApiHealthStatus>("online");
-  const [setupRequired, setSetupRequired] = useState(false);
+  const context = metadata?.context ?? "general";
+  const { apiStatus, setApiStatus, setSetupRequired } = useSystemStore();
+  const contextTheme = useMemo(() => withContext(context), [context]);
 
   useEffect(() => {
     document.title = metadata ? `${metadata.title} | PocketRun` : "PocketRun";
@@ -47,15 +51,31 @@ const AppLayout: React.FC = () => {
       controller.abort();
       window.clearInterval(interval);
     };
-  }, [navigate, pathname]);
+  }, [navigate, pathname, setApiStatus, setSetupRequired]);
+
+  // Telas "bare" (login e setup) ocupam a janela inteira e mostram o estado da API por conta própria.
+  if (metadata?.layout === "bare") {
+    return (
+      <ThemeProvider theme={contextTheme}>
+        <Outlet />
+      </ThemeProvider>
+    );
+  }
 
   return (
-    <Background>
-      <Navbar apiStatus={apiStatus} setupRequired={setupRequired} />
-      <Main $center={Boolean(metadata?.center)}>
-        <Outlet />
-      </Main>
-    </Background>
+    <ThemeProvider theme={contextTheme}>
+      <Shell>
+        <Navbar />
+        {apiStatus === "offline" && (
+          <Alert tone="error" title="A API não responde." isBanner>
+            Nova tentativa a cada {healthCheckInterval / 1000} segundos. Até lá, nada é salvo.
+          </Alert>
+        )}
+        <Main>
+          <Outlet />
+        </Main>
+      </Shell>
+    </ThemeProvider>
   );
 };
 

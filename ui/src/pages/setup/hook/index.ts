@@ -18,9 +18,9 @@ const useSetupPage = (): UseSetupPageReturn => {
   const { execute } = useAction({
     action: ({ name, email, password }: SetupValues) => createSuperadmin({ name, email, password }),
     toastMessages: {
-      pending: "Configurando superadmin...",
-      success: "Superadmin configurado!",
-      error: "Falha ao inicializar o superadmin"
+      pending: "Criando o primeiro gestor…",
+      success: "Gestor criado. Tudo pronto.",
+      error: "Não foi possível concluir o setup"
     },
     callback: (session) => {
       setSession(session);
@@ -30,11 +30,7 @@ const useSetupPage = (): UseSetupPageReturn => {
 
   const form = useForm({ schema: setupSchema, initialValues, onSubmit: execute });
 
-  return {
-    title: "Configuração Inicial",
-    subtitle: "Defina as credenciais do administrador para inicializar o sistema.",
-    form
-  };
+  return { form };
 };
 
 export default useSetupPage;

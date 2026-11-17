@@ -1,65 +1,53 @@
 import type { ThemeProps } from "@radix-ui/themes";
 
+import type { BrandContext } from "@utils/types/brand";
+
+// O painel é sempre escuro. O Radix entra só com as primitivas (diálogo, menu),
+// e as cores dele são reescritas pelos estilos globais.
 export const radixTheme: ThemeProps = {
-  accentColor: "mint",
-  grayColor: "sage",
+  appearance: "dark",
+  accentColor: "gray",
+  grayColor: "gray",
   radius: "medium",
-  scaling: "100%"
+  scaling: "100%",
+  hasBackground: false
 };
 
-export const theme = {
-  palette: {
-    primary: {
-      main: "var(--mint-9)",
-      text: "var(--mint-11)",
-      soft: "var(--mint-a3)",
-      border: "var(--mint-a4)",
-      strong: "var(--mint-a5)",
-      contrast: "var(--mint-contrast)",
-      gradient: "linear-gradient(135deg, var(--mint-9) 0%, var(--mint-6) 100%)",
-      glow: "radial-gradient(ellipse 80% 50% at 50% -20%, var(--mint-a4), transparent)"
-    },
-    success: {
-      main: "var(--grass-9)",
-      soft: "var(--grass-a3)"
-    },
-    danger: {
-      main: "var(--ruby-9)",
-      border: "var(--ruby-a6)"
-    },
-    gray: {
-      soft: "var(--gray-a2)",
-      muted: "var(--gray-a3)",
-      border: "var(--gray-a4)",
-      strongBorder: "var(--gray-a5)",
-      icon: "var(--gray-8)",
-      text: "var(--gray-11)",
-      contrast: "var(--gray-12)"
-    },
-    background: {
-      app: "var(--app-bg, var(--color-background))",
-      panel: "var(--color-panel-translucent)"
-    }
-  },
+export interface AccentColors {
+  base: string;
+  text: string;
+  soft: string;
+  contrast: string;
+}
+
+const generalAccent: AccentColors = {
+  base: "#EEEEEE",
+  text: "#EEEEEE",
+  soft: "rgba(238, 238, 238, 0.12)",
+  contrast: "#111111"
+};
+
+const baseTheme = {
   spacing: (factor: number) => `${factor * 4}px`,
-  radius: (level: 1 | 2 | 3 | 4 | 5 | 6 | "full") => `var(--radius-${level})`,
-  shadow: (level: 1 | 2 | 3 | 4 | 5 | 6) => `var(--shadow-${level})`,
+  radii: {
+    small: "8px",
+    control: "10px",
+    box: "12px",
+    panel: "16px",
+    card: "20px",
+    pill: "999px"
+  },
   breakpoints: {
     sm: "520px",
     md: "768px",
-    lg: "1024px"
+    lg: "1024px",
+    xl: "1200px"
   },
   layout: {
     maxWidth: "1280px",
-    narrowWidth: "460px",
-    headerHeight: "80px"
+    formWidth: "420px",
+    setupWidth: "520px"
   },
-  typography: {
-    mono: "'JetBrains Mono', monospace",
-    codeSize: "12px",
-    tightLetterSpacing: "-0.02em"
-  },
-  blur: "blur(16px)",
   // Durações em milissegundos.
   motion: {
     fast: 150,
@@ -116,11 +104,19 @@ export const theme = {
     states: {
       success: "#12A594",
       successText: "#0BD8B6",
+      successSoft: "rgba(18, 165, 148, 0.16)",
       warning: "#F76B15",
       warningText: "#FFA057",
+      warningSoft: "rgba(247, 107, 21, 0.16)",
       error: "#E5484D",
-      errorText: "#FF9592"
+      errorText: "#FF9592",
+      errorSoft: "rgba(229, 72, 77, 0.12)",
+      errorBorder: "rgba(229, 72, 77, 0.55)",
+      errorTint: "#FFD1CF"
     },
+    general: generalAccent,
+    overlay: "rgba(0, 0, 0, 0.66)",
+    overlayShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
     fonts: {
       display: "'Unbounded', sans-serif",
       body: "'Hanken Grotesk', sans-serif",
@@ -128,6 +124,14 @@ export const theme = {
     }
   }
 };
+
+// Contexto de ferramenta: define a cor dos cinco pontos que mudam dentro de Dados, Conteúdos ou Links.
+const pickAccent = (context: BrandContext): AccentColors =>
+  context === "general" ? generalAccent : baseTheme.brand.tools[context];
+
+export const withContext = (context: BrandContext) => ({ ...baseTheme, context, accent: pickAccent(context) });
+
+export const theme = withContext("general");
 
 export type AppTheme = typeof theme;
 

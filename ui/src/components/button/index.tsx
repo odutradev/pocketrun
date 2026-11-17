@@ -1,21 +1,31 @@
-import { Spinner } from "@radix-ui/themes";
-
-import { StyledButton } from "./styles";
+import { Spinner, StyledButton } from "./styles";
 import type { ButtonProps } from "./types";
 
 const Button: React.FC<ButtonProps> = ({
   children,
-  loading = false,
-  disabled,
+  variant = "primary",
+  size = "md",
+  isLoading = false,
+  loadingLabel,
   leftIcon,
   rightIcon,
-  fullWidth = false,
+  isFullWidth = false,
+  disabled,
+  type = "button",
   ...props
 }) => (
-  <StyledButton disabled={disabled || loading} $fullWidth={fullWidth} {...props}>
-    {loading ? <Spinner size="1" /> : leftIcon}
-    {children}
-    {!loading && rightIcon}
+  <StyledButton
+    type={type}
+    disabled={disabled || isLoading}
+    aria-busy={isLoading || undefined}
+    $variant={variant}
+    $size={size}
+    $isFullWidth={isFullWidth}
+    {...props}
+  >
+    {isLoading ? <Spinner aria-hidden="true" /> : leftIcon}
+    {isLoading && loadingLabel ? loadingLabel : children}
+    {!isLoading && rightIcon}
   </StyledButton>
 );
 

@@ -1,6 +1,7 @@
 import { ReloadIcon } from "@radix-ui/react-icons";
-import { IconButton } from "@radix-ui/themes";
 import { Fragment, useState } from "react";
+
+import IconButton from "@components/iconButton";
 
 import { Panel, PanelText, PanelTitle } from "../../../../styles";
 import { CardStage, ReplayButton, Specs } from "./styles";
@@ -17,14 +18,11 @@ const MotionCard: React.FC<MotionCardProps> = ({ demo, children }) => {
         {demo.hasReplay && (
           <ReplayButton>
             <IconButton
-              variant="soft"
-              color="gray"
-              highContrast
-              aria-label={`Repetir a animação ${demo.title}`}
+              variant="secondary"
+              label={`Repetir a animação ${demo.title}`}
+              icon={<ReloadIcon />}
               onClick={() => setPlayCount((count) => count + 1)}
-            >
-              <ReloadIcon />
-            </IconButton>
+            />
           </ReplayButton>
         )}
       </CardStage>

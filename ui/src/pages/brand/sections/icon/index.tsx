@@ -56,9 +56,7 @@ const IconSection: React.FC = () => {
               </PanelText>
             </FileInfo>
             <Button
-              variant="soft"
-              color="gray"
-              highContrast
+              variant="secondary"
               leftIcon={<DownloadIcon />}
               disabled={isExporting}
               onClick={() => handleDownloadFavicon(item)}

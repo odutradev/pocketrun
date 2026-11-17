@@ -1,25 +1,29 @@
-import { LockOpen1Icon, PlusIcon, TrashIcon } from "@radix-ui/react-icons";
-import { AlertDialog, Heading, Table, Text } from "@radix-ui/themes";
+import { PlusIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
 import { deleteToken } from "@actions/apps";
+import Alert from "@components/alert";
 import Button from "@components/button";
 import Card from "@components/card";
+import ConfirmDialog from "@components/confirmDialog";
+import DataTable from "@components/dataTable";
 import EmptyState from "@components/emptyState";
+import SectionHeader from "@components/sectionHeader";
 import useAction from "@hooks/useAction";
+import type { ApiToken } from "@utils/types/application";
 
 import useAppDetailsPage from "../../hook";
-import { ActionCell, DialogActions, Header } from "./styles";
-import { tokenColumns } from "./table";
+import { Body, Strong } from "./styles";
+import { getTokenColumns } from "./table";
 
 const TokensTab: React.FC = () => {
   const { applicationId, application, handleRefresh, handleOpenTokenModal } = useAppDetailsPage();
-  const [tokenToRevoke, setTokenToRevoke] = useState<string | null>(null);
+  const [tokenToRevoke, setTokenToRevoke] = useState<ApiToken | null>(null);
   const tokens = application?.tokens ?? [];
 
-  const { execute: revokeToken } = useAction({
+  const { execute: revokeToken, isPending } = useAction({
     action: (tokenId: string) => deleteToken(applicationId, tokenId),
-    toastMessages: { pending: "Revogando token...", success: "Token revogado!", error: "Falha ao revogar token" },
+    toastMessages: { pending: "Revogando o token…", success: "Token revogado", error: "Não foi possível revogar o token" },
     callback: () => {
       setTokenToRevoke(null);
       handleRefresh();
@@ -28,88 +32,59 @@ const TokensTab: React.FC = () => {
 
   const handleConfirmRevoke = () => {
     if (!tokenToRevoke) return;
-    revokeToken(tokenToRevoke);
+    revokeToken(tokenToRevoke.id);
   };
 
+  const newTokenButton = (
+    <Button leftIcon={<PlusIcon />} onClick={handleOpenTokenModal}>
+      Novo token
+    </Button>
+  );
+
   return (
-    <Card size="3">
-      <Header>
-        <div>
-          <Heading size="4" weight="bold">
-            Tokens de Acesso da Aplicação
-          </Heading>
-          <Text size="2" color="gray">
-            Chaves secretas para autenticar requisições de clientes autorizados.
-          </Text>
-        </div>
-        <Button variant="solid" color="mint" size="2" onClick={handleOpenTokenModal} leftIcon={<PlusIcon />}>
-          Novo Token
-        </Button>
-      </Header>
+    <Card as="section" aria-labelledby="tokens-title">
+      <Body>
+        <SectionHeader
+          titleId="tokens-title"
+          title="Tokens de acesso"
+          description="Chaves que autorizam clientes a chamar a API desta aplicação."
+          actions={tokens.length > 0 ? newTokenButton : undefined}
+        />
 
-      {tokens.length === 0 ? (
-        <EmptyState icon={<LockOpen1Icon />} message="Nenhum token gerado para esta aplicação." />
-      ) : (
-        <Table.Root variant="surface">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeaderCell>Nome</Table.ColumnHeaderCell>
-              {tokenColumns.map((column) => (
-                <Table.ColumnHeaderCell key={column.key}>{column.header}</Table.ColumnHeaderCell>
-              ))}
-              <Table.ColumnHeaderCell align="center">Ações</Table.ColumnHeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {tokens.map((token) => (
-              <Table.Row key={token.id}>
-                <Table.RowHeaderCell>{token.name}</Table.RowHeaderCell>
-                {tokenColumns.map((column) => (
-                  <Table.Cell key={column.key}>{column.render(token)}</Table.Cell>
-                ))}
-                <Table.Cell>
-                  <ActionCell>
-                    <Button
-                      variant="ghost"
-                      color="red"
-                      size="1"
-                      onClick={() => setTokenToRevoke(token.id)}
-                      leftIcon={<TrashIcon />}
-                      aria-label={`Revogar token ${token.name}`}
-                    >
-                      Revogar
-                    </Button>
-                  </ActionCell>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Root>
-      )}
+        {tokens.length === 0 ? (
+          <EmptyState
+            isCompact
+            title="Nenhum token ainda"
+            description="Sem token, nenhum cliente consegue chamar a API desta aplicação."
+            actions={newTokenButton}
+          />
+        ) : (
+          <>
+            <DataTable
+              caption="Tokens de acesso da aplicação"
+              columns={getTokenColumns(setTokenToRevoke)}
+              rows={tokens}
+              getRowKey={(token) => token.id}
+              minWidth="720px"
+            />
+            <Alert>O token completo só aparece quando é gerado. Aqui a lista mostra apenas o prefixo.</Alert>
+          </>
+        )}
+      </Body>
 
-      <AlertDialog.Root open={Boolean(tokenToRevoke)} onOpenChange={(isOpen) => !isOpen && setTokenToRevoke(null)}>
-        <AlertDialog.Content maxWidth="450px">
-          <AlertDialog.Title size="4" weight="bold">
-            Confirmar Revogação de Token
-          </AlertDialog.Title>
-          <AlertDialog.Description size="2" color="gray">
-            Tem certeza que deseja revogar este token de acesso? Todas as requisições autenticadas por ele serão
-            rejeitadas imediatamente.
-          </AlertDialog.Description>
-          <DialogActions>
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray" size="2">
-                Cancelar
-              </Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button variant="solid" color="red" size="2" onClick={handleConfirmRevoke}>
-                Sim, Revogar Token
-              </Button>
-            </AlertDialog.Action>
-          </DialogActions>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
+      <ConfirmDialog
+        isOpen={Boolean(tokenToRevoke)}
+        onClose={() => setTokenToRevoke(null)}
+        onConfirm={handleConfirmRevoke}
+        isPending={isPending}
+        title="Revogar token?"
+        description={
+          <>
+            Chamadas com <Strong>{tokenToRevoke?.name}</Strong> passam a ser recusadas na hora. Não dá para desfazer.
+          </>
+        }
+        confirmLabel="Revogar token"
+      />
     </Card>
   );
 };

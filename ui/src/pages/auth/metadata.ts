@@ -2,7 +2,7 @@ import type { PageMetadata } from "@utils/types/page";
 
 const metadata: PageMetadata = {
   title: "Entrar",
-  center: true,
+  layout: "bare",
   publicOnly: true
 };
 

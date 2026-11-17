@@ -1,6 +1,6 @@
 import type { Application } from "@utils/types/application";
 
-export type DetailsTab = "security" | "tokens" | "explorer" | "snippets" | "danger";
+export type DetailsTab = "explorer" | "snippets" | "tokens" | "security" | "danger";
 
 export interface UseAppDetailsPageReturn {
   applicationId: string;
@@ -10,8 +10,7 @@ export interface UseAppDetailsPageReturn {
   isTokenModalOpen: boolean;
   loadApplication: (applicationId: string, signal?: AbortSignal) => Promise<void>;
   reset: () => void;
-  handleTabChange: (tab: string) => void;
-  handleBack: () => void;
+  handleTabChange: (tab: DetailsTab) => void;
   handleRefresh: () => Promise<void>;
   handleOpenTokenModal: () => void;
   handleCloseTokenModal: () => void;

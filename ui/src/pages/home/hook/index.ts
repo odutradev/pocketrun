@@ -1,38 +1,42 @@
-import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-
-import useAuthStore from "@stores/auth";
+import { allowsAnyOrigin } from "@utils/functions";
 import type { Application } from "@utils/types/application";
 
 import useHomeStore from "./store";
 import type { UseHomePageReturn } from "./types";
 
-const useHomePage = (): UseHomePageReturn => {
-  const navigate = useNavigate();
-  const { user } = useAuthStore();
-  const { applications, isLoading, isCreateModalOpen, isAuthModalOpen, loadApplications, setCreateModalOpen, setAuthModalOpen } =
-    useHomeStore();
-
-  const totalTokens = applications.reduce((total, application) => total + (application.tokens?.length ?? 0), 0);
-
-  const handleSelectApplication = useCallback(
-    (application: Application) => navigate(`/apps/${application.id}`),
-    [navigate]
+const matchesSearch = (application: Application, search: string) => {
+  const term = search.trim().toLowerCase();
+  if (!term) return true;
+  return [application.name, application.projectId, application.description].some((value) =>
+    value.toLowerCase().includes(term)
   );
+};
 
-  return {
-    user,
+const useHomePage = (): UseHomePageReturn => {
+  const {
     applications,
     isLoading,
-    totalTokens,
+    isRefreshing,
+    search,
     isCreateModalOpen,
-    isAuthModalOpen,
     loadApplications,
+    setSearch,
+    setCreateModalOpen
+  } = useHomeStore();
+
+  return {
+    applications,
+    filteredApplications: applications.filter((application) => matchesSearch(application, search)),
+    isLoading,
+    isRefreshing,
+    search,
+    totalTokens: applications.reduce((total, application) => total + (application.tokens?.length ?? 0), 0),
+    openOriginCount: applications.filter((application) => allowsAnyOrigin(application.allowedOrigins)).length,
+    isCreateModalOpen,
+    loadApplications,
+    handleSearchChange: setSearch,
     handleOpenCreate: () => setCreateModalOpen(true),
-    handleCloseCreate: () => setCreateModalOpen(false),
-    handleOpenAuth: () => setAuthModalOpen(true),
-    handleCloseAuth: () => setAuthModalOpen(false),
-    handleSelectApplication
+    handleCloseCreate: () => setCreateModalOpen(false)
   };
 };
 

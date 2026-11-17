@@ -1,19 +1,18 @@
-import { Skeleton } from "@radix-ui/themes";
-
-import Card from "@components/card";
+import Skeleton from "@components/skeleton";
 
 import { Container } from "./styles";
+import { Layout } from "./tabs/explorer/styles";
 
+// Mesma forma da tela pronta: caminho, título, abas e o explorador.
 const AppDetailsSkeleton: React.FC = () => (
-  <Container>
-    <Skeleton width="180px" height="32px" mb="4" />
-    <Card size="3" mb="5">
-      <Skeleton height="56px" />
-    </Card>
-    <Skeleton height="40px" mb="4" />
-    <Card size="3">
-      <Skeleton height="220px" />
-    </Card>
+  <Container aria-busy="true">
+    <Skeleton width="200px" height="18px" radius="small" />
+    <Skeleton width="min(420px, 100%)" height="44px" />
+    <Skeleton height="48px" radius="small" />
+    <Layout>
+      <Skeleton height="280px" radius="panel" />
+      <Skeleton height="420px" radius="panel" />
+    </Layout>
   </Container>
 );
 

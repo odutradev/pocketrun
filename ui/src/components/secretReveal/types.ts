@@ -1,10 +1,7 @@
-import type { ReactNode } from "react";
-
 export interface SecretRevealProps {
-  icon: ReactNode;
-  title: string;
-  description: ReactNode;
   secret: string;
+  // Nome do segredo, como "Token de acesso".
+  label: string;
   confirmLabel: string;
   onConfirm: () => void;
 }

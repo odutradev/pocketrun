@@ -54,11 +54,11 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
 };
 
 export const tokenValidityOptions = [
-  { value: 30, label: "30 Dias" },
-  { value: 90, label: "90 Dias (3 meses)" },
-  { value: 180, label: "180 Dias (6 meses)" },
-  { value: 365, label: "365 Dias (1 ano)" },
-  { value: 1095, label: "3 Anos" }
+  { value: 30, label: "30 dias" },
+  { value: 90, label: "90 dias (3 meses)" },
+  { value: 180, label: "180 dias (6 meses)" },
+  { value: 365, label: "365 dias (1 ano)" },
+  { value: 1095, label: "3 anos" }
 ] as const;
 
 export const defaultTokenValidity = 365;

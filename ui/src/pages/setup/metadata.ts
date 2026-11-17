@@ -1,8 +1,8 @@
 import type { PageMetadata } from "@utils/types/page";
 
 const metadata: PageMetadata = {
-  title: "Configuração Inicial",
-  center: true,
+  title: "Configuração inicial",
+  layout: "bare",
   publicOnly: true
 };
 

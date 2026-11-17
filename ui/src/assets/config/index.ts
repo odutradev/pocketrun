@@ -5,8 +5,7 @@ export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://
 export const publicApiUrl = trimTrailingSlash(import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5000");
 
 export const storageKeys = {
-  auth: "pocketrun_auth",
-  system: "pocketrun_system"
+  auth: "pocketrun_auth"
 } as const;
 
 export const healthCheckInterval = 20000;
@@ -35,3 +34,6 @@ export const symbolMotion = {
   snapDegrees: 16,
   savedFeedbackDuration: 1400
 } as const;
+
+// Prazo, em dias, a partir do qual tokens e documentos passam a mostrar o aviso de expiração.
+export const expiryWarningDays = 14;

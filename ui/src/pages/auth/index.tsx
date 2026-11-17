@@ -1,19 +1,15 @@
-import AuthPanel from "@components/authPanel";
-import Card from "@components/card";
+import { FormSide, Layout } from "./styles";
+import AuthForm from "./subcomponents/authForm";
+import AuthHero from "./subcomponents/authHero";
 
-import useAuthPage from "./hook";
-import { Container } from "./styles";
-
-const AuthPage: React.FC = () => {
-  const { handleSuccess } = useAuthPage();
-
-  return (
-    <Container>
-      <Card size="3">
-        <AuthPanel onSuccess={handleSuccess} />
-      </Card>
-    </Container>
-  );
-};
+// Tela dividida: a marca e a proposta à esquerda, o acesso do gestor à direita.
+const AuthPage: React.FC = () => (
+  <Layout>
+    <AuthHero />
+    <FormSide>
+      <AuthForm />
+    </FormSide>
+  </Layout>
+);
 
 export default AuthPage;

@@ -36,3 +36,5 @@ export interface PingResponse {
   status: string;
   message: string;
 }
+
+export type ApiHealthStatus = "online" | "offline";

@@ -1,17 +1,16 @@
 import type { Application } from "@utils/types/application";
-import type { User } from "@utils/types/user";
 
 export interface UseHomePageReturn {
-  user: User | null;
   applications: Application[];
+  filteredApplications: Application[];
   isLoading: boolean;
+  isRefreshing: boolean;
+  search: string;
   totalTokens: number;
+  openOriginCount: number;
   isCreateModalOpen: boolean;
-  isAuthModalOpen: boolean;
   loadApplications: () => Promise<void>;
+  handleSearchChange: (search: string) => void;
   handleOpenCreate: () => void;
   handleCloseCreate: () => void;
-  handleOpenAuth: () => void;
-  handleCloseAuth: () => void;
-  handleSelectApplication: (application: Application) => void;
 }

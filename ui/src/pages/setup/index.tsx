@@ -1,17 +1,19 @@
-import Card from "@components/card";
+import ApiStatus from "@components/apiStatus";
+import BrandMark from "@components/brandMark";
 
 import { Container, Content } from "./styles";
 import SetupForm from "./subcomponents/setupForm";
-import SetupHeader from "./subcomponents/setupHeader";
+import SetupSteps from "./subcomponents/setupSteps";
 
+// Primeiro acesso da instância: aparece uma vez, até existir o primeiro gestor.
 const SetupPage: React.FC = () => (
   <Container>
-    <Card>
-      <Content>
-        <SetupHeader />
-        <SetupForm />
-      </Content>
-    </Card>
+    <BrandMark kind="horizontal" size={18} motion="intro" />
+    <SetupSteps />
+    <Content>
+      <SetupForm />
+      <ApiStatus variant="panel" />
+    </Content>
   </Container>
 );
 

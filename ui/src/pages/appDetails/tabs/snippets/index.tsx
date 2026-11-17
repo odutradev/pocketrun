@@ -1,18 +1,14 @@
-import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
-import { Heading } from "@radix-ui/themes";
-
 import { publicApiUrl } from "@assets/config";
-import Button from "@components/button";
 import Card from "@components/card";
 import CodeBlock from "@components/codeBlock";
-import useClipboard from "@hooks/useClipboard";
+import SectionHeader from "@components/sectionHeader";
 
-import { List, SnippetHeader } from "./styles";
+import { Body, List, Placeholder } from "./styles";
 
 const snippets = [
   {
     key: "curl",
-    title: "Exemplo cURL",
+    title: "cURL",
     code: `curl -X POST "${publicApiUrl}/kv/pedidos/create" \\
   -H "Authorization: Bearer <SEU_TOKEN>" \\
   -H "Content-Type: application/json" \\
@@ -20,7 +16,7 @@ const snippets = [
   },
   {
     key: "js",
-    title: "Exemplo JavaScript / Fetch",
+    title: "JavaScript (fetch)",
     code: `const response = await fetch("${publicApiUrl}/kv/pedidos/create", {
   method: "POST",
   headers: {
@@ -35,32 +31,26 @@ const document = await response.json();`
   }
 ];
 
-const SnippetsTab: React.FC = () => {
-  const { copy, isCopied } = useClipboard();
-
-  return (
-    <List>
-      {snippets.map((snippet) => (
-        <Card key={snippet.key} size="3">
-          <SnippetHeader>
-            <Heading size="3" weight="bold">
-              {snippet.title}
-            </Heading>
-            <Button
-              variant="soft"
-              size="1"
-              color={isCopied(snippet.key) ? "grass" : "gray"}
-              onClick={() => copy(snippet.code, snippet.key)}
-              leftIcon={isCopied(snippet.key) ? <CheckIcon /> : <CopyIcon />}
-            >
-              {isCopied(snippet.key) ? "Copiado" : "Copiar"}
-            </Button>
-          </SnippetHeader>
-          <CodeBlock code={snippet.code} />
-        </Card>
-      ))}
-    </List>
-  );
-};
+const SnippetsTab: React.FC = () => (
+  <Card as="section" aria-labelledby="snippets-title">
+    <Body>
+      <SectionHeader
+        titleId="snippets-title"
+        title="Snippets"
+        description={
+          <>
+            Exemplos prontos para gravar um documento. Troque <Placeholder>&lt;SEU_TOKEN&gt;</Placeholder> por um token de
+            acesso desta aplicação.
+          </>
+        }
+      />
+      <List>
+        {snippets.map((snippet) => (
+          <CodeBlock key={snippet.key} title={snippet.title} code={snippet.code} isCopyable />
+        ))}
+      </List>
+    </Body>
+  </Card>
+);
 
 export default SnippetsTab;

@@ -1,77 +1,65 @@
-import { ExitIcon, LockClosedIcon, MoonIcon, PersonIcon, StackIcon, SunIcon } from "@radix-ui/react-icons";
-import { Badge, IconButton, Text } from "@radix-ui/themes";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useTheme } from "styled-components";
 
-import Button from "@components/button";
+import ApiStatus from "@components/apiStatus";
+import Badge from "@components/badge";
+import BrandMark from "@components/brandMark";
+import LinkButton from "@components/linkButton";
 import useAuthStore from "@stores/auth";
 import useSystemStore from "@stores/system";
 
-import { Actions, Brand, BrandTitle, Header, Inner, LogoIcon, UserBadge } from "./styles";
-import type { NavbarProps } from "./types";
+import { End, Header, Inner, LogoLink, Nav, NavLink } from "./styles";
+import UserMenu from "./subcomponents/userMenu";
+import type { NavItem } from "./types";
 
-const Navbar: React.FC<NavbarProps> = ({ apiStatus, setupRequired }) => {
-  const navigate = useNavigate();
-  const { theme, toggleTheme } = useSystemStore();
-  const { user, clearSession } = useAuthStore();
-  const themeLabel = theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro";
+const navItems: NavItem[] = [
+  { label: "Aplicações", to: "/", matches: ["/", "/apps"] },
+  { label: "Identidade visual", to: "/id", matches: ["/id"] }
+];
+
+const isItemActive = (item: NavItem, pathname: string) =>
+  item.matches.some((match) => (match === "/" ? pathname === "/" : pathname.startsWith(match)));
+
+// Barra superior: logo no contexto da tela, navegação principal, estado da API e conta.
+const Navbar: React.FC = () => {
+  const { pathname } = useLocation();
+  const { context } = useTheme();
+  const { user } = useAuthStore();
+  const { isSetupRequired } = useSystemStore();
 
   return (
     <Header>
       <Inner>
-        <Brand>
-          <LogoIcon>
-            <StackIcon />
-          </LogoIcon>
-          <BrandTitle size="3" weight="medium">
-            PocketRun
-          </BrandTitle>
-          <Badge size="1" variant="surface" color="gray" radius="full">
-            v2.0
-          </Badge>
-        </Brand>
-
-        <Actions>
-          <Badge size="1" variant="surface" color={apiStatus === "online" ? "grass" : "amber"} radius="full">
-            <Text size="1" weight="medium">
-              API {apiStatus}
-            </Text>
-          </Badge>
-
-          {setupRequired && (
-            <Badge size="1" variant="outline" color="amber" radius="full">
-              Setup Inicial
+        <LogoLink to="/" aria-label="PocketRun, ir para as aplicações">
+          <BrandMark kind="horizontal" size={16} context={context} />
+        </LogoLink>
+        {user && (
+          <Nav aria-label="Navegação principal">
+            {navItems.map((item) => {
+              const isActive = isItemActive(item, pathname);
+              return (
+                <NavLink key={item.to} to={item.to} aria-current={isActive ? "page" : undefined} $isActive={isActive}>
+                  {item.label}
+                </NavLink>
+              );
+            })}
+          </Nav>
+        )}
+        <End>
+          {isSetupRequired && (
+            <Badge tone="warning" hasDot>
+              Configuração pendente
             </Badge>
           )}
-
-          <IconButton size="1" variant="soft" color="gray" onClick={toggleTheme} title={themeLabel} aria-label={themeLabel}>
-            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-          </IconButton>
-
-          {user && (
-            <>
-              <UserBadge>
-                <LockClosedIcon />
-                <Text size="1" weight="medium">
-                  {user.name}
-                </Text>
-                {user.role === "superadmin" && (
-                  <Badge size="1" variant="solid" color="mint">
-                    SUPERADMIN
-                  </Badge>
-                )}
-              </UserBadge>
-              <Button variant="ghost" color="gray" size="1" onClick={clearSession} leftIcon={<ExitIcon />}>
-                Sair
-              </Button>
-            </>
+          <ApiStatus />
+          {user ? (
+            <UserMenu user={user} />
+          ) : (
+            <LinkButton to="/auth" size="sm">
+              Entrar
+            </LinkButton>
           )}
-
-          {!user && !setupRequired && (
-            <Button variant="soft" color="mint" size="1" onClick={() => navigate("/auth")} leftIcon={<PersonIcon />}>
-              Entrar como Gestor
-            </Button>
-          )}
-        </Actions>
+        </End>
       </Inner>
     </Header>
   );

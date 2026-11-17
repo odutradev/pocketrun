@@ -1,5 +1,7 @@
+import { expiryWarningDays } from "@assets/config";
 import { errorMessages } from "@assets/data";
 import { isApiError } from "@utils/api";
+import type { ExpiryInfo } from "@utils/types/expiry";
 
 type LogLevel = "info" | "warn" | "error";
 
@@ -30,5 +32,40 @@ export const parseOrigins = (value: string): string[] => {
 
 export const allowsAnyOrigin = (origins: string[]): boolean => origins.includes("*");
 
+export const isLocalOrigin = (origin: string): boolean => /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(origin);
+
+export const pluralize = (count: number, singular: string, plural: string): string =>
+  `${count} ${count === 1 ? singular : plural}`;
+
 export const describeOrigins = (origins: string[]): string =>
-  allowsAnyOrigin(origins) ? "Qualquer Origem" : `${origins.length} Origens`;
+  allowsAnyOrigin(origins) ? "Qualquer origem" : pluralize(origins.length, "origem", "origens");
+
+// Dias inteiros até a data; negativo quando ela já passou.
+export const daysUntil = (value: string): number => Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
+
+// Situação de algo que pode expirar (token, documento), para o selo de status.
+export const getExpiryInfo = (expiresAt: string | null | undefined): ExpiryInfo => {
+  if (!expiresAt) return { state: "none" };
+  const days = daysUntil(expiresAt);
+  if (days <= 0) return { state: "expired", days };
+  return { state: days <= expiryWarningDays ? "soon" : "active", days };
+};
+
+// Id longo encurtado para tabelas: começo e fim.
+export const shortenId = (id: string): string => (id.length > 10 ? `${id.slice(0, 4)}…${id.slice(-4)}` : id);
+
+export const getInitial = (name: string): string => name.trim().charAt(0).toUpperCase() || "?";
+
+// Ids de ajuda e erro de um campo, e o `aria-describedby` que liga o controle a eles.
+export const getFieldIds = (controlId: string, flags: { hasHint?: boolean; hasError?: boolean } = {}) => {
+  const hintId = `${controlId}-hint`;
+  const errorId = `${controlId}-error`;
+  const describedBy = [flags.hasHint ? hintId : "", flags.hasError ? errorId : ""].filter(Boolean).join(" ");
+  return { hintId, errorId, describedBy: describedBy || undefined };
+};
+
+// Ids que ligam cada aba ao seu painel.
+export const getTabIds = (prefix: string, value: string) => ({
+  tabId: `${prefix}-tab-${value}`,
+  panelId: `${prefix}-panel-${value}`
+});

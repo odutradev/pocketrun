@@ -1,10 +1,8 @@
-import { GlobeIcon, LockClosedIcon, PlusIcon } from "@radix-ui/react-icons";
-import { Dialog } from "@radix-ui/themes";
 import { useState } from "react";
 
 import { createApplication } from "@actions/apps";
 import Button from "@components/button";
-import DialogHeader from "@components/dialogHeader";
+import Dialog from "@components/dialog";
 import Input from "@components/input";
 import SecretReveal from "@components/secretReveal";
 import TextArea from "@components/textArea";
@@ -15,7 +13,7 @@ import { createApplicationSchema } from "@utils/validations/application";
 import type { CreateApplicationValues } from "@utils/validations/application";
 
 import useHomePage from "../../hook";
-import { Form } from "./styles";
+import { Actions, Form } from "./styles";
 
 const initialValues = { name: "", projectId: "", origins: "*", description: "" };
 
@@ -32,7 +30,11 @@ const CreateAppModal: React.FC = () => {
         allowedOrigins: parseOrigins(origins),
         allowNonBrowserRequests: true
       }),
-    toastMessages: { pending: "Criando aplicação...", success: "Aplicação criada!", error: "Erro ao criar aplicação" },
+    toastMessages: {
+      pending: "Criando a aplicação…",
+      success: "Aplicação criada",
+      error: "Não foi possível criar a aplicação"
+    },
     callback: (created) => setRawToken(created.rawToken)
   });
 
@@ -54,72 +56,78 @@ const CreateAppModal: React.FC = () => {
     handleCloseCreate();
   };
 
+  if (rawToken) {
+    return (
+      <Dialog
+        isOpen={isCreateModalOpen}
+        onClose={handleDone}
+        eyebrow="Nova aplicação"
+        title="Aplicação criada"
+        description="Este é o primeiro token de acesso da aplicação. Os próximos você gera na aba Tokens."
+      >
+        <SecretReveal secret={rawToken} label="Token de acesso" confirmLabel="Já guardei o token" onConfirm={handleDone} />
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog.Root open={isCreateModalOpen} onOpenChange={(isOpen) => !isOpen && handleDone()}>
-      <Dialog.Content maxWidth="520px">
-        <DialogHeader icon={<PlusIcon />} label="Nova Aplicação" onClose={handleDone} />
-
-        {rawToken ? (
-          <SecretReveal
-            icon={<LockClosedIcon />}
-            title="Aplicação Criada com Sucesso!"
-            description="Abaixo está o seu Token de Acesso (API Key). Guarde-o em local seguro, pois ele não será exibido novamente."
-            secret={rawToken}
-            confirmLabel="Entendi e Salvei o Token"
-            onConfirm={handleDone}
-          />
-        ) : (
-          <>
-            <Dialog.Title size="5" weight="bold" mb="1">
-              Criar Aplicação
-            </Dialog.Title>
-            <Dialog.Description size="2" color="gray" mb="4">
-              Configure os detalhes e as origens de acesso autorizadas para o seu novo projeto.
-            </Dialog.Description>
-
-            <Form onSubmit={handleSubmit} noValidate>
-              <Input
-                label="Nome da Aplicação"
-                name="name"
-                placeholder="ex: Meu E-Commerce, Blog Pessoal"
-                value={values.name}
-                onChange={(event) => handleNameChange(event.target.value)}
-                error={errors.name}
-              />
-              <Input
-                label="Project ID (Identificador Único)"
-                name="projectId"
-                placeholder="ex: meu-ecommerce-2026"
-                value={values.projectId}
-                onChange={(event) => setFieldValue("projectId", toProjectId(event.target.value))}
-                error={errors.projectId}
-              />
-              <Input
-                label="Origens Permitidas (CORS)"
-                name="origins"
-                placeholder="https://meusite.com, http://localhost:3000 ou *"
-                value={values.origins}
-                onChange={handleChange}
-                error={errors.origins}
-                leftIcon={<GlobeIcon />}
-              />
-              <TextArea
-                label="Descrição (Opcional)"
-                name="description"
-                rows={2}
-                placeholder="Aplicação web e mobile de pedidos..."
-                value={values.description}
-                onChange={handleChange}
-                error={errors.description}
-              />
-              <Button type="submit" size="3" color="mint" variant="solid" loading={isSubmitting} mt="2" fullWidth>
-                Criar Aplicação
-              </Button>
-            </Form>
-          </>
-        )}
-      </Dialog.Content>
-    </Dialog.Root>
+    <Dialog
+      isOpen={isCreateModalOpen}
+      onClose={handleDone}
+      eyebrow="Nova aplicação"
+      title="Criar aplicação"
+      description="Cada aplicação tem dados, tokens e origens próprios."
+    >
+      <Form onSubmit={handleSubmit} noValidate>
+        <Input
+          label="Nome"
+          name="name"
+          placeholder="Finanças pessoais"
+          value={values.name}
+          onChange={(event) => handleNameChange(event.target.value)}
+          error={errors.name}
+        />
+        <Input
+          label="Project ID"
+          name="projectId"
+          isMono
+          spellCheck={false}
+          placeholder="financas-pessoais"
+          hint="Identificador único, usado pelos clientes da API. Só letras minúsculas, números e hífen."
+          value={values.projectId}
+          onChange={(event) => setFieldValue("projectId", toProjectId(event.target.value))}
+          error={errors.projectId}
+        />
+        <Input
+          label="Origens permitidas"
+          name="origins"
+          isMono
+          spellCheck={false}
+          placeholder="https://app.exemplo.com, http://localhost:5173"
+          hint="Separe por vírgula. Com *, qualquer site pode chamar a API; dá para restringir depois em Segurança."
+          value={values.origins}
+          onChange={handleChange}
+          error={errors.origins}
+        />
+        <TextArea
+          label="Descrição (opcional)"
+          name="description"
+          rows={2}
+          placeholder="Para que serve esta aplicação"
+          value={values.description}
+          onChange={handleChange}
+          error={errors.description}
+        />
+        <Actions>
+          <Button variant="secondary" onClick={handleDone}>
+            Cancelar
+          </Button>
+          <Button type="submit" isLoading={isSubmitting} loadingLabel="Criando…">
+            Criar aplicação
+          </Button>
+        </Actions>
+      </Form>
+    </Dialog>
   );
 };
 

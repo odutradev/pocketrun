@@ -1,9 +1,10 @@
 import { ArrowDownIcon, DownloadIcon } from "@radix-ui/react-icons";
-import { Button as RadixButton, SegmentedControl } from "@radix-ui/themes";
+import { SegmentedControl } from "@radix-ui/themes";
 
 import { brandContextOptions, defaultLogoConfig } from "@assets/data";
 import BrandMark from "@components/brandMark";
 import Button from "@components/button";
+import LinkButton from "@components/linkButton";
 
 import useBrandPage from "../../hook";
 import { ControlScroller, Eyebrow, Lead, PanelText } from "../../styles";
@@ -28,17 +29,12 @@ const Hero: React.FC = () => {
           WEBP e JPG, em vários tamanhos, proporções e cores.
         </Lead>
         <Actions>
-          <RadixButton asChild size="3" highContrast>
-            <a href="#downloads">
-              Ir para os downloads
-              <ArrowDownIcon />
-            </a>
-          </RadixButton>
+          <LinkButton href="#downloads" variant="primary" size="lg" rightIcon={<ArrowDownIcon />}>
+            Ir para os downloads
+          </LinkButton>
           <Button
-            size="3"
-            variant="soft"
-            color="gray"
-            highContrast
+            size="lg"
+            variant="secondary"
             leftIcon={<DownloadIcon />}
             onClick={() => handleDownloadSvg(defaultLogoConfig)}
           >

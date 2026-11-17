@@ -1,14 +1,15 @@
-import { Text } from "@radix-ui/themes";
+import BrandMark from "@components/brandMark";
 
-import { Container } from "./styles";
+import { Actions, Container, Description, Title } from "./styles";
 import type { EmptyStateProps } from "./types";
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon, message }) => (
-  <Container>
-    {icon}
-    <Text size="2" color="gray">
-      {message}
-    </Text>
+// Canivete fechado, uma frase e até duas ações.
+const EmptyState: React.FC<EmptyStateProps> = ({ title, description, actions, isCompact = false }) => (
+  <Container $isCompact={isCompact}>
+    <BrandMark kind="symbol" size={isCompact ? 36 : 52} pose="closed" />
+    <Title>{title}</Title>
+    {description && <Description>{description}</Description>}
+    {actions && <Actions>{actions}</Actions>}
   </Container>
 );
 

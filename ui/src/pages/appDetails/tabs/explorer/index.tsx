@@ -1,31 +1,23 @@
-import { ArchiveIcon, EyeOpenIcon, MagnifyingGlassIcon, ReloadIcon } from "@radix-ui/react-icons";
-import { Badge, Heading, Spinner, Table, Text } from "@radix-ui/themes";
+import { MagnifyingGlassIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import { listCollections, listDocuments } from "@actions/explorer";
 import { explorerPageSize } from "@assets/config";
-import Button from "@components/button";
 import Card from "@components/card";
+import DataTable from "@components/dataTable";
+import EmptyState from "@components/emptyState";
+import IconButton from "@components/iconButton";
 import Input from "@components/input";
-import { createLocalLogger, getErrorMessage } from "@utils/functions";
+import Loader from "@components/loader";
+import Pagination from "@components/pagination";
+import { createLocalLogger, getErrorMessage, pluralize } from "@utils/functions";
 import type { ExplorerDocument, Page } from "@utils/types/explorer";
 
 import useAppDetailsPage from "../../hook";
-import {
-  ActionCell,
-  BlockText,
-  CollectionButton,
-  CollectionList,
-  Header,
-  Layout,
-  Loading,
-  Pagination,
-  PaginationButtons,
-  SearchBox,
-  Toolbar
-} from "./styles";
-import DocumentDialog from "./subcomponents/documentDialog";
+import { DetailSlot, DocumentsBody, Layout, Toolbar } from "./styles";
+import CollectionList from "./subcomponents/collectionList";
+import DocumentPanel from "./subcomponents/documentPanel";
 import { documentColumns, matchesSearch } from "./table";
 
 const logger = createLocalLogger("explorerTab");
@@ -42,7 +34,7 @@ const reportError = (signal: AbortSignal, fallback: string) => (error: unknown) 
 };
 
 const ExplorerTab: React.FC = () => {
-  const { applicationId, application } = useAppDetailsPage();
+  const { applicationId } = useAppDetailsPage();
   const [collectionsState, setCollectionsState] = useState<LoadedState<string[]> | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -66,7 +58,7 @@ const ExplorerTab: React.FC = () => {
         setSelectedCollection((current) => (current && names.includes(current) ? current : names[0] ?? null));
       })
       .catch((error: unknown) => {
-        reportError(controller.signal, "Falha ao carregar coleções")(error);
+        reportError(controller.signal, "Não foi possível carregar as coleções")(error);
         if (!controller.signal.aborted) setCollectionsState((current) => ({ key: collectionsKey, value: current?.value ?? [] }));
       });
     return () => controller.abort();
@@ -78,7 +70,7 @@ const ExplorerTab: React.FC = () => {
     listDocuments({ applicationId, collection: selectedCollection, page, limit: explorerPageSize }, controller.signal)
       .then((result) => setDocumentsState({ key: documentsKey, value: result }))
       .catch((error: unknown) => {
-        reportError(controller.signal, "Falha ao carregar documentos")(error);
+        reportError(controller.signal, "Não foi possível carregar os documentos")(error);
         if (!controller.signal.aborted) setDocumentsState({ key: documentsKey, value: null });
       });
     return () => controller.abort();
@@ -87,154 +79,86 @@ const ExplorerTab: React.FC = () => {
   const handleSelectCollection = (collection: string) => {
     setSelectedCollection(collection);
     setPage(1);
+    setActiveDocument(null);
   };
 
-  const filteredDocuments = (documentsPage?.data ?? []).filter((document) => matchesSearch(document, search));
+  const handleRefresh = () => {
+    setRefreshKey((key) => key + 1);
+    setActiveDocument(null);
+  };
+
+  const pageDocuments = documentsPage?.data ?? [];
+  const filteredDocuments = pageDocuments.filter((document) => matchesSearch(document, search));
   const totalPages = documentsPage?.totalPages ?? 0;
+  const total = documentsPage?.total ?? 0;
+  const summary = search
+    ? `${filteredDocuments.length} de ${pageDocuments.length} nesta página`
+    : pluralize(total, "documento", "documentos");
+
+  const renderDocuments = () => {
+    if (isLoadingCollections || isLoadingDocuments) return <Loader label="Carregando documentos" size={36} isCentered />;
+    if (!selectedCollection) {
+      return (
+        <EmptyState
+          isCompact
+          title="Nenhuma coleção ainda"
+          description="As coleções aparecem aqui quando um cliente grava o primeiro documento pela API."
+        />
+      );
+    }
+    if (filteredDocuments.length === 0) {
+      return (
+        <EmptyState
+          isCompact
+          title={search ? "Nada encontrado nesta página" : "Coleção vazia"}
+          description={search ? "Tente outro trecho do documento." : "Ainda não há documentos nesta coleção."}
+        />
+      );
+    }
+    return (
+      <>
+        <DataTable
+          caption={`Documentos da coleção ${selectedCollection}`}
+          columns={documentColumns}
+          rows={filteredDocuments}
+          getRowKey={(document) => document._id}
+          selectedKey={activeDocument?._id ?? null}
+          onRowSelect={setActiveDocument}
+        />
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} summary={summary} />
+      </>
+    );
+  };
 
   return (
-    <section>
-      <Header>
-        <div>
-          <Heading size="4" weight="bold">
-            Data Explorer — {application?.name}
-          </Heading>
-          <Text size="2" color="gray">
-            Inspecione coleções e documentos armazenados nesta aplicação.
-          </Text>
-        </div>
-        <Button variant="soft" color="gray" size="2" onClick={() => setRefreshKey((key) => key + 1)} leftIcon={<ReloadIcon />}>
-          Atualizar Dados
-        </Button>
-      </Header>
-
-      <Layout>
-        <Card size="2">
-          <BlockText size="2" weight="bold" mb="2" color="gray">
-            Coleções ({collections.length})
-          </BlockText>
-          {isLoadingCollections && (
-            <Loading>
-              <Spinner size="2" />
-            </Loading>
-          )}
-          {!isLoadingCollections && collections.length === 0 && (
-            <BlockText size="2" color="gray" align="center" my="4">
-              Nenhuma coleção encontrada.
-            </BlockText>
-          )}
-          {!isLoadingCollections && collections.length > 0 && (
-            <CollectionList aria-label="Coleções">
-              {collections.map((collection) => (
-                <CollectionButton
-                  key={collection}
-                  variant={selectedCollection === collection ? "solid" : "ghost"}
-                  color="mint"
-                  size="2"
-                  onClick={() => handleSelectCollection(collection)}
-                  leftIcon={<ArchiveIcon />}
-                  aria-current={selectedCollection === collection}
-                >
-                  {collection}
-                </CollectionButton>
-              ))}
-            </CollectionList>
-          )}
-        </Card>
-
-        <Card size="2">
+    <Layout>
+      <CollectionList
+        collections={collections}
+        selected={selectedCollection}
+        isLoading={isLoadingCollections}
+        onSelect={handleSelectCollection}
+      />
+      <Card as="section" padding="sm" aria-label={selectedCollection ? `Documentos de ${selectedCollection}` : "Documentos"}>
+        <DocumentsBody>
           <Toolbar>
-            <Badge size="2" variant="surface" color="mint">
-              {selectedCollection ?? "Selecione uma coleção"}
-            </Badge>
-            <SearchBox>
-              <Input
-                placeholder="Filtrar nesta página..."
-                size="1"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                leftIcon={<MagnifyingGlassIcon />}
-                aria-label="Filtrar documentos"
-              />
-            </SearchBox>
+            <Input
+              type="search"
+              label="Filtrar documentos"
+              isMono
+              leftIcon={<MagnifyingGlassIcon />}
+              placeholder="Buscar nesta página"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <IconButton variant="secondary" label="Atualizar dados" icon={<ReloadIcon />} onClick={handleRefresh} />
           </Toolbar>
-
-          {isLoadingDocuments && (
-            <Loading>
-              <Spinner size="2" />
-              <Text size="2" color="gray">
-                Buscando documentos...
-              </Text>
-            </Loading>
-          )}
-          {!isLoadingDocuments && !selectedCollection && (
-            <BlockText size="2" color="gray" align="center" my="6">
-              Escolha uma coleção à esquerda para visualizar seus registros.
-            </BlockText>
-          )}
-          {!isLoadingDocuments && selectedCollection && filteredDocuments.length === 0 && (
-            <BlockText size="2" color="gray" align="center" my="6">
-              Nenhum documento encontrado.
-            </BlockText>
-          )}
-          {!isLoadingDocuments && selectedCollection && filteredDocuments.length > 0 && (
-            <>
-              <Table.Root variant="surface">
-                <Table.Header>
-                  <Table.Row>
-                    {documentColumns.map((column) => (
-                      <Table.ColumnHeaderCell key={column.key}>{column.header}</Table.ColumnHeaderCell>
-                    ))}
-                    <Table.ColumnHeaderCell align="center">Ação</Table.ColumnHeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                  {filteredDocuments.map((document) => (
-                    <Table.Row key={document._id}>
-                      {documentColumns.map((column) => (
-                        <Table.Cell key={column.key}>{column.render(document)}</Table.Cell>
-                      ))}
-                      <Table.Cell>
-                        <ActionCell>
-                          <Button
-                            variant="ghost"
-                            color="mint"
-                            size="1"
-                            onClick={() => setActiveDocument(document)}
-                            leftIcon={<EyeOpenIcon />}
-                            aria-label={`Ver documento ${document._id}`}
-                          >
-                            Ver
-                          </Button>
-                        </ActionCell>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Root>
-
-              {totalPages > 1 && (
-                <Pagination>
-                  <Text size="1" color="gray">
-                    Página {page} de {totalPages} ({documentsPage?.total} registros)
-                  </Text>
-                  <PaginationButtons>
-                    <Button variant="soft" size="1" disabled={page <= 1} onClick={() => setPage(page - 1)}>
-                      Anterior
-                    </Button>
-                    <Button variant="soft" size="1" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
-                      Próxima
-                    </Button>
-                  </PaginationButtons>
-                </Pagination>
-              )}
-            </>
-          )}
-        </Card>
-      </Layout>
-
-      <DocumentDialog document={activeDocument} onClose={() => setActiveDocument(null)} />
-    </section>
+          {renderDocuments()}
+        </DocumentsBody>
+      </Card>
+      <DetailSlot>
+        <DocumentPanel document={activeDocument} />
+      </DetailSlot>
+    </Layout>
   );
 };
 

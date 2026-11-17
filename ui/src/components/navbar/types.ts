@@ -1,6 +1,6 @@
-export type ApiHealthStatus = "online" | "offline";
-
-export interface NavbarProps {
-  apiStatus: ApiHealthStatus;
-  setupRequired: boolean;
+export interface NavItem {
+  label: string;
+  to: string;
+  // Prefixos de rota em que o item conta como ativo.
+  matches: string[];
 }

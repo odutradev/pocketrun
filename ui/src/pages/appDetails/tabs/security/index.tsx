@@ -1,93 +1,187 @@
-import { CheckIcon } from "@radix-ui/react-icons";
-import { Checkbox, Code, Heading, Text } from "@radix-ui/themes";
-import { useId } from "react";
+import { Cross2Icon, PlusIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
+import type { KeyboardEvent } from "react";
 
 import { updateApplication } from "@actions/apps";
+import Alert from "@components/alert";
+import Badge from "@components/badge";
 import Button from "@components/button";
 import Card from "@components/card";
-import TextArea from "@components/textArea";
+import IconButton from "@components/iconButton";
+import Input from "@components/input";
+import SectionHeader from "@components/sectionHeader";
+import SwitchField from "@components/switchField";
 import useAction from "@hooks/useAction";
 import useForm from "@hooks/useForm";
-import { parseOrigins } from "@utils/functions";
+import { allowsAnyOrigin, isLocalOrigin } from "@utils/functions";
 import type { Application } from "@utils/types/application";
-import { securitySettingsSchema } from "@utils/validations/application";
+import { originSchema, securitySettingsSchema } from "@utils/validations/application";
 import type { SecuritySettingsValues } from "@utils/validations/application";
 
 import useAppDetailsPage from "../../hook";
-import { CheckboxLabel, CheckboxRow, Form } from "./styles";
+import {
+  Actions,
+  AddField,
+  AddRow,
+  Divider,
+  EmptyLine,
+  FieldLabel,
+  Form,
+  Origin,
+  OriginActions,
+  OriginItem,
+  OriginList,
+  Switches
+} from "./styles";
+
+const newOriginId = "security-new-origin";
 
 const toFormValues = (application: Application | null): SecuritySettingsValues => ({
-  origins: application?.allowedOrigins.join(", ") ?? "*",
+  origins: (application?.allowedOrigins ?? []).filter((origin) => origin !== "*"),
+  allowAnyOrigin: allowsAnyOrigin(application?.allowedOrigins ?? ["*"]),
   allowNonBrowserRequests: application?.allowNonBrowserRequests ?? true
 });
 
 const SecurityTab: React.FC = () => {
   const { application, handleRefresh } = useAppDetailsPage();
-  const checkboxId = useId();
+  const [newOrigin, setNewOrigin] = useState("");
+  const [newOriginError, setNewOriginError] = useState<string | undefined>();
+  const initialValues = toFormValues(application);
 
   const { execute } = useAction({
-    action: ({ origins, allowNonBrowserRequests }: SecuritySettingsValues) =>
+    action: ({ origins, allowAnyOrigin, allowNonBrowserRequests }: SecuritySettingsValues) =>
       updateApplication(application?.id ?? "", {
         name: application?.name ?? "",
         description: application?.description ?? "",
-        allowedOrigins: parseOrigins(origins),
+        allowedOrigins: allowAnyOrigin ? ["*"] : origins,
         allowNonBrowserRequests
       }),
     toastMessages: {
-      pending: "Salvando configurações...",
-      success: "Configurações atualizadas com sucesso!",
-      error: "Falha ao salvar configurações"
+      pending: "Salvando…",
+      success: "Configurações salvas",
+      error: "Não foi possível salvar as configurações"
     },
     callback: handleRefresh
   });
 
-  const { values, isSubmitting, setFieldValue, handleChange, handleSubmit } = useForm({
+  const { values, errors, isSubmitting, setFieldValue, handleSubmit, reset } = useForm({
     schema: securitySettingsSchema,
-    initialValues: toFormValues(application),
+    initialValues,
     onSubmit: execute
   });
 
-  return (
-    <Card size="3">
-      <Heading size="4" weight="bold" mb="1">
-        Configurações de Segurança e Origens
-      </Heading>
-      <Text as="p" size="2" color="gray" mb="4">
-        Restrinja quais domínios podem enviar requisições do navegador para os endpoints deste projeto.
-      </Text>
+  const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
 
+  const handleAddOrigin = () => {
+    const parsed = originSchema.safeParse(newOrigin);
+    if (!parsed.success) return setNewOriginError(parsed.error.issues[0]?.message);
+    if (values.origins.includes(parsed.data)) return setNewOriginError("Essa origem já está na lista");
+
+    setFieldValue("origins", [...values.origins, parsed.data]);
+    setNewOrigin("");
+    setNewOriginError(undefined);
+  };
+
+  const handleNewOriginKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    handleAddOrigin();
+  };
+
+  const handleRemoveOrigin = (origin: string) =>
+    setFieldValue(
+      "origins",
+      values.origins.filter((current) => current !== origin)
+    );
+
+  const handleDiscard = () => {
+    reset();
+    setNewOrigin("");
+    setNewOriginError(undefined);
+  };
+
+  return (
+    <Card as="section" aria-labelledby="security-title">
       <Form onSubmit={handleSubmit} noValidate>
-        <TextArea
-          label="Origens Permitidas (CORS)"
-          name="origins"
-          rows={3}
-          placeholder="https://exemplo.com, http://localhost:3000, *"
-          value={values.origins}
-          onChange={handleChange}
-          hint={
-            <>
-              Separe os endereços autorizados por vírgula. Use <Code size="1">*</Code> para liberar requisições de
-              qualquer frontend.
-            </>
-          }
+        <SectionHeader
+          titleId="security-title"
+          title="Origens permitidas"
+          description="Só estes sites podem chamar a API desta aplicação pelo navegador."
         />
 
-        <CheckboxRow>
-          <Checkbox
-            id={checkboxId}
-            checked={values.allowNonBrowserRequests}
-            onCheckedChange={(checked) => setFieldValue("allowNonBrowserRequests", checked === true)}
-          />
-          <CheckboxLabel as="label" size="2" htmlFor={checkboxId}>
-            Permitir requisições que não venham de navegadores (ex: cURL, Insomnia, scripts backend ou mobile)
-          </CheckboxLabel>
-        </CheckboxRow>
+        {values.allowAnyOrigin ? (
+          <Alert tone="warning" title="Origem global ligada">
+            Qualquer site pode chamar a API pelo navegador. Desligue abaixo para voltar a usar a lista.
+          </Alert>
+        ) : (
+          <>
+            {values.origins.length === 0 ? (
+              <EmptyLine>Nenhuma origem na lista.</EmptyLine>
+            ) : (
+              <OriginList aria-label="Origens na lista">
+                {values.origins.map((origin) => (
+                  <OriginItem key={origin}>
+                    <Origin>{origin}</Origin>
+                    <OriginActions>
+                      {isLocalOrigin(origin) && <Badge>desenvolvimento</Badge>}
+                      <IconButton
+                        size="sm"
+                        label={`Remover ${origin}`}
+                        icon={<Cross2Icon />}
+                        onClick={() => handleRemoveOrigin(origin)}
+                      />
+                    </OriginActions>
+                  </OriginItem>
+                ))}
+              </OriginList>
+            )}
 
-        <div>
-          <Button type="submit" variant="solid" color="mint" size="2" loading={isSubmitting} leftIcon={<CheckIcon />}>
-            Salvar Alterações
+            <AddField>
+              <FieldLabel htmlFor={newOriginId}>Nova origem</FieldLabel>
+              <AddRow>
+                <Input
+                  id={newOriginId}
+                  isMono
+                  spellCheck={false}
+                  placeholder="https://app.exemplo.com"
+                  value={newOrigin}
+                  onChange={(event) => setNewOrigin(event.target.value)}
+                  onKeyDown={handleNewOriginKeyDown}
+                  error={newOriginError ?? errors.origins}
+                />
+                <Button variant="secondary" leftIcon={<PlusIcon />} onClick={handleAddOrigin}>
+                  Adicionar
+                </Button>
+              </AddRow>
+            </AddField>
+          </>
+        )}
+
+        <Divider />
+
+        <Switches>
+          <SwitchField
+            label="Origem global (*)"
+            description="Libera qualquer site. Use só em protótipos."
+            isChecked={values.allowAnyOrigin}
+            onCheckedChange={(isChecked) => setFieldValue("allowAnyOrigin", isChecked)}
+          />
+          <SwitchField
+            label="Chamadas fora do navegador"
+            description="Apps mobile, scripts e servidores, que não enviam o header Origin."
+            isChecked={values.allowNonBrowserRequests}
+            onCheckedChange={(isChecked) => setFieldValue("allowNonBrowserRequests", isChecked)}
+          />
+        </Switches>
+
+        <Actions>
+          <Button variant="secondary" disabled={!isDirty || isSubmitting} onClick={handleDiscard}>
+            Descartar
           </Button>
-        </div>
+          <Button type="submit" disabled={!isDirty} isLoading={isSubmitting} loadingLabel="Salvando…">
+            Salvar configurações
+          </Button>
+        </Actions>
       </Form>
     </Card>
   );

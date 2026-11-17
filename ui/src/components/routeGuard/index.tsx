@@ -1,11 +1,10 @@
-import { Spinner } from "@radix-ui/themes";
 import { Suspense } from "react";
 import { Navigate } from "react-router-dom";
 
+import Loader from "@components/loader";
 import useAuthStore from "@stores/auth";
 import useSystemStore from "@stores/system";
 
-import { Fallback } from "./styles";
 import type { RouteGuardProps } from "./types";
 
 const RouteGuard: React.FC<RouteGuardProps> = ({ metadata, children }) => {
@@ -18,17 +17,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ metadata, children }) => {
     return <Navigate to="/" replace />;
   }
 
-  return (
-    <Suspense
-      fallback={
-        <Fallback>
-          <Spinner size="3" />
-        </Fallback>
-      }
-    >
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={<Loader label="Carregando a página" isCentered />}>{children}</Suspense>;
 };
 
 export default RouteGuard;

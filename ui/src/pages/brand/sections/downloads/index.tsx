@@ -113,15 +113,13 @@ const DownloadsSection: React.FC = () => {
             </Hint>
           )}
           <Actions>
-            <Button highContrast leftIcon={<DownloadIcon />} onClick={() => handleDownloadSvg(generatorConfig)}>
+            <Button leftIcon={<DownloadIcon />} onClick={() => handleDownloadSvg(generatorConfig)}>
               Baixar SVG (vetorial)
             </Button>
             <Button
-              variant="soft"
-              color="gray"
-              highContrast
+              variant="secondary"
               leftIcon={<DownloadIcon />}
-              loading={isExporting}
+              isLoading={isExporting}
               disabled={!isAssetsReady}
               onClick={() => handleDownloadRaster(generatorConfig)}
             >
@@ -129,8 +127,6 @@ const DownloadsSection: React.FC = () => {
             </Button>
             <Button
               variant="ghost"
-              color="gray"
-              highContrast
               leftIcon={isCopied("svg") ? <CheckIcon /> : <CopyIcon />}
               onClick={() => handleCopySvg(generatorConfig)}
             >
@@ -147,14 +143,12 @@ const DownloadsSection: React.FC = () => {
             <PanelTitle>{item.title}</PanelTitle>
             <PanelText>{item.description}</PanelText>
             <Actions>
-              <Button size="1" highContrast onClick={() => handleDownloadSvg(item.config)}>
+              <Button size="sm" onClick={() => handleDownloadSvg(item.config)}>
                 SVG
               </Button>
               <Button
-                size="1"
-                variant="soft"
-                color="gray"
-                highContrast
+                size="sm"
+                variant="secondary"
                 disabled={!isAssetsReady || isExporting}
                 onClick={() => handleDownloadRaster(item.config)}
               >

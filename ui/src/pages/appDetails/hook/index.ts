@@ -1,11 +1,10 @@
 import { useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import useAppDetailsStore from "./store";
-import type { DetailsTab, UseAppDetailsPageReturn } from "./types";
+import type { UseAppDetailsPageReturn } from "./types";
 
 const useAppDetailsPage = (): UseAppDetailsPageReturn => {
-  const navigate = useNavigate();
   const { applicationId = "" } = useParams<{ applicationId: string }>();
   const { application, isLoading, activeTab, isTokenModalOpen, loadApplication, setActiveTab, setTokenModalOpen, reset } =
     useAppDetailsStore();
@@ -20,8 +19,7 @@ const useAppDetailsPage = (): UseAppDetailsPageReturn => {
     isTokenModalOpen,
     loadApplication,
     reset,
-    handleTabChange: (tab) => setActiveTab(tab as DetailsTab),
-    handleBack: () => navigate("/"),
+    handleTabChange: setActiveTab,
     handleRefresh,
     handleOpenTokenModal: () => setTokenModalOpen(true),
     handleCloseTokenModal: () => setTokenModalOpen(false)

@@ -1,71 +1,63 @@
-import { ExclamationTriangleIcon, TrashIcon } from "@radix-ui/react-icons";
-import { Code, Heading, Text } from "@radix-ui/themes";
+import { TrashIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { deleteApplication } from "@actions/apps";
 import Button from "@components/button";
 import Card from "@components/card";
-import Input from "@components/input";
+import ConfirmDialog from "@components/confirmDialog";
 import useAction from "@hooks/useAction";
 
 import useAppDetailsPage from "../../hook";
-import { BlockText, Confirmation, Header } from "./styles";
+import { Header, Row, RowDescription, RowText, RowTitle, Strong, Subtitle, Title } from "./styles";
 
 const DangerTab: React.FC = () => {
   const navigate = useNavigate();
   const { applicationId, application } = useAppDetailsPage();
-  const [confirmation, setConfirmation] = useState("");
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
   const projectId = application?.projectId ?? "";
-  const isConfirmed = confirmation === projectId;
 
   const { execute, isPending } = useAction({
     action: () => deleteApplication(applicationId),
     toastMessages: {
-      pending: "Excluindo aplicação...",
-      success: "Aplicação excluída.",
-      error: "Falha ao excluir aplicação"
+      pending: "Excluindo a aplicação…",
+      success: "Aplicação excluída",
+      error: "Não foi possível excluir a aplicação"
     },
     callback: () => navigate("/")
   });
 
   return (
-    <Card size="3" tone="danger">
+    <Card as="section" tone="danger" padding="none" aria-labelledby="danger-title">
       <Header>
-        <ExclamationTriangleIcon />
-        <div>
-          <Heading size="4" weight="bold" color="red">
-            Excluir Aplicação Permanentemente
-          </Heading>
-          <Text size="2" color="gray">
-            Esta ação é irreversível. Todos os dados, chaves e coleções vinculados a este projeto serão apagados.
-          </Text>
-        </div>
+        <Title id="danger-title">Zona de perigo</Title>
+        <Subtitle>Ações sem volta. Cada uma pede confirmação com o Project ID.</Subtitle>
       </Header>
+      <Row>
+        <RowText>
+          <RowTitle>Excluir aplicação</RowTitle>
+          <RowDescription>Apaga dados, coleções, tokens e configurações. Tudo.</RowDescription>
+        </RowText>
+        <Button variant="danger" leftIcon={<TrashIcon />} onClick={() => setConfirmOpen(true)}>
+          Excluir
+        </Button>
+      </Row>
 
-      <Confirmation>
-        <BlockText size="2" mb="1">
-          Para confirmar, digite o identificador do projeto: <Code size="2">{projectId}</Code>
-        </BlockText>
-        <Input
-          placeholder={projectId}
-          value={confirmation}
-          onChange={(event) => setConfirmation(event.target.value)}
-          aria-label="Identificador do projeto"
-        />
-      </Confirmation>
-
-      <Button
-        variant="solid"
-        color="red"
-        size="2"
-        disabled={!isConfirmed}
-        loading={isPending}
-        onClick={() => execute()}
-        leftIcon={<TrashIcon />}
-      >
-        Excluir Esta Aplicação
-      </Button>
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => execute()}
+        isPending={isPending}
+        title="Excluir aplicação?"
+        description={
+          <>
+            <Strong>{application?.name}</Strong> e tudo o que pertence a ela serão apagados de vez. Clientes que usam os
+            tokens dela param de funcionar na hora.
+          </>
+        }
+        confirmLabel="Excluir para sempre"
+        confirmationText={projectId}
+      />
     </Card>
   );
 };

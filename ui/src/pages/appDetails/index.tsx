@@ -1,12 +1,16 @@
-import { CodeIcon, GlobeIcon, LockOpen1Icon, StackIcon, TrashIcon } from "@radix-ui/react-icons";
-import { Tabs } from "@radix-ui/themes";
 import { useEffect } from "react";
+import type { ReactNode } from "react";
 
 import EmptyState from "@components/emptyState";
+import LinkButton from "@components/linkButton";
+import TabNav from "@components/tabNav";
+import type { TabNavItem } from "@components/tabNav/types";
+import TabPanel from "@components/tabPanel";
 
 import useAppDetailsPage from "./hook";
+import type { DetailsTab } from "./hook/types";
 import AppDetailsSkeleton from "./skeleton";
-import { Container, TabLabel } from "./styles";
+import { Container, TabArea } from "./styles";
 import AppHeader from "./subcomponents/appHeader";
 import CreateTokenModal from "./subcomponents/createTokenModal";
 import DangerTab from "./tabs/danger";
@@ -14,6 +18,16 @@ import ExplorerTab from "./tabs/explorer";
 import SecurityTab from "./tabs/security";
 import SnippetsTab from "./tabs/snippets";
 import TokensTab from "./tabs/tokens";
+
+const tabIdPrefix = "app-details";
+
+const tabContent: Record<DetailsTab, ReactNode> = {
+  explorer: <ExplorerTab />,
+  snippets: <SnippetsTab />,
+  tokens: <TokensTab />,
+  security: <SecurityTab />,
+  danger: <DangerTab />
+};
 
 const AppDetailsPage: React.FC = () => {
   const { applicationId, application, isLoading, activeTab, loadApplication, reset, handleTabChange } =
@@ -29,56 +43,39 @@ const AppDetailsPage: React.FC = () => {
   }, [applicationId, loadApplication, reset]);
 
   if (isLoading) return <AppDetailsSkeleton />;
-  if (!application) return <EmptyState icon={<StackIcon />} message="Aplicação não encontrada." />;
+  if (!application) {
+    return (
+      <EmptyState
+        title="Aplicação não encontrada"
+        description="Ela pode ter sido excluída, ou o endereço está errado."
+        actions={<LinkButton to="/">Voltar às aplicações</LinkButton>}
+      />
+    );
+  }
+
+  const tabs: TabNavItem<DetailsTab>[] = [
+    { value: "explorer", label: "Explorador" },
+    { value: "snippets", label: "Snippets" },
+    { value: "tokens", label: "Tokens", count: application.tokens?.length ?? 0 },
+    { value: "security", label: "Segurança" },
+    { value: "danger", label: "Zona de perigo", isDanger: true }
+  ];
 
   return (
     <Container>
       <AppHeader />
-      <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
-        <Tabs.List mb="4">
-          <Tabs.Trigger value="security">
-            <TabLabel>
-              <GlobeIcon /> Segurança & CORS
-            </TabLabel>
-          </Tabs.Trigger>
-          <Tabs.Trigger value="tokens">
-            <TabLabel>
-              <LockOpen1Icon /> Tokens de Acesso ({application.tokens?.length ?? 0})
-            </TabLabel>
-          </Tabs.Trigger>
-          <Tabs.Trigger value="explorer">
-            <TabLabel>
-              <StackIcon /> Data Explorer
-            </TabLabel>
-          </Tabs.Trigger>
-          <Tabs.Trigger value="snippets">
-            <TabLabel>
-              <CodeIcon /> Exemplos de Código
-            </TabLabel>
-          </Tabs.Trigger>
-          <Tabs.Trigger value="danger">
-            <TabLabel>
-              <TrashIcon /> Zona de Perigo
-            </TabLabel>
-          </Tabs.Trigger>
-        </Tabs.List>
-
-        <Tabs.Content value="security">
-          <SecurityTab />
-        </Tabs.Content>
-        <Tabs.Content value="tokens">
-          <TokensTab />
-        </Tabs.Content>
-        <Tabs.Content value="explorer">
-          <ExplorerTab />
-        </Tabs.Content>
-        <Tabs.Content value="snippets">
-          <SnippetsTab />
-        </Tabs.Content>
-        <Tabs.Content value="danger">
-          <DangerTab />
-        </Tabs.Content>
-      </Tabs.Root>
+      <TabArea>
+        <TabNav
+          label="Seções de Dados"
+          idPrefix={tabIdPrefix}
+          items={tabs}
+          value={activeTab}
+          onValueChange={handleTabChange}
+        />
+        <TabPanel idPrefix={tabIdPrefix} value={activeTab}>
+          {tabContent[activeTab]}
+        </TabPanel>
+      </TabArea>
       <CreateTokenModal />
     </Container>
   );

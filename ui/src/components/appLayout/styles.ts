@@ -1,14 +1,13 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 
-export const Background = styled.div`
+export const Shell = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: ${({ theme }) => theme.palette.background.app};
-  background-image: ${({ theme }) => theme.palette.primary.glow};
+  background-color: ${({ theme }) => theme.brand.graphite};
 `;
 
-export const Main = styled.main<{ $center: boolean }>`
+export const Main = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -16,17 +15,9 @@ export const Main = styled.main<{ $center: boolean }>`
   max-width: ${({ theme }) => theme.layout.maxWidth};
   margin: 0 auto;
   box-sizing: border-box;
-  padding: ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(4)} ${({ theme }) => theme.spacing(12)};
+  padding: ${({ theme }) => `${theme.spacing(8)} ${theme.spacing(4)} ${theme.spacing(16)}`};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(6)} ${({ theme }) => theme.spacing(12)};
+    padding: ${({ theme }) => `${theme.spacing(10)} ${theme.spacing(6)} ${theme.spacing(20)}`};
   }
-
-  ${({ $center }) =>
-    $center &&
-    css`
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - ${({ theme }) => theme.layout.headerHeight});
-    `}
 `;

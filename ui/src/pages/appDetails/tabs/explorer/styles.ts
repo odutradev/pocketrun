@@ -1,98 +1,64 @@
-import { Text } from "@radix-ui/themes";
 import styled from "styled-components";
 
-import Button from "@components/button";
-
-export const Header = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: ${({ theme }) => theme.spacing(2)};
-  margin-bottom: ${({ theme }) => theme.spacing(4)};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-`;
-
+// Coleções, documentos e o documento aberto. No tablet o painel do documento desce para baixo da tabela.
 export const Layout = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: ${({ theme }) => theme.spacing(4)};
+  align-items: start;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.xl}) {
+    grid-template-columns: 220px minmax(0, 1fr) 320px;
   }
 `;
 
-export const CollectionList = styled.nav`
+export const DocumentsBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(1)};
-`;
-
-export const CollectionButton = styled(Button)`
-  justify-content: flex-start;
-  text-align: left;
+  gap: ${({ theme }) => theme.spacing(3)};
 `;
 
 export const Toolbar = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: ${({ theme }) => theme.spacing(3)};
-  margin-bottom: ${({ theme }) => theme.spacing(3)};
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-`;
-
-export const SearchBox = styled.div`
-  width: 100%;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
-    max-width: 260px;
-  }
-`;
-
-export const Loading = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   gap: ${({ theme }) => theme.spacing(2)};
-  padding: ${({ theme }) => theme.spacing(6)} 0;
 `;
 
-export const BlockText = styled(Text)`
-  display: block;
+export const DetailSlot = styled.div`
+  min-width: 0;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.xl}) {
+    grid-column: auto;
+    position: sticky;
+    top: ${({ theme }) => theme.spacing(24)};
+  }
 `;
 
-export const Summary = styled(Text)`
-  display: block;
-  max-width: 320px;
+export const IdText = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  color: ${({ theme }) => theme.accent.text};
   white-space: nowrap;
+`;
+
+export const DataSummary = styled.span`
+  display: block;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 13px;
 `;
 
-export const Pagination = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(2)};
-  margin-top: ${({ theme }) => theme.spacing(3)};
-`;
-
-export const PaginationButtons = styled.div`
-  display: flex;
-  gap: ${({ theme }) => theme.spacing(2)};
-`;
-
-export const ActionCell = styled.div`
-  text-align: center;
+export const MutedText = styled.span`
+  color: ${({ theme }) => theme.brand.steelMuted};
+  white-space: nowrap;
 `;
