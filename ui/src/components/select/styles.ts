@@ -87,3 +87,32 @@ export const Item = styled(RadixSelect.Item)`
     }
   `}
 `;
+
+export const Separator = styled(RadixSelect.Separator)`
+  && {
+    margin: ${({ theme }) => theme.spacing(1)} 0;
+    background-color: ${({ theme }) => theme.brand.border};
+  }
+`;
+
+export const ActionItem = styled(Item)`
+  && {
+    color: ${({ theme }) => theme.accent.text};
+    font-weight: 600;
+  }
+
+  &&[data-highlighted] {
+    color: ${({ theme }) => theme.accent.text};
+  }
+`;
+
+export const ActionLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(2)};
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;

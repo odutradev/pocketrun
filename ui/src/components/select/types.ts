@@ -5,6 +5,12 @@ export interface SelectOption {
   label: string;
 }
 
+export interface SelectAction {
+  label: string;
+  icon?: ReactNode;
+  onSelect: () => void;
+}
+
 export interface SelectProps {
   label: string;
   options: SelectOption[];
@@ -16,4 +22,5 @@ export interface SelectProps {
   disabled?: boolean;
   hint?: ReactNode;
   error?: string;
+  action?: SelectAction;
 }
