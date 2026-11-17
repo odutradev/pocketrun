@@ -16,12 +16,14 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 .
 ├── api/
 │   ├── .dockerignore
+│   ├── .env.example  # local dev
 │   ├── CLAUDE.md  # API guide
 │   ├── Dockerfile
 │   ├── go.mod
 │   └── src  # API code
 ├── ui/
 │   ├── .dockerignore
+│   ├── .env.example  # local dev
 │   ├── CLAUDE.md  # frontend guide
 │   ├── Dockerfile
 │   ├── nginx.conf
@@ -66,8 +68,11 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 
 ## 3. Environment variables
 
-- **Location:** Um .env na raiz. Um único .env e .env.example na raiz, lido pelo docker-compose e pelos dois apps.
-- Never commit `.env`. Every new variable goes into `.env.example` with a safe example value.
+- **Location:** one `.env` per context, each with its `.env.example`:
+  - Root `.env`: read by docker-compose (and by Dokploy, from its Environment tab).
+  - `api/.env`: local development of the API. The API reads `api/.env` first, then the root `.env`; the first value found wins.
+  - `ui/.env`: local development of the frontend. Vite reads only `ui/.env`; Docker builds receive the `VITE_` variables as `ARG`.
+- Never commit `.env`. Every new variable goes into the matching `.env.example` (root and app) with a safe example value.
 - Variables read by the frontend use the `VITE_` prefix and are public: never put secrets in them.
 - `VITE_API_URL` points to the API's public URL in each environment.
 
