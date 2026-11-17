@@ -13,11 +13,18 @@ export const Container = styled.div`
 `;
 
 export const Toolbar = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: ${({ theme }) => theme.spacing(3)};
+  align-items: center;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    grid-template-columns: minmax(0, 480px) auto;
+    justify-content: space-between;
+  }
+
+  > button {
+    justify-self: start;
+  }
 `;
 
 export const Stats = styled.div`

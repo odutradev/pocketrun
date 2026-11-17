@@ -10,7 +10,6 @@ export const Wrapper = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(3)};
   min-width: 0;
-  overflow-x: auto;
 `;
 
 export const Peak = styled.p`
@@ -25,9 +24,13 @@ export const Peak = styled.p`
 
 export const Grid = styled.div`
   display: grid;
-  grid-template-columns: 32px repeat(24, minmax(12px, 1fr));
-  gap: 3px;
-  min-width: 420px;
+  grid-template-columns: 28px repeat(24, minmax(0, 1fr));
+  gap: 2px;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    grid-template-columns: 32px repeat(24, minmax(0, 1fr));
+    gap: 3px;
+  }
 `;
 
 export const HourLabel = styled.span`
@@ -45,8 +48,7 @@ export const RowLabel = styled.span`
 
 export const Cell = styled.span<{ $level: number }>`
   aspect-ratio: 1;
-  min-height: 12px;
-  border-radius: 3px;
+  border-radius: 2px;
   ${({ $level }) => levelColor($level)}
 `;
 

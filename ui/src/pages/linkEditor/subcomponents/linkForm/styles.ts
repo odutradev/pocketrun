@@ -11,11 +11,16 @@ export const Section = styled.fieldset`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(4)};
+  min-width: 0;
   margin: 0;
-  padding: ${({ theme }) => theme.spacing(5)};
+  padding: ${({ theme }) => theme.spacing(4)};
   border: 1px solid ${({ theme }) => theme.brand.border};
   border-radius: ${({ theme }) => theme.radii.panel};
   background-color: ${({ theme }) => theme.brand.surface};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: ${({ theme }) => theme.spacing(5)};
+  }
 `;
 
 export const Legend = styled.legend`

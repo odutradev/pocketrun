@@ -28,7 +28,7 @@ const ActivityHeatmap = ({ cells }: ActivityHeatmapProps) => {
         <span />
         {hours.map((hour) => (
           <HourLabel key={hour} aria-hidden="true">
-            {hour % 3 === 0 ? `${hour}h` : ""}
+            {hour % 6 === 0 ? `${hour}h` : ""}
           </HourLabel>
         ))}
         {weekdayOrder.flatMap((weekday) => [

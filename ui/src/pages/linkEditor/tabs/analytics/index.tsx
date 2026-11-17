@@ -68,7 +68,7 @@ const AnalyticsTab = () => {
 
   const toolbar = (
     <Toolbar>
-      <SegmentedControl label="Período da análise" options={analyticsRangeOptions} value={range} onValueChange={handleRangeChange} />
+      <SegmentedControl label="Período da análise" options={analyticsRangeOptions} value={range} onValueChange={handleRangeChange} isFullWidth />
       <Button
         variant="secondary"
         size="sm"
@@ -126,6 +126,7 @@ const AnalyticsTab = () => {
         />
         <StatCard
           label="Último clique"
+          isTextValue
           value={analytics.lastClickAt ? formatRelativeTime(analytics.lastClickAt, now) : "—"}
           hint={analytics.lastClickAt ? formatShortDateTime(analytics.lastClickAt) : "Nenhum clique no período"}
         />

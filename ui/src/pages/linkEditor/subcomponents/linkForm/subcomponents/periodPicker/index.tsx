@@ -32,6 +32,7 @@ const PeriodPicker = ({ startsAt, endsAt, initialPreset, startsAtError, endsAtEr
         value={preset}
         onValueChange={handlePreset}
         isFullWidth
+        mobileColumns={3}
       />
       {preset !== "custom" && endsAt && (
         <Timeline>

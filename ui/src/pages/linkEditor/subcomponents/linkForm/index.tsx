@@ -124,6 +124,7 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
             }
           }}
           isFullWidth
+          mobileColumns={2}
         />
         <ModeHint>{modeHints[values.mode]}</ModeHint>
         {values.mode === "period" && (
