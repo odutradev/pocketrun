@@ -99,7 +99,7 @@ export const getSymbolColors = (context: BrandContext, palette: LogoPalette): Sy
   }
 
   const neutral = palette === "dark" ? brand.steel : brand.ink;
-  const textTone = (tool: BrandTool) => (palette === "dark" ? brand.tools[tool].base : brand.tools[tool].textOnLight);
+  const textTone = (tool: BrandTool) => (palette === "dark" ? brand.tools[tool].base : brand.tools[tool].logoOnLight);
 
   if (context === "geral") {
     return {

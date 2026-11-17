@@ -79,6 +79,7 @@ export const theme = {
         base: "#3E63DD",
         text: "#9EB1FF",
         textOnLight: "#3A5BC7",
+        logoOnLight: "#3A5BC7",
         contrast: "#FFFFFF",
         soft: "rgba(62, 99, 221, 0.18)"
       },
@@ -86,6 +87,7 @@ export const theme = {
         base: "#FFC53D",
         text: "#FFCA16",
         textOnLight: "#AB6400",
+        logoOnLight: "#E8A317",
         contrast: "#21201C",
         soft: "rgba(255, 197, 61, 0.16)"
       },
@@ -93,6 +95,7 @@ export const theme = {
         base: "#46A758",
         text: "#71D083",
         textOnLight: "#2A7E3B",
+        logoOnLight: "#2A7E3B",
         contrast: "#111111",
         soft: "rgba(70, 167, 88, 0.18)"
       }
