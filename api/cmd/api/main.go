@@ -74,6 +74,7 @@ func run(logger *slog.Logger) error {
 	}
 
 	userRepository := user.NewMongoRepository(mongo.Collection("users"))
+	loginAttemptRepository := user.NewMongoAttemptRepository(mongo.Collection("loginAttempts"))
 	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
 	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
@@ -88,7 +89,7 @@ func run(logger *slog.Logger) error {
 	accessRepository := access.NewMongoRepository(mongo.Collection("pageAccess"))
 	accessAttemptRepository := access.NewMongoAttemptRepository(mongo.Collection("pageAccessAttempts"))
 	ensureIndexes(startupContext, logger,
-		userRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
+		userRepository, loginAttemptRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
 		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
 	)
@@ -96,7 +97,13 @@ func run(logger *slog.Logger) error {
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
 	applicationService := application.NewService(applicationRepository, documentService)
-	userService := user.NewService(userRepository, signer, applicationService)
+	userService := user.NewService(user.Dependencies{
+		Repository:   userRepository,
+		Attempts:     loginAttemptRepository,
+		Signer:       signer,
+		Applications: applicationService,
+		Logger:       logger,
+	})
 	setupService := setup.NewService(userService, logger)
 	slugService := slug.NewService(slugRepository)
 	groupService := group.NewService(groupRepository)
@@ -161,7 +168,7 @@ func run(logger *slog.Logger) error {
 	linkPublicHandler := linkpublic.NewHandler(linkService, pagePublicHandler, logger)
 
 	adminMux := http.NewServeMux()
-	authenticateManager := user.Authenticate(signer)
+	authenticateManager := user.Authenticate(signer, userService, logger)
 	healthHandler.Register(adminMux)
 	setupHandler.Register(adminMux)
 	userHandler.Register(adminMux, authenticateManager)
@@ -186,8 +193,8 @@ func run(logger *slog.Logger) error {
 	linkPublicHandler.Register(publicMux)
 
 	root := http.NewServeMux()
-	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins)(adminMux)))
-	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins)(publicMux))
+	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(adminMux)))
+	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins, false)(publicMux))
 
 	servers := []*http.Server{httpx.NewServer(cfg.Host, cfg.Port, root)}
 	return httpx.Serve(ctx, logger, servers)

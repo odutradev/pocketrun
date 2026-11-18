@@ -13,6 +13,8 @@ import (
 	"pocketrun-api/internal/platform/httpx"
 )
 
+const retryAfterSeconds = "900"
+
 type Handler struct {
 	service  *Service
 	validate *validator.Validate
@@ -25,6 +27,8 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.HandleFunc("POST /auth/login", h.login)
+	mux.HandleFunc("POST /auth/logout", h.logout)
+	mux.Handle("POST /auth/sessions/revoke", authenticate(http.HandlerFunc(h.revokeSessions)))
 	mux.Handle("GET /auth/me/details", authenticate(http.HandlerFunc(h.me)))
 	mux.Handle("PATCH /auth/me/update", authenticate(http.HandlerFunc(h.updateProfile)))
 	mux.Handle("PATCH /auth/me/password/update", authenticate(http.HandlerFunc(h.changePassword)))
@@ -36,15 +40,25 @@ func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) h
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	if !IsPanelRequest(r) {
+		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
+		return
+	}
+
 	var input LoginInput
 	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return
 	}
 
-	session, err := h.service.Login(ctx, input)
+	session, err := h.service.Login(ctx, input, httpx.ClientIP(r))
 	if errors.Is(err, ErrInvalidCredentials) {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials")
+		return
+	}
+	if errors.Is(err, ErrTooManyAttempts) {
+		w.Header().Set("Retry-After", retryAfterSeconds)
+		httpx.WriteError(w, http.StatusTooManyRequests, "too_many_login_attempts")
 		return
 	}
 	if err != nil {
@@ -52,7 +66,33 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
+	SetSessionCookie(w, session)
 	httpx.WriteJSON(w, http.StatusOK, session)
+}
+
+func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
+	if !IsPanelRequest(r) {
+		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
+		return
+	}
+	ClearSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	managerID, err := ManagerIDFromContext(ctx)
+	if err != nil {
+		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
+		return
+	}
+
+	if err := h.service.RevokeSessions(ctx, managerID); err != nil {
+		h.writeServiceError(ctx, w, "revoke sessions", err)
+		return
+	}
+	ClearSessionCookie(w)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
@@ -112,10 +152,12 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.ChangePassword(ctx, managerID, input); err != nil {
+	session, err := h.service.ChangePassword(ctx, managerID, input)
+	if err != nil {
 		h.writeServiceError(ctx, w, "change password", err)
 		return
 	}
+	SetSessionCookie(w, session)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -175,6 +217,14 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.writeServiceError(ctx, w, "update user", err)
 		return
+	}
+	if id == managerID {
+		session, err := h.service.IssueSession(user)
+		if err != nil {
+			h.writeServiceError(ctx, w, "update user", err)
+			return
+		}
+		SetSessionCookie(w, session)
 	}
 	httpx.WriteJSON(w, http.StatusOK, user)
 }

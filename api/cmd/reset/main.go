@@ -79,7 +79,13 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	}
 
 	applicationService := application.NewService(applicationRepository, kv.NewService(documentRepository))
-	userService := user.NewService(userRepository, user.NewTokenSigner(cfg.JWTSecret), applicationService)
+	userService := user.NewService(user.Dependencies{
+		Repository:   userRepository,
+		Attempts:     user.NewMongoAttemptRepository(mongo.Collection("loginAttempts")),
+		Signer:       user.NewTokenSigner(cfg.JWTSecret),
+		Applications: applicationService,
+		Logger:       logger,
+	})
 	input := user.CreateInput{Name: adminName, Email: adminEmail, Password: adminPassword}
 	if _, err := userService.Create(ctx, input, user.RoleSuperadmin); err != nil {
 		return fmt.Errorf("create superadmin: %w", err)

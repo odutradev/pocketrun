@@ -24,6 +24,7 @@ var (
 	ErrUserHasApplications = errors.New("user still owns applications")
 	ErrInvalidPassword     = errors.New("current password is invalid")
 	ErrInvalidUserID       = errors.New("invalid user id")
+	ErrTooManyAttempts     = errors.New("too many login attempts")
 )
 
 type User struct {
@@ -32,6 +33,7 @@ type User struct {
 	Email        string        `json:"email" bson:"email"`
 	Role         string        `json:"role" bson:"role"`
 	PasswordHash string        `json:"-" bson:"passwordHash"`
+	TokenVersion int           `json:"-" bson:"tokenVersion"`
 	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt    time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
@@ -96,6 +98,6 @@ func (i *LoginInput) Normalize() {
 }
 
 type Session struct {
-	Token string `json:"token"`
+	Token string `json:"-"`
 	User  *User  `json:"user"`
 }

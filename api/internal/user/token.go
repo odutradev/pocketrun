@@ -16,6 +16,7 @@ type Claims struct {
 	UserID    string `json:"userId"`
 	Email     string `json:"email"`
 	Role      string `json:"role,omitempty"`
+	Version   int    `json:"ver"`
 	ExpiresAt int64  `json:"exp"`
 	IssuedAt  int64  `json:"iat"`
 }
@@ -49,6 +50,7 @@ func (s *TokenSigner) Sign(user *User) (string, error) {
 		UserID:    user.ID.Hex(),
 		Email:     user.Email,
 		Role:      role,
+		Version:   user.TokenVersion,
 		IssuedAt:  now.Unix(),
 		ExpiresAt: now.Add(TokenTTL).Unix(),
 	})

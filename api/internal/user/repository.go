@@ -96,6 +96,17 @@ func (r *MongoRepository) Update(ctx context.Context, id bson.ObjectID, fields b
 	return nil
 }
 
+func (r *MongoRepository) IncrementTokenVersion(ctx context.Context, id bson.ObjectID) error {
+	result, err := r.collection.UpdateByID(ctx, id, bson.M{"$inc": bson.M{"tokenVersion": 1}})
+	if err != nil {
+		return fmt.Errorf("increment token version: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
 func (r *MongoRepository) Delete(ctx context.Context, id bson.ObjectID) error {
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {

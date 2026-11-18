@@ -39,6 +39,11 @@ func (h *Handler) getStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	if !user.IsPanelRequest(r) {
+		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
+		return
+	}
+
 	var input user.CreateInput
 	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 		httpx.WriteDecodeError(w, err)
@@ -59,5 +64,6 @@ func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
+	user.SetSessionCookie(w, session)
 	httpx.WriteJSON(w, http.StatusCreated, session)
 }
