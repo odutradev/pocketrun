@@ -1,8 +1,8 @@
-import { InfoCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { ChevronRightIcon, InfoCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
 import { useTheme } from "styled-components";
 import { Tooltip } from "@radix-ui/themes";
 
-import { Actions, Container, Heading, InfoTrigger, ReloadIconSlot, Title, TooltipText } from "./styles";
+import { Actions, Container, Heading, InfoTrigger, ParentLink, ReloadIconSlot, Separator, Title, TooltipText, Trail, TrailItem } from "./styles";
 import useMediaQuery from "@hooks/useMediaQuery";
 import IconButton from "@components/iconButton";
 import LinkButton from "@components/linkButton";
@@ -35,7 +35,7 @@ const renderAction = (action: ContentNavbarAction, fallbackVariant: "primary" | 
   );
 };
 
-const ContentNavbar = ({ title, info, actions = [], action, onReload, isReloading = false }: ContentNavbarProps) => {
+const ContentNavbar = ({ title, parents = [], info, actions = [], action, onReload, isReloading = false }: ContentNavbarProps) => {
   const { breakpoints } = useTheme();
   const isCompact = !useMediaQuery(`(min-width: ${breakpoints.md})`);
   const hasActions = Boolean(actions.length > 0 || onReload || action);
@@ -43,6 +43,20 @@ const ContentNavbar = ({ title, info, actions = [], action, onReload, isReloadin
   return (
     <Container>
       <Heading>
+        {parents.length > 0 && (
+          <Trail aria-label="Caminho">
+            <ol>
+              {parents.map((parent) => (
+                <TrailItem key={parent.to}>
+                  <ParentLink to={parent.to}>{parent.label}</ParentLink>
+                  <Separator aria-hidden="true">
+                    <ChevronRightIcon />
+                  </Separator>
+                </TrailItem>
+              ))}
+            </ol>
+          </Trail>
+        )}
         <Title title={title}>{title}</Title>
         {info && (
           <Tooltip content={<TooltipText>{info}</TooltipText>} side="bottom" sideOffset={6}>

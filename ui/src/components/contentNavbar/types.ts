@@ -10,8 +10,14 @@ export interface ContentNavbarAction {
   variant?: ButtonVariant;
 }
 
+export interface ContentNavbarCrumb {
+  label: string;
+  to: string;
+}
+
 export interface ContentNavbarProps {
   title: string;
+  parents?: ContentNavbarCrumb[];
   info?: ReactNode;
   actions?: ContentNavbarAction[];
   action?: ContentNavbarAction;

@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from "styled-components";
+import { Link } from "react-router-dom";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -21,6 +22,63 @@ export const Heading = styled.div`
   flex: 1 1 auto;
   gap: ${({ theme }) => theme.spacing(1.5)};
   min-width: 0;
+`;
+
+export const Trail = styled.nav`
+  flex-shrink: 0;
+
+  ol {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+`;
+
+export const TrailItem = styled.li`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1)};
+`;
+
+export const ParentLink = styled(Link)`
+  ${({ theme }) => css`
+    border-radius: ${theme.radii.small};
+    font-family: ${theme.brand.fonts.display};
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: ${theme.brand.steelMuted};
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color ${theme.motion.fast}ms ${theme.motion.easing.standard};
+
+    &:hover {
+      color: ${theme.brand.steel};
+    }
+
+    &:focus-visible {
+      outline: 2px solid ${theme.accent.base};
+      outline-offset: 2px;
+    }
+
+    @media (min-width: ${theme.breakpoints.md}) {
+      font-size: 24px;
+    }
+  `}
+`;
+
+export const Separator = styled.span`
+  display: inline-flex;
+  flex-shrink: 0;
+  color: ${({ theme }) => theme.brand.steelMuted};
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 `;
 
 export const Title = styled.h1`
