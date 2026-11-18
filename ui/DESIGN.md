@@ -64,6 +64,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - The sorted column is marked with `aria-sort`.
   - A selected row uses a soft tint plus a 3 px inset stroke.
   - Bulk actions appear in a bar while rows are selected.
+  - Search that queries the API uses `searchInput`: it waits `searchDelay` (400 ms) after the last key before searching, searches at once on Enter, clears on Escape or with the clear button, and shows the loader inside the field while the request runs. A search always covers every page of the list and sends the list back to page 1.
   - Pagination (`pagination`) shows previous and next arrows with "Página X de Y". With a summary, the summary sits left and the arrows right; a list closed by pagination without a summary centers it (`isCentered`) and hides it when everything fits in one page.
   - Changing pages is never an instant swap. A paginated list must:
     1. Keep the current page on screen while the next one loads, at 45 % opacity, without clicks and with `aria-busy`. Never replace it with a skeleton; skeletons are only for the first load.
@@ -72,7 +73,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
     4. Scroll smoothly to the top of the list.
     5. With `prefers-reduced-motion`, swap and scroll instantly.
 
-    The reference is `pages/linkEditor/tabs/history`. When a second list needs it, move the behavior into a shared hook instead of copying it.
+    Wrap the list area in `listTransition` (`transitionKey` is the page, plus the search when it changes the results; `isBusy` is the request in flight): it dims, animates the height and fades the new content in. The screen only scrolls to the top of the list on a page change, never while the person types in the search. Never copy this behavior into a list by hand.
   - Charts use Recharts, loaded lazily with the screen that needs them. Series colors come from `brand.chart` (clicks green, visitors blue, devices green/blue/pink in fixed order), validated for color blindness on the dark surface; a color follows its entity, never its rank. The first series gets a soft area fill, the rest are 2 px lines. Two or more series always have a legend, tooltips use the raised surface, and grids are dashed and recessive. Rankings use horizontal share bars instead of pies; the donut is only for a small fixed set (devices). Every chart has a text `aria-label` or a legend that names it.
 - **Navigation:**
   - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
@@ -122,6 +123,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Link styled as a button | `@components/linkButton` |
 | Icon-only button (label required) | `@components/iconButton` |
 | Text field with label, hint, error, prefix, mono | `@components/input` |
+| Search field that asks the API: debounce, loader while searching, clear button | `@components/searchInput` |
 | Multi-line field | `@components/textArea` |
 | Select (themed dropdown on Radix; never a native `<select>`, whose list the OS paints white) | `@components/select` |
 | Number with a slider across the field and an exact-value input at the end (a manual value above the max stretches the slider; dragging it down brings back the default range) | `@components/rangeField` |
@@ -137,6 +139,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Loading placeholder | `@components/skeleton` |
 | Data table with selectable rows | `@components/dataTable` |
 | Pagination with arrows and "Página X de Y" (`summary` on the left, or `isCentered`); page changes follow the transition rule in Data | `@components/pagination` |
+| List area that dims while loading, animates its height and fades new content in | `@components/listTransition` |
 | Dialog | `@components/dialog` |
 | Destructive confirmation (typed Project ID) | `@components/confirmDialog` |
 | Show a secret once | `@components/secretReveal` |
