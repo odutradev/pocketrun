@@ -1,4 +1,3 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
 import { Suspense, lazy, useEffect } from "react";
 
 import ContentNavbar from "@components/contentNavbar";
@@ -13,6 +12,7 @@ import Loader from "@components/loader";
 import TabNav from "@components/tabNav";
 import useLinkEditorPage from "./hook";
 
+import type { ContentNavbarCrumb } from "@components/contentNavbar/types";
 import type { LinkEditorTab } from "@utils/types/link";
 import type { ReactNode } from "react";
 
@@ -24,6 +24,11 @@ const LinkEditorPage = () => {
   const { linkId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleLinkSaved, handleTabChange } =
     useLinkEditorPage();
   const isEditing = Boolean(linkId);
+  const linkGroup = groups.find((group) => group.id === link?.groupId);
+  const parents: ContentNavbarCrumb[] = [
+    { label: "Links", to: "/links" },
+    ...(linkGroup ? [{ label: linkGroup.name, to: `/links?group=${linkGroup.id}` }] : [])
+  ];
 
   useEffect(() => {
     load(linkId);
@@ -53,7 +58,7 @@ const LinkEditorPage = () => {
       <ContentNavbar
         title={isEditing ? link?.title ?? "Editar link" : "Novo link"}
         info="O slug é o endereço curto do link. Ele é único entre links e páginas, e aceita só letras minúsculas, números e hífen. Na edição, as abas mostram a análise de acessos e o histórico de alterações."
-        actions={[{ label: "Voltar", icon: <ArrowLeftIcon />, to: "/links" }]}
+        parents={parents}
       />
       {isLoading && <Loader label="Carregando o link" isCentered />}
       {!isLoading && hasFailed && (
