@@ -1,11 +1,15 @@
+import { ShuffleIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 
 import { createPageAccessKey, renamePageAccessKey, resetPageAccessPin } from "@actions/sitePages";
 import { pageAccessKeySchema } from "@utils/validations/sitePage";
+import { Actions, DiceSlot, Form, PinRow } from "./styles";
 import { pageAccessPinLength } from "@assets/config";
 import SecretReveal from "@components/secretReveal";
 import usePageEditorPage from "../../../../hook";
-import { Actions, Form } from "./styles";
+import IconButton from "@components/iconButton";
+import { randomPin } from "@utils/functions";
+import PinInput from "@components/pinInput";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Dialog from "@components/dialog";
@@ -61,9 +65,9 @@ const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
     }
   });
 
-  const { values, errors, isSubmitting, handleChange, handleSubmit } = useForm({
+  const { values, errors, isSubmitting, handleChange, setFieldValue, handleSubmit } = useForm({
     schema: pageAccessKeySchema,
-    initialValues: { isRole: hasRole, role: key?.role ?? "", pin: "" },
+    initialValues: { isRole: hasRole, hasPin, role: key?.role ?? "", pin: "" },
     onSubmit: execute
   });
 
@@ -100,20 +104,26 @@ const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
           />
         )}
         {hasPin && (
-          <Input
-            label="PIN"
-            name="pin"
-            inputMode="numeric"
-            autoComplete="off"
-            maxLength={pageAccessPinLength}
-            placeholder="Gerar automaticamente"
-            hint={`Deixe vazio para gerar um PIN aleatório de ${pageAccessPinLength} números. Sequências e números repetidos não são aceitos.`}
-            value={values.pin}
-            onChange={handleChange}
-            error={errors.pin}
-            isMono
-            autoFocus={!hasRole}
-          />
+          <PinRow>
+            <PinInput
+              label={mode === "reset" ? "Novo PIN" : "PIN"}
+              name="pin"
+              length={pageAccessPinLength}
+              hint="Digite os números ou gere um PIN no botão ao lado. Sequências e números repetidos não são aceitos."
+              value={values.pin}
+              onChange={(pin) => setFieldValue("pin", pin)}
+              error={errors.pin}
+              autoFocus={!hasRole}
+            />
+            <DiceSlot>
+              <IconButton
+                label="Gerar um PIN aleatório"
+                variant="secondary"
+                icon={<ShuffleIcon />}
+                onClick={() => setFieldValue("pin", randomPin(pageAccessPinLength))}
+              />
+            </DiceSlot>
+          </PinRow>
         )}
         <Actions>
           <Button variant="secondary" onClick={onClose}>

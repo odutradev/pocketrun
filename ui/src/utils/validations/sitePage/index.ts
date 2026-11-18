@@ -2,18 +2,19 @@ import { z } from "zod";
 
 import { pageAccessPinLength, pageTitleMaxLength } from "@assets/config";
 import { slugPattern } from "@utils/validations/link";
+import { isWeakPin } from "@utils/functions";
 
 export const pageAccessKeySchema = z.object({
   isRole: z.boolean(),
+  hasPin: z.boolean(),
   role: z.string().trim().toLowerCase().max(64, "Nome muito longo"),
-  pin: z
-    .string()
-    .trim()
-    .refine((value) => value === "" || new RegExp(`^[0-9]{${pageAccessPinLength}}$`).test(value), `Digite ${pageAccessPinLength} números ou deixe vazio`)
+  pin: z.string().trim()
 }).superRefine((values, context) => {
-  if (!values.isRole) return;
-  if (!values.role) context.addIssue({ code: "custom", path: ["role"], message: "Dê um nome ao cargo" });
-  else if (!slugPattern.test(values.role)) context.addIssue({ code: "custom", path: ["role"], message: "Use só letras minúsculas, números e hífen" });
+  if (values.isRole && !values.role) context.addIssue({ code: "custom", path: ["role"], message: "Dê um nome ao cargo" });
+  else if (values.isRole && !slugPattern.test(values.role)) context.addIssue({ code: "custom", path: ["role"], message: "Use só letras minúsculas, números e hífen" });
+  if (!values.hasPin) return;
+  if (!new RegExp(`^[0-9]{${pageAccessPinLength}}$`).test(values.pin)) context.addIssue({ code: "custom", path: ["pin"], message: `Digite os ${pageAccessPinLength} números ou gere um PIN` });
+  else if (isWeakPin(values.pin)) context.addIssue({ code: "custom", path: ["pin"], message: "Esse PIN é fácil de adivinhar. Evite números repetidos ou em sequência." });
 });
 
 export const pageFormSchema = z

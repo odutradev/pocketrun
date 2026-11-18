@@ -39,6 +39,21 @@ export const randomSlug = (length: number): string => {
   return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
 };
 
+export const isWeakPin = (pin: string): boolean => {
+  const digits = Array.from(pin);
+  const isRepeated = (size: number) => digits.every((digit, index) => index < size || digit === digits[index - size]);
+  const isSequence = (step: number) => digits.every((digit, index) => index === 0 || Number(digit) - Number(digits[index - 1]) === step);
+  return isRepeated(1) || isRepeated(2) || isRepeated(3) || isSequence(1) || isSequence(-1);
+};
+
+export const randomPin = (length: number): string => {
+  let pin = "";
+  do {
+    pin = Array.from(crypto.getRandomValues(new Uint32Array(length)), (value) => String(value % 10)).join("");
+  } while (isWeakPin(pin));
+  return pin;
+};
+
 export const toDateTimeInput = (value: string): string => {
   const date = new Date(value);
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
