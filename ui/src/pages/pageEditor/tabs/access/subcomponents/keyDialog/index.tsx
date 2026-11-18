@@ -90,7 +90,7 @@ const KeyDialog = ({ dialog, onClose, onPinChange }: KeyDialogProps) => {
     const name = mode === "general" || !values.role ? "PIN geral" : values.role;
     return (
       <Dialog isOpen onClose={onClose} eyebrow={name} title="PIN pronto" description="Copie e envie para quem vai abrir a página. Você pode ver o PIN de novo na lista.">
-        <SecretReveal secret={pin} label={`PIN de ${name}`} confirmLabel="Já guardei o PIN" onConfirm={onClose} />
+        <SecretReveal secret={pin} label={name === "PIN geral" ? name : `PIN do cargo ${name}`} confirmLabel="Pronto" onConfirm={onClose} warning={null} />
       </Dialog>
     );
   }

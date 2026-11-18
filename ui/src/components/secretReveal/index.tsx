@@ -7,7 +7,9 @@ import Alert from "@components/alert";
 
 import type { SecretRevealProps } from "./types";
 
-const SecretReveal = ({ secret, label, confirmLabel, onConfirm }: SecretRevealProps) => {
+const defaultWarning = "Guarde agora. Este valor não aparece de novo; depois, o painel mostra só o prefixo.";
+
+const SecretReveal = ({ secret, label, confirmLabel, onConfirm, warning = defaultWarning }: SecretRevealProps) => {
   const { copy, isCopied } = useClipboard();
 
   return (
@@ -26,7 +28,7 @@ const SecretReveal = ({ secret, label, confirmLabel, onConfirm }: SecretRevealPr
           {isCopied() ? "Copiado" : "Copiar"}
         </Button>
       </SecretBox>
-      <Alert tone="warning">Guarde agora. Este valor não aparece de novo; depois, o painel mostra só o prefixo.</Alert>
+      {warning && <Alert tone="warning">{warning}</Alert>}
       <Button isFullWidth size="lg" onClick={onConfirm}>
         {confirmLabel}
       </Button>
