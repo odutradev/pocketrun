@@ -107,7 +107,7 @@ export const getPageAccess = async (pageId: string, signal?: AbortSignal) => {
 };
 
 export const setPageAccessEnabled = async (pageId: string, isEnabled: boolean) => {
-  const response = await api.patch<PageAccess>(`/pages/${pageId}/access/update`, { isEnabled });
+  const response = await api.patch<PageAccess>(`/pages/${pageId}/access/status/set`, { isEnabled });
   return response.data;
 };
 

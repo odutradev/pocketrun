@@ -29,7 +29,7 @@ func NewHandler(service *Service, pages PageChecker, validate *validator.Validat
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /pages/{id}/access/details", authenticate(http.HandlerFunc(h.details)))
-	mux.Handle("PATCH /pages/{id}/access/update", authenticate(http.HandlerFunc(h.update)))
+	mux.Handle("PATCH /pages/{id}/access/status/set", authenticate(http.HandlerFunc(h.update)))
 	mux.Handle("POST /pages/{id}/access/sessions/revoke", authenticate(http.HandlerFunc(h.revoke)))
 	mux.Handle("POST /pages/{id}/access/keys/create", authenticate(http.HandlerFunc(h.createKey)))
 	mux.Handle("PATCH /pages/{id}/access/keys/{keyId}/update", authenticate(http.HandlerFunc(h.renameKey)))
