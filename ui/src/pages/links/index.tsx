@@ -1,9 +1,10 @@
-import { DashboardIcon, ListBulletIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
+import { BarChartIcon, DashboardIcon, ListBulletIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useRef } from "react";
 
-import { Container, Count, ListArea, TabArea, Toolbar } from "./styles";
+import { Container, Count, Filters, ListArea, SearchSlot, TabArea, Toolbar } from "./styles";
+import { linkGroupTabs, linkSortOptions, linkStateFilterOptions } from "@assets/data";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
@@ -16,17 +17,17 @@ import useMediaQuery from "@hooks/useMediaQuery";
 import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
 import { pluralize } from "@utils/functions";
-import { linkGroupTabs } from "@assets/data";
 import TabPanel from "@components/tabPanel";
 import Skeleton from "@components/skeleton";
 import TabNav from "@components/tabNav";
 import Button from "@components/button";
+import Select from "@components/select";
 import LinksSkeleton from "./skeleton";
 import useLinksPage from "./hook";
 
 import type { ContentNavbarAction, ContentNavbarCrumb } from "@components/contentNavbar/types";
+import type { LinkSort, LinkStateFilter, LinksView } from "@utils/types/link";
 import type { SegmentedOption } from "@components/segmentedControl/types";
-import type { LinksView } from "@utils/types/link";
 
 const tabIdPrefix = "link-group";
 
@@ -53,6 +54,8 @@ const LinksPage = () => {
     page,
     totalPages,
     search,
+    state,
+    sort,
     transitionKey,
     groups,
     activeGroup,
@@ -61,7 +64,7 @@ const LinksPage = () => {
     isCreatingGroup,
     hasNoLinks,
     isGroupMissing,
-    isSearching,
+    isFiltered,
     isLoading,
     isRefreshing,
     isScopePending,
@@ -71,6 +74,8 @@ const LinksPage = () => {
     openScope,
     handleSearch,
     handlePageChange,
+    handleStateChange,
+    handleSortChange,
     handleTabChange,
     handleViewChange
   } = useLinksPage();
@@ -101,19 +106,23 @@ const LinksPage = () => {
   };
 
   const getListCaption = () => {
-    if (isSearching) return "Links encontrados";
+    if (isFiltered) return "Links encontrados";
     if (activeGroup) return `Links de ${activeGroup.name}`;
     return groups.length > 0 ? "Links sem grupo" : "Links";
   };
 
   const renderListContent = () => {
     if (links.length > 0) return <LinkCollection links={links} total={total} caption={getListCaption()} />;
-    if (isSearching) {
+    if (isFiltered) {
       return (
         <EmptyState
           isCompact
           title="Nada encontrado"
-          description={activeGroup ? "Nenhum link deste grupo combina com a busca." : "Nenhum link sem grupo combina com a busca."}
+          description={
+            activeGroup
+              ? "Nenhum link deste grupo combina com a busca e o filtro."
+              : "Nenhum link sem grupo combina com a busca e o filtro."
+          }
         />
       );
     }
@@ -138,15 +147,35 @@ const LinksPage = () => {
   const renderListArea = () => (
     <ListArea ref={listRef}>
       <Toolbar>
-        <SearchInput
-          key={scope}
-          label="Buscar links"
-          placeholder={getSearchPlaceholder()}
-          defaultValue={search}
-          isLoading={isSearchLoading}
-          onSearch={handleSearch}
-        />
-        <Count>{pluralize(scopeTotal, "link", "links")}</Count>
+        <SearchSlot>
+          <SearchInput
+            key={scope}
+            label="Buscar links"
+            placeholder={getSearchPlaceholder()}
+            defaultValue={search}
+            isLoading={isSearchLoading}
+            onSearch={handleSearch}
+          />
+        </SearchSlot>
+        <Filters>
+          <Select
+            label="Filtrar por estado"
+            isLabelHidden
+            options={linkStateFilterOptions}
+            value={state}
+            onValueChange={(next) => handleStateChange(next as LinkStateFilter)}
+          />
+          <Select
+            label="Ordenar por"
+            isLabelHidden
+            options={linkSortOptions}
+            value={sort}
+            onValueChange={(next) => handleSortChange(next as LinkSort)}
+          />
+        </Filters>
+        <Count>
+          {state === "all" ? pluralize(scopeTotal, "link", "links") : `${total} de ${pluralize(scopeTotal, "link", "links")}`}
+        </Count>
         {!isMobile && (
           <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
         )}
@@ -215,8 +244,13 @@ const LinksPage = () => {
 
   const isNested = isCreatingGroup || scope !== "";
   const parents: ContentNavbarCrumb[] | undefined = isNested ? [{ label: "Links", to: "/links" }] : undefined;
+  const analyticsAction: ContentNavbarAction = { label: "Análise", icon: <BarChartIcon />, to: "/links/analytics" };
   const newGroupAction: ContentNavbarAction = { label: "Novo grupo", icon: <StackIcon />, to: "/links/groups/new" };
-  const newLinkAction: ContentNavbarAction = { label: "Novo link", icon: <PlusIcon />, to: "/links/new" };
+  const newLinkAction: ContentNavbarAction = {
+    label: "Novo link",
+    icon: <PlusIcon />,
+    to: activeGroup ? `/links/new?group=${activeGroup.id}` : "/links/new"
+  };
 
   const getInfo = () => {
     if (isCreatingGroup) return navbarInfo.newGroup;
@@ -229,7 +263,7 @@ const LinksPage = () => {
         title={getTitle()}
         parents={parents}
         info={getInfo()}
-        actions={isNested ? undefined : [newGroupAction]}
+        actions={isNested ? undefined : [analyticsAction, newGroupAction]}
         onReload={isCreatingGroup ? undefined : loadLinks}
         isReloading={isLoading || isRefreshing}
         action={isCreatingGroup ? undefined : newLinkAction}

@@ -3,7 +3,7 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
+import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -39,7 +39,8 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_schedule: "A regra de ativação está incompleta.",
   invalid_slug: "Use só letras minúsculas, números e hífen no slug.",
   reserved_slug: "Esse slug é reservado pelo sistema.",
-  slug_taken: "Esse slug já está em uso."
+  slug_taken: "Esse slug já está em uso.",
+  self_redirect: "O destino não pode ser um endereço deste encurtador, senão o link redireciona para ele mesmo."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
@@ -580,8 +581,45 @@ export const urlProtocolOptions: UrlProtocolOption[] = [
 
 export const linkEditorTabs: { value: LinkEditorTab; label: string }[] = [
   { value: "settings", label: "Configuração" },
+  { value: "qrcode", label: "QR code" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
+];
+
+export const linkStateFilterOptions: { value: LinkStateFilter; label: string }[] = [
+  { value: "all", label: "Todos os estados" },
+  { value: "active", label: "Ativos" },
+  { value: "inactive", label: "Desativados" },
+  { value: "scheduled", label: "Agendados" },
+  { value: "expired", label: "Expirados" },
+  { value: "exhausted", label: "Esgotados" }
+];
+
+export const linkSortOptions: { value: LinkSort; label: string }[] = [
+  { value: "recent", label: "Mais recentes" },
+  { value: "clicks", label: "Mais acessados" },
+  { value: "title", label: "Título (A–Z)" },
+  { value: "expiring", label: "Perto de expirar" }
+];
+
+export const qrSizeOptions: { value: QrSize; label: string }[] = [
+  { value: "256", label: "256 px" },
+  { value: "512", label: "512 px" },
+  { value: "1024", label: "1024 px" },
+  { value: "2048", label: "2048 px" }
+];
+
+export const qrLevelOptions: { value: QrLevel; label: string }[] = [
+  { value: "L", label: "Baixa" },
+  { value: "M", label: "Média" },
+  { value: "Q", label: "Alta" },
+  { value: "H", label: "Máxima" }
+];
+
+export const qrMarginOptions: { value: QrMargin; label: string }[] = [
+  { value: "0", label: "Sem margem" },
+  { value: "2", label: "Pequena" },
+  { value: "4", label: "Padrão" }
 ];
 
 export const linkGroupTabs: { value: LinkGroupTab; label: string }[] = [

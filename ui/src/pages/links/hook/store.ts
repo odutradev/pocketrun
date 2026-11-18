@@ -11,12 +11,17 @@ import type { LinksListQuery, LinksStore } from "./types";
 
 const logger = createLocalLogger("linksPage");
 
-const toListParams = ({ scope, search, page }: LinksListQuery): LinkListParams => ({
+const toListParams = ({ scope, search, state, sort, page }: LinksListQuery): LinkListParams => ({
   groupId: scope || "none",
   search: search || undefined,
+  state: state === "all" ? undefined : state,
+  sort: sort === "recent" ? undefined : sort,
   page,
   limit: linksPageSize
 });
+
+const isSameListing = (first: LinksListQuery, second: LinksListQuery) =>
+  first.scope === second.scope && first.state === second.state && first.sort === second.sort;
 
 const sortGroups = (groups: LinkGroup[]) => [...groups].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
@@ -54,7 +59,7 @@ const useLinksStore = create<LinksStore>()(
       loadList: async (query) => {
         const { loadedQuery, listRequestId: previousRequestId } = get();
         const listRequestId = previousRequestId + 1;
-        const isSearchChange = loadedQuery !== null && loadedQuery.scope === query.scope && loadedQuery.search !== query.search;
+        const isSearchChange = loadedQuery !== null && isSameListing(loadedQuery, query) && loadedQuery.search !== query.search;
         set({ query, listRequestId, isListLoading: true, isSearchLoading: isSearchChange });
         try {
           const result = await listLinks(toListParams(query));
@@ -87,19 +92,18 @@ const useLinksStore = create<LinksStore>()(
         const { query, loadList } = get();
         if (query?.scope === scope) return;
         set({ localSearch: "" });
-        await loadList({ scope, search: "", page: 1 });
+        await loadList({ scope, search: "", state: query?.state ?? "all", sort: query?.sort ?? "recent", page: 1 });
       },
       searchLinks: async (search) => {
         const { query, loadedQuery, total, emptySearchCache, listRequestId, loadList } = get();
         if (!query) return;
-        const isWholeScopeLoaded =
-          loadedQuery !== null && loadedQuery.scope === query.scope && !loadedQuery.search && total <= linksPageSize;
+        const isWholeScopeLoaded = loadedQuery !== null && isSameListing(loadedQuery, query) && !loadedQuery.search && total <= linksPageSize;
         if (isWholeScopeLoaded) {
           set({ localSearch: search });
           return;
         }
         set({ localSearch: "" });
-        if (!search && emptySearchCache?.query.scope === query.scope) {
+        if (!search && emptySearchCache && isSameListing(emptySearchCache.query, query)) {
           set({
             query: emptySearchCache.query,
             loadedQuery: emptySearchCache.query,
@@ -117,6 +121,16 @@ const useLinksStore = create<LinksStore>()(
         const { query, loadList } = get();
         if (!query) return;
         await loadList({ ...query, page });
+      },
+      filterLinks: async (state) => {
+        const { query, loadList } = get();
+        if (!query || query.state === state) return;
+        await loadList({ ...query, state, page: 1 });
+      },
+      sortLinks: async (sort) => {
+        const { query, loadList } = get();
+        if (!query || query.sort === sort) return;
+        await loadList({ ...query, sort, page: 1 });
       },
       addGroup: (group) => set((state) => ({ groups: sortGroups([...state.groups, group]) })),
       replaceGroup: (group) =>

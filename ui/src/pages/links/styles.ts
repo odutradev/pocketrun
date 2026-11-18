@@ -22,13 +22,32 @@ export const ListArea = styled.div`
 `;
 
 export const Toolbar = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: ${({ theme }) => theme.spacing(3)};
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
+
+export const SearchSlot = styled.div`
+  flex: 1 1 0;
+  min-width: 0;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    flex-basis: 240px;
+  }
+`;
+
+export const Filters = styled.div`
+  display: grid;
+  flex: 1 1 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: ${({ theme }) => theme.spacing(3)};
+  order: 1;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex: 0 0 auto;
+    grid-template-columns: repeat(2, 176px);
+    order: 0;
   }
 `;
 

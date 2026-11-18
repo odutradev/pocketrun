@@ -27,7 +27,8 @@ export type ApiErrorCode =
   | "invalid_schedule"
   | "invalid_slug"
   | "reserved_slug"
-  | "slug_taken";
+  | "slug_taken"
+  | "self_redirect";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

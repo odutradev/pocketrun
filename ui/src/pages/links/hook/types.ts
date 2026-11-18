@@ -1,4 +1,4 @@
-import type { Link, LinkGroup, LinkGroupTab, LinkSummary, LinksView } from "@utils/types/link";
+import type { Link, LinkGroup, LinkGroupTab, LinkSort, LinkStateFilter, LinkSummary, LinksView } from "@utils/types/link";
 
 export interface LinkGroupSummary {
   group: LinkGroup;
@@ -9,6 +9,8 @@ export interface LinkGroupSummary {
 export interface LinksListQuery {
   scope: string;
   search: string;
+  state: LinkStateFilter;
+  sort: LinkSort;
   page: number;
 }
 
@@ -26,6 +28,8 @@ export interface UseLinksPageReturn {
   page: number;
   totalPages: number;
   search: string;
+  state: LinkStateFilter;
+  sort: LinkSort;
   transitionKey: string;
   groups: LinkGroup[];
   groupSummaries: LinkGroupSummary[];
@@ -36,6 +40,7 @@ export interface UseLinksPageReturn {
   hasNoLinks: boolean;
   isGroupMissing: boolean;
   isSearching: boolean;
+  isFiltered: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
   isScopePending: boolean;
@@ -46,6 +51,8 @@ export interface UseLinksPageReturn {
   openScope: (scope: string) => Promise<void>;
   handleSearch: (search: string) => void;
   handlePageChange: (page: number) => void;
+  handleStateChange: (state: LinkStateFilter) => void;
+  handleSortChange: (sort: LinkSort) => void;
   handleTabChange: (tab: LinkGroupTab) => void;
   handleGroupCreated: (group: LinkGroup) => void;
   handleGroupSaved: (group: LinkGroup) => void;
@@ -78,6 +85,8 @@ export interface LinksStore {
   openScope: (scope: string) => Promise<void>;
   searchLinks: (search: string) => Promise<void>;
   goToPage: (page: number) => Promise<void>;
+  filterLinks: (state: LinkStateFilter) => Promise<void>;
+  sortLinks: (sort: LinkSort) => Promise<void>;
   addGroup: (group: LinkGroup) => void;
   replaceGroup: (group: LinkGroup) => void;
   removeGroup: (groupId: string) => Promise<void>;

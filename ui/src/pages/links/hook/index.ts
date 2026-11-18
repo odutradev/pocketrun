@@ -40,6 +40,8 @@ const useLinksPage = (): UseLinksPageReturn => {
     openScope,
     searchLinks,
     goToPage,
+    filterLinks,
+    sortLinks,
     addGroup,
     replaceGroup,
     removeGroup,
@@ -60,7 +62,11 @@ const useLinksPage = (): UseLinksPageReturn => {
     page: loadedQuery?.page ?? 1,
     totalPages: Math.max(1, Math.ceil(visibleTotal / linksPageSize)),
     search: query?.scope === scope ? query.search || localSearch : "",
-    transitionKey: loadedQuery ? `${loadedQuery.scope}|${loadedQuery.search}|${localSearch}|${loadedQuery.page}` : "",
+    state: query?.state ?? "all",
+    sort: query?.sort ?? "recent",
+    transitionKey: loadedQuery
+      ? [loadedQuery.scope, loadedQuery.search, localSearch, loadedQuery.state, loadedQuery.sort, loadedQuery.page].join("|")
+      : "",
     groups,
     groupSummaries: groups.map((group) => ({
       group,
@@ -74,6 +80,7 @@ const useLinksPage = (): UseLinksPageReturn => {
     hasNoLinks: hasLoaded && summary.total === 0 && groups.length === 0,
     isGroupMissing: scope !== "" && hasLoaded && activeGroup === null && !isRefreshing,
     isSearching: Boolean(loadedQuery?.search || localSearch),
+    isFiltered: Boolean(loadedQuery?.search || localSearch) || (loadedQuery?.state ?? "all") !== "all",
     isLoading,
     isRefreshing,
     isScopePending: loadedQuery?.scope !== scope,
@@ -87,6 +94,12 @@ const useLinksPage = (): UseLinksPageReturn => {
     },
     handlePageChange: (page) => {
       goToPage(page);
+    },
+    handleStateChange: (state) => {
+      filterLinks(state);
+    },
+    handleSortChange: (sort) => {
+      sortLinks(sort);
     },
     handleTabChange: (next) => setSearchParams(next === "links" ? {} : { tab: next }, { replace: true }),
     handleGroupCreated: (group) => {

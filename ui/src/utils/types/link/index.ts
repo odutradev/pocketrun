@@ -6,6 +6,10 @@ export type LinkMode = "active" | "inactive" | "period" | "clicks";
 
 export type LinkState = "active" | "inactive" | "scheduled" | "expired" | "exhausted";
 
+export type LinkStateFilter = LinkState | "all";
+
+export type LinkSort = "recent" | "clicks" | "title" | "expiring";
+
 export type PeriodPreset = "1h" | "1d" | "7d" | "30d" | "custom";
 
 export interface PeriodPresetOption {
@@ -68,6 +72,8 @@ export type LinkGroupTab = "links" | "settings";
 export interface LinkListParams {
   groupId?: string;
   search?: string;
+  state?: LinkState;
+  sort?: LinkSort;
   page: number;
   limit: number;
 }
@@ -106,7 +112,13 @@ export type LinkGroupValues = z.infer<typeof linkGroupSchema>;
 export type GroupColor = LinkGroupValues["color"];
 export type GroupIcon = LinkGroupValues["icon"];
 
-export type LinkEditorTab = "settings" | "analytics" | "history";
+export type LinkEditorTab = "settings" | "qrcode" | "analytics" | "history";
+
+export type QrSize = "256" | "512" | "1024" | "2048";
+
+export type QrLevel = "L" | "M" | "Q" | "H";
+
+export type QrMargin = "0" | "2" | "4";
 
 export type LinkEventType = "created" | "updated" | "deleted" | "expired" | "exhausted" | "group_detached";
 
@@ -190,4 +202,16 @@ export interface LinkAnalytics {
   devices: AnalyticsShare[];
   systems: AnalyticsShare[];
   browsers: AnalyticsShare[];
+}
+
+export interface RankedLink {
+  id: string;
+  title: string;
+  slug: string;
+  clicks: number;
+  visitors: number;
+}
+
+export interface LinksOverview extends LinkAnalytics {
+  topLinks: RankedLink[];
 }

@@ -11,6 +11,7 @@ import type {
   LinkListParams,
   LinkPayload,
   LinkSummary,
+  LinksOverview,
   SlugAvailability
 } from "@utils/types/link";
 import type { MessageResponse, Page } from "@utils/types/api";
@@ -22,6 +23,12 @@ export const listLinks = async (params: LinkListParams, signal?: AbortSignal) =>
 
 export const getLinkSummary = async (signal?: AbortSignal) => {
   const response = await api.get<LinkSummary>("/links/summary/details", { signal });
+  return response.data;
+};
+
+export const getLinksOverview = async (range: AnalyticsRange, signal?: AbortSignal) => {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await api.get<LinksOverview>("/links/analytics/details", { params: { range, tz }, signal });
   return response.data;
 };
 
