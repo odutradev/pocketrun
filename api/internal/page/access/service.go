@@ -161,8 +161,14 @@ func (s *Service) CreateKey(ctx context.Context, pageID bson.ObjectID, input Key
 		return Issued{}, fmt.Errorf("create page access key: %w", err)
 	}
 
+	keyID := bson.NewObjectID()
+	sealed, err := s.secrets.encryptPIN(pageID, keyID, pin)
+	if err != nil {
+		return Issued{}, fmt.Errorf("create page access key: %w", err)
+	}
+
 	now := time.Now()
-	access.Keys = append(access.Keys, Key{ID: bson.NewObjectID(), Role: input.Role, PINHash: hash, Secret: secret, CreatedAt: now, PINUpdatedAt: now})
+	access.Keys = append(access.Keys, Key{ID: keyID, Role: input.Role, PINHash: hash, PINCipher: sealed, IsRevealable: true, Secret: secret, CreatedAt: now, PINUpdatedAt: now})
 	isFirstKey := len(access.Keys) == 1 && !access.IsEnabled
 	if isFirstKey {
 		access.IsEnabled = true
@@ -226,8 +232,14 @@ func (s *Service) ResetPIN(ctx context.Context, pageID, keyID bson.ObjectID, val
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
+	sealed, err := s.secrets.encryptPIN(pageID, keyID, pin)
+	if err != nil {
+		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
+	}
 
 	key.PINHash = hash
+	key.PINCipher = sealed
+	key.IsRevealable = true
 	key.Secret = secret
 	key.PINUpdatedAt = time.Now()
 	role := key.Role
@@ -236,6 +248,27 @@ func (s *Service) ResetPIN(ctx context.Context, pageID, keyID bson.ObjectID, val
 	}
 	s.record(ctx, pageID, history.EventAccessPINReset, s.actor(ctx), []history.Change{{Field: roleField, From: nil, To: role}})
 	return Issued{Access: access, PIN: pin}, nil
+}
+
+func (s *Service) RevealPIN(ctx context.Context, pageID, keyID bson.ObjectID) (Revealed, error) {
+	access, err := s.load(ctx, pageID)
+	if err != nil {
+		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
+	}
+	key, err := access.key(keyID)
+	if err != nil {
+		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
+	}
+	if key.PINCipher == "" {
+		return Revealed{}, fmt.Errorf("reveal page access pin: %w", ErrPINUnavailable)
+	}
+
+	pin, err := s.secrets.decryptPIN(pageID, keyID, key.PINCipher)
+	if err != nil {
+		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
+	}
+	s.record(ctx, pageID, history.EventAccessPINViewed, s.actor(ctx), []history.Change{{Field: roleField, From: nil, To: key.Role}})
+	return Revealed{PIN: pin}, nil
 }
 
 func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*Access, error) {

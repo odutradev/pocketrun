@@ -1,10 +1,14 @@
 package access
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"regexp"
@@ -26,6 +30,7 @@ type secrets struct {
 	pin     []byte
 	session []byte
 	client  []byte
+	cipher  []byte
 }
 
 func newSecrets(master string) secrets {
@@ -33,6 +38,7 @@ func newSecrets(master string) secrets {
 		pin:     derive(master, "page-access-pin"),
 		session: derive(master, "page-access-session"),
 		client:  derive(master, "page-access-client"),
+		cipher:  derive(master, "page-access-pin-cipher"),
 	}
 }
 
@@ -50,6 +56,47 @@ func sign(key []byte, parts ...string) string {
 
 func (s secrets) hashPIN(pageID bson.ObjectID, pin string) string {
 	return sign(s.pin, pageID.Hex(), pin)
+}
+
+func (s secrets) encryptPIN(pageID, keyID bson.ObjectID, pin string) (string, error) {
+	aead, err := s.aead()
+	if err != nil {
+		return "", fmt.Errorf("encrypt pin: %w", err)
+	}
+	nonce := make([]byte, aead.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return "", fmt.Errorf("encrypt pin: %w", err)
+	}
+	sealed := aead.Seal(nonce, nonce, []byte(pin), pinContext(pageID, keyID))
+	return base64.RawURLEncoding.EncodeToString(sealed), nil
+}
+
+func (s secrets) decryptPIN(pageID, keyID bson.ObjectID, value string) (string, error) {
+	aead, err := s.aead()
+	if err != nil {
+		return "", fmt.Errorf("decrypt pin: %w", err)
+	}
+	sealed, err := base64.RawURLEncoding.DecodeString(value)
+	if err != nil || len(sealed) < aead.NonceSize() {
+		return "", fmt.Errorf("decrypt pin: %w", ErrPINUnavailable)
+	}
+	pin, err := aead.Open(nil, sealed[:aead.NonceSize()], sealed[aead.NonceSize():], pinContext(pageID, keyID))
+	if err != nil {
+		return "", fmt.Errorf("decrypt pin: %w", errors.Join(ErrPINUnavailable, err))
+	}
+	return string(pin), nil
+}
+
+func (s secrets) aead() (cipher.AEAD, error) {
+	block, err := aes.NewCipher(s.cipher)
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewGCM(block)
+}
+
+func pinContext(pageID, keyID bson.ObjectID) []byte {
+	return []byte(pageID.Hex() + "\x00" + keyID.Hex())
 }
 
 func (s secrets) hashClient(pageID bson.ObjectID, client string) string {

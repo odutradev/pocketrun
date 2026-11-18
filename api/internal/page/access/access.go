@@ -31,6 +31,7 @@ var (
 	ErrWrongPIN        = errors.New("wrong pin")
 	ErrTooManyAttempts = errors.New("too many wrong pins")
 	ErrNotProtected    = errors.New("page is not protected")
+	ErrPINUnavailable  = errors.New("pin was saved before it could be shown again")
 	errAccessNotFound  = errors.New("page access not found")
 )
 
@@ -38,6 +39,8 @@ type Key struct {
 	ID           bson.ObjectID `json:"id" bson:"id"`
 	Role         string        `json:"role" bson:"role"`
 	PINHash      string        `json:"-" bson:"pinHash"`
+	PINCipher    string        `json:"-" bson:"pinCipher,omitempty"`
+	IsRevealable bool          `json:"isRevealable" bson:"-"`
 	Secret       string        `json:"-" bson:"secret"`
 	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
 	PINUpdatedAt time.Time     `json:"pinUpdatedAt" bson:"pinUpdatedAt"`
@@ -60,6 +63,9 @@ func newAccess(pageID bson.ObjectID) *Access {
 func (a *Access) applyDefaults() {
 	if a.SessionHours <= 0 {
 		a.SessionHours = DefaultSessionHours
+	}
+	for index := range a.Keys {
+		a.Keys[index].IsRevealable = a.Keys[index].PINCipher != ""
 	}
 }
 
@@ -138,6 +144,10 @@ type PINInput struct {
 
 func (i *PINInput) Normalize() {
 	i.PIN = strings.TrimSpace(i.PIN)
+}
+
+type Revealed struct {
+	PIN string `json:"pin"`
 }
 
 type Issued struct {

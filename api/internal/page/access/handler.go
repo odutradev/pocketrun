@@ -35,6 +35,7 @@ func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) h
 	mux.Handle("POST /pages/{id}/access/keys/create", authenticate(http.HandlerFunc(h.createKey)))
 	mux.Handle("PATCH /pages/{id}/access/keys/{keyId}/update", authenticate(http.HandlerFunc(h.renameKey)))
 	mux.Handle("POST /pages/{id}/access/keys/{keyId}/pin/reset", authenticate(http.HandlerFunc(h.resetPIN)))
+	mux.Handle("GET /pages/{id}/access/keys/{keyId}/pin/reveal", authenticate(http.HandlerFunc(h.revealPIN)))
 	mux.Handle("DELETE /pages/{id}/access/keys/{keyId}/remove", authenticate(http.HandlerFunc(h.removeKey)))
 }
 
@@ -168,6 +169,21 @@ func (h *Handler) resetPIN(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, issued)
 }
 
+func (h *Handler) revealPIN(w http.ResponseWriter, r *http.Request) {
+	pageID, keyID, ok := h.keyIDs(w, r)
+	if !ok {
+		return
+	}
+
+	revealed, err := h.service.RevealPIN(r.Context(), pageID, keyID)
+	if err != nil {
+		h.writeError(w, r, "reveal page access pin", err)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-store")
+	httpx.WriteJSON(w, http.StatusOK, revealed)
+}
+
 func (h *Handler) removeKey(w http.ResponseWriter, r *http.Request) {
 	pageID, keyID, ok := h.keyIDs(w, r)
 	if !ok {
@@ -235,6 +251,8 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusNotFound, "access_key_not_found")
 	case errors.Is(err, ErrPINInUse):
 		httpx.WriteError(w, http.StatusConflict, "pin_in_use")
+	case errors.Is(err, ErrPINUnavailable):
+		httpx.WriteError(w, http.StatusConflict, "pin_unavailable")
 	case errors.Is(err, ErrRoleTaken):
 		httpx.WriteError(w, http.StatusConflict, "role_taken")
 	case errors.Is(err, ErrAccessConflict):

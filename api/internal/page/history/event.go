@@ -24,6 +24,7 @@ const (
 	EventAccessKeyCreated     EventType = "access_key_created"
 	EventAccessKeyRenamed     EventType = "access_key_renamed"
 	EventAccessPINReset       EventType = "access_pin_reset"
+	EventAccessPINViewed      EventType = "access_pin_viewed"
 	EventAccessKeyRemoved     EventType = "access_key_removed"
 	EventAccessRevoked        EventType = "access_sessions_revoked"
 	EventAccessSessionChanged EventType = "access_session_changed"
