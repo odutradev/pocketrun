@@ -89,7 +89,7 @@ Links (pronto):
 - Painel de análise com período (24h, 7, 30, 90 dias ou tudo): cliques, visitantes únicos e média por dia comparados ao período anterior, último clique, progresso do limite ou do período, gráfico de cliques com marcas nas alterações do link, mapa de calor por dia e hora, origens, dispositivos, sistemas, navegadores e exportação em CSV. O contador de acessos que limita o link continua contando todas as aberturas, robôs incluídos.
 - Slug personalizado ou id aleatório (botão de sortear). A disponibilidade é verificada sozinha, com um pequeno atraso depois que o gestor para de digitar.
 - Ativação: **ativo**, **desativado**, **por período** (fim obrigatório, início opcional) ou **por acessos** (ativo até atingir o número de aberturas). Fora da regra, o link responde 404 e o slug continua reservado.
-- Grupos de links criados, renomeados e excluídos pelo botão Grupos da lista.
+- Grupos de links com nome, cor e ícone, escolhidos entre oito cores e dezesseis ícones fixos. O botão **Novo grupo** da lista abre a página de criação (`/links/groups/new`). Cada grupo abre na própria página (`/links/groups/{id}`), com as abas **Links** (a lista do grupo, com busca e paginação) e **Configurações** (nome, cor, ícone e exclusão); a aba fica na URL, `?tab=`. Excluir o grupo deixa os links dele sem grupo.
 - Redirect público em `GET /{slug}` na raiz da API, com `302`, `Cache-Control: no-store` e contagem atômica de acessos. O domínio dedicado (roadmap 3.8) fica para depois.
 
 Páginas (planejado):

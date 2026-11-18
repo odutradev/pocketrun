@@ -33,6 +33,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
 | Context tint | `accent.soft` | Selected row, active list item, chart area, focus ring |
 | Text on context fill | `accent.contrast` | Label on the primary button |
 | States | `brand.states.success / warning / error` (+ `*Text`) | Status only: never for a tool, never decorative |
+| Group label | `brand.groups[color]` (`base`, `text`, `soft`) | The color a manager picks for a group: only the group tile and the color swatch |
 
 - **Fonts:** `brand.fonts.display` (Unbounded 800) for page titles, big numbers and section labels; `brand.fonts.body` (Hanken Grotesk) for UI; `brand.fonts.mono` (Space Mono) per principle 3.
 - **Spacing:** `theme.spacing(n)` on a 4 px grid. Sections 56 px apart, card padding 24–28 px.
@@ -51,6 +52,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - Selects are native (`select`), wrapped in the field frame.
   - Segmented controls handle 2–4 views of the same data.
   - Filter chips are toggle buttons with `aria-pressed`.
+  - A small fixed set of visual choices (a group's color or icon) is a grid of radio options. The native radio stays in the page, hidden but focusable, so the arrow keys move the choice; each option carries its name (`aria-label` and `title`); the checked one gets a 2 px ring in the context color, and its name sits next to the label.
 - **Feedback:**
   - Inline alerts come in four tones: neutral, success, warning and error.
   - Toasts go bottom right for results of actions.
@@ -94,9 +96,11 @@ The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every oth
 2. The logo: `BrandMark` with `context={tool}`.
 3. The active nav item or tab stroke, and the current page at the end of a breadcrumb.
 4. The primary action button.
-5. The focus ring, the selected-item tint and the search field's loading spinner.
+5. The focus ring, the selected-item tint, the ring of a checked option and the search field's loading spinner.
 
-Text, surfaces, borders and states never change. Never show two tools' colors on one screen. Text color on a tool fill: white on blue, `#21201C` (dark) on brass, graphite on olive (use `tools[tool].contrast`).
+Text, surfaces, borders and states never change. Never show two tools' colors on one screen.
+
+Group colors are not tool colors: they are labels a manager picks for a group, from the eight fixed tones in `brand.groups`. They appear only on the group tile (the icon square, `soft` fill with the icon in `text`) and on the swatches of the color choice; never on text, buttons, borders, focus or states, and never in place of a context point. Text color on a tool fill: white on blue, `#21201C` (dark) on brass, graphite on olive (use `tools[tool].contrast`).
 
 ## 5. Writing
 
