@@ -297,6 +297,18 @@ func (s *Service) DetachGroup(ctx context.Context, groupID bson.ObjectID) error 
 	return nil
 }
 
+func (s *Service) Resolve(ctx context.Context, value string) (*slug.Entry, error) {
+	value = NormalizeSlug(value)
+	entry, err := s.slugs.Find(ctx, value)
+	if errors.Is(err, slug.ErrSlugNotFound) {
+		return nil, ErrLinkNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("resolve slug %s: %w", value, err)
+	}
+	return entry, nil
+}
+
 func (s *Service) Open(ctx context.Context, value string, visit traffic.Visit) (*Link, error) {
 	value = NormalizeSlug(value)
 	entry, err := s.slugs.Find(ctx, value)

@@ -16,6 +16,7 @@ type Config struct {
 	MongoURI                string
 	MongoName               string
 	JWTSecret               string
+	PageAccessSecret        string
 	LinksURL                string
 }
 
@@ -36,6 +37,7 @@ func Load() (Config, error) {
 		MongoName:               lookup("MONGODB_NAME", "pocketrun"),
 		JWTSecret:               lookup("JWT_SECRET", "pocketrun-secret-key-change-in-production"),
 		LinksURL:                lookup("LINKS_URL", ""),
+		PageAccessSecret:        lookup("PAGE_ACCESS_SECRET", ""),
 	}
 	return cfg, nil
 }

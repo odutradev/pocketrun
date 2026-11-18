@@ -48,6 +48,10 @@ type OpenTracker interface {
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
+type AccessCleaner interface {
+	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
+}
+
 type SlugRegistry interface {
 	Check(ctx context.Context, value string, ownerID *bson.ObjectID) (slug.Availability, error)
 	Reserve(ctx context.Context, value string, kind slug.Kind, targetID bson.ObjectID) error
@@ -68,6 +72,7 @@ type Dependencies struct {
 	Versions   VersionKeeper
 	History    EventRecorder
 	Opens      OpenTracker
+	Access     AccessCleaner
 	Slugs      SlugRegistry
 	Groups     GroupChecker
 	Actors     ActorResolver
@@ -79,6 +84,7 @@ type Service struct {
 	versions   VersionKeeper
 	history    EventRecorder
 	opens      OpenTracker
+	access     AccessCleaner
 	slugs      SlugRegistry
 	groups     GroupChecker
 	actors     ActorResolver
@@ -91,6 +97,7 @@ func NewService(dependencies Dependencies) *Service {
 		versions:   dependencies.Versions,
 		history:    dependencies.History,
 		opens:      dependencies.Opens,
+		access:     dependencies.Access,
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
@@ -140,6 +147,17 @@ func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Page, error) 
 		return nil, fmt.Errorf("get page %s: %w", id.Hex(), err)
 	}
 	page.State = page.StateAt(time.Now())
+	return page, nil
+}
+
+func (s *Service) Visible(ctx context.Context, id bson.ObjectID) (*Page, error) {
+	page, err := s.repository.FindByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("find visible page %s: %w", id.Hex(), err)
+	}
+	if page.StateAt(time.Now()) != activation.StateActive {
+		return nil, fmt.Errorf("find visible page %s: %w", id.Hex(), ErrPageUnavailable)
+	}
 	return page, nil
 }
 
@@ -343,6 +361,9 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 	}
 	if err := s.versions.DeleteAll(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete page versions", "pageId", page.ID.Hex(), "error", err)
+	}
+	if err := s.access.DeleteAll(ctx, page.ID); err != nil {
+		s.logger.WarnContext(ctx, "delete page access", "pageId", page.ID.Hex(), "error", err)
 	}
 	return nil
 }

@@ -19,6 +19,7 @@ import (
 	linkhistory "pocketrun-api/internal/link/history"
 	"pocketrun-api/internal/link/link"
 	linkpublic "pocketrun-api/internal/link/public"
+	"pocketrun-api/internal/page/access"
 	pageanalytics "pocketrun-api/internal/page/analytics"
 	pagehistory "pocketrun-api/internal/page/history"
 	"pocketrun-api/internal/page/page"
@@ -84,10 +85,12 @@ func run(logger *slog.Logger) error {
 	pageVersionRepository := version.NewMongoRepository(mongo.Collection("pageVersions"))
 	pageEventRepository := pagehistory.NewMongoRepository(mongo.Collection("pageEvents"))
 	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))
+	accessRepository := access.NewMongoRepository(mongo.Collection("pageAccess"))
+	accessAttemptRepository := access.NewMongoAttemptRepository(mongo.Collection("pageAccessAttempts"))
 	ensureIndexes(startupContext, logger,
 		userRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
-		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository,
+		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
 	)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
@@ -111,11 +114,25 @@ func run(logger *slog.Logger) error {
 	versionService := version.NewService(pageVersionRepository, logger)
 	pageHistoryService := pagehistory.NewService(pageEventRepository, logger)
 	pageAnalyticsService := pageanalytics.NewService(pageOpenRepository, logger)
+	accessSecret := cfg.PageAccessSecret
+	if accessSecret == "" {
+		logger.WarnContext(ctx, "PAGE_ACCESS_SECRET is empty, deriving the page pin key from JWT_SECRET")
+		accessSecret = "page-access:" + cfg.JWTSecret
+	}
+	accessService := access.NewService(access.Dependencies{
+		Repository: accessRepository,
+		Attempts:   accessAttemptRepository,
+		History:    pageHistoryService,
+		Actors:     userService,
+		Secret:     accessSecret,
+		Logger:     logger,
+	})
 	pageService := page.NewService(page.Dependencies{
 		Repository: pageRepository,
 		Versions:   versionService,
 		History:    pageHistoryService,
 		Opens:      pageAnalyticsService,
+		Access:     accessService,
 		Slugs:      slugService,
 		Groups:     groupService,
 		Actors:     userService,
@@ -139,7 +156,8 @@ func run(logger *slog.Logger) error {
 	versionHandler := version.NewHandler(versionService, pageService, logger)
 	pageHistoryHandler := pagehistory.NewHandler(pageHistoryService, pageService, validate, logger)
 	pageAnalyticsHandler := pageanalytics.NewHandler(pageAnalyticsService, pageService, validate, logger)
-	pagePublicHandler := pagepublic.NewHandler(pageService, cfg.LinksURL, logger)
+	accessHandler := access.NewHandler(accessService, pageService, validate, logger)
+	pagePublicHandler := pagepublic.NewHandler(pageService, accessService, cfg.LinksURL, logger)
 	linkPublicHandler := linkpublic.NewHandler(linkService, pagePublicHandler, logger)
 
 	adminMux := http.NewServeMux()
@@ -158,6 +176,7 @@ func run(logger *slog.Logger) error {
 	versionHandler.Register(adminMux, authenticateManager)
 	pageHistoryHandler.Register(adminMux, authenticateManager)
 	pageAnalyticsHandler.Register(adminMux, authenticateManager)
+	accessHandler.Register(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)

@@ -21,11 +21,13 @@ const (
 )
 
 type LinkOpener interface {
+	Resolve(ctx context.Context, value string) (*slug.Entry, error)
 	Open(ctx context.Context, value string, visit traffic.Visit) (*link.Link, error)
 }
 
 type PageServer interface {
 	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
+	UnlockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
 }
 
 type Handler struct {
@@ -41,6 +43,27 @@ func NewHandler(links LinkOpener, pages PageServer, logger *slog.Logger) *Handle
 func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{slug}", h.open)
 	mux.HandleFunc("GET /{slug}/{$}", h.open)
+	mux.HandleFunc("POST /{slug}", h.unlock)
+	mux.HandleFunc("POST /{slug}/{$}", h.unlock)
+}
+
+func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {
+	entry, err := h.links.Resolve(r.Context(), r.PathValue("slug"))
+	if errors.Is(err, link.ErrLinkNotFound) {
+		h.writeNotFoundPage(w, r)
+		return
+	}
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "resolve slug", "error", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if entry.Kind != slug.KindPage {
+		w.Header().Set("Allow", "GET, HEAD")
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+	h.pages.UnlockPage(w, r, entry.TargetID)
 }
 
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
