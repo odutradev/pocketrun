@@ -1,4 +1,4 @@
-import { expiryWarningDays, apiUrl } from "@assets/config";
+import { expiryWarningDays, linksUrl } from "@assets/config";
 import { errorMessages } from "@assets/data";
 import { isApiError } from "@utils/api";
 
@@ -67,7 +67,7 @@ export const cancelFrame = (frameRef: { current: number | null }) => {
   frameRef.current = null;
 };
 
-export const publicLinkUrl = (slug: string): string => `${apiUrl}/${slug}`;
+export const publicLinkUrl = (slug: string): string => `${linksUrl}/${slug}`;
 
 export const formatShortDateTime = (value: string): string =>
   new Date(value).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });

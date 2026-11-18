@@ -151,6 +151,7 @@ networks:
 
 ```env
 VITE_API_URL=https://api-pocketrun.odutra.com
+LINKS_URL=https://link.odutra.com
 CORS_ALLOWED_ORIGINS=*
 ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.odutra.com
 MONGODB_URI=mongodb+srv://meu_usuario:minha_senha@cluster0.xxx.mongodb.net/?retryWrites=true&w=majority

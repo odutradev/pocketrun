@@ -24,6 +24,7 @@ services:
         project: .
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
+        - VITE_LINKS_URL=${LINKS_URL:-}
     restart: unless-stopped
     expose:
       - "80"

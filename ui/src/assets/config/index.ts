@@ -4,6 +4,8 @@ export const apiUrl = trimTrailingSlash(import.meta.env.VITE_API_URL || "http://
 
 export const adminApiUrl = `${apiUrl}/admin`;
 
+export const linksUrl = trimTrailingSlash(import.meta.env.VITE_LINKS_URL || apiUrl);
+
 export const appVersion = __APP_VERSION__;
 
 export const storageKeys = {
