@@ -111,6 +111,11 @@ export const setPageAccessEnabled = async (pageId: string, isEnabled: boolean) =
   return response.data;
 };
 
+export const setPageAccessSessionHours = async (pageId: string, sessionHours: number) => {
+  const response = await api.patch<PageAccess>(`/pages/${pageId}/access/session/set`, { sessionHours });
+  return response.data;
+};
+
 export const revokePageAccessSessions = async (pageId: string) => {
   const response = await api.post<PageAccess>(`/pages/${pageId}/access/sessions/revoke`);
   return response.data;

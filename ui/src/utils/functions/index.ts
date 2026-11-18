@@ -39,6 +39,11 @@ export const randomSlug = (length: number): string => {
   return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
 };
 
+export const formatSessionHours = (hours: number): string => {
+  if (hours % 24 === 0) return hours === 24 ? "1 dia" : `${hours / 24} dias`;
+  return hours === 1 ? "1 hora" : `${hours} horas`;
+};
+
 export const isWeakPin = (pin: string): boolean => {
   const digits = Array.from(pin);
   const isRepeated = (size: number) => digits.every((digit, index) => index < size || digit === digits[index - size]);

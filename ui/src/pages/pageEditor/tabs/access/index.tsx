@@ -18,9 +18,9 @@ import {
   PanelTitle,
   Rules
 } from "./styles";
-import { removePageAccessKey, revokePageAccessSessions, setPageAccessEnabled } from "@actions/sitePages";
-import { pageAccessKeysMax, pageAccessSessionHours } from "@assets/config";
-import { currentTimestamp, formatRelativeTime } from "@utils/functions";
+import { removePageAccessKey, revokePageAccessSessions, setPageAccessEnabled, setPageAccessSessionHours } from "@actions/sitePages";
+import { currentTimestamp, formatRelativeTime, formatSessionHours } from "@utils/functions";
+import { pageAccessKeysMax, pageAccessSessionHoursOptions } from "@assets/config";
 import ConfirmDialog from "@components/confirmDialog";
 import SwitchField from "@components/switchField";
 import IconButton from "@components/iconButton";
@@ -30,6 +30,7 @@ import usePageEditorPage from "../../hook";
 import KeyDialog from "./subcomponents/keyDialog";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
+import Select from "@components/select";
 
 import type { PageAccessDialogState, PageAccessKey } from "@utils/types/sitePage";
 import type { AccessConfirm } from "./types";
@@ -49,6 +50,12 @@ const AccessTab = () => {
   const toggle = useAction({
     action: (isEnabled: boolean) => setPageAccessEnabled(pageId, isEnabled),
     toastMessages: { pending: "Salvando a proteção…", success: "Proteção atualizada", error: "Não foi possível mudar a proteção" },
+    callback: handleAccessChange
+  });
+
+  const session = useAction({
+    action: (sessionHours: number) => setPageAccessSessionHours(pageId, sessionHours),
+    toastMessages: { pending: "Salvando a duração…", success: "Duração atualizada", error: "Não foi possível mudar a duração" },
     callback: handleAccessChange
   });
 
@@ -83,6 +90,9 @@ const AccessTab = () => {
   const hasGeneral = access.keys.some((key) => key.role === "");
   const isFull = access.keys.length >= pageAccessKeysMax;
   const isLastProtected = access.isEnabled && access.keys.length === 1;
+  const sessionOptions = [...new Set([...pageAccessSessionHoursOptions, access.sessionHours])]
+    .sort((first, second) => first - second)
+    .map((hours) => ({ value: String(hours), label: formatSessionHours(hours) }));
 
   const handleConfirm = () => {
     if (!confirm) return;
@@ -172,10 +182,15 @@ const AccessTab = () => {
       <Column>
         <Panel>
           <PanelTitle>Acessos abertos</PanelTitle>
-          <Hint>
-            Quem acerta o PIN fica com a página liberada naquele navegador por {pageAccessSessionHours} horas. Trocar o PIN de um cargo encerra só os
-            acessos dele.
-          </Hint>
+          <Hint>Quem acerta o PIN fica com a página liberada naquele navegador pelo tempo abaixo. Trocar o PIN de um cargo encerra só os acessos dele.</Hint>
+          <Select
+            label="Duração do acesso"
+            options={sessionOptions}
+            value={String(access.sessionHours)}
+            onValueChange={(value) => session.execute(Number(value))}
+            disabled={session.isPending}
+            hint="Diminuir a duração também encurta os acessos que já estão abertos."
+          />
           <div>
             <Button size="sm" variant="secondary" disabled={access.keys.length === 0} onClick={() => setConfirm({ kind: "revoke" })}>
               Encerrar todos os acessos

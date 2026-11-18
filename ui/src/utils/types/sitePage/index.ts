@@ -99,7 +99,7 @@ export type PageGroupTab = "pages" | "settings";
 
 export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "qrcode" | "analytics" | "history";
 
-export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "role";
+export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "role" | "sessionHours";
 
 export type PageEventType =
   | LinkEventType
@@ -110,6 +110,7 @@ export type PageEventType =
   | "access_pin_reset"
   | "access_key_removed"
   | "access_sessions_revoked"
+  | "access_session_changed"
   | "access_locked"
   | "unlocked";
 
@@ -158,6 +159,7 @@ export interface PageAccess {
   pageId: string;
   isEnabled: boolean;
   keys: PageAccessKey[];
+  sessionHours: number;
   updatedAt: string | null;
 }
 

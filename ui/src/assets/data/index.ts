@@ -632,6 +632,7 @@ export const pageEventLabels: Record<PageEventType, string> = {
   access_pin_reset: "trocou um PIN",
   access_key_removed: "apagou um PIN",
   access_sessions_revoked: "encerrou os acessos abertos com PIN",
+  access_session_changed: "mudou a duração do acesso por PIN",
   access_locked: "bloqueou o PIN da página por excesso de tentativas erradas",
   unlocked: "abriu a página com PIN"
 };
@@ -645,7 +646,8 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   startsAt: "Início",
   endsAt: "Fim",
   maxClicks: "Limite de acessos",
-  role: "Cargo"
+  role: "Cargo",
+  sessionHours: "Duração do acesso"
 };
 
 export const htmlVoidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
