@@ -79,7 +79,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
   - Tool tabs are underline tabs; inside a tool the active underline uses the tool color.
   - Inside a page, a local side menu groups items by area. "Zona de perigo" is always last and always in error text.
-  - Breadcrumbs appear on pages deeper than one level, as the page title itself: `contentNavbar` takes the parent pages in `parents` and shows them as muted links in the title font, a chevron between each, and the current page as the h1 ("Links > Black Friday"). The breadcrumb replaces a "Voltar" button; never show both.
+  - Breadcrumbs appear on pages deeper than one level, as the page title itself: `contentNavbar` takes the parent pages in `parents` and shows them as muted links in the title font, a chevron between each (long names cut with an ellipsis), and the current page as the h1 in `accent.text` ("Links > Black Friday", "Links > Black Friday > Cupom VIP"). The breadcrumb replaces a "Voltar" button; never show both.
 - **Overlays:**
   - The backdrop is black at 66%.
   - Dialogs are for confirmation and one-time secrets. A destructive dialog asks the user to type the Project ID before the final button is enabled.
@@ -92,7 +92,7 @@ The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every oth
 
 1. A 3 px top stroke on the side menu and on the mobile top bar.
 2. The logo: `BrandMark` with `context={tool}`.
-3. The active nav item or tab stroke.
+3. The active nav item or tab stroke, and the current page at the end of a breadcrumb.
 4. The primary action button.
 5. The focus ring, the selected-item tint and the search field's loading spinner.
 
