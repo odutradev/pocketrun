@@ -45,11 +45,7 @@ const LinkEditorPage = () => {
       <ContentNavbar
         title={isEditing ? link?.title ?? "Editar link" : "Novo link"}
         info="O slug é o endereço curto do link. Ele é único entre links e páginas, e aceita só letras minúsculas, números e hífen. Na edição, as abas mostram a análise de acessos e o histórico de alterações."
-        actions={
-          <LinkButton to="/links" leftIcon={<ArrowLeftIcon />}>
-            Voltar
-          </LinkButton>
-        }
+        actions={[{ label: "Voltar", icon: <ArrowLeftIcon />, to: "/links" }]}
       />
       {isLoading && <Loader label="Carregando o link" isCentered />}
       {!isLoading && hasFailed && (

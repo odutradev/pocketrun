@@ -75,11 +75,7 @@ const LinksPage = () => {
       <ContentNavbar
         title="Links"
         info="Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos."
-        actions={
-          <Button variant="secondary" leftIcon={<StackIcon />} onClick={handleOpenGroups}>
-            Grupos
-          </Button>
-        }
+        actions={[{ label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }]}
         onReload={loadLinks}
         isReloading={isLoading || isRefreshing}
         action={{ label: "Novo link", icon: <PlusIcon />, to: "/links/new" }}

@@ -1,21 +1,49 @@
 import { InfoCircledIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { useTheme } from "styled-components";
 import { Tooltip } from "@radix-ui/themes";
 
 import { Actions, Container, Heading, InfoTrigger, ReloadIconSlot, Title, TooltipText } from "./styles";
+import useMediaQuery from "@hooks/useMediaQuery";
 import IconButton from "@components/iconButton";
 import LinkButton from "@components/linkButton";
 import Button from "@components/button";
 
-import type { ContentNavbarProps } from "./types";
+import type { ContentNavbarAction, ContentNavbarProps } from "./types";
 
-const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = false }: ContentNavbarProps) => {
-  const hasActions = Boolean(actions || onReload || action);
-  const isActionLink = Boolean(action?.to && !action.isDisabled);
+const renderAction = (action: ContentNavbarAction, fallbackVariant: "primary" | "secondary", isIconOnly: boolean) => {
+  const variant = action.variant ?? fallbackVariant;
+
+  if (action.to && !action.isDisabled) {
+    return (
+      <LinkButton key={action.label} to={action.to} variant={variant} leftIcon={action.icon} isIconOnly={isIconOnly}>
+        {action.label}
+      </LinkButton>
+    );
+  }
+
+  return (
+    <Button
+      key={action.label}
+      variant={variant}
+      leftIcon={action.icon}
+      onClick={action.onClick}
+      disabled={action.isDisabled}
+      isIconOnly={isIconOnly}
+    >
+      {action.label}
+    </Button>
+  );
+};
+
+const ContentNavbar = ({ title, info, actions = [], action, onReload, isReloading = false }: ContentNavbarProps) => {
+  const { breakpoints } = useTheme();
+  const isCompact = !useMediaQuery(`(min-width: ${breakpoints.md})`);
+  const hasActions = Boolean(actions.length > 0 || onReload || action);
 
   return (
     <Container>
       <Heading>
-        <Title>{title}</Title>
+        <Title title={title}>{title}</Title>
         {info && (
           <Tooltip content={<TooltipText>{info}</TooltipText>} side="bottom" sideOffset={6}>
             <InfoTrigger type="button" aria-label={`Sobre ${title}`}>
@@ -26,7 +54,7 @@ const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = f
       </Heading>
       {hasActions && (
         <Actions>
-          {actions}
+          {actions.map((item) => renderAction(item, "secondary", isCompact))}
           {onReload && (
             <IconButton
               label="Recarregar"
@@ -40,21 +68,7 @@ const ContentNavbar = ({ title, info, actions, action, onReload, isReloading = f
               disabled={isReloading}
             />
           )}
-          {action && isActionLink && (
-            <LinkButton to={action.to} variant={action.variant ?? "primary"} leftIcon={action.icon}>
-              {action.label}
-            </LinkButton>
-          )}
-          {action && !isActionLink && (
-            <Button
-              variant={action.variant}
-              leftIcon={action.icon}
-              onClick={action.onClick}
-              disabled={action.isDisabled}
-            >
-              {action.label}
-            </Button>
-          )}
+          {action && renderAction(action, "primary", false)}
         </Actions>
       )}
     </Container>

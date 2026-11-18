@@ -7,7 +7,6 @@ const spin = keyframes`
 export const Container = styled.header`
   ${({ theme }) => css`
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: ${theme.spacing(3)};
@@ -19,6 +18,7 @@ export const Container = styled.header`
 export const Heading = styled.div`
   display: flex;
   align-items: center;
+  flex: 1 1 auto;
   gap: ${({ theme }) => theme.spacing(1.5)};
   min-width: 0;
 `;
@@ -30,7 +30,10 @@ export const Title = styled.h1`
   font-size: 22px;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
     font-size: 24px;
@@ -78,7 +81,7 @@ export const TooltipText = styled.span`
 
 export const Actions = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-shrink: 0;
   align-items: center;
   gap: ${({ theme }) => theme.spacing(2)};
 `;

@@ -106,7 +106,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Page loader (symbol loop) | `@components/loader` |
 | Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
 | API status pill, panel line or pulsing dot with tooltip (address and version) | `@components/apiStatus` |
-| Page header: title, info tooltip, reload, one action and free actions | `@components/contentNavbar` |
+| Page header in one line: title (truncated), info tooltip, extra actions (icon-only below md), reload and one labeled action | `@components/contentNavbar` |
 | Section or panel title (h2) with actions | `@components/sectionHeader` |
 | Underline tabs and their panel | `@components/tabNav` + `@components/tabPanel` |
 | Buttons with icon or loading | `@components/button` |

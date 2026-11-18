@@ -13,7 +13,7 @@ export interface ContentNavbarAction {
 export interface ContentNavbarProps {
   title: string;
   info?: ReactNode;
-  actions?: ReactNode;
+  actions?: ContentNavbarAction[];
   action?: ContentNavbarAction;
   onReload?: () => void;
   isReloading?: boolean;

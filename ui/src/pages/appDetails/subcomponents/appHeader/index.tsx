@@ -1,7 +1,6 @@
 import { ArrowLeftIcon } from "@radix-ui/react-icons";
 
 import ContentNavbar from "@components/contentNavbar";
-import LinkButton from "@components/linkButton";
 import CopyField from "@components/copyField";
 import useAppDetailsPage from "../../hook";
 import { Container } from "./styles";
@@ -15,11 +14,7 @@ const AppHeader = () => {
       <ContentNavbar
         title={application.name}
         info={application.description || "Aplicação do KV, sem descrição."}
-        actions={
-          <LinkButton to="/kv" leftIcon={<ArrowLeftIcon />}>
-            KV
-          </LinkButton>
-        }
+        actions={[{ label: "KV", icon: <ArrowLeftIcon />, to: "/kv" }]}
         onReload={() => loadApplication(application.id)}
         isReloading={isLoading}
       />
