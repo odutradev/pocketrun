@@ -10,5 +10,6 @@ export interface LinkButtonProps {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   isFullWidth?: boolean;
+  isIconOnly?: boolean;
   isExternal?: boolean;
 }

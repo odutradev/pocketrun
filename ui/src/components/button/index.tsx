@@ -1,3 +1,4 @@
+import VisuallyHidden from "@components/visuallyHidden";
 import { Spinner, StyledButton } from "./styles";
 
 import type { ButtonProps } from "./types";
@@ -11,6 +12,7 @@ const Button = ({
   leftIcon,
   rightIcon,
   isFullWidth = false,
+  isIconOnly = false,
   disabled,
   type = "button",
   ...props
@@ -22,10 +24,12 @@ const Button = ({
     $variant={variant}
     $size={size}
     $isFullWidth={isFullWidth}
+    $isIconOnly={isIconOnly}
+    title={isIconOnly && typeof children === "string" ? children : undefined}
     {...props}
   >
     {isLoading ? <Spinner aria-hidden="true" /> : leftIcon}
-    {isLoading && loadingLabel ? loadingLabel : children}
+    {isIconOnly ? <VisuallyHidden>{children}</VisuallyHidden> : isLoading && loadingLabel ? loadingLabel : children}
     {!isLoading && rightIcon}
   </StyledButton>
 );

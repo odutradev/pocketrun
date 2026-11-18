@@ -8,6 +8,7 @@ export interface ButtonStyleProps {
   $variant: ButtonVariant;
   $size: ButtonSize;
   $isFullWidth: boolean;
+  $isIconOnly?: boolean;
 }
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,4 +19,5 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   isFullWidth?: boolean;
+  isIconOnly?: boolean;
 }

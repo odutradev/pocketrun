@@ -62,7 +62,7 @@ const variants = (theme: DefaultTheme): Record<ButtonVariant, ReturnType<typeof 
 });
 
 export const buttonStyles = css<ButtonStyleProps>`
-  ${({ theme, $variant, $size, $isFullWidth }) => css`
+  ${({ theme, $variant, $size, $isFullWidth, $isIconOnly = false }) => css`
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -105,6 +105,17 @@ export const buttonStyles = css<ButtonStyleProps>`
     @media (min-width: ${theme.breakpoints.md}) {
       height: ${sizes[$size].desktop};
     }
+
+    ${$isIconOnly &&
+    css`
+      flex-shrink: 0;
+      width: ${sizes[$size].mobile};
+      padding: 0;
+
+      @media (min-width: ${theme.breakpoints.md}) {
+        width: ${sizes[$size].desktop};
+      }
+    `}
 
     ${variants(theme)[$variant]}
   `}
