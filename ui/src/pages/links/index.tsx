@@ -3,17 +3,15 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect } from "react";
 
-import { Container, Section, Sections, Toolbar } from "./styles";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
-import SectionHeader from "@components/sectionHeader";
 import GroupCards from "./subcomponents/groupCards";
 import useMediaQuery from "@hooks/useMediaQuery";
 import EmptyState from "@components/emptyState";
-import { pluralize } from "@utils/functions";
+import { Container, Toolbar } from "./styles";
 import Button from "@components/button";
 import LinksSkeleton from "./skeleton";
 import Input from "@components/input";
@@ -72,31 +70,39 @@ const LinksPage = () => {
     );
   };
 
-  const renderOverview = () => {
-    if (isSearching && visibleLinks.length === 0) {
-      return <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca." />;
-    }
-    if (isSearching) return <LinkCollection links={visibleLinks} caption="Links encontrados" />;
-    if (groups.length === 0) return <LinkCollection links={visibleLinks} caption="Links" />;
+  const getListCaption = () => {
+    if (isSearching) return "Links encontrados";
+    return groups.length > 0 ? "Links sem grupo" : "Links";
+  };
+
+  const renderLinks = () => {
+    if (visibleLinks.length > 0) return <LinkCollection links={visibleLinks} caption={getListCaption()} />;
+    if (isSearching) return <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca." />;
     return (
-      <Sections>
-        <Section aria-labelledby="links-groups-title">
-          <SectionHeader title="Grupos" titleId="links-groups-title" description={pluralize(groups.length, "grupo", "grupos")} />
-          <GroupCards />
-        </Section>
-        {visibleLinks.length > 0 && (
-          <Section aria-labelledby="links-ungrouped-title">
-            <SectionHeader
-              title="Sem grupo"
-              titleId="links-ungrouped-title"
-              description={pluralize(visibleLinks.length, "link", "links")}
-            />
-            <LinkCollection links={visibleLinks} caption="Links sem grupo" />
-          </Section>
-        )}
-      </Sections>
+      <EmptyState
+        isCompact
+        title="Nenhum link sem grupo"
+        description="Os seus links estão nos grupos acima. Abra um grupo para ver os links dele."
+      />
     );
   };
+
+  const toolbar = (
+    <Toolbar>
+      <Input
+        label="Buscar links"
+        isLabelHidden
+        type="search"
+        leftIcon={<MagnifyingGlassIcon />}
+        placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
+        value={search}
+        onChange={(event) => handleSearchChange(event.target.value)}
+      />
+      {!isMobile && (
+        <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
+      )}
+    </Toolbar>
+  );
 
   const renderContent = () => {
     if (isLoading) return <LinksSkeleton />;
@@ -114,29 +120,19 @@ const LinksPage = () => {
         />
       );
     }
+    if (activeGroup) {
+      return (
+        <>
+          {toolbar}
+          {renderGroupLinks(activeGroup)}
+        </>
+      );
+    }
     return (
       <>
-        <Toolbar>
-          <Input
-            label="Buscar links"
-            isLabelHidden
-            type="search"
-            leftIcon={<MagnifyingGlassIcon />}
-            placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
-            value={search}
-            onChange={(event) => handleSearchChange(event.target.value)}
-          />
-          {!isMobile && (
-            <SegmentedControl
-              label="Visualização"
-              options={viewOptions}
-              value={view}
-              onValueChange={handleViewChange}
-              isIconOnly
-            />
-          )}
-        </Toolbar>
-        {activeGroup ? renderGroupLinks(activeGroup) : renderOverview()}
+        {groups.length > 0 && <GroupCards />}
+        {toolbar}
+        {renderLinks()}
       </>
     );
   };

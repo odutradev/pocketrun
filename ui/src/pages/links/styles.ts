@@ -18,18 +18,6 @@ export const Toolbar = styled.div`
   }
 `;
 
-export const Sections = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(10)};
-`;
-
-export const Section = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(4)};
-`;
-
 export const LinkCell = styled.span`
   display: flex;
   flex-direction: column;
