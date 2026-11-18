@@ -1,22 +1,27 @@
 import type { Link, LinkGroup, LinksView } from "@utils/types/link";
 
-export type GroupFilter = "all" | "none" | string;
+export interface LinkGroupSummary {
+  group: LinkGroup;
+  linkCount: number;
+  clicks: number;
+}
 
 export interface UseLinksPageReturn {
   view: LinksView;
   links: Link[];
-  filteredLinks: Link[];
+  visibleLinks: Link[];
   groups: LinkGroup[];
-  groupNames: Record<string, string>;
+  groupSummaries: LinkGroupSummary[];
+  activeGroup: LinkGroup | null;
+  isGroupMissing: boolean;
+  isSearching: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
   search: string;
-  groupFilter: GroupFilter;
   isGroupsOpen: boolean;
   removeTarget: Link | null;
   loadLinks: () => Promise<void>;
   handleSearchChange: (search: string) => void;
-  handleGroupFilterChange: (groupFilter: GroupFilter) => void;
   handleOpenGroups: () => void;
   handleCloseGroups: () => void;
   handleOpenRemove: (link: Link) => void;
@@ -31,12 +36,10 @@ export interface LinksStore {
   isLoading: boolean;
   isRefreshing: boolean;
   search: string;
-  groupFilter: GroupFilter;
   isGroupsOpen: boolean;
   removeTarget: Link | null;
   loadLinks: () => Promise<void>;
   setSearch: (search: string) => void;
-  setGroupFilter: (groupFilter: GroupFilter) => void;
   setGroupsOpen: (isOpen: boolean) => void;
   setRemoveTarget: (link: Link | null) => void;
   setView: (view: LinksView) => void;

@@ -18,7 +18,6 @@ const useLinksStore = create<LinksStore>()(
       isLoading: true,
       isRefreshing: false,
       search: "",
-      groupFilter: "all",
       isGroupsOpen: false,
       removeTarget: null,
       loadLinks: async () => {
@@ -26,10 +25,7 @@ const useLinksStore = create<LinksStore>()(
         set(isFirstLoad ? { isLoading: true } : { isRefreshing: true });
         try {
           const [links, groups] = await Promise.all([listLinks(), listLinkGroups()]);
-          const { groupFilter } = get();
-          const isKnownFilter =
-            groupFilter === "all" || groupFilter === "none" || groups.some((group) => group.id === groupFilter);
-          set({ links, groups, groupFilter: isKnownFilter ? groupFilter : "all" });
+          set({ links, groups });
         } catch (error) {
           logger.error(error);
           toast.error(getErrorMessage(error, "Não foi possível carregar os links"));
@@ -38,7 +34,6 @@ const useLinksStore = create<LinksStore>()(
         }
       },
       setSearch: (search) => set({ search }),
-      setGroupFilter: (groupFilter) => set({ groupFilter }),
       setGroupsOpen: (isGroupsOpen) => set({ isGroupsOpen }),
       setRemoveTarget: (removeTarget) => set({ removeTarget }),
       setView: (view) => set({ view })

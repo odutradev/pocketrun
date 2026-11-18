@@ -14,12 +14,20 @@ export const Toolbar = styled.div`
   align-items: center;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: minmax(0, 1fr) 220px auto;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 `;
 
-export const GroupFilter = styled.div`
-  min-width: 0;
+export const Sections = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(10)};
+`;
+
+export const Section = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(4)};
 `;
 
 export const LinkCell = styled.span`
@@ -70,15 +78,6 @@ export const Host = styled.span`
   &::before {
     content: "→ ";
   }
-`;
-
-export const Group = styled.span`
-  padding: 0 ${({ theme }) => theme.spacing(2)};
-  border: 1px solid ${({ theme }) => theme.brand.border};
-  border-radius: ${({ theme }) => theme.radii.pill};
-  font-size: 12px;
-  line-height: 20px;
-  color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
 export const StateCell = styled.span`

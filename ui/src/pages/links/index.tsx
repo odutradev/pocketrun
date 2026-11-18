@@ -1,49 +1,46 @@
-import { DashboardIcon, ListBulletIcon, MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeftIcon, DashboardIcon, ListBulletIcon, MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect } from "react";
 
+import { Container, Section, Sections, Toolbar } from "./styles";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
-import { publicLinkUrl, pluralize } from "@utils/functions";
+import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
-import { Container, GroupFilter, Toolbar } from "./styles";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
-import LinkCards from "./subcomponents/linkCards";
+import SectionHeader from "@components/sectionHeader";
+import GroupCards from "./subcomponents/groupCards";
 import useMediaQuery from "@hooks/useMediaQuery";
 import EmptyState from "@components/emptyState";
-import useClipboard from "@hooks/useClipboard";
-import DataTable from "@components/dataTable";
-import { getLinkColumns } from "./table";
+import { pluralize } from "@utils/functions";
 import Button from "@components/button";
-import Select from "@components/select";
 import LinksSkeleton from "./skeleton";
 import Input from "@components/input";
 import useLinksPage from "./hook";
 
+import type { ContentNavbarAction } from "@components/contentNavbar/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
-import type { Link, LinksView } from "@utils/types/link";
+import type { LinkGroup, LinksView } from "@utils/types/link";
 
 const LinksPage = () => {
   const navigate = useNavigate();
   const { breakpoints } = useTheme();
   const isMobile = !useMediaQuery(`(min-width: ${breakpoints.md})`);
-  const { copy, isCopied } = useClipboard();
   const {
     view,
     links,
-    filteredLinks,
     groups,
-    groupNames,
+    visibleLinks,
+    activeGroup,
+    isGroupMissing,
+    isSearching,
     isLoading,
     isRefreshing,
     search,
-    groupFilter,
     loadLinks,
     handleSearchChange,
-    handleGroupFilterChange,
     handleOpenGroups,
-    handleOpenRemove,
     handleViewChange
   } = useLinksPage();
 
@@ -51,37 +48,61 @@ const LinksPage = () => {
     loadLinks();
   }, [loadLinks]);
 
-  const linkOptions = {
-    groupNames,
-    isCopied,
-    onCopy: (link: Link) => copy(publicLinkUrl(link.slug), link.id),
-    onEdit: (link: Link) => navigate(`/links/${link.id}/edit`),
-    onRemove: handleOpenRemove
-  };
-
   const viewOptions: SegmentedOption<LinksView>[] = [
     { value: "list", label: "Ver em lista", icon: <ListBulletIcon /> },
     { value: "cards", label: "Ver em cards", icon: <DashboardIcon /> }
   ];
 
-  const groupOptions = [
-    { value: "all", label: "Todos os grupos" },
-    { value: "none", label: "Sem grupo" },
-    ...groups.map((group) => ({ value: group.id, label: group.name }))
+  const navbarActions: ContentNavbarAction[] = [
+    ...(activeGroup ? [{ label: "Voltar", icon: <ArrowLeftIcon />, to: "/links" }] : []),
+    { label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }
   ];
 
-  return (
-    <Container>
-      <ContentNavbar
-        title="Links"
-        info="Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos."
-        actions={[{ label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }]}
-        onReload={loadLinks}
-        isReloading={isLoading || isRefreshing}
-        action={{ label: "Novo link", icon: <PlusIcon />, to: "/links/new" }}
+  const renderGroupLinks = (group: LinkGroup) => {
+    if (visibleLinks.length > 0) return <LinkCollection links={visibleLinks} caption={`Links de ${group.name}`} />;
+    if (isSearching) {
+      return <EmptyState isCompact title="Nada encontrado" description="Nenhum link deste grupo combina com a busca." />;
+    }
+    return (
+      <EmptyState
+        isCompact
+        title="Nenhum link neste grupo"
+        description="Para trazer um link para cá, abra o link e escolha este grupo."
       />
-      {isLoading && <LinksSkeleton />}
-      {!isLoading && links.length === 0 && (
+    );
+  };
+
+  const renderOverview = () => {
+    if (isSearching && visibleLinks.length === 0) {
+      return <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca." />;
+    }
+    if (isSearching) return <LinkCollection links={visibleLinks} caption="Links encontrados" />;
+    if (groups.length === 0) return <LinkCollection links={visibleLinks} caption="Links" />;
+    return (
+      <Sections>
+        <Section aria-labelledby="links-groups-title">
+          <SectionHeader title="Grupos" titleId="links-groups-title" description={pluralize(groups.length, "grupo", "grupos")} />
+          <GroupCards />
+        </Section>
+        {visibleLinks.length > 0 && (
+          <Section aria-labelledby="links-ungrouped-title">
+            <SectionHeader
+              title="Sem grupo"
+              titleId="links-ungrouped-title"
+              description={pluralize(visibleLinks.length, "link", "links")}
+            />
+            <LinkCollection links={visibleLinks} caption="Links sem grupo" />
+          </Section>
+        )}
+      </Sections>
+    );
+  };
+
+  const renderContent = () => {
+    if (isLoading) return <LinksSkeleton />;
+    if (isGroupMissing) return <Navigate to="/links" replace />;
+    if (links.length === 0 && groups.length === 0) {
+      return (
         <EmptyState
           title="Nenhum link ainda"
           description="Crie o primeiro link curto: escolha um slug ou use um aleatório, e defina até quando ele redireciona."
@@ -91,55 +112,50 @@ const LinksPage = () => {
             </Button>
           }
         />
-      )}
-      {!isLoading && links.length > 0 && (
-        <>
-          <Toolbar>
-            <Input
-              label="Buscar links"
-              isLabelHidden
-              type="search"
-              leftIcon={<MagnifyingGlassIcon />}
-              placeholder="Buscar por título, slug ou destino"
-              value={search}
-              onChange={(event) => handleSearchChange(event.target.value)}
-            />
-            <GroupFilter>
-              <Select
-                label="Grupo"
-                isLabelHidden
-                options={groupOptions}
-                value={groupFilter}
-                onValueChange={handleGroupFilterChange}
-              />
-            </GroupFilter>
-            {!isMobile && (
-              <SegmentedControl
-                label="Visualização"
-                options={viewOptions}
-                value={view}
-                onValueChange={handleViewChange}
-                isIconOnly
-              />
-            )}
-          </Toolbar>
-          {filteredLinks.length === 0 ? (
-            <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca e o grupo escolhidos." />
-          ) : isMobile ? (
-            <LinkCards links={filteredLinks} isCompact {...linkOptions} />
-          ) : view === "cards" ? (
-            <LinkCards links={filteredLinks} isCompact={false} {...linkOptions} />
-          ) : (
-            <DataTable
-              caption={`Links, ${pluralize(filteredLinks.length, "item", "itens")}`}
-              columns={getLinkColumns(linkOptions)}
-              rows={filteredLinks}
-              getRowKey={(link) => link.id}
-              minWidth="720px"
+      );
+    }
+    return (
+      <>
+        <Toolbar>
+          <Input
+            label="Buscar links"
+            isLabelHidden
+            type="search"
+            leftIcon={<MagnifyingGlassIcon />}
+            placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
+            value={search}
+            onChange={(event) => handleSearchChange(event.target.value)}
+          />
+          {!isMobile && (
+            <SegmentedControl
+              label="Visualização"
+              options={viewOptions}
+              value={view}
+              onValueChange={handleViewChange}
+              isIconOnly
             />
           )}
-        </>
-      )}
+        </Toolbar>
+        {activeGroup ? renderGroupLinks(activeGroup) : renderOverview()}
+      </>
+    );
+  };
+
+  return (
+    <Container>
+      <ContentNavbar
+        title={activeGroup?.name ?? "Links"}
+        info={
+          activeGroup
+            ? "Os links deste grupo. Para mudar o grupo de um link, abra o link e escolha outro grupo."
+            : "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele; a busca procura em todos os links."
+        }
+        actions={navbarActions}
+        onReload={loadLinks}
+        isReloading={isLoading || isRefreshing}
+        action={{ label: "Novo link", icon: <PlusIcon />, to: "/links/new" }}
+      />
+      {renderContent()}
       <GroupsDialog />
       <RemoveLinkDialog />
     </Container>

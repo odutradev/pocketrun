@@ -110,15 +110,6 @@ export const Host = styled.span`
   }
 `;
 
-export const Group = styled.span`
-  padding: 0 ${({ theme }) => theme.spacing(2)};
-  border: 1px solid ${({ theme }) => theme.brand.border};
-  border-radius: ${({ theme }) => theme.radii.pill};
-  font-size: 12px;
-  line-height: 20px;
-  color: ${({ theme }) => theme.brand.steelMuted};
-`;
-
 export const Footer = styled.div<{ $isCompact: boolean }>`
   ${({ theme, $isCompact }) => css`
     display: flex;

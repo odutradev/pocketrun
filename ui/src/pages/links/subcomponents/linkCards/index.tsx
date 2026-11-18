@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
-import { Actions, Body, CardItem, Clicks, ClicksLabel, Footer, Grid, Group, Header, Host, Rule, Slug, Title, Usage } from "./styles";
+import { Actions, Body, CardItem, Clicks, ClicksLabel, Footer, Grid, Header, Host, Rule, Slug, Title, Usage } from "./styles";
 import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
@@ -8,7 +8,7 @@ import Badge from "@components/badge";
 
 import type { LinkCardsProps } from "./types";
 
-const LinkCards = ({ links, groupNames, isCopied, onCopy, onEdit, onRemove, isCompact = false }: LinkCardsProps) => (
+const LinkCards = ({ links, isCopied, onCopy, onEdit, onRemove, isCompact = false }: LinkCardsProps) => (
   <Grid $isCompact={isCompact}>
     {links.map((link) => {
       const rule = describeLinkRule(link);
@@ -33,7 +33,6 @@ const LinkCards = ({ links, groupNames, isCopied, onCopy, onEdit, onRemove, isCo
               /{link.slug}
             </Slug>
             <Host title={link.url}>{urlHost(link.url)}</Host>
-            {link.groupId && groupNames[link.groupId] && <Group>{groupNames[link.groupId]}</Group>}
           </Body>
           <Footer $isCompact={isCompact}>
             <Usage $isCompact={isCompact}>

@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
-import { Clicks, ClicksLimit, Group, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
+import { Clicks, ClicksLimit, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
 import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
@@ -10,13 +10,7 @@ import type { DataTableColumn } from "@components/dataTable/types";
 import type { LinkColumnsOptions } from "./types";
 import type { Link } from "@utils/types/link";
 
-export const getLinkColumns = ({
-  groupNames,
-  isCopied,
-  onCopy,
-  onEdit,
-  onRemove
-}: LinkColumnsOptions): DataTableColumn<Link>[] => [
+export const getLinkColumns = ({ isCopied, onCopy, onEdit, onRemove }: LinkColumnsOptions): DataTableColumn<Link>[] => [
   {
     key: "link",
     header: "Link",
@@ -34,7 +28,6 @@ export const getLinkColumns = ({
             /{link.slug}
           </Slug>
           <Host title={link.url}>{urlHost(link.url)}</Host>
-          {link.groupId && groupNames[link.groupId] && <Group>{groupNames[link.groupId]}</Group>}
         </Meta>
       </LinkCell>
     )
