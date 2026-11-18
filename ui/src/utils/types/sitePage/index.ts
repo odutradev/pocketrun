@@ -108,6 +108,7 @@ export type PageEventType =
   | "access_key_created"
   | "access_key_renamed"
   | "access_pin_reset"
+  | "access_pin_viewed"
   | "access_key_removed"
   | "access_sessions_revoked"
   | "access_session_changed"
@@ -151,6 +152,7 @@ export interface PageVersion {
 export interface PageAccessKey {
   id: string;
   role: string;
+  isRevealable: boolean;
   createdAt: string;
   pinUpdatedAt: string;
 }
@@ -168,6 +170,10 @@ export interface PageAccessIssued {
   pin: string;
 }
 
+export interface PageAccessRevealed {
+  pin: string;
+}
+
 export interface PageAccessKeyPayload {
   role: string;
   pin: string;
@@ -175,11 +181,12 @@ export interface PageAccessKeyPayload {
 
 export type PageAccessKeyValues = z.infer<typeof pageAccessKeySchema>;
 
-export type PageAccessDialogMode = "general" | "role" | "rename" | "reset";
+export type PageAccessDialogMode = "general" | "role" | "edit";
 
 export interface PageAccessDialogState {
   mode: PageAccessDialogMode;
   key: PageAccessKey | null;
+  pin: string;
 }
 
 export interface PageDraft {

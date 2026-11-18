@@ -43,6 +43,7 @@ export type ApiErrorCode =
   | "too_many_access_keys"
   | "access_key_not_found"
   | "pin_in_use"
+  | "pin_unavailable"
   | "role_taken"
   | "access_conflict";
 

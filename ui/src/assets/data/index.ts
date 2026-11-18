@@ -56,6 +56,7 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   too_many_access_keys: "A página chegou ao limite de PINs.",
   access_key_not_found: "PIN não encontrado.",
   pin_in_use: "Outro cargo desta página já usa esse PIN.",
+  pin_unavailable: "Esse PIN foi criado antes de poder ser visto de novo. Troque o PIN para vê-lo.",
   role_taken: "Já existe um cargo com esse nome nesta página.",
   access_conflict: "O acesso da página mudou enquanto você editava. Recarregue e tente de novo."
 };
@@ -630,6 +631,7 @@ export const pageEventLabels: Record<PageEventType, string> = {
   access_key_created: "criou um PIN",
   access_key_renamed: "renomeou um cargo",
   access_pin_reset: "trocou um PIN",
+  access_pin_viewed: "viu um PIN",
   access_key_removed: "apagou um PIN",
   access_sessions_revoked: "encerrou os acessos abertos com PIN",
   access_session_changed: "mudou a duração do acesso por PIN",

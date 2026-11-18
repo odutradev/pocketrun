@@ -8,6 +8,7 @@ import type {
   PageAccess,
   PageAccessIssued,
   PageAccessKeyPayload,
+  PageAccessRevealed,
   PageGroup,
   PageHistoryPage,
   PageListParams,
@@ -133,6 +134,11 @@ export const renamePageAccessKey = async (pageId: string, keyId: string, role: s
 
 export const resetPageAccessPin = async (pageId: string, keyId: string, pin: string) => {
   const response = await api.post<PageAccessIssued>(`/pages/${pageId}/access/keys/${keyId}/pin/reset`, { pin });
+  return response.data;
+};
+
+export const revealPageAccessPin = async (pageId: string, keyId: string) => {
+  const response = await api.get<PageAccessRevealed>(`/pages/${pageId}/access/keys/${keyId}/pin/reveal`);
   return response.data;
 };
 

@@ -100,6 +100,13 @@ export const KeyMeta = styled.span`
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
+export const KeyPin = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: ${({ theme }) => theme.brand.steel};
+`;
+
 export const KeyActions = styled.div`
   display: flex;
   flex-shrink: 0;

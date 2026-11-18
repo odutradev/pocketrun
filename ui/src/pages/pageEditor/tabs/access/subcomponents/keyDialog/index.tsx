@@ -22,59 +22,74 @@ import type { KeyDialogProps } from "./types";
 const titles: Record<PageAccessDialogMode, string> = {
   general: "Criar PIN geral",
   role: "Novo cargo",
-  rename: "Renomear cargo",
-  reset: "Trocar PIN"
+  edit: "Editar PIN"
 };
 
 const submitLabels: Record<PageAccessDialogMode, string> = {
   general: "Criar PIN",
   role: "Criar cargo",
-  rename: "Salvar nome",
-  reset: "Trocar PIN"
+  edit: "Salvar"
 };
 
 const isIssued = (result: PageAccess | PageAccessIssued): result is PageAccessIssued => "pin" in result;
 
-const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
+const KeyDialog = ({ dialog, onClose, onPinChange }: KeyDialogProps) => {
   const { sitePage, handleAccessChange } = usePageEditorPage();
   const [pin, setPin] = useState<string | null>(null);
   const { mode, key } = dialog;
   const pageId = sitePage?.id ?? "";
-  const hasRole = mode === "role" || mode === "rename";
-  const hasPin = mode !== "rename";
+  const isEdit = mode === "edit" && key !== null;
+  const hasRole = mode === "role" || (isEdit && key.role !== "");
+  const isPinOptional = isEdit && !key.isRevealable;
+
+  const saveEdit = async (values: PageAccessKeyValues): Promise<PageAccess | PageAccessIssued | null> => {
+    if (!key) return null;
+    let result: PageAccess | PageAccessIssued | null = null;
+    if (hasRole && values.role !== key.role) result = await renamePageAccessKey(pageId, key.id, values.role);
+    if (values.pin !== "" && values.pin !== dialog.pin) result = await resetPageAccessPin(pageId, key.id, values.pin);
+    return result;
+  };
 
   const { execute } = useAction({
-    action: (values: PageAccessKeyValues): Promise<PageAccess | PageAccessIssued> => {
-      if (mode === "rename" && key) return renamePageAccessKey(pageId, key.id, values.role);
-      if (mode === "reset" && key) return resetPageAccessPin(pageId, key.id, values.pin);
+    action: (values: PageAccessKeyValues): Promise<PageAccess | PageAccessIssued | null> => {
+      if (isEdit) return saveEdit(values);
       return createPageAccessKey(pageId, { role: mode === "role" ? values.role : "", pin: values.pin });
     },
     toastMessages: {
-      pending: mode === "rename" ? "Salvando o cargo…" : "Gerando o PIN…",
-      success: mode === "rename" ? "Cargo renomeado" : "PIN pronto",
-      error: mode === "rename" ? "Não foi possível renomear o cargo" : "Não foi possível salvar o PIN"
+      pending: isEdit ? "Salvando…" : "Gerando o PIN…",
+      success: isEdit ? "Alterações salvas" : "PIN pronto",
+      error: isEdit ? "Não foi possível salvar as alterações" : "Não foi possível salvar o PIN"
     },
     callback: (result) => {
+      if (!result) {
+        onClose();
+        return;
+      }
       if (!isIssued(result)) {
         handleAccessChange(result);
         onClose();
         return;
       }
       handleAccessChange(result.access);
+      if (isEdit) {
+        onPinChange(key.id, result.pin);
+        onClose();
+        return;
+      }
       setPin(result.pin);
     }
   });
 
   const { values, errors, isSubmitting, handleChange, setFieldValue, handleSubmit } = useForm({
     schema: pageAccessKeySchema,
-    initialValues: { isRole: hasRole, hasPin, role: key?.role ?? "", pin: "" },
+    initialValues: { isRole: hasRole, hasPin: true, isPinOptional, role: key?.role ?? "", pin: dialog.pin },
     onSubmit: execute
   });
 
   if (pin) {
     const name = mode === "general" || !values.role ? "PIN geral" : values.role;
     return (
-      <Dialog isOpen onClose={onClose} eyebrow={name} title="PIN pronto" description="Copie e envie para quem vai abrir a página. Por segurança, o PIN não aparece de novo.">
+      <Dialog isOpen onClose={onClose} eyebrow={name} title="PIN pronto" description="Copie e envie para quem vai abrir a página. Você pode ver o PIN de novo na lista.">
         <SecretReveal secret={pin} label={`PIN de ${name}`} confirmLabel="Já guardei o PIN" onConfirm={onClose} />
       </Dialog>
     );
@@ -86,7 +101,7 @@ const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
       onClose={onClose}
       eyebrow={key ? key.role || "PIN geral" : "Acesso"}
       title={titles[mode]}
-      description={mode === "reset" ? "O PIN antigo para de funcionar e quem entrou com ele precisa digitar o novo." : undefined}
+      description={isEdit ? "Se trocar o PIN, o antigo para de funcionar e quem entrou com ele precisa digitar o novo." : undefined}
       maxWidth="440px"
     >
       <Form onSubmit={handleSubmit} noValidate>
@@ -103,13 +118,16 @@ const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
             autoFocus
           />
         )}
-        {hasPin && (
-          <PinRow>
+        <PinRow>
             <PinInput
-              label={mode === "reset" ? "Novo PIN" : "PIN"}
+              label="PIN"
               name="pin"
               length={pageAccessPinLength}
-              hint="Digite os números ou gere um PIN no botão ao lado. Sequências e números repetidos não são aceitos."
+              hint={
+                isPinOptional
+                  ? "Este PIN foi criado antes de poder ser visto. Deixe vazio para manter ou digite um novo."
+                  : "Digite os números ou gere um PIN no botão ao lado. Sequências e números repetidos não são aceitos."
+              }
               value={values.pin}
               onChange={(pin) => setFieldValue("pin", pin)}
               error={errors.pin}
@@ -124,7 +142,6 @@ const KeyDialog = ({ dialog, onClose }: KeyDialogProps) => {
               />
             </DiceSlot>
           </PinRow>
-        )}
         <Actions>
           <Button variant="secondary" onClick={onClose}>
             Cancelar

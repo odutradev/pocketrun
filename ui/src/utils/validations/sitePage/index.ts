@@ -7,12 +7,13 @@ import { isWeakPin } from "@utils/functions";
 export const pageAccessKeySchema = z.object({
   isRole: z.boolean(),
   hasPin: z.boolean(),
+  isPinOptional: z.boolean(),
   role: z.string().trim().toLowerCase().max(64, "Nome muito longo"),
   pin: z.string().trim()
 }).superRefine((values, context) => {
   if (values.isRole && !values.role) context.addIssue({ code: "custom", path: ["role"], message: "Dê um nome ao cargo" });
   else if (values.isRole && !slugPattern.test(values.role)) context.addIssue({ code: "custom", path: ["role"], message: "Use só letras minúsculas, números e hífen" });
-  if (!values.hasPin) return;
+  if (!values.hasPin || (values.isPinOptional && values.pin === "")) return;
   if (!new RegExp(`^[0-9]{${pageAccessPinLength}}$`).test(values.pin)) context.addIssue({ code: "custom", path: ["pin"], message: `Digite os ${pageAccessPinLength} números ou gere um PIN` });
   else if (isWeakPin(values.pin)) context.addIssue({ code: "custom", path: ["pin"], message: "Esse PIN é fácil de adivinhar. Evite números repetidos ou em sequência." });
 });
