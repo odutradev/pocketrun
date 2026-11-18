@@ -29,6 +29,7 @@ const useLinksStore = create<LinksStore>()(
       query: null,
       loadedQuery: null,
       localSearch: "",
+      emptySearchCache: null,
       hasLoaded: false,
       isLoading: true,
       isRefreshing: false,
@@ -62,6 +63,7 @@ const useLinksStore = create<LinksStore>()(
             return;
           }
           set({ links: result.data, total: result.total, loadedQuery: query });
+          if (!query.search) set({ emptySearchCache: { query, links: result.data, total: result.total } });
           const { localSearch } = get();
           if (localSearch && !query.search && result.total > linksPageSize) {
             set({ localSearch: "" });
@@ -77,6 +79,7 @@ const useLinksStore = create<LinksStore>()(
       },
       loadLinks: async () => {
         const { query, loadOverview, loadList } = get();
+        set({ emptySearchCache: null });
         await Promise.all([loadOverview(), query ? loadList(query) : Promise.resolve()]);
       },
       openScope: async (scope) => {
@@ -86,7 +89,7 @@ const useLinksStore = create<LinksStore>()(
         await loadList({ scope, search: "", page: 1 });
       },
       searchLinks: async (search) => {
-        const { query, loadedQuery, total, loadList } = get();
+        const { query, loadedQuery, total, emptySearchCache, listRequestId, loadList } = get();
         if (!query) return;
         const isWholeScopeLoaded =
           loadedQuery !== null && loadedQuery.scope === query.scope && !loadedQuery.search && total <= linksPageSize;
@@ -95,6 +98,18 @@ const useLinksStore = create<LinksStore>()(
           return;
         }
         set({ localSearch: "" });
+        if (!search && emptySearchCache?.query.scope === query.scope) {
+          set({
+            query: emptySearchCache.query,
+            loadedQuery: emptySearchCache.query,
+            links: emptySearchCache.links,
+            total: emptySearchCache.total,
+            listRequestId: listRequestId + 1,
+            isListLoading: false,
+            isSearchLoading: false
+          });
+          return;
+        }
         await loadList({ ...query, search, page: 1 });
       },
       goToPage: async (page) => {

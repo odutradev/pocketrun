@@ -12,6 +12,12 @@ export interface LinksListQuery {
   page: number;
 }
 
+export interface LinksListCache {
+  query: LinksListQuery;
+  links: Link[];
+  total: number;
+}
+
 export interface UseLinksPageReturn {
   view: LinksView;
   links: Link[];
@@ -55,6 +61,7 @@ export interface LinksStore {
   query: LinksListQuery | null;
   loadedQuery: LinksListQuery | null;
   localSearch: string;
+  emptySearchCache: LinksListCache | null;
   hasLoaded: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
