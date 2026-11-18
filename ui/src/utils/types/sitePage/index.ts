@@ -97,6 +97,8 @@ export type PageFormValues = z.infer<typeof pageFormSchema>;
 
 export type PageGroupTab = "pages" | "settings";
 
+export type PageTemplate = "blank" | "kvCrud";
+
 export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "qrcode" | "analytics" | "history";
 
 export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "role" | "sessionHours";

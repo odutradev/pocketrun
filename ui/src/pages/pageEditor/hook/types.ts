@@ -7,6 +7,7 @@ import type {
   PageEditorTab,
   PageEvent,
   PageGroup,
+  PageTemplate,
   PageVersion,
   SitePage,
   StoredPageDraft
@@ -82,6 +83,7 @@ export interface UsePageEditorPageReturn {
   handleVersionRestore: (number: number) => void;
   pageId: string | undefined;
   defaultGroupId: string;
+  defaultTemplate: PageTemplate;
   sitePage: SitePage | null;
   groups: PageGroup[];
   groupNames: Record<string, string>;

@@ -37,6 +37,7 @@ const PageEditorPage = () => {
   const {
     pageId,
     defaultGroupId,
+    defaultTemplate,
     sitePage,
     groups,
     isLoading,
@@ -82,6 +83,7 @@ const PageEditorPage = () => {
       sitePage={sitePage}
       groups={groups}
       defaultGroupId={defaultGroupId}
+      defaultTemplate={defaultTemplate}
       cancelTo={pageGroup ? `/pages/groups/${pageGroup.id}` : "/pages"}
       onGroupCreated={handleGroupCreated}
       onSaved={handlePageSaved}

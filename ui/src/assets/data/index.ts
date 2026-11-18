@@ -3,9 +3,10 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab } from "@utils/types/sitePage";
+import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort } from "@utils/types/application";
+import type { KvDocError, KvDocMethod, KvDocRoute, KvDocSection } from "@utils/types/kvDocs";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -624,6 +625,50 @@ export const appEditorTabs: { value: AppEditorTab; label: string }[] = [
   { value: "snippets", label: "Snippets" }
 ];
 
+export const kvDocSections: KvDocSection[] = [
+  { id: "overview", label: "Visão geral" },
+  { id: "auth", label: "Autenticação" },
+  { id: "routes", label: "Rotas" },
+  { id: "create", label: "Gravar" },
+  { id: "list", label: "Listar e filtrar" },
+  { id: "documents", label: "Ler, atualizar e apagar" },
+  { id: "expiry", label: "Validade" },
+  { id: "errors", label: "Erros" },
+  { id: "security", label: "Segurança" },
+  { id: "example", label: "Página de exemplo" }
+];
+
+export const kvDocRoutes: KvDocRoute[] = [
+  { method: "GET", path: "/ping", description: "Confere se a API está no ar. Não pede token.", response: "200" },
+  { method: "GET", path: "/validate/control-access", description: "Confere o token e a origem, e diz de qual aplicação é o token.", response: "200" },
+  { method: "POST", path: "/kv/{colecao}/create", description: "Grava um documento novo. A coleção nasce no primeiro documento.", response: "201" },
+  { method: "GET", path: "/kv/{colecao}/get-all", description: "Lista os documentos, do mais novo ao mais antigo, com filtros e paginação opcionais.", response: "200" },
+  { method: "GET", path: "/kv/{colecao}/get/{id}", description: "Lê um documento pelo id.", response: "200" },
+  { method: "PATCH", path: "/kv/{colecao}/update/{id}", description: "Troca o data inteiro do documento.", response: "200" },
+  { method: "DELETE", path: "/kv/{colecao}/delete/{id}", description: "Apaga um documento.", response: "200" },
+  { method: "DELETE", path: "/kv/{colecao}/delete-all", description: "Apaga todos os documentos da coleção.", response: "200" },
+  { method: "DELETE", path: "/kv/project/delete-all", description: "Apaga todos os documentos de todas as coleções da aplicação.", response: "200" }
+];
+
+export const kvDocMethodTones: Record<KvDocMethod, BadgeTone> = {
+  GET: "accent",
+  POST: "success",
+  PATCH: "warning",
+  DELETE: "error"
+};
+
+export const kvDocErrors: KvDocError[] = [
+  { status: 400, code: "invalid_body", description: "O corpo não é um JSON válido ou passou de 1 MB." },
+  { status: 400, code: "validation_failed", description: "Faltou o data ou o expiresInDays saiu de 0 a 3650. O campo fields diz qual." },
+  { status: 400, code: "invalid_document_id", description: "O id na rota não tem o formato de um id de documento." },
+  { status: 401, code: "missing_access_token", description: "Nenhum token nos headers." },
+  { status: 401, code: "invalid_access_token", description: "O token não existe ou foi revogado." },
+  { status: 401, code: "expired_access_token", description: "O token passou da validade." },
+  { status: 403, code: "origin_not_allowed", description: "A origem da chamada não está na lista da aplicação, ou a chamada veio sem Origin e a aplicação recusa chamadas fora do navegador." },
+  { status: 404, code: "document_not_found", description: "Não há documento com esse id nessa coleção da aplicação." },
+  { status: 500, code: "internal_error", description: "Erro no servidor. Tente de novo; se repetir, veja os logs da API." }
+];
+
 export const applicationFilterOptions: { value: ApplicationFilter; label: string }[] = [
   { value: "all", label: "Todas as origens" },
   { value: "restricted", label: "Origens definidas" },
@@ -719,6 +764,299 @@ export const pageStarterHtml = `<!doctype html>
 </body>
 </html>
 `;
+
+export const kvCrudPageHtml = `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tarefas</title>
+  <style>
+    :root { color-scheme: light dark; --bg: #f5f6f8; --card: #ffffff; --text: #16181d; --muted: #667085; --border: #e3e6eb; --accent: #3b6cf6; --danger: #d64545; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #111317; --card: #1a1d23; --text: #eef0f4; --muted: #9aa3b2; --border: #2a2f38; --accent: #6d93ff; --danger: #ff6b6b; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { max-width: 560px; margin: 0 auto; padding: 48px 16px; }
+    h1 { margin: 0 0 6px; font-size: 28px; }
+    .lead { margin: 0 0 24px; color: var(--muted); line-height: 1.5; }
+    .notice { margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--border); border-left: 3px solid var(--danger); border-radius: 10px; background: var(--card); font-size: 14px; line-height: 1.5; }
+    .add { display: flex; gap: 8px; margin-bottom: 16px; }
+    input[type="text"] { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); color: inherit; font: inherit; }
+    input[type="text"]:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .ghost { padding: 6px 8px; background: transparent; color: var(--muted); font-weight: 500; }
+    .ghost:hover { color: var(--text); }
+    .ghost.danger:hover { color: var(--danger); }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
+    ul { margin: 0; padding: 0; overflow: hidden; list-style: none; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+    li { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; }
+    li + li { border-top: 1px solid var(--border); }
+    li input[type="checkbox"] { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+    li .title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    li.done .title { color: var(--muted); text-decoration: line-through; }
+    li input[type="text"] { padding: 6px 8px; }
+    .empty { padding: 28px 16px; justify-content: center; color: var(--muted); }
+    .status { min-height: 20px; margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+    .status.error { color: var(--danger); }
+    footer { margin-top: 32px; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tarefas</h1>
+    <p class="lead">Exemplo de CRUD com o KV do PocketRun: criar, listar, editar, concluir e apagar documentos de uma coleção.</p>
+    <p class="notice" id="setup" hidden></p>
+    <form class="add" id="add-form">
+      <input type="text" id="add-title" placeholder="Nova tarefa" maxlength="120" aria-label="Nova tarefa" autocomplete="off">
+      <button type="submit" id="add-button">Adicionar</button>
+    </form>
+    <div class="toolbar">
+      <span id="count">Carregando…</span>
+      <button type="button" class="ghost" id="reload">Atualizar</button>
+    </div>
+    <ul id="list" aria-label="Tarefas"></ul>
+    <p class="status" id="status" role="status"></p>
+    <footer id="footer"></footer>
+  </main>
+  <script>
+    const API_URL = "__POCKETRUN_API_URL__";
+    const TOKEN = "COLE_O_TOKEN_AQUI";
+    const COLLECTION = "tarefas";
+
+    const elements = {
+      setup: document.getElementById("setup"),
+      form: document.getElementById("add-form"),
+      title: document.getElementById("add-title"),
+      addButton: document.getElementById("add-button"),
+      count: document.getElementById("count"),
+      reload: document.getElementById("reload"),
+      list: document.getElementById("list"),
+      status: document.getElementById("status"),
+      footer: document.getElementById("footer")
+    };
+
+    const state = { tasks: [], editingId: null };
+    const isPreview = location.origin === "null" || Boolean(window.pocketrun && window.pocketrun.page.isPreview);
+
+    const messages = {
+      missing_access_token: "Falta o token de acesso.",
+      invalid_access_token: "Token inválido ou revogado.",
+      expired_access_token: "O token expirou. Gere outro na aba Tokens da aplicação.",
+      origin_not_allowed: isPreview ? "A prévia do editor roda isolada e só chama a API se a aplicação aceitar qualquer origem." : "Esta origem não está liberada na aplicação. Adicione " + location.origin + " na Configuração.",
+      document_not_found: "Essa tarefa não existe mais.",
+      validation_failed: "Os dados enviados não passaram na validação.",
+      network: "Não foi possível falar com a API."
+    };
+
+    const showStatus = (text, isError) => {
+      elements.status.textContent = text;
+      elements.status.classList.toggle("error", Boolean(isError));
+    };
+
+    const showError = (error) => showStatus(messages[error.message] || "Não deu certo (" + error.message + ").", true);
+
+    const request = async (method, path, body) => {
+      const headers = { Authorization: "Bearer " + TOKEN };
+      if (body) headers["Content-Type"] = "application/json";
+      const response = await fetch(API_URL + "/kv/" + COLLECTION + path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+      }).catch(() => {
+        throw new Error("network");
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "http_" + response.status);
+      return payload;
+    };
+
+    const api = {
+      list: () => request("GET", "/get-all"),
+      create: (data) => request("POST", "/create", { data }),
+      update: (id, data) => request("PATCH", "/update/" + id, { data }),
+      remove: (id) => request("DELETE", "/delete/" + id)
+    };
+
+    const createButton = (label, className, onClick) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = className;
+      button.textContent = label;
+      button.addEventListener("click", onClick);
+      return button;
+    };
+
+    const renderTitle = (task) => {
+      if (state.editingId !== task.id) {
+        const title = document.createElement("span");
+        title.className = "title";
+        title.textContent = task.data.title;
+        title.addEventListener("dblclick", () => startEditing(task.id));
+        return title;
+      }
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = task.data.title;
+      input.maxLength = 120;
+      input.setAttribute("aria-label", "Editar tarefa");
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") saveTitle(task, input.value);
+        if (event.key === "Escape") stopEditing();
+      });
+      input.addEventListener("blur", () => saveTitle(task, input.value));
+      requestAnimationFrame(() => input.focus());
+      return input;
+    };
+
+    const renderTask = (task) => {
+      const item = document.createElement("li");
+      item.classList.toggle("done", Boolean(task.data.done));
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = Boolean(task.data.done);
+      checkbox.setAttribute("aria-label", "Concluir " + task.data.title);
+      checkbox.addEventListener("change", () => toggleTask(task));
+      item.append(
+        checkbox,
+        renderTitle(task),
+        createButton("Editar", "ghost", () => startEditing(task.id)),
+        createButton("Apagar", "ghost danger", () => removeTask(task))
+      );
+      return item;
+    };
+
+    const render = () => {
+      const total = state.tasks.length;
+      const pending = state.tasks.filter((task) => !task.data.done).length;
+      elements.count.textContent = total === 0 ? "Nenhuma tarefa" : pending + " pendente(s) de " + total;
+      if (total === 0) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "Nada por aqui. Adicione a primeira tarefa acima.";
+        elements.list.replaceChildren(empty);
+        return;
+      }
+      elements.list.replaceChildren(...state.tasks.map(renderTask));
+    };
+
+    const replaceTask = (id, data) => {
+      state.tasks = state.tasks.map((task) => (task.id === id ? Object.assign({}, task, { data }) : task));
+    };
+
+    const loadTasks = async () => {
+      showStatus("Carregando…");
+      try {
+        state.tasks = await api.list();
+        render();
+        showStatus("");
+      } catch (error) {
+        showError(error);
+      }
+    };
+
+    const addTask = async (event) => {
+      event.preventDefault();
+      const title = elements.title.value.trim();
+      if (!title) return;
+      elements.addButton.disabled = true;
+      try {
+        const created = await api.create({ title, done: false });
+        state.tasks = [created].concat(state.tasks);
+        elements.title.value = "";
+        render();
+        showStatus("Tarefa criada.");
+      } catch (error) {
+        showError(error);
+      } finally {
+        elements.addButton.disabled = false;
+        elements.title.focus();
+      }
+    };
+
+    const toggleTask = async (task) => {
+      const data = Object.assign({}, task.data, { done: !task.data.done });
+      try {
+        await api.update(task.id, data);
+        replaceTask(task.id, data);
+      } catch (error) {
+        showError(error);
+      }
+      render();
+    };
+
+    const startEditing = (id) => {
+      state.editingId = id;
+      render();
+    };
+
+    const stopEditing = () => {
+      state.editingId = null;
+      render();
+    };
+
+    const saveTitle = async (task, value) => {
+      if (state.editingId !== task.id) return;
+      state.editingId = null;
+      const title = value.trim();
+      if (!title || title === task.data.title) return render();
+      const data = Object.assign({}, task.data, { title });
+      try {
+        await api.update(task.id, data);
+        replaceTask(task.id, data);
+        showStatus("Tarefa atualizada.");
+      } catch (error) {
+        showError(error);
+      }
+      render();
+    };
+
+    const removeTask = async (task) => {
+      if (!confirm("Apagar \\"" + task.data.title + "\\"?")) return;
+      try {
+        await api.remove(task.id);
+        state.tasks = state.tasks.filter((item) => item.id !== task.id);
+        render();
+        showStatus("Tarefa apagada.");
+      } catch (error) {
+        showError(error);
+      }
+    };
+
+    const showSetup = () => {
+      elements.setup.hidden = false;
+      elements.setup.textContent = "Falta configurar: no código desta página, troque COLE_O_TOKEN_AQUI por um token de uma aplicação do KV. " + (isPreview ? "Na prévia do editor, a API só responde se a aplicação aceitar qualquer origem; publicada, a página precisa da origem dela liberada na aplicação." : "Depois, libere a origem " + location.origin + " na Configuração da aplicação.");
+      elements.count.textContent = "Sem token";
+      elements.form.querySelectorAll("input, button").forEach((element) => {
+        element.disabled = true;
+      });
+      elements.reload.disabled = true;
+    };
+
+    if (window.pocketrun) {
+      const page = window.pocketrun.page;
+      elements.footer.textContent = "Coleção " + COLLECTION + " · /" + page.slug + (page.isPreview ? " · prévia do editor" : " · versão 1." + Math.max(page.version - 1, 0));
+    }
+
+    elements.form.addEventListener("submit", addTask);
+    elements.reload.addEventListener("click", loadTasks);
+
+    if (TOKEN === "COLE_O_TOKEN_AQUI") showSetup();
+    else loadTasks();
+  </script>
+</body>
+</html>
+`;
+
+export const pageTemplateOptions: { value: PageTemplate; label: string; description: string; html: string }[] = [
+  { value: "blank", label: "Em branco", description: "Um HTML mínimo para você começar do zero.", html: pageStarterHtml },
+  {
+    value: "kvCrud",
+    label: "CRUD com KV",
+    description: "Uma lista de tarefas que cria, lista, edita, conclui e apaga documentos na coleção tarefas do KV. Depois de criar, troque COLE_O_TOKEN_AQUI no código por um token de uma aplicação e libere a origem dos links nela.",
+    html: kvCrudPageHtml
+  }
+];
 
 export const linkStateFilterOptions: { value: LinkStateFilter; label: string }[] = [
   { value: "all", label: "Todos os estados" },

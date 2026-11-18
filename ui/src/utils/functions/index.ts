@@ -1,4 +1,4 @@
-import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
+import { apiUrl, expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags } from "@assets/data";
 import { isApiError } from "@utils/api";
 
@@ -163,6 +163,8 @@ export const measureBytes = (value: string): number => new TextEncoder().encode(
 
 export const formatBytes = (bytes: number): string =>
   bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
+
+export const fillPageTemplate = (html: string): string => html.replaceAll("\r\n", "\n").replaceAll("__POCKETRUN_API_URL__", apiUrl);
 
 export const versionLabel = (number: number): string => `1.${Math.max(number, 1) - 1}`;
 

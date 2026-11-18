@@ -1,8 +1,8 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { pageEditorTabs, pageTemplateOptions } from "@assets/data";
 import { historyPageSize } from "@assets/config";
 import { measureBytes } from "@utils/functions";
-import { pageEditorTabs } from "@assets/data";
 import usePageEditorStore from "./store";
 
 import type { HistoryFilter, SitePage, PageEditorTab, PageEvent } from "@utils/types/sitePage";
@@ -77,6 +77,7 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
       handleVersionRestore(number);
     },
     pageId,
+    defaultTemplate: pageTemplateOptions.find((option) => option.value === searchParams.get("template"))?.value ?? "blank",
     defaultGroupId: store.groups.some((group) => group.id === requestedGroupId) ? requestedGroupId : "",
     sitePage: store.sitePage,
     groups: store.groups,

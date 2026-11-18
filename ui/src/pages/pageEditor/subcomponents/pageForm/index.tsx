@@ -1,26 +1,26 @@
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useCallback, useState } from "react";
 
+import { fillPageTemplate, fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
 import { ActionGroup, Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
 import { clickLimitRange, defaultPeriodHours, pageTitleMaxLength } from "@assets/config";
-import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
+import { linkModeOptions, pageTemplateOptions } from "@assets/data";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import RemovePageDialog from "./subcomponents/removePageDialog";
-import SegmentedControl from "@components/segmentedControl";
 import { pageFormSchema } from "@utils/validations/sitePage";
+import SegmentedControl from "@components/segmentedControl";
 import { createPage, updatePage } from "@actions/sitePages";
 import PeriodPicker from "./subcomponents/periodPicker";
 import SlugField from "./subcomponents/slugField";
 import LinkButton from "@components/linkButton";
 import RangeField from "@components/rangeField";
-import { linkModeOptions, pageStarterHtml } from "@assets/data";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Select from "@components/select";
 import Input from "@components/input";
 import useForm from "@hooks/useForm";
 
-import type { PageFormValues, LinkMode, PagePayload } from "@utils/types/sitePage";
+import type { PageFormValues, LinkMode, PagePayload, PageTemplate } from "@utils/types/sitePage";
 import type { SlugCheck } from "./subcomponents/slugField/types";
 import type { PageFormProps } from "./types";
 
@@ -41,14 +41,17 @@ const toPayload = (values: PageFormValues): PagePayload => ({
   maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
 });
 
-const PageForm = ({ sitePage, groups, defaultGroupId, cancelTo, onGroupCreated, onSaved }: PageFormProps) => {
+const PageForm = ({ sitePage, groups, defaultGroupId, defaultTemplate, cancelTo, onGroupCreated, onSaved }: PageFormProps) => {
+  const [template, setTemplate] = useState<PageTemplate>(defaultTemplate);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ status: "idle" });
   const handleSlugCheck = useCallback((check: SlugCheck) => setSlugCheck(check), []);
 
+  const selectedTemplate = pageTemplateOptions.find((option) => option.value === template) ?? pageTemplateOptions[0];
+
   const { execute } = useAction({
-    action: (payload: PagePayload) => (sitePage ? updatePage(sitePage.id, payload) : createPage({ ...payload, html: pageStarterHtml })),
+    action: (payload: PagePayload) => (sitePage ? updatePage(sitePage.id, payload) : createPage({ ...payload, html: fillPageTemplate(selectedTemplate.html) })),
     toastMessages: {
       pending: sitePage ? "Salvando a página…" : "Criando a página…",
       success: sitePage ? "Página atualizada" : "Página criada",
@@ -103,6 +106,15 @@ const PageForm = ({ sitePage, groups, defaultGroupId, cancelTo, onGroupCreated, 
             action={{ label: "Novo grupo", icon: <PlusIcon />, onSelect: () => setIsCreatingGroup(true) }}
           />
         </Pair>
+        {!sitePage && (
+          <Select
+            label="Modelo"
+            options={pageTemplateOptions.map(({ value, label }) => ({ value, label }))}
+            value={template}
+            onValueChange={(next) => setTemplate(next as PageTemplate)}
+            hint={selectedTemplate.description}
+          />
+        )}
         <SlugField
           value={values.slug}
           pageId={sitePage?.id}
