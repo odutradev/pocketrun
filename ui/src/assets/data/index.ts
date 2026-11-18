@@ -5,6 +5,7 @@ import theme from "@styles/theme";
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab } from "@utils/types/sitePage";
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
+import type { AppEditorTab, ApplicationFilter, ApplicationSort } from "@utils/types/application";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -614,6 +615,26 @@ export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
   { value: "qrcode", label: "QR code" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
+];
+
+export const appEditorTabs: { value: AppEditorTab; label: string }[] = [
+  { value: "explorer", label: "Explorador" },
+  { value: "settings", label: "Configuração" },
+  { value: "tokens", label: "Tokens" },
+  { value: "snippets", label: "Snippets" }
+];
+
+export const applicationFilterOptions: { value: ApplicationFilter; label: string }[] = [
+  { value: "all", label: "Todas as origens" },
+  { value: "restricted", label: "Origens definidas" },
+  { value: "open", label: "Qualquer origem" },
+  { value: "noTokens", label: "Sem token" }
+];
+
+export const applicationSortOptions: { value: ApplicationSort; label: string }[] = [
+  { value: "recent", label: "Mais recentes" },
+  { value: "name", label: "Nome (A–Z)" },
+  { value: "tokens", label: "Mais tokens" }
 ];
 
 export const pageGroupTabs: { value: PageGroupTab; label: string }[] = [

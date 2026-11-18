@@ -1,4 +1,4 @@
-import type { createApplicationSchema, securitySettingsSchema, createTokenSchema } from "@utils/validations/application";
+import type { applicationFormSchema, createTokenSchema } from "@utils/validations/application";
 import type { z } from "zod";
 
 export interface ApiToken {
@@ -53,6 +53,11 @@ export interface CreatedToken {
   rawToken: string;
 }
 
-export type CreateApplicationValues = z.infer<typeof createApplicationSchema>;
-export type SecuritySettingsValues = z.infer<typeof securitySettingsSchema>;
+export type ApplicationSort = "recent" | "name" | "tokens";
+
+export type ApplicationFilter = "all" | "open" | "restricted" | "noTokens";
+
+export type AppEditorTab = "explorer" | "settings" | "tokens" | "snippets";
+
+export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 export type CreateTokenValues = z.infer<typeof createTokenSchema>;

@@ -2,6 +2,7 @@ import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/conf
 import { errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags } from "@assets/data";
 import { isApiError } from "@utils/api";
 
+import type { Application, ApplicationFilter, ApplicationSort } from "@utils/types/application";
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
@@ -304,6 +305,42 @@ export const pluralize = (count: number, singular: string, plural: string): stri
 
 export const describeOrigins = (origins: string[]): string =>
   allowsAnyOrigin(origins) ? "Qualquer origem" : pluralize(origins.length, "origem", "origens");
+
+export const countTokens = (application: Application): number => application.tokens?.length ?? 0;
+
+export const lastTokenUse = (application: Application): string | null =>
+  (application.tokens ?? [])
+    .map((token) => token.lastUsedAt)
+    .filter((value): value is string => value !== null)
+    .reduce<string | null>((latest, value) => (latest && latest > value ? latest : value), null);
+
+export const describeLastUse = (application: Application): string => {
+  const lastUse = lastTokenUse(application);
+  return lastUse ? `Usada ${formatRelativeTime(lastUse, currentTimestamp())}` : "Nunca usada";
+};
+
+export const matchesApplicationFilters =(application: Application, search: string, filter: ApplicationFilter): boolean => {
+  const term = search.trim().toLowerCase();
+  const isOpen = allowsAnyOrigin(application.allowedOrigins);
+  const matchesFilter =
+    filter === "all" ||
+    (filter === "open" && isOpen) ||
+    (filter === "restricted" && !isOpen) ||
+    (filter === "noTokens" && countTokens(application) === 0);
+  const fields = [application.name, application.projectId, application.description];
+  return matchesFilter && (!term || fields.some((value) => value.toLowerCase().includes(term)));
+};
+
+export const sortApplications = (applications: Application[], sort: ApplicationSort): Application[] => {
+  const compareNewest = (first: Application, second: Application) =>
+    new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime() || second.id.localeCompare(first.id);
+  const compareBySort = (first: Application, second: Application): number => {
+    if (sort === "name") return first.name.localeCompare(second.name, "pt-BR", { sensitivity: "base" });
+    if (sort === "tokens") return countTokens(second) - countTokens(first);
+    return 0;
+  };
+  return [...applications].sort((first, second) => compareBySort(first, second) || compareNewest(first, second));
+};
 
 export const daysUntil = (value: string): number => Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
 
