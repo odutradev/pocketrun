@@ -24,8 +24,7 @@ const groups: SidebarGroup[] = [
         to: "/pages",
         icon: <FileTextIcon />,
         matches: ["/pages"],
-        requiredPermissions: ["manage_apps"],
-        badge: "Em breve"
+        requiredPermissions: ["manage_apps"]
       },
       { label: "Links", to: "/links", icon: <Link2Icon />, matches: ["/links"], requiredPermissions: ["manage_apps"] }
     ]
