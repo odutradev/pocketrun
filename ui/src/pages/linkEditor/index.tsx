@@ -20,11 +20,13 @@ const tabIdPrefix = "link-editor";
 
 const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 
+const QrCodeTab = lazy(() => import("./tabs/qrCode"));
+
 const LinkEditorPage = () => {
-  const { linkId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleLinkSaved, handleTabChange } =
+  const { linkId, defaultGroupId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleLinkSaved, handleTabChange } =
     useLinkEditorPage();
   const isEditing = Boolean(linkId);
-  const linkGroup = groups.find((group) => group.id === link?.groupId);
+  const linkGroup = groups.find((group) => group.id === (link ? link.groupId : defaultGroupId));
   const parents: ContentNavbarCrumb[] = [
     { label: "Links", to: "/links" },
     ...(linkGroup ? [{ label: linkGroup.name, to: `/links/groups/${linkGroup.id}` }] : [])
@@ -39,12 +41,19 @@ const LinkEditorPage = () => {
       key={link ? `${link.id}-${link.updatedAt}` : "new"}
       link={link}
       groups={groups}
+      defaultGroupId={defaultGroupId}
+      cancelTo={linkGroup ? `/links/groups/${linkGroup.id}` : "/links"}
       onGroupCreated={handleGroupCreated}
       onSaved={handleLinkSaved}
     />
   );
   const tabContent: Record<LinkEditorTab, ReactNode> = {
     settings: form,
+    qrcode: (
+      <Suspense fallback={<Loader label="Carregando o QR code" isCentered />}>
+        <QrCodeTab />
+      </Suspense>
+    ),
     analytics: (
       <Suspense fallback={<Loader label="Carregando a análise" isCentered />}>
         <AnalyticsTab />

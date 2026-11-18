@@ -1,9 +1,9 @@
 import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useCallback, useState } from "react";
 
-import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
 import { ActionGroup, Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
 import { clickLimitRange, defaultPeriodHours, linkTitleMaxLength } from "@assets/config";
+import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import DestinationField from "./subcomponents/destinationField";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
@@ -43,7 +43,7 @@ const toPayload = (values: LinkFormValues): LinkPayload => ({
   maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
 });
 
-const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
+const LinkForm = ({ link, groups, defaultGroupId, cancelTo, onGroupCreated, onSaved }: LinkFormProps) => {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ status: "idle" });
@@ -65,7 +65,7 @@ const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
       title: link?.title ?? "",
       slug: link?.slug ?? "",
       url: link?.url ?? "",
-      groupId: link?.groupId ?? "",
+      groupId: link?.groupId ?? defaultGroupId,
       mode: link?.mode ?? "active",
       startsAt: link?.startsAt ? toDateTimeInput(link.startsAt) : "",
       endsAt: link?.endsAt ? toDateTimeInput(link.endsAt) : "",
@@ -165,7 +165,7 @@ const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
           </Button>
         )}
         <ActionGroup>
-          <LinkButton to="/links">Cancelar</LinkButton>
+          <LinkButton to={cancelTo}>Cancelar</LinkButton>
           <Button
             type="submit"
             disabled={isSlugBlocked}

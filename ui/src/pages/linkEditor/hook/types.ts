@@ -31,6 +31,7 @@ export interface LinkEditorStore {
 
 export interface UseLinkEditorPageReturn {
   linkId: string | undefined;
+  defaultGroupId: string;
   link: Link | null;
   groups: LinkGroup[];
   groupNames: Record<string, string>;

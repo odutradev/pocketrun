@@ -43,8 +43,11 @@ const useLinkEditorPage = (): UseLinkEditorPageReturn => {
     )
   ];
 
+  const requestedGroupId = linkId ? "" : (searchParams.get("group") ?? "");
+
   return {
     linkId,
+    defaultGroupId: store.groups.some((group) => group.id === requestedGroupId) ? requestedGroupId : "",
     link: store.link,
     groups: store.groups,
     groupNames: Object.fromEntries(store.groups.map((group) => [group.id, group.name])),
