@@ -43,15 +43,30 @@ const isItemActive = (item: SidebarItem, pathname: string) =>
 
 const Sidebar = () => {
   const { pathname } = useLocation();
-  const { context } = useTheme();
+  const { context, motion } = useTheme();
   const { user } = useAuthStore();
   const { isSetupRequired, hasPermissions } = useSystemStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [barContext, setBarContext] = useState(context);
+
+  if (!isOpen && !isClosing && barContext !== context) setBarContext(context);
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setIsClosing(true);
+  };
+
+  useEffect(() => {
+    if (!isClosing) return undefined;
+    const timeout = window.setTimeout(() => setIsClosing(false), motion.base);
+    return () => window.clearTimeout(timeout);
+  }, [isClosing, motion.base]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
+      if (event.key === "Escape") handleClose();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -70,7 +85,7 @@ const Sidebar = () => {
     <>
       <MobileBar>
         <LogoLink to="/" aria-label="PocketRun, ir para o início">
-          <BrandMark kind="horizontal" size={14} context={context} hasContextTransition />
+          <BrandMark kind="horizontal" size={14} context={barContext} hasContextTransition />
         </LogoLink>
         <IconButton
           label="Abrir o menu"
@@ -80,13 +95,13 @@ const Sidebar = () => {
           onClick={() => setIsOpen(true)}
         />
       </MobileBar>
-      <Backdrop $isOpen={isOpen} aria-hidden="true" onClick={() => setIsOpen(false)} />
+      <Backdrop $isOpen={isOpen} aria-hidden="true" onClick={handleClose} />
       <Aside
         id="panel-sidebar"
         $isOpen={isOpen}
         aria-label="Menu do painel"
         onClick={(event) => {
-          if (event.target instanceof Element && event.target.closest("a")) setIsOpen(false);
+          if (isOpen && event.target instanceof Element && event.target.closest("a")) handleClose();
         }}
       >
         <Top>
@@ -104,7 +119,7 @@ const Sidebar = () => {
             <BrandEnd>
               <ApiStatus variant="dot" />
               <CloseSlot>
-                <IconButton label="Fechar o menu" icon={<Cross2Icon />} size="sm" onClick={() => setIsOpen(false)} />
+                <IconButton label="Fechar o menu" icon={<Cross2Icon />} size="sm" onClick={handleClose} />
               </CloseSlot>
             </BrandEnd>
           </Brand>
