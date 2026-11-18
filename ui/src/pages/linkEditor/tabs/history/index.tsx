@@ -1,10 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { useTheme } from "styled-components";
 
-import { ActorSelect, Container, Count, Day, DayHeading, Filters, FiltersAside, Timeline } from "./styles";
+import { ActorSelect, Container, Count, Day, DayHeading, Filters, FiltersAside, Timeline, TimelineFrame } from "./styles";
 import { currentTimestamp, formatDayHeading, pluralize, toDayKey } from "@utils/functions";
 import SegmentedControl from "@components/segmentedControl";
 import { historyFilterOptions } from "@assets/data";
 import EventItem from "./subcomponents/eventItem";
+import useMediaQuery from "@hooks/useMediaQuery";
 import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
 import Skeleton from "@components/skeleton";
@@ -23,7 +25,11 @@ const groupByDay = (events: LinkEvent[]) =>
   }, []);
 
 const HistoryTab = () => {
+  const { motion } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const previousHeight = useRef<number | null>(null);
+  const shouldReduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const {
     visibleEvents,
     actorOptions,
@@ -45,9 +51,29 @@ const HistoryTab = () => {
     if (!hasLoadedHistory) loadHistory();
   }, [hasLoadedHistory, loadHistory]);
 
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    const fromHeight = previousHeight.current;
+    if (isHistoryLoading || !frame || fromHeight === null) return;
+    previousHeight.current = null;
+
+    const toHeight = frame.offsetHeight;
+    if (shouldReduceMotion || fromHeight === toHeight) return;
+
+    frame.style.overflow = "hidden";
+    const animation = frame.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], {
+      duration: motion.base,
+      easing: motion.easing.standard
+    });
+    const releaseOverflow = () => frame.style.removeProperty("overflow");
+    animation.onfinish = releaseOverflow;
+    animation.oncancel = releaseOverflow;
+  }, [historyPage, isHistoryLoading, shouldReduceMotion, motion]);
+
   const handlePageChange = (page: number) => {
+    previousHeight.current = frameRef.current?.offsetHeight ?? null;
     handleHistoryPageChange(page);
-    containerRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    containerRef.current?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" });
   };
 
   if (!hasLoadedHistory) {
@@ -73,21 +99,13 @@ const HistoryTab = () => {
   const now = currentTimestamp();
 
   const renderTimeline = () => {
-    if (isHistoryLoading) {
-      return (
-        <Timeline aria-busy="true">
-          <Skeleton height="96px" radius="panel" />
-          <Skeleton height="96px" radius="panel" />
-        </Timeline>
-      );
-    }
     if (visibleEvents.length === 0) {
       return (
         <EmptyState isCompact title="Nada com esse filtro" description="Nenhuma alteração desta página combina com o filtro escolhido." />
       );
     }
     return (
-      <Timeline>
+      <Timeline key={historyPage}>
         {groupByDay(visibleEvents).map((day) => (
           <Day key={day.key}>
             <DayHeading>{formatDayHeading(day.at, now)}</DayHeading>
@@ -115,7 +133,9 @@ const HistoryTab = () => {
           )}
         </FiltersAside>
       </Filters>
-      {renderTimeline()}
+      <TimelineFrame ref={frameRef} aria-busy={isHistoryLoading} $isBusy={isHistoryLoading}>
+        {renderTimeline()}
+      </TimelineFrame>
       {historyTotalPages > 1 && (
         <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={handlePageChange} isCentered />
       )}

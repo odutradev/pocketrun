@@ -1,4 +1,16 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+
+const pageIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 export const Container = styled.div`
   display: flex;
@@ -36,10 +48,17 @@ export const ActorSelect = styled.div`
   max-width: 100%;
 `;
 
+export const TimelineFrame = styled.div<{ $isBusy: boolean }>`
+  opacity: ${({ $isBusy }) => ($isBusy ? 0.45 : 1)};
+  pointer-events: ${({ $isBusy }) => ($isBusy ? "none" : "auto")};
+  transition: opacity ${({ theme }) => theme.motion.fast}ms ${({ theme }) => theme.motion.easing.standard};
+`;
+
 export const Timeline = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(4)};
+  animation: ${pageIn} ${({ theme }) => theme.motion.base}ms ${({ theme }) => theme.motion.easing.standard};
 `;
 
 export const Day = styled.section`
