@@ -161,7 +161,7 @@ const UserFilters = () => {
 - **Props:** always typed in the component's types file.
 - **Base components:** @radix-ui/themes.
 - **Styles:** Styled Components. Styles in `styles.ts` with access to the theme.
-- **Page header:** every page inside the app layout opens with `ContentNavbar`. Title on the left, the explanation in `info` (shown in the info icon tooltip, never as a paragraph under the title), and on the right the default reload (`onReload`) plus one text-and-icon button (`action`). Extra content goes in `actions`, rendered before the defaults. No eyebrow, subtitle or breadcrumbs above the title.
+- **Page header:** every page inside the app layout opens with `ContentNavbar`. Title on the left, the explanation in `info` (shown in the info icon tooltip, never as a paragraph under the title), and on the right the default reload (`onReload`) plus one text-and-icon button (`action`). Extra content goes in `actions`, rendered before the defaults. No eyebrow, subtitle or breadcrumbs above the title. A page deeper than one level turns the title into a breadcrumb on the same line by passing `parents`, instead of a "Voltar" action.
 - **Loading a whole page:** use `Loader` with `isCentered`, which shows the logo in the center of the content area.
 
 ```text

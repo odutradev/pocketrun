@@ -79,7 +79,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
   - Tool tabs are underline tabs; inside a tool the active underline uses the tool color.
   - Inside a page, a local side menu groups items by area. "Zona de perigo" is always last and always in error text.
-  - Breadcrumbs appear on pages deeper than one level.
+  - Breadcrumbs appear on pages deeper than one level, as the page title itself: `contentNavbar` takes the parent pages in `parents` and shows them as muted links in the title font, a chevron between each, and the current page as the h1 ("Links > Black Friday"). The breadcrumb replaces a "Voltar" button; never show both.
 - **Overlays:**
   - The backdrop is black at 66%.
   - Dialogs are for confirmation and one-time secrets. A destructive dialog asks the user to type the Project ID before the final button is enabled.
@@ -116,7 +116,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Page loader (symbol loop) | `@components/loader` |
 | Page shell: side menu, offline banner, tool context | `@components/appLayout` with `@components/sidebar` |
 | API status pill, panel line or pulsing dot with tooltip (address and version) | `@components/apiStatus` |
-| Page header in one line: title (truncated), info tooltip, extra actions (icon-only below md), reload and one labeled action | `@components/contentNavbar` |
+| Page header in one line: title (truncated) or breadcrumb (`parents`), info tooltip, extra actions (icon-only below md), reload and one labeled action | `@components/contentNavbar` |
 | Section or panel title (h2) with actions | `@components/sectionHeader` |
 | Underline tabs and their panel | `@components/tabNav` + `@components/tabPanel` |
 | Buttons with icon or loading | `@components/button` |
