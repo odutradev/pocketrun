@@ -10,11 +10,11 @@ import type { PageEditorStore } from "./types";
 
 const logger = createLocalLogger("pageEditorPage");
 
-const toDraft = (sitePage: SitePage | null): PageDraft => ({ html: sitePage?.html ?? "", restoredFrom: null });
+const toDraft = (sitePage: SitePage | null): PageDraft => ({ html: sitePage?.html ?? "", restoredFrom: null, message: "" });
 
 const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   requestKey: "",
-  draft: { html: "", restoredFrom: null },
+  draft: { html: "", restoredFrom: null, message: "" },
   versions: [],
   versionHtml: {},
   hasLoadedVersions: false,
@@ -51,7 +51,7 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       historyFilter: "all",
       historyActor: "all",
       analytics: null,
-      draft: { html: "", restoredFrom: null },
+      draft: { html: "", restoredFrom: null, message: "" },
       versions: [],
       versionHtml: {},
       hasLoadedVersions: false,
@@ -130,6 +130,7 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   setHistoryFilter: (historyFilter) => set({ historyFilter }),
   setHistoryActor: (historyActor) => set({ historyActor }),
   setDraftHtml: (html) => set((state) => ({ draft: { ...state.draft, html } })),
+  setDraftMessage: (message) => set((state) => ({ draft: { ...state.draft, message } })),
   discardDraft: () => set((state) => ({ draft: toDraft(state.sitePage) })),
   loadVersions: async () => {
     const { sitePage, requestKey } = get();
@@ -169,7 +170,7 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   restoreVersion: async (number) => {
     const html = await get().loadVersionHtml(number);
     if (html === null) return false;
-    set({ draft: { html, restoredFrom: number } });
+    set((state) => ({ draft: { ...state.draft, html, restoredFrom: number } }));
     return true;
   }
 }));

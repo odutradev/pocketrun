@@ -51,6 +51,15 @@ export const Status = styled.div`
   gap: ${({ theme }) => theme.spacing(1.5)};
 `;
 
+export const MessageField = styled.div`
+  flex: 1 1 200px;
+  min-width: 0;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    flex: 0 1 240px;
+  }
+`;
+
 export const Panes = styled.div<PanesStyleProps>`
   display: grid;
   flex: 1;

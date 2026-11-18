@@ -90,6 +90,7 @@ export interface PagePayload {
   endsAt: string | null;
   maxClicks: number | null;
   restoredFrom?: number | null;
+  message?: string;
 }
 
 export type PageFormValues = z.infer<typeof pageFormSchema>;
@@ -129,6 +130,7 @@ export interface PageVersion {
   html?: string;
   size: number;
   restoredFrom: number | null;
+  message?: string;
   actor: LinkEventActor;
   createdAt: string;
 }
@@ -136,9 +138,10 @@ export interface PageVersion {
 export interface PageDraft {
   html: string;
   restoredFrom: number | null;
+  message: string;
 }
 
-export type VersionComparison = "previous" | "draft";
+export type VersionBase = "previous" | "draft" | `${number}`;
 
 export interface RankedPage {
   id: string;

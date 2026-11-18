@@ -12,6 +12,7 @@ import {
   Item,
   ItemHeader,
   ItemLabel,
+  ItemMessage,
   ItemMeta,
   List,
   ListPanel,
@@ -22,7 +23,7 @@ import {
   Workbench
 } from "./styles";
 import { currentTimestamp, formatBytes, formatRelativeTime, versionLabel } from "@utils/functions";
-import SegmentedControl from "@components/segmentedControl";
+import { pageVersionsKept } from "@assets/config";
 import DiffViewer from "../../subcomponents/diffViewer";
 import useMediaQuery from "@hooks/useMediaQuery";
 import IconButton from "@components/iconButton";
@@ -30,16 +31,13 @@ import EmptyState from "@components/emptyState";
 import usePageEditorPage from "../../hook";
 import Skeleton from "@components/skeleton";
 import Button from "@components/button";
+import Select from "@components/select";
 import Badge from "@components/badge";
 
 import type { DiffStats } from "../../subcomponents/diffViewer/types";
-import type { SegmentedOption } from "@components/segmentedControl/types";
-import type { VersionComparison } from "@utils/types/sitePage";
+import type { PageVersion, VersionBase } from "@utils/types/sitePage";
 
-const comparisonOptions: SegmentedOption<VersionComparison>[] = [
-  { value: "previous", label: "Com a anterior" },
-  { value: "draft", label: "Com o editor" }
-];
+const describeVersion = (version: PageVersion) => (version.message ? `${version.label} · ${version.message}` : version.label);
 
 const VersionsTab = () => {
   const { breakpoints } = useTheme();
@@ -58,11 +56,12 @@ const VersionsTab = () => {
     handleVersionSelect,
     handleVersionRestore
   } = usePageEditorPage();
-  const [comparison, setComparison] = useState<VersionComparison>("previous");
+  const [base, setBase] = useState<VersionBase>("previous");
   const [isSideBySide, setIsSideBySide] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [stats, setStats] = useState<DiffStats | null>(null);
-  const previousNumber = selectedVersion !== null && selectedVersion > 1 ? selectedVersion - 1 : null;
+  const previousNumber = versions.find((version) => selectedVersion !== null && version.number < selectedVersion)?.number ?? null;
+  const baseNumber = base === "previous" ? previousNumber : base === "draft" ? null : Number(base);
 
   useEffect(() => {
     if (!hasLoadedVersions) loadVersions();
@@ -71,8 +70,8 @@ const VersionsTab = () => {
   useEffect(() => {
     if (selectedVersion === null) return;
     loadVersionHtml(selectedVersion);
-    if (previousNumber !== null) loadVersionHtml(previousNumber);
-  }, [selectedVersion, previousNumber, loadVersionHtml]);
+    if (baseNumber !== null) loadVersionHtml(baseNumber);
+  }, [selectedVersion, baseNumber, loadVersionHtml]);
 
   useEffect(() => {
     if (!isExpanded) return;
@@ -112,27 +111,39 @@ const VersionsTab = () => {
   const now = currentTimestamp();
   const selected = versions.find((version) => version.number === selectedVersion) ?? null;
   const selectedHtml = selectedVersion !== null ? versionHtml[selectedVersion] : undefined;
-  const previousHtml = previousNumber !== null ? versionHtml[previousNumber] : "";
-  const isComparingDraft = comparison === "draft";
-  const original = isComparingDraft ? selectedHtml : previousHtml;
-  const modified = isComparingDraft ? draft.html : selectedHtml;
+  const isComparingDraft = base === "draft";
+  const olderNumber = baseNumber !== null && selectedVersion !== null ? Math.min(baseNumber, selectedVersion) : null;
+  const newerNumber = baseNumber !== null && selectedVersion !== null ? Math.max(baseNumber, selectedVersion) : null;
+  const getSides = (): [string | undefined, string | undefined] => {
+    if (isComparingDraft) return [selectedHtml, draft.html];
+    if (olderNumber === null || newerNumber === null) return ["", selectedHtml];
+    return [versionHtml[olderNumber], versionHtml[newerNumber]];
+  };
+  const [original, modified] = getSides();
+  const baseOptions = [
+    { value: "previous", label: previousNumber !== null ? `Anterior (${versionLabel(previousNumber)})` : "Anterior" },
+    { value: "draft", label: "Código do editor" },
+    ...versions.filter((version) => version.number !== selectedVersion).map((version) => ({ value: `${version.number}`, label: describeVersion(version) }))
+  ];
   const isCurrent = selected?.number === sitePage.version;
   const isSplit = isSideBySide && (isWide || isExpanded);
 
   const getTitle = () => {
     if (!selected) return "Escolha uma versão";
     if (isComparingDraft) return `${selected.label} → editor`;
-    return previousNumber !== null ? `${versionLabel(previousNumber)} → ${selected.label}` : `${selected.label} · primeira versão`;
+    if (olderNumber !== null && newerNumber !== null) return `${versionLabel(olderNumber)} → ${versionLabel(newerNumber)}`;
+    return selected.number === 1 ? `${selected.label} · primeira versão` : `${selected.label} · mais antiga guardada`;
   };
 
   const handleSelect = (number: number) => {
     setStats(null);
+    if (base === `${number}`) setBase("previous");
     handleVersionSelect(number);
   };
 
-  const handleComparisonChange = (next: VersionComparison) => {
+  const handleBaseChange = (next: string) => {
     setStats(null);
-    setComparison(next);
+    setBase(next as VersionBase);
   };
 
   return (
@@ -151,6 +162,7 @@ const VersionsTab = () => {
                     {isLive && <Badge tone="success" hasDot>No ar</Badge>}
                     {version.restoredFrom !== null && <Badge>Restaurada da {versionLabel(version.restoredFrom)}</Badge>}
                   </ItemHeader>
+                  {version.message && <ItemMessage>{version.message}</ItemMessage>}
                   <ItemMeta>
                     {version.actor.name} · {formatRelativeTime(version.createdAt, now)} · {formatBytes(version.size)}
                   </ItemMeta>
@@ -173,7 +185,7 @@ const VersionsTab = () => {
             )}
           </BarGroup>
           <BarGroup>
-            <SegmentedControl label="Comparar" options={comparisonOptions} value={comparison} onValueChange={handleComparisonChange} />
+            <Select label="Comparar com" isLabelHidden options={baseOptions} value={base} onValueChange={handleBaseChange} />
             {(isWide || isExpanded) && (
               <IconButton
                 label={isSideBySide ? "Mostrar em uma coluna" : "Mostrar lado a lado"}
@@ -195,7 +207,7 @@ const VersionsTab = () => {
             <Skeleton height="100%" />
           ) : (
             <DiffViewer
-              key={`${selectedVersion}-${comparison}`}
+              key={`${selectedVersion}-${base}`}
               original={original}
               modified={modified}
               label={`Diferenças: ${getTitle()}`}
@@ -205,7 +217,10 @@ const VersionsTab = () => {
           )}
         </Body>
         <Footer>
-          <span>Verde entrou, vermelho saiu. Restaurar leva o código para o editor; ao salvar, ele vira uma versão nova.</span>
+          <span>
+            Verde entrou, vermelho saiu. Restaurar leva o código para o editor; ao salvar, ele vira uma versão nova. Ficam guardadas as últimas{" "}
+            {pageVersionsKept} versões.
+          </span>
           {selected && (
             <Button
               size="sm"

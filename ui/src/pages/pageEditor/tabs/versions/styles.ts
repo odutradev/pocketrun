@@ -97,6 +97,13 @@ export const ItemLabel = styled.span`
   color: ${({ theme }) => theme.brand.steel};
 `;
 
+export const ItemMessage = styled.span`
+  font-size: 13px;
+  line-height: 1.4;
+  color: ${({ theme }) => theme.brand.steel};
+  overflow-wrap: anywhere;
+`;
+
 export const ItemMeta = styled.span`
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};

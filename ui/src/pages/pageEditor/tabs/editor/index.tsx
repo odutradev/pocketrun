@@ -2,9 +2,9 @@ import { CodeIcon, EnterFullScreenIcon, ExitFullScreenIcon, ExternalLinkIcon, Ey
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
 
-import { Bar, BarGroup, Footer, Frame, Hint, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
+import { Bar, BarGroup, Footer, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
 import { formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
-import { pageHtmlMaxBytes, pagePreviewDelay } from "@assets/config";
+import { pageHtmlMaxBytes, pagePreviewDelay, pageVersionMessageMaxLength } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
 import CodeEditor from "../../subcomponents/codeEditor";
 import useMediaQuery from "@hooks/useMediaQuery";
@@ -13,9 +13,10 @@ import { updatePage } from "@actions/sitePages";
 import usePageEditorPage from "../../hook";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
+import Input from "@components/input";
 import Badge from "@components/badge";
 
-import type { PagePayload, SitePage } from "@utils/types/sitePage";
+import type { PageDraft, PagePayload, SitePage } from "@utils/types/sitePage";
 import type { SegmentedOption } from "@components/segmentedControl/types";
 import type { EditorView } from "./types";
 
@@ -25,7 +26,7 @@ const viewOptions: SegmentedOption<EditorView>[] = [
   { value: "split", label: "Dividido", icon: <ViewVerticalIcon /> }
 ];
 
-const toPayload = (sitePage: SitePage, html: string, restoredFrom: number | null): PagePayload => ({
+const toPayload = (sitePage: SitePage, draft: PageDraft): PagePayload => ({
   title: sitePage.title,
   slug: sitePage.slug,
   groupId: sitePage.groupId ?? "",
@@ -33,15 +34,16 @@ const toPayload = (sitePage: SitePage, html: string, restoredFrom: number | null
   startsAt: sitePage.startsAt,
   endsAt: sitePage.endsAt,
   maxClicks: sitePage.maxClicks,
-  html,
-  restoredFrom
+  html: draft.html,
+  restoredFrom: draft.restoredFrom,
+  message: draft.message.trim()
 });
 
 const EditorTab = () => {
   const { breakpoints } = useTheme();
   const isWide = useMediaQuery(`(min-width: ${breakpoints.lg})`);
   const isCompact = !useMediaQuery(`(min-width: ${breakpoints.md})`);
-  const { sitePage, draft, isDirty, draftSize, setDraftHtml, discardDraft, handlePageSaved } = usePageEditorPage();
+  const { sitePage, draft, isDirty, draftSize, setDraftHtml, setDraftMessage, discardDraft, handlePageSaved } = usePageEditorPage();
   const [view, setView] = useState<EditorView>("split");
   const [isExpanded, setIsExpanded] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(draft.html);
@@ -89,7 +91,7 @@ const EditorTab = () => {
 
   const handleSave = () => {
     if (!isDirty || isOverLimit || isPending) return;
-    execute({ id: sitePage.id, data: toPayload(sitePage, draft.html, draft.restoredFrom) });
+    execute({ id: sitePage.id, data: toPayload(sitePage, draft) });
   };
 
   const remaining = pageHtmlMaxBytes - draftSize;
@@ -111,6 +113,22 @@ const EditorTab = () => {
             <Button variant="ghost" size="sm" leftIcon={<ResetIcon />} onClick={discardDraft}>
               Descartar
             </Button>
+          )}
+          {isDirty && (
+            <MessageField>
+              <Input
+                label="Mensagem da versão"
+                isLabelHidden
+                size="sm"
+                placeholder="O que mudou? (opcional)"
+                value={draft.message}
+                maxLength={pageVersionMessageMaxLength}
+                onChange={(event) => setDraftMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") handleSave();
+                }}
+              />
+            </MessageField>
           )}
           <Button size="sm" disabled={!isDirty || isOverLimit} isLoading={isPending} loadingLabel="Salvando…" onClick={handleSave}>
             Salvar {versionLabel(sitePage.version + 1)}

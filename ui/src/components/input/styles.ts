@@ -6,6 +6,7 @@ import type { FieldControlStyleProps } from "@components/formField/types";
 import type { InputSize } from "./types";
 
 const heights: Record<InputSize, { mobile: string; desktop: string }> = {
+  sm: { mobile: "36px", desktop: "32px" },
   md: { mobile: "44px", desktop: "40px" },
   lg: { mobile: "48px", desktop: "48px" }
 };

@@ -9,7 +9,8 @@ export const linksUrl = trimTrailingSlash(import.meta.env.VITE_LINKS_URL || apiU
 export const appVersion = __APP_VERSION__;
 
 export const storageKeys = {
-  auth: "pocketrun_auth"
+  auth: "pocketrun_auth",
+  pageDrafts: "pocketrun_page_drafts"
 } as const;
 
 export const healthCheckInterval = 20000;
@@ -60,6 +61,14 @@ export const pageTitleMaxLength = 20;
 export const pageHtmlMaxBytes = 512 * 1024;
 
 export const pagePreviewDelay = 600;
+
+export const pageVersionMessageMaxLength = 80;
+
+export const pageVersionsKept = 50;
+
+export const pageDraftSaveDelay = 1000;
+
+export const pageLintDelay = 400;
 
 export const searchDelay = 800;
 

@@ -34,6 +34,7 @@ export interface PageEditorStore {
   setHistoryFilter: (filter: HistoryFilter) => void;
   setHistoryActor: (actor: string) => void;
   setDraftHtml: (html: string) => void;
+  setDraftMessage: (message: string) => void;
   discardDraft: () => void;
   loadVersions: () => Promise<void>;
   loadVersionHtml: (number: number) => Promise<string | null>;
@@ -51,6 +52,7 @@ export interface UsePageEditorPageReturn {
   isVersionsLoading: boolean;
   selectedVersion: number | null;
   setDraftHtml: (html: string) => void;
+  setDraftMessage: (message: string) => void;
   discardDraft: () => void;
   loadVersions: () => Promise<void>;
   loadVersionHtml: (number: number) => Promise<string | null>;

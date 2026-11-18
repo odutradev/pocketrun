@@ -62,6 +62,7 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
     isVersionsLoading: store.isVersionsLoading,
     selectedVersion: store.selectedVersion,
     setDraftHtml: store.setDraftHtml,
+    setDraftMessage: store.setDraftMessage,
     discardDraft: store.discardDraft,
     loadVersions: store.loadVersions,
     loadVersionHtml: store.loadVersionHtml,
