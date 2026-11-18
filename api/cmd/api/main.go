@@ -16,6 +16,7 @@ import (
 	"pocketrun-api/internal/health"
 	"pocketrun-api/internal/kv"
 	"pocketrun-api/internal/link"
+	"pocketrun-api/internal/page"
 	"pocketrun-api/internal/platform/database"
 	"pocketrun-api/internal/platform/httpx"
 	"pocketrun-api/internal/setup"
@@ -72,7 +73,15 @@ func run(logger *slog.Logger) error {
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
 	linkEventRepository := link.NewMongoEventRepository(mongo.Collection("linkEvents"))
 	linkOpenRepository := link.NewMongoOpenRepository(mongo.Collection("linkOpens"))
-	ensureIndexes(startupContext, logger, userRepository, applicationRepository, documentRepository, slugRepository, groupRepository, linkRepository, linkEventRepository, linkOpenRepository)
+	pageRepository := page.NewMongoRepository(mongo.Collection("pages"))
+	pageVersionRepository := page.NewMongoVersionRepository(mongo.Collection("pageVersions"))
+	pageEventRepository := page.NewMongoEventRepository(mongo.Collection("pageEvents"))
+	pageOpenRepository := page.NewMongoOpenRepository(mongo.Collection("pageOpens"))
+	ensureIndexes(startupContext, logger,
+		userRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
+		linkRepository, linkEventRepository, linkOpenRepository,
+		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository,
+	)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
@@ -90,6 +99,16 @@ func run(logger *slog.Logger) error {
 		Actors:     userService,
 		Logger:     logger,
 	})
+	pageService := page.NewService(page.Dependencies{
+		Repository: pageRepository,
+		Versions:   pageVersionRepository,
+		Events:     pageEventRepository,
+		Opens:      pageOpenRepository,
+		Slugs:      slugService,
+		Groups:     groupService,
+		Actors:     userService,
+		Logger:     logger,
+	})
 
 	if err := setupService.ReportStatus(startupContext); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)
@@ -101,7 +120,8 @@ func run(logger *slog.Logger) error {
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
 	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
 	groupHandler := group.NewHandler(groupService, validate, logger)
-	linkHandler := link.NewHandler(linkService, cfg.LinksURL, validate, logger)
+	pageHandler := page.NewHandler(pageService, cfg.LinksURL, validate, logger)
+	linkHandler := link.NewHandler(linkService, pageHandler, cfg.LinksURL, validate, logger)
 
 	adminMux := http.NewServeMux()
 	authenticateManager := user.Authenticate(signer)
@@ -112,6 +132,8 @@ func run(logger *slog.Logger) error {
 	documentHandler.RegisterAdmin(adminMux, authenticateManager)
 	groupHandler.Register(adminMux, authenticateManager, "/links/groups", group.KindLinks, linkService)
 	linkHandler.RegisterAdmin(adminMux, authenticateManager)
+	groupHandler.Register(adminMux, authenticateManager, "/pages/groups", group.KindPages, pageService)
+	pageHandler.RegisterAdmin(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)

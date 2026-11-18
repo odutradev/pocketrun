@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/activation"
+	"pocketrun-api/internal/slug"
 )
 
 type Mode = activation.Mode
@@ -37,6 +38,15 @@ var (
 	ErrInvalidSchedule = activation.ErrInvalidSchedule
 	ErrSelfRedirect    = errors.New("destination points to this shortener")
 )
+
+type KindError struct {
+	Kind     slug.Kind
+	TargetID bson.ObjectID
+}
+
+func (e *KindError) Error() string {
+	return "slug belongs to a " + string(e.Kind)
+}
 
 type Link struct {
 	ID        bson.ObjectID  `json:"id" bson:"_id"`

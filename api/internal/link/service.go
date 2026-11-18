@@ -414,7 +414,7 @@ func (s *Service) Open(ctx context.Context, value string, visit traffic.Visit) (
 	}
 
 	if entry.Kind != slug.KindLink {
-		return nil, ErrLinkNotFound
+		return nil, &KindError{Kind: entry.Kind, TargetID: entry.TargetID}
 	}
 
 	now := time.Now()

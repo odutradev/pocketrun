@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/platform/httpx"
@@ -16,15 +17,20 @@ import (
 	"pocketrun-api/internal/user"
 )
 
+type PageServer interface {
+	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
+}
+
 type Handler struct {
 	service   *Service
+	pages     PageServer
 	linksHost string
 	validate  *validator.Validate
 	logger    *slog.Logger
 }
 
-func NewHandler(service *Service, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, linksHost: urlHost(linksURL), validate: validate, logger: logger}
+func NewHandler(service *Service, pages PageServer, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, pages: pages, linksHost: urlHost(linksURL), validate: validate, logger: logger}
 }
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -223,6 +229,15 @@ func (h *Handler) overview(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	link, err := h.service.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
+	var kindError *KindError
+	if errors.As(err, &kindError) && kindError.Kind == slug.KindPage {
+		h.pages.ServePage(w, r, kindError.TargetID)
+		return
+	}
+	if errors.As(err, &kindError) {
+		h.writeNotFoundPage(w, r)
+		return
+	}
 	if errors.Is(err, ErrLinkNotFound) || errors.Is(err, ErrLinkUnavailable) {
 		h.writeNotFoundPage(w, r)
 		return
