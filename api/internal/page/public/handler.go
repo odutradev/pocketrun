@@ -73,6 +73,12 @@ func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.Obje
 		return
 	}
 
+	body, err := render(*opened)
+	if err != nil {
+		h.writeInternalError(w, r, "render page", err)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -84,7 +90,7 @@ func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.Obje
 	if r.Method == http.MethodHead {
 		return
 	}
-	if _, err := w.Write([]byte(render(*opened))); err != nil {
+	if _, err := w.Write([]byte(body)); err != nil {
 		h.logger.WarnContext(r.Context(), "write page", "error", err)
 	}
 }

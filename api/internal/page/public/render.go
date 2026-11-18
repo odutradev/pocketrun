@@ -7,7 +7,15 @@ import (
 	"pocketrun-api/internal/page/page"
 )
 
-func render(target page.Page) string {
+func render(target page.Page) (string, error) {
+	tag, err := runtimeTag(target)
+	if err != nil {
+		return "", err
+	}
+	return injectRuntime(document(target), tag), nil
+}
+
+func document(target page.Page) string {
 	lower := strings.ToLower(target.HTML)
 	if strings.Contains(lower, "<html") || strings.Contains(lower, "<!doctype") {
 		return target.HTML
