@@ -1,9 +1,9 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { linkEditorTabs } from "@assets/data";
 import useLinkEditorStore from "./store";
 
-import type { HistoryFilter, LinkEditorTab, LinkEvent } from "@utils/types/link";
+import type { HistoryFilter, Link, LinkEditorTab, LinkEvent } from "@utils/types/link";
 import type { UseLinkEditorPageReturn } from "./types";
 
 const toTab = (value: string | null, isEditing: boolean): LinkEditorTab => {
@@ -23,8 +23,17 @@ const matchesFilter = (event: LinkEvent, filter: HistoryFilter, actor: string) =
 const useLinkEditorPage = (): UseLinkEditorPageReturn => {
   const { linkId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const store = useLinkEditorStore();
   const tab = toTab(searchParams.get("tab"), Boolean(linkId));
+
+  const handleLinkSaved = (saved: Link) => {
+    if (linkId) {
+      store.setSavedLink(saved);
+      return;
+    }
+    navigate(`/links/${saved.id}/edit`, { replace: true });
+  };
 
   const actorOptions = [
     { value: "all", label: "Todas as pessoas" },
@@ -57,6 +66,7 @@ const useLinkEditorPage = (): UseLinkEditorPageReturn => {
     loadHistory: store.loadHistory,
     loadAnalytics: store.loadAnalytics,
     handleGroupCreated: store.addGroup,
+    handleLinkSaved,
     handleTabChange: (next) => setSearchParams(next === "settings" ? {} : { tab: next }, { replace: true }),
     handleRangeChange: store.setRange,
     handleHistoryFilterChange: store.setHistoryFilter,

@@ -21,7 +21,7 @@ const tabIdPrefix = "link-editor";
 const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 
 const LinkEditorPage = () => {
-  const { linkId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleTabChange } =
+  const { linkId, link, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handleLinkSaved, handleTabChange } =
     useLinkEditorPage();
   const isEditing = Boolean(linkId);
 
@@ -29,7 +29,15 @@ const LinkEditorPage = () => {
     load(linkId);
   }, [linkId, load]);
 
-  const form = <LinkForm key={link?.id ?? "new"} link={link} groups={groups} onGroupCreated={handleGroupCreated} />;
+  const form = (
+    <LinkForm
+      key={link ? `${link.id}-${link.updatedAt}` : "new"}
+      link={link}
+      groups={groups}
+      onGroupCreated={handleGroupCreated}
+      onSaved={handleLinkSaved}
+    />
+  );
   const tabContent: Record<LinkEditorTab, ReactNode> = {
     settings: form,
     analytics: (

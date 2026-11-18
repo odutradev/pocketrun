@@ -1,5 +1,4 @@
 import { PlusIcon } from "@radix-ui/react-icons";
-import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 
 import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
@@ -43,9 +42,8 @@ const toPayload = (values: LinkFormValues): LinkPayload => ({
   maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
 });
 
-const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
+const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
-  const navigate = useNavigate();
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ status: "idle" });
   const handleSlugCheck = useCallback((check: SlugCheck) => setSlugCheck(check), []);
 
@@ -56,7 +54,7 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
       success: link ? "Link atualizado" : "Link criado",
       error: link ? "Não foi possível salvar o link" : "Não foi possível criar o link"
     },
-    callback: () => navigate("/links")
+    callback: onSaved
   });
 
   const { values, errors, isSubmitting, setFieldValue, handleChange, handleSubmit } = useForm({

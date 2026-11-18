@@ -19,6 +19,7 @@ export interface LinkEditorStore {
   isAnalyticsLoading: boolean;
   load: (linkId?: string) => Promise<void>;
   addGroup: (group: LinkGroup) => void;
+  setSavedLink: (link: Link) => void;
   loadHistory: (isMore?: boolean) => Promise<void>;
   loadAnalytics: () => Promise<void>;
   setRange: (range: AnalyticsRange) => void;
@@ -50,6 +51,7 @@ export interface UseLinkEditorPageReturn {
   loadHistory: (isMore?: boolean) => Promise<void>;
   loadAnalytics: () => Promise<void>;
   handleGroupCreated: (group: LinkGroup) => void;
+  handleLinkSaved: (link: Link) => void;
   handleTabChange: (tab: LinkEditorTab) => void;
   handleRangeChange: (range: AnalyticsRange) => void;
   handleHistoryFilterChange: (filter: HistoryFilter) => void;

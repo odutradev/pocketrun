@@ -4,4 +4,5 @@ export interface LinkFormProps {
   link: Link | null;
   groups: LinkGroup[];
   onGroupCreated: (group: LinkGroup) => void;
+  onSaved: (link: Link) => void;
 }

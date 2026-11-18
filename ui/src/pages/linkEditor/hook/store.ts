@@ -53,6 +53,7 @@ const useLinkEditorStore = create<LinkEditorStore>()((set, get) => ({
   },
   addGroup: (group) =>
     set((state) => ({ groups: [...state.groups, group].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) })),
+  setSavedLink: (link) => set({ link, events: [], nextCursor: null, hasLoadedHistory: false }),
   loadHistory: async (isMore = false) => {
     const { link, nextCursor, requestKey } = get();
     if (!link) return;
