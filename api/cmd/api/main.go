@@ -101,7 +101,7 @@ func run(logger *slog.Logger) error {
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
 	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
 	groupHandler := group.NewHandler(groupService, validate, logger)
-	linkHandler := link.NewHandler(linkService, validate, logger)
+	linkHandler := link.NewHandler(linkService, cfg.LinksURL, validate, logger)
 
 	adminMux := http.NewServeMux()
 	authenticateManager := user.Authenticate(signer)

@@ -16,13 +16,14 @@ import (
 )
 
 type Handler struct {
-	service  *Service
-	validate *validator.Validate
-	logger   *slog.Logger
+	service   *Service
+	linksHost string
+	validate  *validator.Validate
+	logger    *slog.Logger
 }
 
-func NewHandler(service *Service, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, validate: validate, logger: logger}
+func NewHandler(service *Service, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, linksHost: urlHost(linksURL), validate: validate, logger: logger}
 }
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -95,7 +96,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteDecodeError(w, err)
 		return
 	}
-	if err := input.CheckDestination(requestHosts(r)); err != nil {
+	if err := input.CheckDestination(h.requestHosts(r)); err != nil {
 		h.writeError(w, r, "create link", err)
 		return
 	}
@@ -135,7 +136,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteDecodeError(w, err)
 		return
 	}
-	if err := input.CheckDestination(requestHosts(r)); err != nil {
+	if err := input.CheckDestination(h.requestHosts(r)); err != nil {
 		h.writeError(w, r, "update link", err)
 		return
 	}
@@ -271,8 +272,16 @@ func withQuery(destination string, query url.Values) string {
 	return target.String()
 }
 
-func requestHosts(r *http.Request) []string {
-	hosts := []string{r.Host}
+func urlHost(raw string) string {
+	parsed, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return ""
+	}
+	return parsed.Host
+}
+
+func (h *Handler) requestHosts(r *http.Request) []string {
+	hosts := []string{r.Host, h.linksHost}
 	for _, host := range strings.Split(r.Header.Get("X-Forwarded-Host"), ",") {
 		hosts = append(hosts, strings.TrimSpace(host))
 	}
