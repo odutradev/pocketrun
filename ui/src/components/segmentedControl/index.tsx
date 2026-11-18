@@ -9,9 +9,10 @@ const SegmentedControl = <TValue extends string>({
   onValueChange,
   isFullWidth = false,
   isIconOnly = false,
-  mobileColumns
+  mobileColumns,
+  size = "md"
 }: SegmentedControlProps<TValue>): React.ReactElement => (
-  <Group role="group" aria-label={label} $isFullWidth={isFullWidth} $mobileColumns={mobileColumns}>
+  <Group role="group" aria-label={label} $isFullWidth={isFullWidth} $mobileColumns={mobileColumns} $size={size}>
     {options.map((option) => (
       <Segment
         key={option.value}
@@ -23,6 +24,7 @@ const SegmentedControl = <TValue extends string>({
         $isActive={option.value === value}
         $isFullWidth={isFullWidth}
         $isIconOnly={isIconOnly}
+        $size={size}
       >
         {option.icon}
         {!isIconOnly && option.label}

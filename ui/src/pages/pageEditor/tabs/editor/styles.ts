@@ -30,18 +30,36 @@ export const Bar = styled.div`
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(2)};
-  padding: ${({ theme }) => theme.spacing(2)};
+  gap: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(4)}`};
+  min-height: 48px;
+  padding: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(3)}`};
   border-bottom: 1px solid ${({ theme }) => theme.brand.border};
   background-color: ${({ theme }) => theme.brand.surface};
 `;
 
 export const BarGroup = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 0 auto;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
+  gap: ${({ theme }) => theme.spacing(3)};
   min-width: 0;
+`;
+
+export const Actions = styled.div`
+  display: flex;
+  flex: 1 1 320px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.spacing(1)};
+  min-width: 0;
+`;
+
+export const Divider = styled.span`
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  margin: 0 ${({ theme }) => theme.spacing(1)};
+  background-color: ${({ theme }) => theme.brand.border};
 `;
 
 export const Status = styled.div`
@@ -52,12 +70,10 @@ export const Status = styled.div`
 `;
 
 export const MessageField = styled.div`
-  flex: 1 1 200px;
+  flex: 1 1 auto;
   min-width: 0;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    flex: 0 1 240px;
-  }
+  max-width: 260px;
+  margin-right: ${({ theme }) => theme.spacing(1)};
 `;
 
 export const Panes = styled.div<PanesStyleProps>`

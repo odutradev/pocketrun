@@ -12,7 +12,7 @@ import {
 import { useTheme } from "styled-components";
 import { useEffect, useRef, useState } from "react";
 
-import { Bar, BarGroup, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
+import { Actions, Bar, BarGroup, Divider, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
 import { formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
 import { pageHtmlMaxBytes, pagePreviewDelay, pageVersionMessageMaxLength } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
@@ -114,19 +114,14 @@ const EditorTab = () => {
     <Workbench $isExpanded={isExpanded} aria-label="Editor da página">
       <Bar>
         <BarGroup>
-          <SegmentedControl label="Visualização" options={visibleOptions} value={activeView} onValueChange={setView} isIconOnly={isCompact} />
+          <SegmentedControl label="Visualização" options={visibleOptions} value={activeView} onValueChange={setView} isIconOnly={isCompact} size="sm" />
           <Status>
             <Badge isMono>v{versionLabel(sitePage.version)}</Badge>
             {isDirty && <Badge tone="warning">Não salvo</Badge>}
             {isDirty && draft.restoredFrom !== null && <Badge tone="accent">Restaurando a {versionLabel(draft.restoredFrom)}</Badge>}
           </Status>
         </BarGroup>
-        <BarGroup>
-          {isDirty && (
-            <Button variant="ghost" size="sm" leftIcon={<ResetIcon />} onClick={discardDraft}>
-              Descartar
-            </Button>
-          )}
+        <Actions>
           {isDirty && (
             <MessageField>
               <Input
@@ -143,9 +138,11 @@ const EditorTab = () => {
               />
             </MessageField>
           )}
+          {isDirty && <IconButton label="Descartar as alterações" icon={<ResetIcon />} size="sm" onClick={discardDraft} />}
           <Button size="sm" disabled={!isDirty || isOverLimit} isLoading={isPending} loadingLabel="Salvando…" onClick={handleSave}>
             Salvar {versionLabel(sitePage.version + 1)}
           </Button>
+          <Divider aria-hidden="true" />
           {activeView !== "preview" && (
             <IconButton label="Formatar o HTML (Shift+Alt+F)" icon={<MagicWandIcon />} size="sm" onClick={() => codeEditorRef.current?.format()} />
           )}
@@ -161,7 +158,7 @@ const EditorTab = () => {
             size="sm"
             onClick={() => setIsExpanded((current) => !current)}
           />
-        </BarGroup>
+        </Actions>
       </Bar>
       <Panes $isSplit={activeView === "split"}>
         {activeView !== "preview" && (

@@ -6,6 +6,8 @@ export interface SegmentedOption<TValue extends string> {
   icon?: ReactNode;
 }
 
+export type SegmentedSize = "sm" | "md";
+
 export interface SegmentedControlProps<TValue extends string> {
   label: string;
   options: SegmentedOption<TValue>[];
@@ -14,4 +16,5 @@ export interface SegmentedControlProps<TValue extends string> {
   isFullWidth?: boolean;
   isIconOnly?: boolean;
   mobileColumns?: number;
+  size?: SegmentedSize;
 }
