@@ -8,13 +8,20 @@ import type {
   LinkGroupValues,
   LinkHistoryPage,
   LinkHistoryParams,
+  LinkListParams,
   LinkPayload,
+  LinkSummary,
   SlugAvailability
 } from "@utils/types/link";
-import type { MessageResponse } from "@utils/types/api";
+import type { MessageResponse, Page } from "@utils/types/api";
 
-export const listLinks = async (signal?: AbortSignal) => {
-  const response = await api.get<Link[]>("/links/list", { signal });
+export const listLinks = async (params: LinkListParams, signal?: AbortSignal) => {
+  const response = await api.get<Page<Link>>("/links/list", { params, signal });
+  return response.data;
+};
+
+export const getLinkSummary = async (signal?: AbortSignal) => {
+  const response = await api.get<LinkSummary>("/links/summary/details", { signal });
   return response.data;
 };
 

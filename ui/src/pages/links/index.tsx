@@ -1,43 +1,58 @@
-import { ArrowLeftIcon, DashboardIcon, ListBulletIcon, MagnifyingGlassIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, DashboardIcon, ListBulletIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
+import { Container, ListArea, Toolbar } from "./styles";
+import ListTransition from "@components/listTransition";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
 import GroupCards from "./subcomponents/groupCards";
+import SearchInput from "@components/searchInput";
 import useMediaQuery from "@hooks/useMediaQuery";
+import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
-import { Container, Toolbar } from "./styles";
+import Skeleton from "@components/skeleton";
 import Button from "@components/button";
 import LinksSkeleton from "./skeleton";
-import Input from "@components/input";
 import useLinksPage from "./hook";
 
 import type { ContentNavbarAction } from "@components/contentNavbar/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
-import type { LinkGroup, LinksView } from "@utils/types/link";
+import type { LinksView } from "@utils/types/link";
 
 const LinksPage = () => {
   const navigate = useNavigate();
   const { breakpoints } = useTheme();
+  const listRef = useRef<HTMLDivElement>(null);
   const isMobile = !useMediaQuery(`(min-width: ${breakpoints.md})`);
+  const shouldReduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const {
     view,
     links,
+    total,
+    page,
+    totalPages,
+    search,
+    transitionKey,
     groups,
-    visibleLinks,
     activeGroup,
+    scope,
+    hasNoLinks,
     isGroupMissing,
     isSearching,
     isLoading,
     isRefreshing,
-    search,
+    isScopePending,
+    isListLoading,
+    isSearchLoading,
     loadLinks,
-    handleSearchChange,
+    openScope,
+    handleSearch,
+    handlePageChange,
     handleOpenGroups,
     handleViewChange
   } = useLinksPage();
@@ -45,6 +60,10 @@ const LinksPage = () => {
   useEffect(() => {
     loadLinks();
   }, [loadLinks]);
+
+  useEffect(() => {
+    openScope(scope);
+  }, [scope, openScope]);
 
   const viewOptions: SegmentedOption<LinksView>[] = [
     { value: "list", label: "Ver em lista", icon: <ListBulletIcon /> },
@@ -56,28 +75,37 @@ const LinksPage = () => {
     { label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }
   ];
 
-  const renderGroupLinks = (group: LinkGroup) => {
-    if (visibleLinks.length > 0) return <LinkCollection links={visibleLinks} caption={`Links de ${group.name}`} />;
-    if (isSearching) {
-      return <EmptyState isCompact title="Nada encontrado" description="Nenhum link deste grupo combina com a busca." />;
-    }
-    return (
-      <EmptyState
-        isCompact
-        title="Nenhum link neste grupo"
-        description="Para trazer um link para cá, abra o link e escolha este grupo."
-      />
-    );
+  const handleListPageChange = (nextPage: number) => {
+    handlePageChange(nextPage);
+    listRef.current?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" });
   };
 
   const getListCaption = () => {
+    if (activeGroup) return `Links de ${activeGroup.name}`;
     if (isSearching) return "Links encontrados";
     return groups.length > 0 ? "Links sem grupo" : "Links";
   };
 
-  const renderLinks = () => {
-    if (visibleLinks.length > 0) return <LinkCollection links={visibleLinks} caption={getListCaption()} />;
-    if (isSearching) return <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca." />;
+  const renderListContent = () => {
+    if (links.length > 0) return <LinkCollection links={links} total={total} caption={getListCaption()} />;
+    if (isSearching) {
+      return (
+        <EmptyState
+          isCompact
+          title="Nada encontrado"
+          description={activeGroup ? "Nenhum link deste grupo combina com a busca." : "Nenhum link combina com a busca."}
+        />
+      );
+    }
+    if (activeGroup) {
+      return (
+        <EmptyState
+          isCompact
+          title="Nenhum link neste grupo"
+          description="Para trazer um link para cá, abra o link e escolha este grupo."
+        />
+      );
+    }
     return (
       <EmptyState
         isCompact
@@ -87,27 +115,10 @@ const LinksPage = () => {
     );
   };
 
-  const toolbar = (
-    <Toolbar>
-      <Input
-        label="Buscar links"
-        isLabelHidden
-        type="search"
-        leftIcon={<MagnifyingGlassIcon />}
-        placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
-        value={search}
-        onChange={(event) => handleSearchChange(event.target.value)}
-      />
-      {!isMobile && (
-        <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
-      )}
-    </Toolbar>
-  );
-
   const renderContent = () => {
     if (isLoading) return <LinksSkeleton />;
     if (isGroupMissing) return <Navigate to="/links" replace />;
-    if (links.length === 0 && groups.length === 0) {
+    if (hasNoLinks) {
       return (
         <EmptyState
           title="Nenhum link ainda"
@@ -120,19 +131,34 @@ const LinksPage = () => {
         />
       );
     }
-    if (activeGroup) {
-      return (
-        <>
-          {toolbar}
-          {renderGroupLinks(activeGroup)}
-        </>
-      );
-    }
     return (
       <>
-        {groups.length > 0 && <GroupCards />}
-        {toolbar}
-        {renderLinks()}
+        {!activeGroup && groups.length > 0 && <GroupCards />}
+        <ListArea ref={listRef}>
+          <Toolbar>
+            <SearchInput
+              key={scope}
+              label="Buscar links"
+              placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
+              defaultValue={search}
+              isLoading={isSearchLoading}
+              onSearch={handleSearch}
+            />
+            {!isMobile && (
+              <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
+            )}
+          </Toolbar>
+          {isScopePending ? (
+            <Skeleton height="320px" radius="panel" />
+          ) : (
+            <ListTransition transitionKey={transitionKey} isBusy={isListLoading}>
+              {renderListContent()}
+            </ListTransition>
+          )}
+          {!isScopePending && totalPages > 1 && (
+            <Pagination page={page} totalPages={totalPages} onPageChange={handleListPageChange} isCentered />
+          )}
+        </ListArea>
       </>
     );
   };

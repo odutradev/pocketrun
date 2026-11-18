@@ -7,6 +7,13 @@ export const Container = styled.div`
   width: 100%;
 `;
 
+export const ListArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(6)};
+  scroll-margin-top: ${({ theme }) => theme.spacing(6)};
+`;
+
 export const Toolbar = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);

@@ -1,65 +1,76 @@
 import { useSearchParams } from "react-router-dom";
 
+import { linksPageSize } from "@assets/config";
 import useLinksStore from "./store";
 
-import type { LinkGroupSummary, UseLinksPageReturn } from "./types";
-import type { Link, LinkGroup } from "@utils/types/link";
+import type { LinkGroupTotals } from "@utils/types/link";
+import type { UseLinksPageReturn } from "./types";
 
-const matchesSearch = (link: Link, search: string) => {
-  const term = search.trim().toLowerCase();
-  if (!term) return true;
-  return [link.title, link.slug, link.url].some((value) => value.toLowerCase().includes(term));
-};
-
-const summarizeGroup = (group: LinkGroup, links: Link[]): LinkGroupSummary => {
-  const groupLinks = links.filter((link) => link.groupId === group.id);
-  return { group, linkCount: groupLinks.length, clicks: groupLinks.reduce((total, link) => total + link.clicks, 0) };
-};
-
-const scopeLinks = (links: Link[], activeGroup: LinkGroup | null, isSearching: boolean) => {
-  if (activeGroup) return links.filter((link) => link.groupId === activeGroup.id);
-  if (isSearching) return links;
-  return links.filter((link) => link.groupId === null);
-};
+const findTotals = (totals: LinkGroupTotals[], groupId: string) => totals.find((item) => item.groupId === groupId);
 
 const useLinksPage = (): UseLinksPageReturn => {
   const [searchParams] = useSearchParams();
   const {
     view,
-    links,
     groups,
+    summary,
+    links,
+    total,
+    query,
+    loadedQuery,
+    hasLoaded,
     isLoading,
     isRefreshing,
-    search,
+    isListLoading,
+    isSearchLoading,
     isGroupsOpen,
     removeTarget,
     loadLinks,
-    setSearch,
+    openScope,
+    searchLinks,
+    goToPage,
     setGroupsOpen,
     setRemoveTarget,
     setView
   } = useLinksStore();
 
-  const groupId = searchParams.get("group");
-  const activeGroup = groups.find((group) => group.id === groupId) ?? null;
-  const isSearching = search.trim() !== "";
+  const scope = searchParams.get("group") ?? "";
+  const activeGroup = groups.find((group) => group.id === scope) ?? null;
 
   return {
     view,
     links,
-    visibleLinks: scopeLinks(links, activeGroup, isSearching).filter((link) => matchesSearch(link, search)),
+    total,
+    page: loadedQuery?.page ?? 1,
+    totalPages: Math.max(1, Math.ceil(total / linksPageSize)),
+    search: query?.scope === scope ? query.search : "",
+    transitionKey: loadedQuery ? `${loadedQuery.scope}|${loadedQuery.search}|${loadedQuery.page}` : "",
     groups,
-    groupSummaries: groups.map((group) => summarizeGroup(group, links)),
+    groupSummaries: groups.map((group) => ({
+      group,
+      linkCount: findTotals(summary.groups, group.id)?.links ?? 0,
+      clicks: findTotals(summary.groups, group.id)?.clicks ?? 0
+    })),
     activeGroup,
-    isGroupMissing: groupId !== null && activeGroup === null && !isLoading && !isRefreshing,
-    isSearching,
+    scope,
+    hasNoLinks: hasLoaded && summary.total === 0 && groups.length === 0,
+    isGroupMissing: scope !== "" && hasLoaded && activeGroup === null && !isRefreshing,
+    isSearching: Boolean(loadedQuery?.search),
     isLoading,
     isRefreshing,
-    search,
+    isScopePending: loadedQuery?.scope !== scope,
+    isListLoading,
+    isSearchLoading,
     isGroupsOpen,
     removeTarget,
     loadLinks,
-    handleSearchChange: setSearch,
+    openScope,
+    handleSearch: (search) => {
+      searchLinks(search);
+    },
+    handlePageChange: (page) => {
+      goToPage(page);
+    },
     handleOpenGroups: () => setGroupsOpen(true),
     handleCloseGroups: () => setGroupsOpen(false),
     handleOpenRemove: setRemoveTarget,

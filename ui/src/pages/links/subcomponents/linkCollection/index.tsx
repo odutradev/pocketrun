@@ -12,7 +12,7 @@ import LinkCards from "../linkCards";
 import type { LinkCollectionProps } from "./types";
 import type { Link } from "@utils/types/link";
 
-const LinkCollection = ({ links, caption }: LinkCollectionProps) => {
+const LinkCollection = ({ links, total, caption }: LinkCollectionProps) => {
   const navigate = useNavigate();
   const { breakpoints } = useTheme();
   const isMobile = !useMediaQuery(`(min-width: ${breakpoints.md})`);
@@ -31,7 +31,7 @@ const LinkCollection = ({ links, caption }: LinkCollectionProps) => {
 
   return (
     <DataTable
-      caption={`${caption}, ${pluralize(links.length, "item", "itens")}`}
+      caption={`${caption}, ${pluralize(total, "item", "itens")}`}
       columns={getLinkColumns(linkOptions)}
       rows={links}
       getRowKey={(link) => link.id}

@@ -49,6 +49,25 @@ export interface LinkGroup {
   updatedAt: string;
 }
 
+export interface LinkListParams {
+  groupId?: string;
+  search?: string;
+  page: number;
+  limit: number;
+}
+
+export interface LinkGroupTotals {
+  groupId: string;
+  links: number;
+  clicks: number;
+}
+
+export interface LinkSummary {
+  total: number;
+  ungrouped: number;
+  groups: LinkGroupTotals[];
+}
+
 export interface SlugAvailability {
   slug: string;
   isAvailable: boolean;
