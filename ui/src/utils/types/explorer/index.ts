@@ -9,14 +9,6 @@ export interface ExplorerDocument {
   updatedAt: string;
 }
 
-export interface Page<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
 export interface ExplorerQuery {
   applicationId: string;
   collection: string;

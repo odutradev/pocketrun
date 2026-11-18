@@ -50,3 +50,11 @@ export interface PingResponse {
 }
 
 export type ApiHealthStatus = "online" | "offline";
+
+export interface Page<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}

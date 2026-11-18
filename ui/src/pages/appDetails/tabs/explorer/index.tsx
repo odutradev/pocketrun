@@ -18,7 +18,8 @@ import Loader from "@components/loader";
 import Input from "@components/input";
 import Card from "@components/card";
 
-import type { ExplorerDocument, Page } from "@utils/types/explorer";
+import type { ExplorerDocument } from "@utils/types/explorer";
+import type { Page } from "@utils/types/api";
 import type { LoadedState } from "./types";
 
 const logger = createLocalLogger("explorerTab");

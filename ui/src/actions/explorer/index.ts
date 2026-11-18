@@ -1,6 +1,7 @@
 import api from "@utils/api";
 
-import type { ExplorerDocument, ExplorerQuery, Page } from "@utils/types/explorer";
+import type { ExplorerDocument, ExplorerQuery } from "@utils/types/explorer";
+import type { Page } from "@utils/types/api";
 
 export const listCollections = async (applicationId: string, signal?: AbortSignal) => {
   const response = await api.get<string[]>(`/apps/${applicationId}/explorer/collections/list`, { signal });
