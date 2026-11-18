@@ -19,6 +19,8 @@ const recordTimeout = 5 * time.Second
 
 type Repository interface {
 	Find(ctx context.Context, query ListQuery) ([]Link, error)
+	Count(ctx context.Context, query ListQuery) (int64, error)
+	Totals(ctx context.Context) ([]GroupTotals, error)
 	FindByID(ctx context.Context, id bson.ObjectID) (*Link, error)
 	Insert(ctx context.Context, link *Link) error
 	Replace(ctx context.Context, link *Link) error
@@ -89,17 +91,40 @@ func NewService(dependencies Dependencies) *Service {
 	}
 }
 
-func (s *Service) List(ctx context.Context, query ListQuery) ([]Link, error) {
+func (s *Service) List(ctx context.Context, query ListQuery) (ListPage, error) {
 	links, err := s.repository.Find(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("list links: %w", err)
+		return ListPage{}, fmt.Errorf("list links: %w", err)
+	}
+
+	total, err := s.repository.Count(ctx, query)
+	if err != nil {
+		return ListPage{}, fmt.Errorf("list links: %w", err)
 	}
 
 	now := time.Now()
 	for index := range links {
 		links[index].State = links[index].StateAt(now)
 	}
-	return links, nil
+	return newListPage(links, total, query), nil
+}
+
+func (s *Service) Summary(ctx context.Context) (Summary, error) {
+	totals, err := s.repository.Totals(ctx)
+	if err != nil {
+		return Summary{}, fmt.Errorf("summarize links: %w", err)
+	}
+
+	summary := Summary{Groups: []GroupTotals{}}
+	for _, item := range totals {
+		summary.Total += item.Links
+		if item.GroupID == nil {
+			summary.Ungrouped += item.Links
+			continue
+		}
+		summary.Groups = append(summary.Groups, item)
+	}
+	return summary, nil
 }
 
 func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Link, error) {

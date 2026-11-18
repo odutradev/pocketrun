@@ -25,6 +25,7 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /links/list", authenticate(http.HandlerFunc(h.list)))
+	mux.Handle("GET /links/summary/details", authenticate(http.HandlerFunc(h.summary)))
 	mux.Handle("GET /links/slug-availability/check", authenticate(http.HandlerFunc(h.checkSlug)))
 	mux.Handle("POST /links/create", authenticate(http.HandlerFunc(h.create)))
 	mux.Handle("GET /links/{id}/details", authenticate(http.HandlerFunc(h.getByID)))
@@ -45,12 +46,21 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	links, err := h.service.List(r.Context(), params.Query())
+	page, err := h.service.List(r.Context(), params.Query())
 	if err != nil {
 		h.writeError(w, r, "list links", err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, links)
+	httpx.WriteJSON(w, http.StatusOK, page)
+}
+
+func (h *Handler) summary(w http.ResponseWriter, r *http.Request) {
+	summary, err := h.service.Summary(r.Context())
+	if err != nil {
+		h.writeError(w, r, "summarize links", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, summary)
 }
 
 func (h *Handler) checkSlug(w http.ResponseWriter, r *http.Request) {

@@ -116,20 +116,71 @@ func (i Input) CheckSchedule() error {
 	return nil
 }
 
+const (
+	DefaultListLimit = 20
+	UngroupedFilter  = "none"
+)
+
 type ListQuery struct {
-	GroupID *bson.ObjectID
+	GroupID   *bson.ObjectID
+	Ungrouped bool
+	Search    string
+	Page      int
+	Limit     int
 }
 
 type ListParams struct {
-	GroupID string `json:"groupId" query:"groupId" validate:"omitempty,mongodb"`
+	GroupID string `json:"groupId" query:"groupId" validate:"omitempty,mongodb|eq=none"`
+	Search  string `json:"search" query:"search" validate:"max=100"`
+	Page    int    `json:"page" query:"page" validate:"omitempty,min=1"`
+	Limit   int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
 func (p ListParams) Query() ListQuery {
-	groupID, err := bson.ObjectIDFromHex(p.GroupID)
-	if err != nil {
-		return ListQuery{}
+	query := ListQuery{
+		Ungrouped: p.GroupID == UngroupedFilter,
+		Search:    strings.TrimSpace(p.Search),
+		Page:      max(p.Page, 1),
+		Limit:     DefaultListLimit,
 	}
-	return ListQuery{GroupID: &groupID}
+	if p.Limit > 0 {
+		query.Limit = p.Limit
+	}
+	if groupID, err := bson.ObjectIDFromHex(p.GroupID); err == nil {
+		query.GroupID = &groupID
+	}
+	return query
+}
+
+type ListPage struct {
+	Data       []Link `json:"data"`
+	Total      int64  `json:"total"`
+	Page       int    `json:"page"`
+	Limit      int    `json:"limit"`
+	TotalPages int64  `json:"totalPages"`
+}
+
+func newListPage(links []Link, total int64, query ListQuery) ListPage {
+	limit := int64(max(query.Limit, 1))
+	return ListPage{
+		Data:       links,
+		Total:      total,
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: (total + limit - 1) / limit,
+	}
+}
+
+type GroupTotals struct {
+	GroupID *bson.ObjectID `json:"groupId" bson:"_id"`
+	Links   int64          `json:"links" bson:"links"`
+	Clicks  int64          `json:"clicks" bson:"clicks"`
+}
+
+type Summary struct {
+	Total     int64         `json:"total"`
+	Ungrouped int64         `json:"ungrouped"`
+	Groups    []GroupTotals `json:"groups"`
 }
 
 type SlugCheckParams struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -30,13 +31,28 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, error) {
+func listFilter(query ListQuery) bson.M {
 	filter := bson.M{}
 	if query.GroupID != nil {
 		filter["groupId"] = *query.GroupID
 	}
+	if query.Ungrouped {
+		filter["groupId"] = nil
+	}
+	if query.Search != "" {
+		pattern := bson.Regex{Pattern: regexp.QuoteMeta(query.Search), Options: "i"}
+		filter["$or"] = bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}, bson.M{"url": pattern}}
+	}
+	return filter
+}
 
-	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}}))
+func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, error) {
+	findOptions := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}, {Key: "_id", Value: -1}})
+	if query.Limit > 0 {
+		findOptions.SetSkip(int64((max(query.Page, 1) - 1) * query.Limit)).SetLimit(int64(query.Limit))
+	}
+
+	cursor, err := r.collection.Find(ctx, listFilter(query), findOptions)
 	if err != nil {
 		return nil, fmt.Errorf("find links: %w", err)
 	}
@@ -47,6 +63,34 @@ func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, er
 		return nil, fmt.Errorf("decode links: %w", err)
 	}
 	return links, nil
+}
+
+func (r *MongoRepository) Count(ctx context.Context, query ListQuery) (int64, error) {
+	total, err := r.collection.CountDocuments(ctx, listFilter(query))
+	if err != nil {
+		return 0, fmt.Errorf("count links: %w", err)
+	}
+	return total, nil
+}
+
+func (r *MongoRepository) Totals(ctx context.Context) ([]GroupTotals, error) {
+	cursor, err := r.collection.Aggregate(ctx, mongo.Pipeline{
+		{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$groupId"},
+			{Key: "links", Value: bson.D{{Key: "$sum", Value: 1}}},
+			{Key: "clicks", Value: bson.D{{Key: "$sum", Value: "$clicks"}}},
+		}}},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("aggregate link totals: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	totals := []GroupTotals{}
+	if err := cursor.All(ctx, &totals); err != nil {
+		return nil, fmt.Errorf("decode link totals: %w", err)
+	}
+	return totals, nil
 }
 
 func (r *MongoRepository) FindByID(ctx context.Context, id bson.ObjectID) (*Link, error) {
