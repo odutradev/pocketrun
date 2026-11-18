@@ -28,50 +28,46 @@ export const ListPanel = styled.section`
 `;
 
 export const ListTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0;
   padding: ${({ theme }) => `${theme.spacing(3)} ${theme.spacing(4)}`};
-  border-bottom: 1px solid ${({ theme }) => theme.brand.border};
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: ${({ theme }) => theme.brand.steel};
+`;
+
+export const ListCount = styled.span`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 12px;
+  font-weight: 500;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
 export const List = styled.ul`
   display: flex;
   flex-direction: column;
+  gap: 2px;
   margin: 0;
-  padding: 0;
+  padding: ${({ theme }) => `0 ${theme.spacing(2)} ${theme.spacing(2)}`};
   overflow-y: auto;
   list-style: none;
-
-  li + li {
-    border-top: 1px solid ${({ theme }) => theme.brand.border};
-  }
 `;
 
 export const Item = styled.button<VersionItemStyleProps>`
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing(1.5)};
+  gap: 2px;
   width: 100%;
-  padding: ${({ theme }) => `${theme.spacing(3)} ${theme.spacing(4)}`};
+  padding: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(3)}`};
   border: 0;
+  border-radius: ${({ theme }) => theme.radii.small};
   background-color: ${({ theme, $isSelected }) => ($isSelected ? theme.brand.raised : "transparent")};
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 3px;
-    background-color: ${({ theme, $isSelected }) => ($isSelected ? theme.accent.base : "transparent")};
-  }
 
   &:hover {
     background-color: ${({ theme }) => theme.brand.raised};
@@ -85,16 +81,32 @@ export const Item = styled.button<VersionItemStyleProps>`
 
 export const ItemHeader = styled.span`
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(2)};
 `;
 
 export const ItemLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1.5)};
   font-family: ${({ theme }) => theme.brand.fonts.mono};
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: ${({ theme }) => theme.brand.steel};
+`;
+
+export const LiveDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background-color: ${({ theme }) => theme.brand.states.success};
+`;
+
+export const ItemTime = styled.time`
+  flex-shrink: 0;
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
 export const ItemMessage = styled.span`

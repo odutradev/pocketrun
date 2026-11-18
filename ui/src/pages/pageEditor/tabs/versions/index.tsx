@@ -14,9 +14,12 @@ import {
   ItemLabel,
   ItemMessage,
   ItemMeta,
+  ItemTime,
   List,
+  ListCount,
   ListPanel,
   ListTitle,
+  LiveDot,
   Removed,
   Stats,
   Title,
@@ -151,7 +154,10 @@ const VersionsTab = () => {
     <Container>
       <ListPanel>
         <ListTitle>
-          {versions.length === 1 ? "1 versão" : `${versions.length} versões`} · guarda até {pageVersionsKept}
+          Versões
+          <ListCount title={`Ficam guardadas as últimas ${pageVersionsKept} versões`}>
+            {versions.length}/{pageVersionsKept}
+          </ListCount>
         </ListTitle>
         <List aria-label="Versões da página">
           {versions.map((version) => {
@@ -161,13 +167,16 @@ const VersionsTab = () => {
               <li key={version.id}>
                 <Item type="button" $isSelected={isSelected} aria-pressed={isSelected} onClick={() => handleSelect(version.number)}>
                   <ItemHeader>
-                    <ItemLabel>{version.label}</ItemLabel>
-                    {isLive && <Badge tone="success" hasDot>No ar</Badge>}
-                    {version.restoredFrom !== null && <Badge>Restaurada da {versionLabel(version.restoredFrom)}</Badge>}
+                    <ItemLabel>
+                      {version.label}
+                      {isLive && <LiveDot role="img" aria-label="No ar" title="No ar" />}
+                    </ItemLabel>
+                    <ItemTime dateTime={version.createdAt}>{formatRelativeTime(version.createdAt, now)}</ItemTime>
                   </ItemHeader>
                   {version.message && <ItemMessage>{version.message}</ItemMessage>}
                   <ItemMeta>
-                    {version.actor.name} · {formatRelativeTime(version.createdAt, now)} · {formatBytes(version.size)}
+                    {version.actor.name} · {formatBytes(version.size)}
+                    {version.restoredFrom !== null && ` · restaurada da ${versionLabel(version.restoredFrom)}`}
                   </ItemMeta>
                 </Item>
               </li>
