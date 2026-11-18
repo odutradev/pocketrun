@@ -2,6 +2,7 @@ package link
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 	"time"
 
@@ -32,6 +33,7 @@ var (
 	ErrLinkUnavailable = errors.New("link unavailable")
 	ErrInvalidLinkID   = errors.New("invalid link id")
 	ErrInvalidSchedule = errors.New("invalid schedule")
+	ErrSelfRedirect    = errors.New("destination points to this shortener")
 )
 
 type Link struct {
@@ -99,6 +101,37 @@ func (i *Input) Normalize() {
 	}
 }
 
+func (i Input) CheckDestination(hosts []string) error {
+	target, err := url.Parse(i.URL)
+	if err != nil {
+		return nil
+	}
+
+	destination := normalizeHost(target.Host, target.Scheme)
+	for _, host := range hosts {
+		if host != "" && normalizeHost(host, target.Scheme) == destination {
+			return ErrSelfRedirect
+		}
+	}
+	return nil
+}
+
+func normalizeHost(host, scheme string) string {
+	host = strings.ToLower(strings.TrimSpace(host))
+	switch scheme {
+	case "https":
+		return strings.TrimSuffix(host, ":443")
+	case "http":
+		return strings.TrimSuffix(host, ":80")
+	default:
+		return host
+	}
+}
+
+func NormalizeSlug(value string) string {
+	return strings.ToLower(strings.Trim(strings.TrimSpace(value), "/"))
+}
+
 func (i Input) CheckSchedule() error {
 	switch i.Mode {
 	case ModePeriod:
@@ -121,17 +154,31 @@ const (
 	UngroupedFilter  = "none"
 )
 
+type Sort string
+
+const (
+	SortRecent   Sort = "recent"
+	SortClicks   Sort = "clicks"
+	SortTitle    Sort = "title"
+	SortExpiring Sort = "expiring"
+)
+
 type ListQuery struct {
 	GroupID   *bson.ObjectID
 	Ungrouped bool
 	Search    string
+	State     State
+	Sort      Sort
 	Page      int
 	Limit     int
+	Now       time.Time
 }
 
 type ListParams struct {
 	GroupID string `json:"groupId" query:"groupId" validate:"omitempty,mongodb|eq=none"`
 	Search  string `json:"search" query:"search" validate:"max=100"`
+	State   string `json:"state" query:"state" validate:"omitempty,oneof=active inactive scheduled expired exhausted"`
+	Sort    string `json:"sort" query:"sort" validate:"omitempty,oneof=recent clicks title expiring"`
 	Page    int    `json:"page" query:"page" validate:"omitempty,min=1"`
 	Limit   int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 }
@@ -140,8 +187,13 @@ func (p ListParams) Query() ListQuery {
 	query := ListQuery{
 		Ungrouped: p.GroupID == UngroupedFilter,
 		Search:    strings.TrimSpace(p.Search),
+		State:     State(p.State),
+		Sort:      SortRecent,
 		Page:      max(p.Page, 1),
 		Limit:     DefaultListLimit,
+	}
+	if p.Sort != "" {
+		query.Sort = Sort(p.Sort)
 	}
 	if p.Limit > 0 {
 		query.Limit = p.Limit

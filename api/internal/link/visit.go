@@ -29,6 +29,11 @@ type Visit struct {
 	IP        string
 	UserAgent string
 	Referrer  string
+	IsProbe   bool
+}
+
+func (v Visit) IsBot() bool {
+	return v.IsProbe || isBot(strings.ToLower(v.UserAgent))
 }
 
 type Open struct {
@@ -44,7 +49,7 @@ type Open struct {
 }
 
 func VisitFromRequest(r *http.Request) Visit {
-	return Visit{IP: clientIP(r), UserAgent: r.UserAgent(), Referrer: r.Referer()}
+	return Visit{IP: clientIP(r), UserAgent: r.UserAgent(), Referrer: r.Referer(), IsProbe: r.Method == http.MethodHead}
 }
 
 func clientIP(r *http.Request) string {
@@ -114,7 +119,7 @@ func newOpen(linkID bson.ObjectID, visit Visit, visitor string, at time.Time) *O
 		Device:   deviceOf(agent),
 		System:   systemOf(agent),
 		Browser:  browserOf(agent),
-		IsBot:    isBot(agent),
+		IsBot:    visit.IsBot(),
 	}
 }
 

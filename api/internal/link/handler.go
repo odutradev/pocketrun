@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 
@@ -26,6 +28,7 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /links/list", authenticate(http.HandlerFunc(h.list)))
 	mux.Handle("GET /links/summary/details", authenticate(http.HandlerFunc(h.summary)))
+	mux.Handle("GET /links/analytics/details", authenticate(http.HandlerFunc(h.overview)))
 	mux.Handle("GET /links/slug-availability/check", authenticate(http.HandlerFunc(h.checkSlug)))
 	mux.Handle("POST /links/create", authenticate(http.HandlerFunc(h.create)))
 	mux.Handle("GET /links/{id}/details", authenticate(http.HandlerFunc(h.getByID)))
@@ -37,6 +40,7 @@ func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handl
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{slug}", h.open)
+	mux.HandleFunc("GET /{slug}/{$}", h.open)
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +95,10 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteDecodeError(w, err)
 		return
 	}
+	if err := input.CheckDestination(requestHosts(r)); err != nil {
+		h.writeError(w, r, "create link", err)
+		return
+	}
 
 	link, err := h.service.Create(ctx, managerID, input)
 	if err != nil {
@@ -125,6 +133,10 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	var input Input
 	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 		httpx.WriteDecodeError(w, err)
+		return
+	}
+	if err := input.CheckDestination(requestHosts(r)); err != nil {
+		h.writeError(w, r, "update link", err)
 		return
 	}
 
@@ -192,10 +204,25 @@ func (h *Handler) analytics(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, analytics)
 }
 
+func (h *Handler) overview(w http.ResponseWriter, r *http.Request) {
+	var params AnalyticsParams
+	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	overview, err := h.service.Overview(r.Context(), params.Query())
+	if err != nil {
+		h.writeError(w, r, "links overview", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, overview)
+}
+
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	link, err := h.service.Open(r.Context(), r.PathValue("slug"), VisitFromRequest(r))
 	if errors.Is(err, ErrLinkNotFound) || errors.Is(err, ErrLinkUnavailable) {
-		http.NotFound(w, r)
+		h.writeNotFoundPage(w, r)
 		return
 	}
 	if err != nil {
@@ -205,7 +232,51 @@ func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Cache-Control", "no-store")
-	http.Redirect(w, r, link.URL, http.StatusFound)
+	http.Redirect(w, r, withQuery(link.URL, r.URL.Query()), http.StatusFound)
+}
+
+func withQuery(destination string, query url.Values) string {
+	if len(query) == 0 {
+		return destination
+	}
+
+	target, err := url.Parse(destination)
+	if err != nil {
+		return destination
+	}
+
+	values := target.Query()
+	extra := url.Values{}
+	hasOverlap := false
+	for key, items := range query {
+		if values.Has(key) {
+			values[key] = items
+			hasOverlap = true
+			continue
+		}
+		extra[key] = items
+	}
+
+	switch {
+	case hasOverlap:
+		for key, items := range extra {
+			values[key] = items
+		}
+		target.RawQuery = values.Encode()
+	case target.RawQuery == "":
+		target.RawQuery = extra.Encode()
+	default:
+		target.RawQuery = target.RawQuery + "&" + extra.Encode()
+	}
+	return target.String()
+}
+
+func requestHosts(r *http.Request) []string {
+	hosts := []string{r.Host}
+	for _, host := range strings.Split(r.Header.Get("X-Forwarded-Host"), ",") {
+		hosts = append(hosts, strings.TrimSpace(host))
+	}
+	return hosts
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {
@@ -216,6 +287,8 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_group_id")
 	case errors.Is(err, ErrInvalidSchedule):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_schedule")
+	case errors.Is(err, ErrSelfRedirect):
+		httpx.WriteError(w, http.StatusBadRequest, "self_redirect")
 	case errors.Is(err, slug.ErrInvalidSlug):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_slug")
 	case errors.Is(err, slug.ErrReservedSlug):

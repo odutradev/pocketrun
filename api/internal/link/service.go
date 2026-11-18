@@ -22,11 +22,12 @@ type Repository interface {
 	Count(ctx context.Context, query ListQuery) (int64, error)
 	Totals(ctx context.Context) ([]GroupTotals, error)
 	FindByID(ctx context.Context, id bson.ObjectID) (*Link, error)
+	FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]Link, error)
 	Insert(ctx context.Context, link *Link) error
 	Replace(ctx context.Context, link *Link) error
 	Delete(ctx context.Context, id bson.ObjectID) error
 	UnsetGroup(ctx context.Context, groupID bson.ObjectID) error
-	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time) (*Link, error)
+	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error)
 }
 
 type EventRepository interface {
@@ -38,6 +39,7 @@ type EventRepository interface {
 type OpenRepository interface {
 	InsertOpen(ctx context.Context, open *Open) error
 	FindOpens(ctx context.Context, linkID bson.ObjectID, from, to time.Time) ([]Open, error)
+	FindOpensBetween(ctx context.Context, from, to time.Time) ([]Open, error)
 	DeleteOpens(ctx context.Context, linkID bson.ObjectID) error
 }
 
@@ -92,6 +94,7 @@ func NewService(dependencies Dependencies) *Service {
 }
 
 func (s *Service) List(ctx context.Context, query ListQuery) (ListPage, error) {
+	query.Now = time.Now()
 	links, err := s.repository.Find(ctx, query)
 	if err != nil {
 		return ListPage{}, fmt.Errorf("list links: %w", err)
@@ -102,9 +105,8 @@ func (s *Service) List(ctx context.Context, query ListQuery) (ListPage, error) {
 		return ListPage{}, fmt.Errorf("list links: %w", err)
 	}
 
-	now := time.Now()
 	for index := range links {
-		links[index].State = links[index].StateAt(now)
+		links[index].State = links[index].StateAt(query.Now)
 	}
 	return newListPage(links, total, query), nil
 }
@@ -340,7 +342,68 @@ func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query Analyti
 	return analytics, nil
 }
 
+func (s *Service) Overview(ctx context.Context, query AnalyticsQuery) (Overview, error) {
+	to := time.Now()
+	span := query.Range.Duration()
+	from := to.Add(-OpenRetention)
+	if span > 0 {
+		from = to.Add(-span)
+	}
+
+	opens, err := s.opens.FindOpensBetween(ctx, from, to)
+	if err != nil {
+		return Overview{}, fmt.Errorf("links overview: %w", err)
+	}
+	if span == 0 {
+		from = to.Add(-7 * 24 * time.Hour)
+		if len(opens) > 0 && opens[0].At.Before(from) {
+			from = opens[0].At
+		}
+	}
+
+	overview := Overview{Analytics: buildAnalytics(query, from, to, opens), TopLinks: []RankedLink{}}
+	if span > 0 {
+		previous, err := s.opens.FindOpensBetween(ctx, from.Add(-span), from)
+		if err != nil {
+			return Overview{}, fmt.Errorf("links overview: %w", err)
+		}
+		clicks, visitors := summarize(previous)
+		overview.Totals.PreviousClicks = &clicks
+		overview.Totals.PreviousVisitors = &visitors
+	}
+
+	ranked := rankLinks(opens)
+	if len(ranked) == 0 {
+		return overview, nil
+	}
+
+	ids := make([]bson.ObjectID, 0, len(ranked))
+	for _, item := range ranked {
+		ids = append(ids, item.ID)
+	}
+	links, err := s.repository.FindByIDs(ctx, ids)
+	if err != nil {
+		return Overview{}, fmt.Errorf("links overview: %w", err)
+	}
+
+	known := map[bson.ObjectID]Link{}
+	for _, link := range links {
+		known[link.ID] = link
+	}
+	for _, item := range ranked {
+		link, ok := known[item.ID]
+		if !ok {
+			continue
+		}
+		item.Title = link.Title
+		item.Slug = link.Slug
+		overview.TopLinks = append(overview.TopLinks, item)
+	}
+	return overview, nil
+}
+
 func (s *Service) Open(ctx context.Context, value string, visit Visit) (*Link, error) {
+	value = NormalizeSlug(value)
 	entry, err := s.slugs.Find(ctx, value)
 	if errors.Is(err, slug.ErrSlugNotFound) {
 		return nil, ErrLinkNotFound
@@ -354,12 +417,13 @@ func (s *Service) Open(ctx context.Context, value string, visit Visit) (*Link, e
 	}
 
 	now := time.Now()
-	link, err := s.repository.RegisterOpen(ctx, entry.TargetID, now)
+	isCounted := !visit.IsBot()
+	link, err := s.repository.RegisterOpen(ctx, entry.TargetID, now, isCounted)
 	if err != nil {
 		return nil, fmt.Errorf("open link %s: %w", value, err)
 	}
 
-	go s.recordOpen(context.WithoutCancel(ctx), *link, visit, now)
+	go s.recordOpen(context.WithoutCancel(ctx), *link, visit, now, isCounted)
 	return link, nil
 }
 
@@ -398,7 +462,7 @@ func (s *Service) reserveSlug(ctx context.Context, value string, targetID bson.O
 	return value, nil
 }
 
-func (s *Service) recordOpen(ctx context.Context, link Link, visit Visit, at time.Time) {
+func (s *Service) recordOpen(ctx context.Context, link Link, visit Visit, at time.Time, isCounted bool) {
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
@@ -410,7 +474,7 @@ func (s *Service) recordOpen(ctx context.Context, link Link, visit Visit, at tim
 		s.logger.WarnContext(ctx, "record link open", "linkId", link.ID.Hex(), "error", err)
 	}
 
-	if link.Mode == ModeClicks && link.MaxClicks != nil && link.Clicks+1 == *link.MaxClicks {
+	if isCounted && link.Mode == ModeClicks && link.MaxClicks != nil && link.Clicks+1 == *link.MaxClicks {
 		s.record(ctx, newEvent(link.ID, EventExhausted, systemActor(), nil, at))
 	}
 }

@@ -51,6 +51,21 @@ func (r *MongoOpenRepository) FindOpens(ctx context.Context, linkID bson.ObjectI
 	return opens, nil
 }
 
+func (r *MongoOpenRepository) FindOpensBetween(ctx context.Context, from, to time.Time) ([]Open, error) {
+	filter := bson.M{"at": bson.M{"$gte": from, "$lt": to}}
+	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "at", Value: 1}}))
+	if err != nil {
+		return nil, fmt.Errorf("find opens between: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	opens := []Open{}
+	if err := cursor.All(ctx, &opens); err != nil {
+		return nil, fmt.Errorf("decode opens between: %w", err)
+	}
+	return opens, nil
+}
+
 func (r *MongoOpenRepository) DeleteOpens(ctx context.Context, linkID bson.ObjectID) error {
 	if _, err := r.collection.DeleteMany(ctx, bson.M{"linkId": linkID}); err != nil {
 		return fmt.Errorf("delete link opens: %w", err)

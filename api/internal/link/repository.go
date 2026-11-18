@@ -31,6 +31,48 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
+var farFuture = time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)
+
+func availableConditions(now time.Time) bson.A {
+	return bson.A{
+		bson.M{"mode": ModeActive},
+		bson.M{
+			"mode":   ModePeriod,
+			"endsAt": bson.M{"$gt": now},
+			"$or": bson.A{
+				bson.M{"startsAt": bson.M{"$exists": false}},
+				bson.M{"startsAt": bson.M{"$lte": now}},
+			},
+		},
+		bson.M{
+			"mode":  ModeClicks,
+			"$expr": bson.M{"$lt": bson.A{"$clicks", "$maxClicks"}},
+		},
+	}
+}
+
+func stateFilter(state State, now time.Time) bson.M {
+	switch state {
+	case StateInactive:
+		return bson.M{"mode": ModeInactive}
+	case StateScheduled:
+		return bson.M{"mode": ModePeriod, "startsAt": bson.M{"$gt": now}}
+	case StateExpired:
+		return bson.M{"mode": ModePeriod, "endsAt": bson.M{"$lte": now}}
+	case StateExhausted:
+		return bson.M{"mode": ModeClicks, "$expr": bson.M{"$gte": bson.A{"$clicks", "$maxClicks"}}}
+	default:
+		return bson.M{"$or": availableConditions(now)}
+	}
+}
+
+func queryTime(query ListQuery) time.Time {
+	if query.Now.IsZero() {
+		return time.Now()
+	}
+	return query.Now
+}
+
 func listFilter(query ListQuery) bson.M {
 	filter := bson.M{}
 	if query.GroupID != nil {
@@ -39,20 +81,62 @@ func listFilter(query ListQuery) bson.M {
 	if query.Ungrouped {
 		filter["groupId"] = nil
 	}
+
+	conditions := bson.A{}
 	if query.Search != "" {
 		pattern := bson.Regex{Pattern: regexp.QuoteMeta(query.Search), Options: "i"}
-		filter["$or"] = bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}, bson.M{"url": pattern}}
+		conditions = append(conditions, bson.M{"$or": bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}, bson.M{"url": pattern}}})
+	}
+	if query.State != "" {
+		conditions = append(conditions, stateFilter(query.State, queryTime(query)))
+	}
+	if len(conditions) > 0 {
+		filter["$and"] = conditions
 	}
 	return filter
 }
 
+func listSort(sort Sort) bson.D {
+	newest := bson.D{{Key: "createdAt", Value: -1}, {Key: "_id", Value: -1}}
+	switch sort {
+	case SortClicks:
+		return append(bson.D{{Key: "clicks", Value: -1}}, newest...)
+	case SortTitle:
+		return append(bson.D{{Key: "title", Value: 1}}, newest...)
+	case SortExpiring:
+		return append(bson.D{{Key: "expiresSort", Value: 1}}, newest...)
+	default:
+		return newest
+	}
+}
+
 func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, error) {
-	findOptions := options.Find().SetSort(bson.D{{Key: "createdAt", Value: -1}, {Key: "_id", Value: -1}})
+	pipeline := mongo.Pipeline{{{Key: "$match", Value: listFilter(query)}}}
+	if query.Sort == SortExpiring {
+		upcoming := bson.D{{Key: "$cond", Value: bson.A{
+			bson.D{{Key: "$gt", Value: bson.A{"$endsAt", queryTime(query)}}},
+			"$endsAt",
+			farFuture,
+		}}}
+		pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{{Key: "expiresSort", Value: upcoming}}}})
+	}
+	pipeline = append(pipeline, bson.D{{Key: "$sort", Value: listSort(query.Sort)}})
 	if query.Limit > 0 {
-		findOptions.SetSkip(int64((max(query.Page, 1) - 1) * query.Limit)).SetLimit(int64(query.Limit))
+		pipeline = append(pipeline,
+			bson.D{{Key: "$skip", Value: int64((max(query.Page, 1) - 1) * query.Limit)}},
+			bson.D{{Key: "$limit", Value: int64(query.Limit)}},
+		)
+	}
+	if query.Sort == SortExpiring {
+		pipeline = append(pipeline, bson.D{{Key: "$project", Value: bson.D{{Key: "expiresSort", Value: 0}}}})
 	}
 
-	cursor, err := r.collection.Find(ctx, listFilter(query), findOptions)
+	aggregateOptions := options.Aggregate()
+	if query.Sort == SortTitle {
+		aggregateOptions.SetCollation(&options.Collation{Locale: "pt", Strength: 1})
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline, aggregateOptions)
 	if err != nil {
 		return nil, fmt.Errorf("find links: %w", err)
 	}
@@ -91,6 +175,20 @@ func (r *MongoRepository) Totals(ctx context.Context) ([]GroupTotals, error) {
 		return nil, fmt.Errorf("decode link totals: %w", err)
 	}
 	return totals, nil
+}
+
+func (r *MongoRepository) FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]Link, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+	if err != nil {
+		return nil, fmt.Errorf("find links by ids: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	links := []Link{}
+	if err := cursor.All(ctx, &links); err != nil {
+		return nil, fmt.Errorf("decode links by ids: %w", err)
+	}
+	return links, nil
 }
 
 func (r *MongoRepository) FindByID(ctx context.Context, id bson.ObjectID) (*Link, error) {
@@ -147,28 +245,16 @@ func (r *MongoRepository) UnsetGroup(ctx context.Context, groupID bson.ObjectID)
 	return nil
 }
 
-func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time) (*Link, error) {
-	filter := bson.M{
-		"_id": id,
-		"$or": bson.A{
-			bson.M{"mode": ModeActive},
-			bson.M{
-				"mode":   ModePeriod,
-				"endsAt": bson.M{"$gt": now},
-				"$or": bson.A{
-					bson.M{"startsAt": bson.M{"$exists": false}},
-					bson.M{"startsAt": bson.M{"$lte": now}},
-				},
-			},
-			bson.M{
-				"mode":  ModeClicks,
-				"$expr": bson.M{"$lt": bson.A{"$clicks", "$maxClicks"}},
-			},
-		},
-	}
+func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error) {
+	filter := bson.M{"_id": id, "$or": availableConditions(now)}
 
 	var link Link
-	err := r.collection.FindOneAndUpdate(ctx, filter, bson.M{"$inc": bson.M{"clicks": 1}}).Decode(&link)
+	var err error
+	if isCounted {
+		err = r.collection.FindOneAndUpdate(ctx, filter, bson.M{"$inc": bson.M{"clicks": 1}}).Decode(&link)
+	} else {
+		err = r.collection.FindOne(ctx, filter).Decode(&link)
+	}
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, ErrLinkUnavailable
 	}
