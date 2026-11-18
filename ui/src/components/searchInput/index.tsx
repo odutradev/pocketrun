@@ -1,9 +1,9 @@
 import { Cross2Icon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { searchDelay, searchSpinnerMinDuration } from "@assets/config";
 import VisuallyHidden from "@components/visuallyHidden";
 import IconButton from "@components/iconButton";
-import { searchDelay } from "@assets/config";
 import { Container, Spinner } from "./styles";
 import Input from "@components/input";
 
@@ -12,7 +12,9 @@ import type { KeyboardEvent } from "react";
 
 const SearchInput = ({ label, placeholder, defaultValue = "", isLoading = false, delay = searchDelay, onSearch }: SearchInputProps) => {
   const [value, setValue] = useState(defaultValue);
+  const [isSpinnerHeld, setIsSpinnerHeld] = useState(isLoading);
   const inputRef = useRef<HTMLInputElement>(null);
+  const spinnerStartedAt = useRef(0);
   const lastTerm = useRef(defaultValue.trim());
   const onSearchRef = useRef(onSearch);
 
@@ -31,6 +33,18 @@ const SearchInput = ({ label, placeholder, defaultValue = "", isLoading = false,
     const timeout = window.setTimeout(() => emitTerm(value), delay);
     return () => window.clearTimeout(timeout);
   }, [value, delay, emitTerm]);
+
+  if (isLoading && !isSpinnerHeld) setIsSpinnerHeld(true);
+
+  useEffect(() => {
+    if (isLoading) {
+      spinnerStartedAt.current = Date.now();
+      return;
+    }
+    const remaining = searchSpinnerMinDuration - (Date.now() - spinnerStartedAt.current);
+    const timeout = window.setTimeout(() => setIsSpinnerHeld(false), Math.max(remaining, 0));
+    return () => window.clearTimeout(timeout);
+  }, [isLoading]);
 
   const handleClear = () => {
     setValue("");
@@ -59,7 +73,7 @@ const SearchInput = ({ label, placeholder, defaultValue = "", isLoading = false,
         label={label}
         isLabelHidden
         type="search"
-        leftIcon={isLoading ? <Spinner /> : <MagnifyingGlassIcon />}
+        leftIcon={isLoading || isSpinnerHeld ? <Spinner /> : <MagnifyingGlassIcon />}
         placeholder={placeholder}
         value={value}
         onChange={(event) => setValue(event.target.value)}

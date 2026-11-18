@@ -51,6 +51,8 @@ export const linksPageSize = 20;
 
 export const searchDelay = 400;
 
+export const searchSpinnerMinDuration = 500;
+
 export const clickLimitRange = { min: 1, max: 150, initial: 100 } as const;
 
 export const defaultPeriodHours = 168;
