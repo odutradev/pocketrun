@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, DashboardIcon, ListBulletIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
+import { DashboardIcon, ListBulletIcon, PlusIcon, StackIcon } from "@radix-ui/react-icons";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useRef } from "react";
@@ -20,7 +20,6 @@ import Button from "@components/button";
 import LinksSkeleton from "./skeleton";
 import useLinksPage from "./hook";
 
-import type { ContentNavbarAction } from "@components/contentNavbar/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
 import type { LinksView } from "@utils/types/link";
 
@@ -68,11 +67,6 @@ const LinksPage = () => {
   const viewOptions: SegmentedOption<LinksView>[] = [
     { value: "list", label: "Ver em lista", icon: <ListBulletIcon /> },
     { value: "cards", label: "Ver em cards", icon: <DashboardIcon /> }
-  ];
-
-  const navbarActions: ContentNavbarAction[] = [
-    ...(activeGroup ? [{ label: "Voltar", icon: <ArrowLeftIcon />, to: "/links" }] : []),
-    { label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }
   ];
 
   const handleListPageChange = (nextPage: number) => {
@@ -172,12 +166,13 @@ const LinksPage = () => {
     <Container>
       <ContentNavbar
         title={activeGroup?.name ?? "Links"}
+        parents={activeGroup ? [{ label: "Links", to: "/links" }] : undefined}
         info={
           activeGroup
             ? "Os links deste grupo. Para mudar o grupo de um link, abra o link e escolha outro grupo."
             : "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele; a busca procura nos links da lista."
         }
-        actions={navbarActions}
+        actions={[{ label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }]}
         onReload={loadLinks}
         isReloading={isLoading || isRefreshing}
         action={{ label: "Novo link", icon: <PlusIcon />, to: "/links/new" }}
