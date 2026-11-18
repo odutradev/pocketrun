@@ -11,6 +11,12 @@ export interface SelectAction {
   onSelect: () => void;
 }
 
+export type SelectSize = "sm" | "md";
+
+export interface SelectStyleProps {
+  $size: SelectSize;
+}
+
 export interface SelectProps {
   label: string;
   isLabelHidden?: boolean;
@@ -24,4 +30,5 @@ export interface SelectProps {
   hint?: ReactNode;
   error?: string;
   action?: SelectAction;
+  size?: SelectSize;
 }

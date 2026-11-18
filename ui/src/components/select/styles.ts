@@ -4,20 +4,26 @@ import styled, { css } from "styled-components";
 import { fieldControlStyles } from "@components/formField/styles";
 
 import type { FieldControlStyleProps } from "@components/formField/types";
+import type { SelectSize, SelectStyleProps } from "./types";
 
-export const Control = styled.div<FieldControlStyleProps>`
+const heights: Record<SelectSize, { mobile: string; desktop: string; font: string }> = {
+  sm: { mobile: "36px", desktop: "32px", font: "13px" },
+  md: { mobile: "44px", desktop: "40px", font: "15px" }
+};
+
+export const Control = styled.div<FieldControlStyleProps & SelectStyleProps>`
   ${fieldControlStyles}
   display: flex;
   align-items: stretch;
-  height: 44px;
+  height: ${({ $size }) => heights[$size].mobile};
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    height: 40px;
+    height: ${({ $size }) => heights[$size].desktop};
   }
 `;
 
-export const Trigger = styled(RadixSelect.Trigger)`
-  ${({ theme }) => css`
+export const Trigger = styled(RadixSelect.Trigger)<SelectStyleProps>`
+  ${({ theme, $size }) => css`
     && {
       flex: 1;
       width: 100%;
@@ -29,7 +35,7 @@ export const Trigger = styled(RadixSelect.Trigger)`
       box-shadow: none;
       color: ${theme.brand.steel};
       font-family: ${theme.brand.fonts.body};
-      font-size: 15px;
+      font-size: ${heights[$size].font};
       justify-content: space-between;
       cursor: pointer;
       outline: none;

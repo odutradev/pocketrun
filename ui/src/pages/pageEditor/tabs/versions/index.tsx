@@ -7,8 +7,8 @@ import {
   Bar,
   BarGroup,
   Body,
+  BaseField,
   Container,
-  Footer,
   Item,
   ItemHeader,
   ItemLabel,
@@ -20,6 +20,7 @@ import {
   Removed,
   Stats,
   Title,
+  Tools,
   Workbench
 } from "./styles";
 import { currentTimestamp, formatBytes, formatRelativeTime, versionLabel } from "@utils/functions";
@@ -149,7 +150,9 @@ const VersionsTab = () => {
   return (
     <Container>
       <ListPanel>
-        <ListTitle>{versions.length === 1 ? "1 versão" : `${versions.length} versões`}</ListTitle>
+        <ListTitle>
+          {versions.length === 1 ? "1 versão" : `${versions.length} versões`} · guarda até {pageVersionsKept}
+        </ListTitle>
         <List aria-label="Versões da página">
           {versions.map((version) => {
             const isSelected = version.number === selectedVersion;
@@ -175,7 +178,7 @@ const VersionsTab = () => {
       <Workbench $isExpanded={isExpanded} aria-label="Comparação de versões">
         <Bar>
           <BarGroup>
-            <Title>{getTitle()}</Title>
+            <Title title={getTitle()}>{getTitle()}</Title>
             {isComparingDraft && isDirty && <Badge tone="warning">Editor não salvo</Badge>}
             {stats && (
               <Stats aria-label={`${stats.added} linhas entraram e ${stats.removed} saíram`}>
@@ -184,8 +187,10 @@ const VersionsTab = () => {
               </Stats>
             )}
           </BarGroup>
-          <BarGroup>
-            <Select label="Comparar com" isLabelHidden options={baseOptions} value={base} onValueChange={handleBaseChange} />
+          <Tools>
+            <BaseField>
+              <Select label="Comparar com" isLabelHidden size="sm" options={baseOptions} value={base} onValueChange={handleBaseChange} />
+            </BaseField>
             {(isWide || isExpanded) && (
               <IconButton
                 label={isSideBySide ? "Mostrar em uma coluna" : "Mostrar lado a lado"}
@@ -200,7 +205,19 @@ const VersionsTab = () => {
               size="sm"
               onClick={() => setIsExpanded((current) => !current)}
             />
-          </BarGroup>
+            {selected && (
+              <Button
+                size="sm"
+                variant="secondary"
+                leftIcon={<CounterClockwiseClockIcon />}
+                title="Leva o código para o editor; ao salvar, ele vira uma versão nova"
+                disabled={isCurrent && !isDirty}
+                onClick={() => handleVersionRestore(selected.number)}
+              >
+                Restaurar
+              </Button>
+            )}
+          </Tools>
         </Bar>
         <Body>
           {original === undefined || modified === undefined ? (
@@ -216,23 +233,6 @@ const VersionsTab = () => {
             />
           )}
         </Body>
-        <Footer>
-          <span>
-            Verde entrou, vermelho saiu. Restaurar leva o código para o editor; ao salvar, ele vira uma versão nova. Ficam guardadas as últimas{" "}
-            {pageVersionsKept} versões.
-          </span>
-          {selected && (
-            <Button
-              size="sm"
-              variant="secondary"
-              leftIcon={<CounterClockwiseClockIcon />}
-              disabled={isCurrent && !isDirty}
-              onClick={() => handleVersionRestore(selected.number)}
-            >
-              Restaurar a {selected.label}
-            </Button>
-          )}
-        </Footer>
       </Workbench>
     </Container>
   );

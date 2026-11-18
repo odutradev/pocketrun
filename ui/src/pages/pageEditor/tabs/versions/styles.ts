@@ -137,22 +137,42 @@ export const Bar = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: ${({ theme }) => theme.spacing(2)};
-  padding: ${({ theme }) => theme.spacing(2)};
-  padding-left: ${({ theme }) => theme.spacing(4)};
+  min-height: 48px;
+  padding: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(4)}`};
   border-bottom: 1px solid ${({ theme }) => theme.brand.border};
   background-color: ${({ theme }) => theme.brand.surface};
 `;
 
 export const BarGroup = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex: 1 1 auto;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing(2)};
+  gap: ${({ theme }) => theme.spacing(3)};
   min-width: 0;
+`;
+
+export const Tools = styled.div`
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(1)};
+  margin-left: auto;
+`;
+
+export const BaseField = styled.div`
+  width: 200px;
+  margin-right: ${({ theme }) => theme.spacing(1)};
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    width: 150px;
+  }
 `;
 
 export const Title = styled.h2`
   margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: ${({ theme }) => theme.brand.fonts.mono};
   font-size: 14px;
   font-weight: 700;
@@ -161,6 +181,7 @@ export const Title = styled.h2`
 
 export const Stats = styled.span`
   display: inline-flex;
+  flex-shrink: 0;
   gap: ${({ theme }) => theme.spacing(2)};
   font-family: ${({ theme }) => theme.brand.fonts.mono};
   font-size: 12px;
@@ -179,17 +200,4 @@ export const Body = styled.div`
   display: flex;
   flex: 1;
   min-height: 0;
-`;
-
-export const Footer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(3)};
-  padding: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(2)} ${theme.spacing(4)}`};
-  border-top: 1px solid ${({ theme }) => theme.brand.border};
-  background-color: ${({ theme }) => theme.brand.surface};
-  font-size: 12px;
-  color: ${({ theme }) => theme.brand.steelMuted};
 `;
