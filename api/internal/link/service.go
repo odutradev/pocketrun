@@ -30,6 +30,7 @@ type Repository interface {
 type EventRepository interface {
 	InsertEvent(ctx context.Context, event *Event) error
 	FindEvents(ctx context.Context, linkID bson.ObjectID, query HistoryQuery) ([]Event, error)
+	CountEvents(ctx context.Context, linkID bson.ObjectID) (int64, error)
 }
 
 type OpenRepository interface {
@@ -259,12 +260,21 @@ func (s *Service) History(ctx context.Context, id bson.ObjectID, query HistoryQu
 		return HistoryPage{}, fmt.Errorf("link history %s: %w", id.Hex(), err)
 	}
 
-	if expired := expirationEvent(link, query.Before, time.Now()); expired != nil {
+	total, err := s.events.CountEvents(ctx, id)
+	if err != nil {
+		return HistoryPage{}, fmt.Errorf("link history %s: %w", id.Hex(), err)
+	}
+
+	now := time.Now()
+	if expirationEvent(link, nil, now) != nil {
+		total++
+	}
+	if expired := expirationEvent(link, query.Before, now); expired != nil {
 		events = append(events, *expired)
 		sort.SliceStable(events, func(i, j int) bool { return events[i].At.After(events[j].At) })
 	}
 
-	page := HistoryPage{Events: events}
+	page := HistoryPage{Events: events, Total: total}
 	if len(events) > query.Limit {
 		page.Events = events[:query.Limit]
 		cursor := page.Events[query.Limit-1].At

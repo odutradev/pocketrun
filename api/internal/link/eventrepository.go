@@ -34,6 +34,14 @@ func (r *MongoEventRepository) InsertEvent(ctx context.Context, event *Event) er
 	return nil
 }
 
+func (r *MongoEventRepository) CountEvents(ctx context.Context, linkID bson.ObjectID) (int64, error) {
+	total, err := r.collection.CountDocuments(ctx, bson.M{"linkId": linkID})
+	if err != nil {
+		return 0, fmt.Errorf("count link events: %w", err)
+	}
+	return total, nil
+}
+
 func (r *MongoEventRepository) FindEvents(ctx context.Context, linkID bson.ObjectID, query HistoryQuery) ([]Event, error) {
 	filter := bson.M{"linkId": linkID}
 	if query.Before != nil {

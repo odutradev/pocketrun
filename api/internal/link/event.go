@@ -64,6 +64,7 @@ func (p HistoryParams) Query() HistoryQuery {
 type HistoryPage struct {
 	Events     []Event    `json:"events"`
 	NextCursor *time.Time `json:"nextCursor"`
+	Total      int64      `json:"total"`
 }
 
 func systemActor() Actor {
