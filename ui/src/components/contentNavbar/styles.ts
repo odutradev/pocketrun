@@ -50,9 +50,14 @@ export const ParentLink = styled(Link)`
     font-size: 22px;
     line-height: 1.2;
     letter-spacing: -0.02em;
+    display: inline-block;
+    max-width: 140px;
+    overflow: hidden;
     color: ${theme.brand.steelMuted};
     text-decoration: none;
+    text-overflow: ellipsis;
     white-space: nowrap;
+    vertical-align: bottom;
     transition: color ${theme.motion.fast}ms ${theme.motion.easing.standard};
 
     &:hover {
@@ -65,6 +70,7 @@ export const ParentLink = styled(Link)`
     }
 
     @media (min-width: ${theme.breakpoints.md}) {
+      max-width: 240px;
       font-size: 24px;
     }
   `}
@@ -81,13 +87,14 @@ export const Separator = styled.span`
   }
 `;
 
-export const Title = styled.h1`
+export const Title = styled.h1<{ $isCurrentCrumb: boolean }>`
   margin: 0;
   font-family: ${({ theme }) => theme.brand.fonts.display};
   font-weight: 700;
   font-size: 22px;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  color: ${({ theme, $isCurrentCrumb }) => ($isCurrentCrumb ? theme.accent.text : "inherit")};
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;

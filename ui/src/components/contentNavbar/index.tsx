@@ -48,7 +48,9 @@ const ContentNavbar = ({ title, parents = [], info, actions = [], action, onRelo
             <ol>
               {parents.map((parent) => (
                 <TrailItem key={parent.to}>
-                  <ParentLink to={parent.to}>{parent.label}</ParentLink>
+                  <ParentLink to={parent.to} title={parent.label}>
+                    {parent.label}
+                  </ParentLink>
                   <Separator aria-hidden="true">
                     <ChevronRightIcon />
                   </Separator>
@@ -57,7 +59,9 @@ const ContentNavbar = ({ title, parents = [], info, actions = [], action, onRelo
             </ol>
           </Trail>
         )}
-        <Title title={title}>{title}</Title>
+        <Title title={title} $isCurrentCrumb={parents.length > 0}>
+          {title}
+        </Title>
         {info && (
           <Tooltip content={<TooltipText>{info}</TooltipText>} side="bottom" sideOffset={6}>
             <InfoTrigger type="button" aria-label={`Sobre ${title}`}>
