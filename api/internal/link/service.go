@@ -475,7 +475,7 @@ func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit
 		s.logger.WarnContext(ctx, "record link open", "linkId", link.ID.Hex(), "error", err)
 	}
 
-	if isCounted && link.Mode == ModeClicks && link.MaxClicks != nil && link.Clicks+1 == *link.MaxClicks {
+	if isCounted && link.Rule().ExhaustedBy(link.Clicks+1) {
 		s.record(ctx, newEvent(link.ID, EventExhausted, systemActor(), nil, at))
 	}
 }
@@ -510,7 +510,7 @@ func (s *Service) actor(ctx context.Context) Actor {
 }
 
 func expirationEvent(link *Link, before *time.Time, now time.Time) *Event {
-	if link == nil || link.Mode != ModePeriod || link.EndsAt == nil || link.EndsAt.After(now) {
+	if link == nil || !link.Rule().ExpiredBefore(now) {
 		return nil
 	}
 	if before != nil && !link.EndsAt.Before(*before) {

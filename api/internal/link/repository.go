@@ -10,6 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"pocketrun-api/internal/activation"
 )
 
 type MongoRepository struct {
@@ -29,41 +31,6 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 		return fmt.Errorf("create links indexes: %w", err)
 	}
 	return nil
-}
-
-var farFuture = time.Date(9999, time.December, 31, 0, 0, 0, 0, time.UTC)
-
-func availableConditions(now time.Time) bson.A {
-	return bson.A{
-		bson.M{"mode": ModeActive},
-		bson.M{
-			"mode":   ModePeriod,
-			"endsAt": bson.M{"$gt": now},
-			"$or": bson.A{
-				bson.M{"startsAt": bson.M{"$exists": false}},
-				bson.M{"startsAt": bson.M{"$lte": now}},
-			},
-		},
-		bson.M{
-			"mode":  ModeClicks,
-			"$expr": bson.M{"$lt": bson.A{"$clicks", "$maxClicks"}},
-		},
-	}
-}
-
-func stateFilter(state State, now time.Time) bson.M {
-	switch state {
-	case StateInactive:
-		return bson.M{"mode": ModeInactive}
-	case StateScheduled:
-		return bson.M{"mode": ModePeriod, "startsAt": bson.M{"$gt": now}}
-	case StateExpired:
-		return bson.M{"mode": ModePeriod, "endsAt": bson.M{"$lte": now}}
-	case StateExhausted:
-		return bson.M{"mode": ModeClicks, "$expr": bson.M{"$gte": bson.A{"$clicks", "$maxClicks"}}}
-	default:
-		return bson.M{"$or": availableConditions(now)}
-	}
 }
 
 func queryTime(query ListQuery) time.Time {
@@ -88,7 +55,7 @@ func listFilter(query ListQuery) bson.M {
 		conditions = append(conditions, bson.M{"$or": bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}, bson.M{"url": pattern}}})
 	}
 	if query.State != "" {
-		conditions = append(conditions, stateFilter(query.State, queryTime(query)))
+		conditions = append(conditions, activation.StateFilter(query.State, queryTime(query)))
 	}
 	if len(conditions) > 0 {
 		filter["$and"] = conditions
@@ -113,11 +80,7 @@ func listSort(sort Sort) bson.D {
 func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, error) {
 	pipeline := mongo.Pipeline{{{Key: "$match", Value: listFilter(query)}}}
 	if query.Sort == SortExpiring {
-		upcoming := bson.D{{Key: "$cond", Value: bson.A{
-			bson.D{{Key: "$gt", Value: bson.A{"$endsAt", queryTime(query)}}},
-			"$endsAt",
-			farFuture,
-		}}}
+		upcoming := activation.UpcomingExpiry(queryTime(query))
 		pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{{Key: "expiresSort", Value: upcoming}}}})
 	}
 	pipeline = append(pipeline, bson.D{{Key: "$sort", Value: listSort(query.Sort)}})
@@ -246,7 +209,7 @@ func (r *MongoRepository) UnsetGroup(ctx context.Context, groupID bson.ObjectID)
 }
 
 func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error) {
-	filter := bson.M{"_id": id, "$or": availableConditions(now)}
+	filter := bson.M{"_id": id, "$or": activation.AvailableConditions(now)}
 
 	var link Link
 	var err error

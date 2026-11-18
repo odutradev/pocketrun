@@ -7,32 +7,34 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/activation"
 )
 
-type Mode string
+type Mode = activation.Mode
+
+type State = activation.State
 
 const (
-	ModeActive   Mode = "active"
-	ModeInactive Mode = "inactive"
-	ModePeriod   Mode = "period"
-	ModeClicks   Mode = "clicks"
+	ModeActive   = activation.ModeActive
+	ModeInactive = activation.ModeInactive
+	ModePeriod   = activation.ModePeriod
+	ModeClicks   = activation.ModeClicks
 )
 
-type State string
-
 const (
-	StateActive    State = "active"
-	StateInactive  State = "inactive"
-	StateScheduled State = "scheduled"
-	StateExpired   State = "expired"
-	StateExhausted State = "exhausted"
+	StateActive    = activation.StateActive
+	StateInactive  = activation.StateInactive
+	StateScheduled = activation.StateScheduled
+	StateExpired   = activation.StateExpired
+	StateExhausted = activation.StateExhausted
 )
 
 var (
 	ErrLinkNotFound    = errors.New("link not found")
 	ErrLinkUnavailable = errors.New("link unavailable")
 	ErrInvalidLinkID   = errors.New("invalid link id")
-	ErrInvalidSchedule = errors.New("invalid schedule")
+	ErrInvalidSchedule = activation.ErrInvalidSchedule
 	ErrSelfRedirect    = errors.New("destination points to this shortener")
 )
 
@@ -53,26 +55,12 @@ type Link struct {
 	UpdatedAt time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
+func (l Link) Rule() activation.Rule {
+	return activation.Rule{Mode: l.Mode, StartsAt: l.StartsAt, EndsAt: l.EndsAt, MaxClicks: l.MaxClicks}
+}
+
 func (l Link) StateAt(now time.Time) State {
-	switch l.Mode {
-	case ModeInactive:
-		return StateInactive
-	case ModePeriod:
-		if l.StartsAt != nil && now.Before(*l.StartsAt) {
-			return StateScheduled
-		}
-		if l.EndsAt != nil && !now.Before(*l.EndsAt) {
-			return StateExpired
-		}
-		return StateActive
-	case ModeClicks:
-		if l.MaxClicks != nil && l.Clicks >= *l.MaxClicks {
-			return StateExhausted
-		}
-		return StateActive
-	default:
-		return StateActive
-	}
+	return l.Rule().StateAt(l.Clicks, now)
 }
 
 type Input struct {
@@ -92,13 +80,13 @@ func (i *Input) Normalize() {
 	i.URL = strings.TrimSpace(i.URL)
 	i.GroupID = strings.TrimSpace(i.GroupID)
 
-	if i.Mode != ModePeriod {
-		i.StartsAt = nil
-		i.EndsAt = nil
-	}
-	if i.Mode != ModeClicks {
-		i.MaxClicks = nil
-	}
+	rule := i.Rule()
+	rule.Normalize()
+	i.StartsAt, i.EndsAt, i.MaxClicks = rule.StartsAt, rule.EndsAt, rule.MaxClicks
+}
+
+func (i Input) Rule() activation.Rule {
+	return activation.Rule{Mode: i.Mode, StartsAt: i.StartsAt, EndsAt: i.EndsAt, MaxClicks: i.MaxClicks}
 }
 
 func (i Input) CheckDestination(hosts []string) error {
@@ -133,20 +121,7 @@ func NormalizeSlug(value string) string {
 }
 
 func (i Input) CheckSchedule() error {
-	switch i.Mode {
-	case ModePeriod:
-		if i.EndsAt == nil {
-			return ErrInvalidSchedule
-		}
-		if i.StartsAt != nil && !i.StartsAt.Before(*i.EndsAt) {
-			return ErrInvalidSchedule
-		}
-	case ModeClicks:
-		if i.MaxClicks == nil {
-			return ErrInvalidSchedule
-		}
-	}
-	return nil
+	return i.Rule().Check()
 }
 
 const (
