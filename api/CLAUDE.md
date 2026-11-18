@@ -26,6 +26,10 @@ O layout mais comum em Go: `cmd/api` sobe o servidor e cada domínio é um pacot
 - Cada domínio é um pacote em `internal/<dominio>` com `handler.go`, `service.go`, `repository.go` e o arquivo do tipo (`user.go`).
 - O service declara a interface do repositório que consome. O pacote exporta só o que outros pacotes usam.
 - Código compartilhado de infraestrutura fica em `internal/platform` (banco, HTTP, logs). Nada de pacotes `utils` ou `common`.
+- A domain that grows past one subject becomes a folder of subdomains, one package per subject: `internal/page/{page, version, history, analytics, public}` and `internal/link/{link, history, analytics, public}`. Each subdomain has its own handler, service, repository and type file, and registers its own routes.
+- Dependencies between subdomains point one way: the core package (`page/page`, `link/link`) uses `version`, `history` and `analytics` through interfaces it declares, and those packages never import the core. When they need data from the core (expiry, titles, existence), their handler or service receives a small interface the core service implements.
+- `public` holds what visitors reach without login (redirects, page HTML). Admin routes stay in the other subdomains.
+- Shared non-domain logic used by several domains lives in `internal/platform` (`activation` for schedules and click limits, `traffic` for visits and analytics math). The event actor lives in `user` (`user.Actor`).
 - Um domínio nunca importa o repositório de outro: chama o service exportado dele.
 - Repository interfaces live in the consuming service.
 - Everything that is not public module API lives in `internal/`.
@@ -41,10 +45,18 @@ O layout mais comum em Go: `cmd/api` sobe o servidor e cada domínio é um pacot
 │   ├── config/
 │   │   └── config.go  # variáveis de ambiente
 │   ├── platform/
+│   │   ├── activation/  # agenda e limite de cliques
 │   │   ├── database/
 │   │   │   └── mongo.go  # conexão
-│   │   └── httpx/
-│   │       └── respond.go  # JSON e erros HTTP
+│   │   ├── httpx/
+│   │   │   └── respond.go  # JSON e erros HTTP
+│   │   └── traffic/  # visitas e contas de análise
+│   ├── page/  # domínio com subdomínios
+│   │   ├── page/  # página: handler, service, repository, page.go
+│   │   ├── version/  # versões do HTML
+│   │   ├── history/  # eventos da página
+│   │   ├── analytics/  # aberturas e análise
+│   │   └── public/  # entrega do HTML para o visitante
 │   └── user/
 │       ├── handler.go  # HTTP
 │       ├── repository.go  # acesso ao banco
