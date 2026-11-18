@@ -13,7 +13,7 @@ import { useTheme } from "styled-components";
 import { useEffect, useRef, useState } from "react";
 
 import { Actions, Bar, BarGroup, Divider, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
-import { formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
+import { formatBytes, injectPageRuntime, publicLinkUrl, versionLabel } from "@utils/functions";
 import { pageHtmlMaxBytes, pagePreviewDelay, pageVersionMessageMaxLength } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
 import CodeEditor from "../../subcomponents/codeEditor";
@@ -175,7 +175,14 @@ const EditorTab = () => {
         )}
         {activeView !== "code" && (
           <Pane $isPreview>
-            <Frame title={`Prévia de ${sitePage.title}`} sandbox="allow-scripts allow-forms allow-popups allow-modals" srcDoc={previewHtml} />
+            <Frame title={`Prévia de ${sitePage.title}`} sandbox="allow-scripts allow-forms allow-popups allow-modals" srcDoc={injectPageRuntime(previewHtml, {
+                slug: sitePage.slug,
+                title: sitePage.title,
+                version: sitePage.version,
+                updatedAt: sitePage.updatedAt,
+                isPreview: true
+              })}
+            />
           </Pane>
         )}
       </Panes>

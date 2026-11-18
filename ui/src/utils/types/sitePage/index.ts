@@ -170,6 +170,14 @@ export interface PageAccessIssued {
   pin: string;
 }
 
+export interface PageRuntimeInfo {
+  slug: string;
+  title: string;
+  version: number;
+  updatedAt: string;
+  isPreview: boolean;
+}
+
 export interface PageAccessRevealed {
   pin: string;
 }

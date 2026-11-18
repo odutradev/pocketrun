@@ -1,11 +1,11 @@
-import { expiryWarningDays, linksUrl } from "@assets/config";
+import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags } from "@assets/data";
 import { isApiError } from "@utils/api";
 
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
-import type { HtmlIssue, SitePage } from "@utils/types/sitePage";
+import type { HtmlIssue, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -42,6 +42,20 @@ export const randomSlug = (length: number): string => {
 export const formatSessionHours = (hours: number): string => {
   if (hours % 24 === 0) return hours === 24 ? "1 dia" : `${hours / 24} dias`;
   return hours === 1 ? "1 hora" : `${hours} horas`;
+};
+
+const runtimeInsertPatterns = [/<head(\s[^>]*)?>/i, /<html(\s[^>]*)?>/i, /<!doctype[^>]*>/i];
+
+const pageRuntimeScript = (info: string) =>
+  `(function(info){if("pocketrun" in window)return;var page=Object.freeze(info);Object.defineProperty(window,"pocketrun",{value:Object.freeze({apiVersion:${pageRuntimeApiVersion},page:page}),enumerable:false});var date=new Date(page.updatedAt).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});console.log("%cPocketRun%c "+page.slug+" · v"+page.version+(page.isPreview?" · prévia do editor":" · atualizada em "+date),"background:#ffc93c;color:#111;font-weight:700;padding:1px 6px;border-radius:4px","color:inherit")})(${info});`;
+
+export const injectPageRuntime = (html: string, page: PageRuntimeInfo): string => {
+  const info = JSON.stringify(page).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+  const tag = `<script>${pageRuntimeScript(info)}</script>`;
+  const match = runtimeInsertPatterns.map((pattern) => pattern.exec(html)).find((result) => result !== null);
+  if (!match) return `${tag}\n${html}`;
+  const end = match.index + match[0].length;
+  return `${html.slice(0, end)}\n${tag}${html.slice(end)}`;
 };
 
 export const isWeakPin = (pin: string): boolean => {

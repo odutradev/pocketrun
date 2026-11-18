@@ -65,6 +65,7 @@ export const pagePreviewDelay = 600;
 export const pageVersionMessageMaxLength = 80;
 
 export const pageAccessPinLength = 6;
+export const pageRuntimeApiVersion = 1;
 
 export const pageAccessSessionHoursOptions = [1, 6, 12, 24, 72, 168, 720];
 
