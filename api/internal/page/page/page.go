@@ -13,7 +13,6 @@ import (
 const (
 	MaxHTMLBytes     = 512 * 1024
 	MaxBodyBytes     = 4 * MaxHTMLBytes
-	MaxVersions      = 50
 	DefaultListLimit = 20
 	UngroupedFilter  = "none"
 )
@@ -23,8 +22,6 @@ var (
 	ErrPageUnavailable = errors.New("page unavailable")
 	ErrInvalidPageID   = errors.New("invalid page id")
 	ErrPageTooLarge    = errors.New("page html too large")
-	ErrVersionNotFound = errors.New("page version not found")
-	ErrInvalidVersion  = errors.New("invalid page version")
 )
 
 type Page struct {

@@ -1,11 +1,21 @@
-package page
+package version
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/user"
+)
+
+const MaxKept = 50
+
+var (
+	ErrVersionNotFound = errors.New("page version not found")
+	ErrInvalidVersion  = errors.New("invalid page version")
 )
 
 type Version struct {
@@ -17,15 +27,15 @@ type Version struct {
 	Size         int64         `json:"size" bson:"size"`
 	RestoredFrom *int          `json:"restoredFrom" bson:"restoredFrom,omitempty"`
 	Message      string        `json:"message" bson:"message,omitempty"`
-	Actor        Actor         `json:"actor" bson:"actor"`
+	Actor        user.Actor    `json:"actor" bson:"actor"`
 	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
 }
 
-func VersionLabel(number int) string {
+func Label(number int) string {
 	return fmt.Sprintf("1.%d", max(number, 1)-1)
 }
 
-func ParseVersionNumber(value string) (int, error) {
+func ParseNumber(value string) (int, error) {
 	number, err := strconv.Atoi(value)
 	if err != nil || number < 1 {
 		return 0, ErrInvalidVersion
@@ -33,7 +43,7 @@ func ParseVersionNumber(value string) (int, error) {
 	return number, nil
 }
 
-func newVersion(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor Actor, at time.Time) *Version {
+func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor user.Actor, at time.Time) *Version {
 	return &Version{
 		ID:           bson.NewObjectID(),
 		PageID:       pageID,
@@ -48,6 +58,6 @@ func newVersion(pageID bson.ObjectID, number int, html, message string, restored
 }
 
 func (v *Version) withLabel() *Version {
-	v.Label = VersionLabel(v.Number)
+	v.Label = Label(v.Number)
 	return v
 }

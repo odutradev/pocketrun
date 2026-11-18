@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/group"
+	"pocketrun-api/internal/page/analytics"
+	"pocketrun-api/internal/page/history"
+	"pocketrun-api/internal/page/version"
 	"pocketrun-api/internal/platform/activation"
 	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/slug"
@@ -32,25 +34,18 @@ type Repository interface {
 	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Page, error)
 }
 
-type VersionRepository interface {
-	InsertVersion(ctx context.Context, version *Version) error
-	FindVersions(ctx context.Context, pageID bson.ObjectID) ([]Version, error)
-	FindVersion(ctx context.Context, pageID bson.ObjectID, number int) (*Version, error)
-	PruneVersions(ctx context.Context, pageID bson.ObjectID, keepFrom int) error
-	DeleteVersions(ctx context.Context, pageID bson.ObjectID) error
+type VersionKeeper interface {
+	Save(ctx context.Context, version *version.Version)
+	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
-type EventRepository interface {
-	InsertEvent(ctx context.Context, event *Event) error
-	FindEvents(ctx context.Context, pageID bson.ObjectID, query HistoryQuery) ([]Event, error)
-	CountEvents(ctx context.Context, pageID bson.ObjectID) (int64, error)
+type EventRecorder interface {
+	Record(ctx context.Context, event *history.Event)
 }
 
-type OpenRepository interface {
-	InsertOpen(ctx context.Context, open *Open) error
-	FindOpens(ctx context.Context, pageID bson.ObjectID, from, to time.Time) ([]Open, error)
-	FindOpensBetween(ctx context.Context, from, to time.Time) ([]Open, error)
-	DeleteOpens(ctx context.Context, pageID bson.ObjectID) error
+type OpenTracker interface {
+	Record(ctx context.Context, pageID bson.ObjectID, visit traffic.Visit, at time.Time) error
+	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type SlugRegistry interface {
@@ -64,30 +59,29 @@ type GroupChecker interface {
 	Ensure(ctx context.Context, kind group.Kind, id bson.ObjectID) error
 }
 
-type ActorFinder interface {
-	GetUserByID(ctx context.Context, id bson.ObjectID) (*user.User, error)
+type ActorResolver interface {
+	Actor(ctx context.Context) (user.Actor, error)
 }
 
 type Dependencies struct {
 	Repository Repository
-	Versions   VersionRepository
-	Events     EventRepository
-	Opens      OpenRepository
+	Versions   VersionKeeper
+	History    EventRecorder
+	Opens      OpenTracker
 	Slugs      SlugRegistry
 	Groups     GroupChecker
-	Actors     ActorFinder
+	Actors     ActorResolver
 	Logger     *slog.Logger
 }
 
 type Service struct {
 	repository Repository
-	versions   VersionRepository
-	events     EventRepository
-	opens      OpenRepository
+	versions   VersionKeeper
+	history    EventRecorder
+	opens      OpenTracker
 	slugs      SlugRegistry
 	groups     GroupChecker
-	actors     ActorFinder
-	visitors   *traffic.VisitorHasher
+	actors     ActorResolver
 	logger     *slog.Logger
 }
 
@@ -95,12 +89,11 @@ func NewService(dependencies Dependencies) *Service {
 	return &Service{
 		repository: dependencies.Repository,
 		versions:   dependencies.Versions,
-		events:     dependencies.Events,
+		history:    dependencies.History,
 		opens:      dependencies.Opens,
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
-		visitors:   traffic.NewVisitorHasher(),
 		logger:     dependencies.Logger,
 	}
 }
@@ -150,6 +143,44 @@ func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Page, error) 
 	return page, nil
 }
 
+func (s *Service) Exists(ctx context.Context, id bson.ObjectID) (bool, error) {
+	_, err := s.repository.FindByID(ctx, id)
+	if errors.Is(err, ErrPageNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("check page %s: %w", id.Hex(), err)
+	}
+	return true, nil
+}
+
+func (s *Service) ExpiredAt(ctx context.Context, id bson.ObjectID) (*time.Time, error) {
+	page, err := s.repository.FindByID(ctx, id)
+	if errors.Is(err, ErrPageNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("page expiry %s: %w", id.Hex(), err)
+	}
+	if !page.Rule().ExpiredBefore(time.Now()) {
+		return nil, nil
+	}
+	return page.EndsAt, nil
+}
+
+func (s *Service) Targets(ctx context.Context, ids []bson.ObjectID) ([]analytics.Target, error) {
+	pages, err := s.repository.FindByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("find analytics pages: %w", err)
+	}
+
+	targets := make([]analytics.Target, 0, len(pages))
+	for _, page := range pages {
+		targets = append(targets, analytics.Target{ID: page.ID, Title: page.Title, Slug: page.Slug, CreatedAt: page.CreatedAt})
+	}
+	return targets, nil
+}
+
 func (s *Service) CheckSlug(ctx context.Context, value string, ownerID *bson.ObjectID) (slug.Availability, error) {
 	availability, err := s.slugs.Check(ctx, value, ownerID)
 	if err != nil {
@@ -196,8 +227,8 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 	}
 
 	actor := s.actor(ctx)
-	s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, input.Message, nil, actor, now))
-	s.record(ctx, newEvent(page.ID, EventCreated, actor, snapshot(*page), now))
+	s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, nil, actor, now))
+	s.history.Record(ctx, history.NewEvent(page.ID, history.EventCreated, actor, snapshot(*page), now))
 	page.State = page.StateAt(now)
 	return page, nil
 }
@@ -254,10 +285,11 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*P
 
 	actor := s.actor(ctx)
 	if isNewVersion {
-		s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, input.Message, restoredFrom(input.RestoredFrom, page.Version), actor, page.UpdatedAt))
+		restored := restoredFrom(input.RestoredFrom, page.Version)
+		s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, restored, actor, page.UpdatedAt))
 	}
 	if changes := diff(previous, *page); len(changes) > 0 {
-		s.record(ctx, newEvent(page.ID, EventUpdated, actor, changes, page.UpdatedAt))
+		s.history.Record(ctx, history.NewEvent(page.ID, history.EventUpdated, actor, changes, page.UpdatedAt))
 	}
 	page.State = page.StateAt(page.UpdatedAt)
 	return page, nil
@@ -286,7 +318,7 @@ func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool
 	if err := s.repository.Replace(ctx, page); err != nil {
 		return nil, fmt.Errorf("set page %s status: %w", id.Hex(), err)
 	}
-	s.record(ctx, newEvent(page.ID, EventUpdated, s.actor(ctx), changes, page.UpdatedAt))
+	s.history.Record(ctx, history.NewEvent(page.ID, history.EventUpdated, s.actor(ctx), changes, page.UpdatedAt))
 	page.State = page.StateAt(page.UpdatedAt)
 	return page, nil
 }
@@ -305,11 +337,11 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 		return fmt.Errorf("delete page %s: %w", id.Hex(), err)
 	}
 
-	s.record(ctx, newEvent(page.ID, EventDeleted, s.actor(ctx), nil, time.Now()))
-	if err := s.opens.DeleteOpens(ctx, page.ID); err != nil {
+	s.history.Record(ctx, history.NewEvent(page.ID, history.EventDeleted, s.actor(ctx), nil, time.Now()))
+	if err := s.opens.DeleteAll(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete page opens", "pageId", page.ID.Hex(), "error", err)
 	}
-	if err := s.versions.DeleteVersions(ctx, page.ID); err != nil {
+	if err := s.versions.DeleteAll(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete page versions", "pageId", page.ID.Hex(), "error", err)
 	}
 	return nil
@@ -328,161 +360,10 @@ func (s *Service) DetachGroup(ctx context.Context, groupID bson.ObjectID) error 
 	actor := s.actor(ctx)
 	now := time.Now()
 	for _, member := range members {
-		changes := []Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
-		s.record(ctx, newEvent(member.ID, EventGroupDetached, actor, changes, now))
+		changes := []history.Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
+		s.history.Record(ctx, history.NewEvent(member.ID, history.EventGroupDetached, actor, changes, now))
 	}
 	return nil
-}
-
-func (s *Service) Versions(ctx context.Context, id bson.ObjectID) ([]Version, error) {
-	if _, err := s.repository.FindByID(ctx, id); err != nil {
-		return nil, fmt.Errorf("page versions %s: %w", id.Hex(), err)
-	}
-
-	versions, err := s.versions.FindVersions(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("page versions %s: %w", id.Hex(), err)
-	}
-	for index := range versions {
-		versions[index].withLabel()
-	}
-	return versions, nil
-}
-
-func (s *Service) Version(ctx context.Context, id bson.ObjectID, number int) (*Version, error) {
-	version, err := s.versions.FindVersion(ctx, id, number)
-	if err != nil {
-		return nil, fmt.Errorf("page version %s %d: %w", id.Hex(), number, err)
-	}
-	return version.withLabel(), nil
-}
-
-func (s *Service) History(ctx context.Context, id bson.ObjectID, query HistoryQuery) (HistoryPage, error) {
-	page, err := s.repository.FindByID(ctx, id)
-	if err != nil && !errors.Is(err, ErrPageNotFound) {
-		return HistoryPage{}, fmt.Errorf("page history %s: %w", id.Hex(), err)
-	}
-
-	lookup := query
-	lookup.Limit = query.Limit + 1
-	events, err := s.events.FindEvents(ctx, id, lookup)
-	if err != nil {
-		return HistoryPage{}, fmt.Errorf("page history %s: %w", id.Hex(), err)
-	}
-
-	total, err := s.events.CountEvents(ctx, id)
-	if err != nil {
-		return HistoryPage{}, fmt.Errorf("page history %s: %w", id.Hex(), err)
-	}
-
-	now := time.Now()
-	if expirationEvent(page, nil, now) != nil {
-		total++
-	}
-	if expired := expirationEvent(page, query.Before, now); expired != nil {
-		events = append(events, *expired)
-		sort.SliceStable(events, func(i, j int) bool { return events[i].At.After(events[j].At) })
-	}
-
-	history := HistoryPage{Events: events, Total: total}
-	if len(events) > query.Limit {
-		history.Events = events[:query.Limit]
-		cursor := history.Events[query.Limit-1].At
-		history.NextCursor = &cursor
-	}
-	return history, nil
-}
-
-func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query traffic.AnalyticsQuery) (traffic.Analytics, error) {
-	page, err := s.repository.FindByID(ctx, id)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("page analytics %s: %w", id.Hex(), err)
-	}
-
-	to := time.Now()
-	from := page.CreatedAt
-	span := query.Range.Duration()
-	if span > 0 {
-		from = to.Add(-span)
-	}
-
-	opens, err := s.opens.FindOpens(ctx, id, from, to)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("page analytics %s: %w", id.Hex(), err)
-	}
-	analytics := traffic.Build(query, from, to, hitsOf(opens))
-	if span == 0 {
-		return analytics, nil
-	}
-
-	previous, err := s.opens.FindOpens(ctx, id, from.Add(-span), from)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("page analytics %s: %w", id.Hex(), err)
-	}
-	clicks, visitors := traffic.Summarize(hitsOf(previous))
-	analytics.Totals.PreviousClicks = &clicks
-	analytics.Totals.PreviousVisitors = &visitors
-	return analytics, nil
-}
-
-func (s *Service) Overview(ctx context.Context, query traffic.AnalyticsQuery) (Overview, error) {
-	to := time.Now()
-	span := query.Range.Duration()
-	from := to.Add(-traffic.Retention)
-	if span > 0 {
-		from = to.Add(-span)
-	}
-
-	opens, err := s.opens.FindOpensBetween(ctx, from, to)
-	if err != nil {
-		return Overview{}, fmt.Errorf("pages overview: %w", err)
-	}
-	if span == 0 {
-		from = to.Add(-7 * 24 * time.Hour)
-		if len(opens) > 0 && opens[0].At.Before(from) {
-			from = opens[0].At
-		}
-	}
-
-	overview := Overview{Analytics: traffic.Build(query, from, to, hitsOf(opens)), TopPages: []RankedPage{}}
-	if span > 0 {
-		previous, err := s.opens.FindOpensBetween(ctx, from.Add(-span), from)
-		if err != nil {
-			return Overview{}, fmt.Errorf("pages overview: %w", err)
-		}
-		clicks, visitors := traffic.Summarize(hitsOf(previous))
-		overview.Totals.PreviousClicks = &clicks
-		overview.Totals.PreviousVisitors = &visitors
-	}
-
-	ranked := rankPages(opens)
-	if len(ranked) == 0 {
-		return overview, nil
-	}
-
-	ids := make([]bson.ObjectID, 0, len(ranked))
-	for _, item := range ranked {
-		ids = append(ids, item.ID)
-	}
-	pages, err := s.repository.FindByIDs(ctx, ids)
-	if err != nil {
-		return Overview{}, fmt.Errorf("pages overview: %w", err)
-	}
-
-	known := map[bson.ObjectID]Page{}
-	for _, page := range pages {
-		known[page.ID] = page
-	}
-	for _, item := range ranked {
-		page, ok := known[item.ID]
-		if !ok {
-			continue
-		}
-		item.Title = page.Title
-		item.Slug = page.Slug
-		overview.TopPages = append(overview.TopPages, item)
-	}
-	return overview, nil
 }
 
 func (s *Service) Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*Page, error) {
@@ -540,58 +421,20 @@ func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
-	visitor, err := s.visitors.Hash(visit, at)
-	if err != nil {
-		s.logger.WarnContext(ctx, "hash page visitor", "pageId", page.ID.Hex(), "error", err)
-	}
-	if err := s.opens.InsertOpen(ctx, newOpen(page.ID, visit, visitor, at)); err != nil {
+	if err := s.opens.Record(ctx, page.ID, visit, at); err != nil {
 		s.logger.WarnContext(ctx, "record page open", "pageId", page.ID.Hex(), "error", err)
 	}
 
 	if isCounted && page.Rule().ExhaustedBy(page.Clicks+1) {
-		s.record(ctx, newEvent(page.ID, EventExhausted, systemActor(), nil, at))
+		s.history.Record(ctx, history.NewEvent(page.ID, history.EventExhausted, user.SystemActor(), nil, at))
 	}
 }
 
-func (s *Service) saveVersion(ctx context.Context, version *Version) {
-	if err := s.versions.InsertVersion(ctx, version); err != nil {
-		s.logger.WarnContext(ctx, "save page version", "pageId", version.PageID.Hex(), "number", version.Number, "error", err)
-		return
-	}
-	if version.Number <= MaxVersions {
-		return
-	}
-	if err := s.versions.PruneVersions(ctx, version.PageID, version.Number-MaxVersions+1); err != nil {
-		s.logger.WarnContext(ctx, "prune page versions", "pageId", version.PageID.Hex(), "error", err)
-	}
-}
-
-func (s *Service) record(ctx context.Context, event *Event) {
-	if err := s.events.InsertEvent(ctx, event); err != nil {
-		s.logger.WarnContext(ctx, "record page event", "pageId", event.PageID.Hex(), "type", event.Type, "error", err)
-	}
-}
-
-func (s *Service) actor(ctx context.Context) Actor {
-	claims, ok := user.ClaimsFromContext(ctx)
-	if !ok {
-		return systemActor()
-	}
-
-	actor := Actor{Name: claims.Email, Email: claims.Email}
-	id, err := bson.ObjectIDFromHex(claims.UserID)
+func (s *Service) actor(ctx context.Context) user.Actor {
+	actor, err := s.actors.Actor(ctx)
 	if err != nil {
-		return actor
+		s.logger.WarnContext(ctx, "resolve page event actor", "error", err)
 	}
-	actor.ID = &id
-
-	member, err := s.actors.GetUserByID(ctx, id)
-	if err != nil {
-		s.logger.WarnContext(ctx, "resolve page event actor", "userId", claims.UserID, "error", err)
-		return actor
-	}
-	actor.Name = member.Name
-	actor.Email = member.Email
 	return actor
 }
 
@@ -600,17 +443,4 @@ func restoredFrom(value *int, current int) *int {
 		return nil
 	}
 	return value
-}
-
-func expirationEvent(page *Page, before *time.Time, now time.Time) *Event {
-	if page == nil || !page.Rule().ExpiredBefore(now) {
-		return nil
-	}
-	if before != nil && !page.EndsAt.Before(*before) {
-		return nil
-	}
-
-	event := newEvent(page.ID, EventExpired, systemActor(), nil, *page.EndsAt)
-	event.ID = bson.NewObjectIDFromTimestamp(*page.EndsAt)
-	return event
 }

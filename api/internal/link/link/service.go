@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/group"
+	"pocketrun-api/internal/link/analytics"
+	"pocketrun-api/internal/link/history"
 	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/slug"
 	"pocketrun-api/internal/user"
@@ -31,17 +32,13 @@ type Repository interface {
 	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error)
 }
 
-type EventRepository interface {
-	InsertEvent(ctx context.Context, event *Event) error
-	FindEvents(ctx context.Context, linkID bson.ObjectID, query HistoryQuery) ([]Event, error)
-	CountEvents(ctx context.Context, linkID bson.ObjectID) (int64, error)
+type EventRecorder interface {
+	Record(ctx context.Context, event *history.Event)
 }
 
-type OpenRepository interface {
-	InsertOpen(ctx context.Context, open *Open) error
-	FindOpens(ctx context.Context, linkID bson.ObjectID, from, to time.Time) ([]Open, error)
-	FindOpensBetween(ctx context.Context, from, to time.Time) ([]Open, error)
-	DeleteOpens(ctx context.Context, linkID bson.ObjectID) error
+type OpenTracker interface {
+	Record(ctx context.Context, linkID bson.ObjectID, visit traffic.Visit, at time.Time) error
+	DeleteAll(ctx context.Context, linkID bson.ObjectID) error
 }
 
 type SlugRegistry interface {
@@ -56,40 +53,38 @@ type GroupChecker interface {
 	Ensure(ctx context.Context, kind group.Kind, id bson.ObjectID) error
 }
 
-type ActorFinder interface {
-	GetUserByID(ctx context.Context, id bson.ObjectID) (*user.User, error)
+type ActorResolver interface {
+	Actor(ctx context.Context) (user.Actor, error)
 }
 
 type Dependencies struct {
 	Repository Repository
-	Events     EventRepository
-	Opens      OpenRepository
+	History    EventRecorder
+	Opens      OpenTracker
 	Slugs      SlugRegistry
 	Groups     GroupChecker
-	Actors     ActorFinder
+	Actors     ActorResolver
 	Logger     *slog.Logger
 }
 
 type Service struct {
 	repository Repository
-	events     EventRepository
-	opens      OpenRepository
+	history    EventRecorder
+	opens      OpenTracker
 	slugs      SlugRegistry
 	groups     GroupChecker
-	actors     ActorFinder
-	visitors   *traffic.VisitorHasher
+	actors     ActorResolver
 	logger     *slog.Logger
 }
 
 func NewService(dependencies Dependencies) *Service {
 	return &Service{
 		repository: dependencies.Repository,
-		events:     dependencies.Events,
+		history:    dependencies.History,
 		opens:      dependencies.Opens,
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
-		visitors:   traffic.NewVisitorHasher(),
 		logger:     dependencies.Logger,
 	}
 }
@@ -139,6 +134,33 @@ func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Link, error) 
 	return link, nil
 }
 
+func (s *Service) ExpiredAt(ctx context.Context, id bson.ObjectID) (*time.Time, error) {
+	link, err := s.repository.FindByID(ctx, id)
+	if errors.Is(err, ErrLinkNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("link expiry %s: %w", id.Hex(), err)
+	}
+	if !link.Rule().ExpiredBefore(time.Now()) {
+		return nil, nil
+	}
+	return link.EndsAt, nil
+}
+
+func (s *Service) Targets(ctx context.Context, ids []bson.ObjectID) ([]analytics.Target, error) {
+	links, err := s.repository.FindByIDs(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("find analytics links: %w", err)
+	}
+
+	targets := make([]analytics.Target, 0, len(links))
+	for _, link := range links {
+		targets = append(targets, analytics.Target{ID: link.ID, Title: link.Title, Slug: link.Slug, CreatedAt: link.CreatedAt})
+	}
+	return targets, nil
+}
+
 func (s *Service) CheckSlug(ctx context.Context, value string, ownerID *bson.ObjectID) (slug.Availability, error) {
 	availability, err := s.slugs.Check(ctx, value, ownerID)
 	if err != nil {
@@ -177,7 +199,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 		return nil, errors.Join(fmt.Errorf("create link: %w", err), s.slugs.Release(ctx, link.Slug, link.ID))
 	}
 
-	s.record(ctx, newEvent(link.ID, EventCreated, s.actor(ctx), snapshot(*link), now))
+	s.history.Record(ctx, history.NewEvent(link.ID, history.EventCreated, s.actor(ctx), snapshot(*link), now))
 	link.State = link.StateAt(now)
 	return link, nil
 }
@@ -229,7 +251,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*L
 	}
 
 	if changes := diff(previous, *link); len(changes) > 0 {
-		s.record(ctx, newEvent(link.ID, EventUpdated, s.actor(ctx), changes, link.UpdatedAt))
+		s.history.Record(ctx, history.NewEvent(link.ID, history.EventUpdated, s.actor(ctx), changes, link.UpdatedAt))
 	}
 	link.State = link.StateAt(link.UpdatedAt)
 	return link, nil
@@ -249,8 +271,8 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 		return fmt.Errorf("delete link %s: %w", id.Hex(), err)
 	}
 
-	s.record(ctx, newEvent(link.ID, EventDeleted, s.actor(ctx), nil, time.Now()))
-	if err := s.opens.DeleteOpens(ctx, link.ID); err != nil {
+	s.history.Record(ctx, history.NewEvent(link.ID, history.EventDeleted, s.actor(ctx), nil, time.Now()))
+	if err := s.opens.DeleteAll(ctx, link.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete link opens", "linkId", link.ID.Hex(), "error", err)
 	}
 	return nil
@@ -269,138 +291,10 @@ func (s *Service) DetachGroup(ctx context.Context, groupID bson.ObjectID) error 
 	actor := s.actor(ctx)
 	now := time.Now()
 	for _, member := range members {
-		changes := []Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
-		s.record(ctx, newEvent(member.ID, EventGroupDetached, actor, changes, now))
+		changes := []history.Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
+		s.history.Record(ctx, history.NewEvent(member.ID, history.EventGroupDetached, actor, changes, now))
 	}
 	return nil
-}
-
-func (s *Service) History(ctx context.Context, id bson.ObjectID, query HistoryQuery) (HistoryPage, error) {
-	link, err := s.repository.FindByID(ctx, id)
-	if err != nil && !errors.Is(err, ErrLinkNotFound) {
-		return HistoryPage{}, fmt.Errorf("link history %s: %w", id.Hex(), err)
-	}
-
-	lookup := query
-	lookup.Limit = query.Limit + 1
-	events, err := s.events.FindEvents(ctx, id, lookup)
-	if err != nil {
-		return HistoryPage{}, fmt.Errorf("link history %s: %w", id.Hex(), err)
-	}
-
-	total, err := s.events.CountEvents(ctx, id)
-	if err != nil {
-		return HistoryPage{}, fmt.Errorf("link history %s: %w", id.Hex(), err)
-	}
-
-	now := time.Now()
-	if expirationEvent(link, nil, now) != nil {
-		total++
-	}
-	if expired := expirationEvent(link, query.Before, now); expired != nil {
-		events = append(events, *expired)
-		sort.SliceStable(events, func(i, j int) bool { return events[i].At.After(events[j].At) })
-	}
-
-	page := HistoryPage{Events: events, Total: total}
-	if len(events) > query.Limit {
-		page.Events = events[:query.Limit]
-		cursor := page.Events[query.Limit-1].At
-		page.NextCursor = &cursor
-	}
-	return page, nil
-}
-
-func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query traffic.AnalyticsQuery) (traffic.Analytics, error) {
-	link, err := s.repository.FindByID(ctx, id)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
-	}
-
-	to := time.Now()
-	from := link.CreatedAt
-	span := query.Range.Duration()
-	if span > 0 {
-		from = to.Add(-span)
-	}
-
-	opens, err := s.opens.FindOpens(ctx, id, from, to)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
-	}
-	analytics := traffic.Build(query, from, to, hitsOf(opens))
-	if span == 0 {
-		return analytics, nil
-	}
-
-	previous, err := s.opens.FindOpens(ctx, id, from.Add(-span), from)
-	if err != nil {
-		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
-	}
-	clicks, visitors := traffic.Summarize(hitsOf(previous))
-	analytics.Totals.PreviousClicks = &clicks
-	analytics.Totals.PreviousVisitors = &visitors
-	return analytics, nil
-}
-
-func (s *Service) Overview(ctx context.Context, query traffic.AnalyticsQuery) (Overview, error) {
-	to := time.Now()
-	span := query.Range.Duration()
-	from := to.Add(-traffic.Retention)
-	if span > 0 {
-		from = to.Add(-span)
-	}
-
-	opens, err := s.opens.FindOpensBetween(ctx, from, to)
-	if err != nil {
-		return Overview{}, fmt.Errorf("links overview: %w", err)
-	}
-	if span == 0 {
-		from = to.Add(-7 * 24 * time.Hour)
-		if len(opens) > 0 && opens[0].At.Before(from) {
-			from = opens[0].At
-		}
-	}
-
-	overview := Overview{Analytics: traffic.Build(query, from, to, hitsOf(opens)), TopLinks: []RankedLink{}}
-	if span > 0 {
-		previous, err := s.opens.FindOpensBetween(ctx, from.Add(-span), from)
-		if err != nil {
-			return Overview{}, fmt.Errorf("links overview: %w", err)
-		}
-		clicks, visitors := traffic.Summarize(hitsOf(previous))
-		overview.Totals.PreviousClicks = &clicks
-		overview.Totals.PreviousVisitors = &visitors
-	}
-
-	ranked := rankLinks(opens)
-	if len(ranked) == 0 {
-		return overview, nil
-	}
-
-	ids := make([]bson.ObjectID, 0, len(ranked))
-	for _, item := range ranked {
-		ids = append(ids, item.ID)
-	}
-	links, err := s.repository.FindByIDs(ctx, ids)
-	if err != nil {
-		return Overview{}, fmt.Errorf("links overview: %w", err)
-	}
-
-	known := map[bson.ObjectID]Link{}
-	for _, link := range links {
-		known[link.ID] = link
-	}
-	for _, item := range ranked {
-		link, ok := known[item.ID]
-		if !ok {
-			continue
-		}
-		item.Title = link.Title
-		item.Slug = link.Slug
-		overview.TopLinks = append(overview.TopLinks, item)
-	}
-	return overview, nil
 }
 
 func (s *Service) Open(ctx context.Context, value string, visit traffic.Visit) (*Link, error) {
@@ -467,57 +361,19 @@ func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
-	visitor, err := s.visitors.Hash(visit, at)
-	if err != nil {
-		s.logger.WarnContext(ctx, "hash link visitor", "linkId", link.ID.Hex(), "error", err)
-	}
-	if err := s.opens.InsertOpen(ctx, newOpen(link.ID, visit, visitor, at)); err != nil {
+	if err := s.opens.Record(ctx, link.ID, visit, at); err != nil {
 		s.logger.WarnContext(ctx, "record link open", "linkId", link.ID.Hex(), "error", err)
 	}
 
 	if isCounted && link.Rule().ExhaustedBy(link.Clicks+1) {
-		s.record(ctx, newEvent(link.ID, EventExhausted, systemActor(), nil, at))
+		s.history.Record(ctx, history.NewEvent(link.ID, history.EventExhausted, user.SystemActor(), nil, at))
 	}
 }
 
-func (s *Service) record(ctx context.Context, event *Event) {
-	if err := s.events.InsertEvent(ctx, event); err != nil {
-		s.logger.WarnContext(ctx, "record link event", "linkId", event.LinkID.Hex(), "type", event.Type, "error", err)
-	}
-}
-
-func (s *Service) actor(ctx context.Context) Actor {
-	claims, ok := user.ClaimsFromContext(ctx)
-	if !ok {
-		return systemActor()
-	}
-
-	actor := Actor{Name: claims.Email, Email: claims.Email}
-	id, err := bson.ObjectIDFromHex(claims.UserID)
+func (s *Service) actor(ctx context.Context) user.Actor {
+	actor, err := s.actors.Actor(ctx)
 	if err != nil {
-		return actor
+		s.logger.WarnContext(ctx, "resolve link event actor", "error", err)
 	}
-	actor.ID = &id
-
-	member, err := s.actors.GetUserByID(ctx, id)
-	if err != nil {
-		s.logger.WarnContext(ctx, "resolve link event actor", "userId", claims.UserID, "error", err)
-		return actor
-	}
-	actor.Name = member.Name
-	actor.Email = member.Email
 	return actor
-}
-
-func expirationEvent(link *Link, before *time.Time, now time.Time) *Event {
-	if link == nil || !link.Rule().ExpiredBefore(now) {
-		return nil
-	}
-	if before != nil && !link.EndsAt.Before(*before) {
-		return nil
-	}
-
-	event := newEvent(link.ID, EventExpired, systemActor(), nil, *link.EndsAt)
-	event.ID = bson.NewObjectIDFromTimestamp(*link.EndsAt)
-	return event
 }

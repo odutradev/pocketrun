@@ -15,8 +15,15 @@ import (
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/health"
 	"pocketrun-api/internal/kv"
-	"pocketrun-api/internal/link"
-	"pocketrun-api/internal/page"
+	linkanalytics "pocketrun-api/internal/link/analytics"
+	linkhistory "pocketrun-api/internal/link/history"
+	"pocketrun-api/internal/link/link"
+	linkpublic "pocketrun-api/internal/link/public"
+	pageanalytics "pocketrun-api/internal/page/analytics"
+	pagehistory "pocketrun-api/internal/page/history"
+	"pocketrun-api/internal/page/page"
+	pagepublic "pocketrun-api/internal/page/public"
+	"pocketrun-api/internal/page/version"
 	"pocketrun-api/internal/platform/database"
 	"pocketrun-api/internal/platform/httpx"
 	"pocketrun-api/internal/setup"
@@ -71,12 +78,12 @@ func run(logger *slog.Logger) error {
 	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
-	linkEventRepository := link.NewMongoEventRepository(mongo.Collection("linkEvents"))
-	linkOpenRepository := link.NewMongoOpenRepository(mongo.Collection("linkOpens"))
+	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))
+	linkOpenRepository := linkanalytics.NewMongoRepository(mongo.Collection("linkOpens"))
 	pageRepository := page.NewMongoRepository(mongo.Collection("pages"))
-	pageVersionRepository := page.NewMongoVersionRepository(mongo.Collection("pageVersions"))
-	pageEventRepository := page.NewMongoEventRepository(mongo.Collection("pageEvents"))
-	pageOpenRepository := page.NewMongoOpenRepository(mongo.Collection("pageOpens"))
+	pageVersionRepository := version.NewMongoRepository(mongo.Collection("pageVersions"))
+	pageEventRepository := pagehistory.NewMongoRepository(mongo.Collection("pageEvents"))
+	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))
 	ensureIndexes(startupContext, logger,
 		userRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
@@ -90,20 +97,25 @@ func run(logger *slog.Logger) error {
 	setupService := setup.NewService(userService, logger)
 	slugService := slug.NewService(slugRepository)
 	groupService := group.NewService(groupRepository)
+	linkHistoryService := linkhistory.NewService(linkEventRepository, logger)
+	linkAnalyticsService := linkanalytics.NewService(linkOpenRepository, logger)
 	linkService := link.NewService(link.Dependencies{
 		Repository: linkRepository,
-		Events:     linkEventRepository,
-		Opens:      linkOpenRepository,
+		History:    linkHistoryService,
+		Opens:      linkAnalyticsService,
 		Slugs:      slugService,
 		Groups:     groupService,
 		Actors:     userService,
 		Logger:     logger,
 	})
+	versionService := version.NewService(pageVersionRepository, logger)
+	pageHistoryService := pagehistory.NewService(pageEventRepository, logger)
+	pageAnalyticsService := pageanalytics.NewService(pageOpenRepository, logger)
 	pageService := page.NewService(page.Dependencies{
 		Repository: pageRepository,
-		Versions:   pageVersionRepository,
-		Events:     pageEventRepository,
-		Opens:      pageOpenRepository,
+		Versions:   versionService,
+		History:    pageHistoryService,
+		Opens:      pageAnalyticsService,
 		Slugs:      slugService,
 		Groups:     groupService,
 		Actors:     userService,
@@ -120,8 +132,15 @@ func run(logger *slog.Logger) error {
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
 	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
 	groupHandler := group.NewHandler(groupService, validate, logger)
-	pageHandler := page.NewHandler(pageService, cfg.LinksURL, validate, logger)
-	linkHandler := link.NewHandler(linkService, pageHandler, cfg.LinksURL, validate, logger)
+	linkHandler := link.NewHandler(linkService, cfg.LinksURL, validate, logger)
+	linkHistoryHandler := linkhistory.NewHandler(linkHistoryService, linkService, validate, logger)
+	linkAnalyticsHandler := linkanalytics.NewHandler(linkAnalyticsService, linkService, validate, logger)
+	pageHandler := page.NewHandler(pageService, validate, logger)
+	versionHandler := version.NewHandler(versionService, pageService, logger)
+	pageHistoryHandler := pagehistory.NewHandler(pageHistoryService, pageService, validate, logger)
+	pageAnalyticsHandler := pageanalytics.NewHandler(pageAnalyticsService, pageService, validate, logger)
+	pagePublicHandler := pagepublic.NewHandler(pageService, cfg.LinksURL, logger)
+	linkPublicHandler := linkpublic.NewHandler(linkService, pagePublicHandler, logger)
 
 	adminMux := http.NewServeMux()
 	authenticateManager := user.Authenticate(signer)
@@ -131,16 +150,21 @@ func run(logger *slog.Logger) error {
 	applicationHandler.RegisterAdmin(adminMux, authenticateManager)
 	documentHandler.RegisterAdmin(adminMux, authenticateManager)
 	groupHandler.Register(adminMux, authenticateManager, "/links/groups", group.KindLinks, linkService)
-	linkHandler.RegisterAdmin(adminMux, authenticateManager)
+	linkHandler.Register(adminMux, authenticateManager)
+	linkHistoryHandler.Register(adminMux, authenticateManager)
+	linkAnalyticsHandler.Register(adminMux, authenticateManager)
 	groupHandler.Register(adminMux, authenticateManager, "/pages/groups", group.KindPages, pageService)
-	pageHandler.RegisterAdmin(adminMux, authenticateManager)
+	pageHandler.Register(adminMux, authenticateManager)
+	versionHandler.Register(adminMux, authenticateManager)
+	pageHistoryHandler.Register(adminMux, authenticateManager)
+	pageAnalyticsHandler.Register(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)
 	healthHandler.Register(publicMux)
 	applicationHandler.RegisterPublic(publicMux, authenticateApplication)
 	documentHandler.RegisterPublic(publicMux, authenticateApplication)
-	linkHandler.RegisterPublic(publicMux)
+	linkPublicHandler.Register(publicMux)
 
 	root := http.NewServeMux()
 	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins)(adminMux)))

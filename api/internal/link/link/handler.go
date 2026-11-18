@@ -8,47 +8,32 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/platform/httpx"
-	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/slug"
 	"pocketrun-api/internal/user"
 )
 
-type PageServer interface {
-	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
-}
-
 type Handler struct {
 	service   *Service
-	pages     PageServer
 	linksHost string
 	validate  *validator.Validate
 	logger    *slog.Logger
 }
 
-func NewHandler(service *Service, pages PageServer, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, pages: pages, linksHost: urlHost(linksURL), validate: validate, logger: logger}
+func NewHandler(service *Service, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, linksHost: urlHost(linksURL), validate: validate, logger: logger}
 }
 
-func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
+func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /links/list", authenticate(http.HandlerFunc(h.list)))
 	mux.Handle("GET /links/summary/details", authenticate(http.HandlerFunc(h.summary)))
-	mux.Handle("GET /links/analytics/details", authenticate(http.HandlerFunc(h.overview)))
 	mux.Handle("GET /links/slug-availability/check", authenticate(http.HandlerFunc(h.checkSlug)))
 	mux.Handle("POST /links/create", authenticate(http.HandlerFunc(h.create)))
 	mux.Handle("GET /links/{id}/details", authenticate(http.HandlerFunc(h.getByID)))
 	mux.Handle("PATCH /links/{id}/update", authenticate(http.HandlerFunc(h.update)))
 	mux.Handle("DELETE /links/{id}/delete", authenticate(http.HandlerFunc(h.delete)))
-	mux.Handle("GET /links/{id}/history/list", authenticate(http.HandlerFunc(h.history)))
-	mux.Handle("GET /links/{id}/analytics/details", authenticate(http.HandlerFunc(h.analytics)))
-}
-
-func (h *Handler) RegisterPublic(mux *http.ServeMux) {
-	mux.HandleFunc("GET /{slug}", h.open)
-	mux.HandleFunc("GET /{slug}/{$}", h.open)
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -168,124 +153,6 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteMessage(w, http.StatusOK, "Link deleted successfully")
-}
-
-func (h *Handler) history(w http.ResponseWriter, r *http.Request) {
-	id, err := ParseID(r.PathValue("id"))
-	if err != nil {
-		h.writeError(w, r, "link history", err)
-		return
-	}
-
-	var params HistoryParams
-	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
-		httpx.WriteDecodeError(w, err)
-		return
-	}
-
-	page, err := h.service.History(r.Context(), id, params.Query())
-	if err != nil {
-		h.writeError(w, r, "link history", err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, page)
-}
-
-func (h *Handler) analytics(w http.ResponseWriter, r *http.Request) {
-	id, err := ParseID(r.PathValue("id"))
-	if err != nil {
-		h.writeError(w, r, "link analytics", err)
-		return
-	}
-
-	var params traffic.AnalyticsParams
-	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
-		httpx.WriteDecodeError(w, err)
-		return
-	}
-
-	analytics, err := h.service.Analytics(r.Context(), id, params.Query())
-	if err != nil {
-		h.writeError(w, r, "link analytics", err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, analytics)
-}
-
-func (h *Handler) overview(w http.ResponseWriter, r *http.Request) {
-	var params traffic.AnalyticsParams
-	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
-		httpx.WriteDecodeError(w, err)
-		return
-	}
-
-	overview, err := h.service.Overview(r.Context(), params.Query())
-	if err != nil {
-		h.writeError(w, r, "links overview", err)
-		return
-	}
-	httpx.WriteJSON(w, http.StatusOK, overview)
-}
-
-func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
-	link, err := h.service.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
-	var kindError *KindError
-	if errors.As(err, &kindError) && kindError.Kind == slug.KindPage {
-		h.pages.ServePage(w, r, kindError.TargetID)
-		return
-	}
-	if errors.As(err, &kindError) {
-		h.writeNotFoundPage(w, r)
-		return
-	}
-	if errors.Is(err, ErrLinkNotFound) || errors.Is(err, ErrLinkUnavailable) {
-		h.writeNotFoundPage(w, r)
-		return
-	}
-	if err != nil {
-		h.logger.ErrorContext(r.Context(), "open link", "error", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Cache-Control", "no-store")
-	http.Redirect(w, r, withQuery(link.URL, r.URL.Query()), http.StatusFound)
-}
-
-func withQuery(destination string, query url.Values) string {
-	if len(query) == 0 {
-		return destination
-	}
-
-	target, err := url.Parse(destination)
-	if err != nil {
-		return destination
-	}
-
-	values := target.Query()
-	extra := url.Values{}
-	hasOverlap := false
-	for key, items := range query {
-		if values.Has(key) {
-			values[key] = items
-			hasOverlap = true
-			continue
-		}
-		extra[key] = items
-	}
-
-	switch {
-	case hasOverlap:
-		for key, items := range extra {
-			values[key] = items
-		}
-		target.RawQuery = values.Encode()
-	case target.RawQuery == "":
-		target.RawQuery = extra.Encode()
-	default:
-		target.RawQuery = target.RawQuery + "&" + extra.Encode()
-	}
-	return target.String()
 }
 
 func urlHost(raw string) string {
