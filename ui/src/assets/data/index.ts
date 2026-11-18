@@ -3,7 +3,7 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { PageChangeField, PageEditorTab, PageGroupTab } from "@utils/types/sitePage";
+import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab } from "@utils/types/sitePage";
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -46,7 +46,18 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_slug: "Use só letras minúsculas, números e hífen no slug.",
   reserved_slug: "Esse slug é reservado pelo sistema.",
   slug_taken: "Esse slug já está em uso.",
-  self_redirect: "O destino não pode ser um endereço deste encurtador, senão o link redireciona para ele mesmo."
+  self_redirect: "O destino não pode ser um endereço deste encurtador, senão o link redireciona para ele mesmo.",
+  invalid_key_id: "PIN inválido.",
+  invalid_pin: "O PIN precisa ter 6 números.",
+  weak_pin: "Esse PIN é fácil de adivinhar. Evite números repetidos ou em sequência.",
+  invalid_role: "Use só letras minúsculas, números e hífen no nome do cargo.",
+  no_access_keys: "Crie um PIN antes de ligar a proteção.",
+  last_access_key: "Não dá para apagar o último PIN com a proteção ligada. Desligue a proteção antes.",
+  too_many_access_keys: "A página chegou ao limite de PINs.",
+  access_key_not_found: "PIN não encontrado.",
+  pin_in_use: "Outro cargo desta página já usa esse PIN.",
+  role_taken: "Já existe um cargo com esse nome nesta página.",
+  access_conflict: "O acesso da página mudou enquanto você editava. Recarregue e tente de novo."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
@@ -596,6 +607,7 @@ export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
   { value: "editor", label: "Editor" },
   { value: "settings", label: "Configuração" },
   { value: "versions", label: "Versões" },
+  { value: "access", label: "Acesso" },
   { value: "qrcode", label: "QR code" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
@@ -606,13 +618,22 @@ export const pageGroupTabs: { value: PageGroupTab; label: string }[] = [
   { value: "settings", label: "Configurações" }
 ];
 
-export const pageEventLabels: Record<LinkEventType, string> = {
+export const pageEventLabels: Record<PageEventType, string> = {
   created: "criou a página",
   updated: "editou a página",
   deleted: "excluiu a página",
   expired: "encerrou a página no fim do período",
   exhausted: "encerrou a página ao atingir o limite de acessos",
-  group_detached: "removeu a página do grupo ao excluir o grupo"
+  group_detached: "removeu a página do grupo ao excluir o grupo",
+  access_enabled: "ligou a proteção por PIN",
+  access_disabled: "desligou a proteção por PIN",
+  access_key_created: "criou um PIN",
+  access_key_renamed: "renomeou um cargo",
+  access_pin_reset: "trocou um PIN",
+  access_key_removed: "apagou um PIN",
+  access_sessions_revoked: "encerrou os acessos abertos com PIN",
+  access_locked: "bloqueou o PIN da página por excesso de tentativas erradas",
+  unlocked: "abriu a página com PIN"
 };
 
 export const pageChangeLabels: Record<PageChangeField, string> = {
@@ -623,7 +644,8 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   mode: "Ativação",
   startsAt: "Início",
   endsAt: "Fim",
-  maxClicks: "Limite de acessos"
+  maxClicks: "Limite de acessos",
+  role: "Cargo"
 };
 
 export const htmlVoidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);

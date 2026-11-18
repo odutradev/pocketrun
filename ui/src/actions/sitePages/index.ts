@@ -5,6 +5,9 @@ import type {
   LinkAnalytics,
   LinkGroupValues,
   LinkHistoryParams,
+  PageAccess,
+  PageAccessIssued,
+  PageAccessKeyPayload,
   PageGroup,
   PageHistoryPage,
   PageListParams,
@@ -95,6 +98,41 @@ export const listPageVersions = async (pageId: string, signal?: AbortSignal) => 
 
 export const getPageVersion = async (pageId: string, number: number, signal?: AbortSignal) => {
   const response = await api.get<PageVersion>(`/pages/${pageId}/versions/${number}/details`, { signal });
+  return response.data;
+};
+
+export const getPageAccess = async (pageId: string, signal?: AbortSignal) => {
+  const response = await api.get<PageAccess>(`/pages/${pageId}/access/details`, { signal });
+  return response.data;
+};
+
+export const setPageAccessEnabled = async (pageId: string, isEnabled: boolean) => {
+  const response = await api.patch<PageAccess>(`/pages/${pageId}/access/update`, { isEnabled });
+  return response.data;
+};
+
+export const revokePageAccessSessions = async (pageId: string) => {
+  const response = await api.post<PageAccess>(`/pages/${pageId}/access/sessions/revoke`);
+  return response.data;
+};
+
+export const createPageAccessKey = async (pageId: string, data: PageAccessKeyPayload) => {
+  const response = await api.post<PageAccessIssued>(`/pages/${pageId}/access/keys/create`, data);
+  return response.data;
+};
+
+export const renamePageAccessKey = async (pageId: string, keyId: string, role: string) => {
+  const response = await api.patch<PageAccess>(`/pages/${pageId}/access/keys/${keyId}/update`, { role });
+  return response.data;
+};
+
+export const resetPageAccessPin = async (pageId: string, keyId: string, pin: string) => {
+  const response = await api.post<PageAccessIssued>(`/pages/${pageId}/access/keys/${keyId}/pin/reset`, { pin });
+  return response.data;
+};
+
+export const removePageAccessKey = async (pageId: string, keyId: string) => {
+  const response = await api.delete<PageAccess>(`/pages/${pageId}/access/keys/${keyId}/remove`);
   return response.data;
 };
 

@@ -9,7 +9,7 @@ import type {
   LinkSort,
   LinkState
 } from "@utils/types/link";
-import type { pageFormSchema } from "@utils/validations/sitePage";
+import type { pageAccessKeySchema, pageFormSchema } from "@utils/validations/sitePage";
 import type { z } from "zod";
 
 export type {
@@ -97,9 +97,21 @@ export type PageFormValues = z.infer<typeof pageFormSchema>;
 
 export type PageGroupTab = "pages" | "settings";
 
-export type PageEditorTab = "editor" | "settings" | "versions" | "qrcode" | "analytics" | "history";
+export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "qrcode" | "analytics" | "history";
 
-export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks";
+export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "role";
+
+export type PageEventType =
+  | LinkEventType
+  | "access_enabled"
+  | "access_disabled"
+  | "access_key_created"
+  | "access_key_renamed"
+  | "access_pin_reset"
+  | "access_key_removed"
+  | "access_sessions_revoked"
+  | "access_locked"
+  | "unlocked";
 
 export interface PageChange {
   field: PageChangeField;
@@ -110,7 +122,7 @@ export interface PageChange {
 export interface PageEvent {
   id: string;
   pageId: string;
-  type: LinkEventType;
+  type: PageEventType;
   actor: LinkEventActor;
   changes: PageChange[];
   at: string;
@@ -133,6 +145,39 @@ export interface PageVersion {
   message?: string;
   actor: LinkEventActor;
   createdAt: string;
+}
+
+export interface PageAccessKey {
+  id: string;
+  role: string;
+  createdAt: string;
+  pinUpdatedAt: string;
+}
+
+export interface PageAccess {
+  pageId: string;
+  isEnabled: boolean;
+  keys: PageAccessKey[];
+  updatedAt: string | null;
+}
+
+export interface PageAccessIssued {
+  access: PageAccess;
+  pin: string;
+}
+
+export interface PageAccessKeyPayload {
+  role: string;
+  pin: string;
+}
+
+export type PageAccessKeyValues = z.infer<typeof pageAccessKeySchema>;
+
+export type PageAccessDialogMode = "general" | "role" | "rename" | "reset";
+
+export interface PageAccessDialogState {
+  mode: PageAccessDialogMode;
+  key: PageAccessKey | null;
 }
 
 export interface PageDraft {

@@ -1,7 +1,20 @@
 import { z } from "zod";
 
-import { pageTitleMaxLength } from "@assets/config";
+import { pageAccessPinLength, pageTitleMaxLength } from "@assets/config";
 import { slugPattern } from "@utils/validations/link";
+
+export const pageAccessKeySchema = z.object({
+  isRole: z.boolean(),
+  role: z.string().trim().toLowerCase().max(64, "Nome muito longo"),
+  pin: z
+    .string()
+    .trim()
+    .refine((value) => value === "" || new RegExp(`^[0-9]{${pageAccessPinLength}}$`).test(value), `Digite ${pageAccessPinLength} números ou deixe vazio`)
+}).superRefine((values, context) => {
+  if (!values.isRole) return;
+  if (!values.role) context.addIssue({ code: "custom", path: ["role"], message: "Dê um nome ao cargo" });
+  else if (!slugPattern.test(values.role)) context.addIssue({ code: "custom", path: ["role"], message: "Use só letras minúsculas, números e hífen" });
+});
 
 export const pageFormSchema = z
   .object({

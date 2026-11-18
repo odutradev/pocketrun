@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { create } from "zustand";
 
-import { getPage, getPageAnalytics, getPageHistory, getPageVersion, listPageGroups, listPageVersions } from "@actions/sitePages";
+import { getPage, getPageAccess, getPageAnalytics, getPageHistory, getPageVersion, listPageGroups, listPageVersions } from "@actions/sitePages";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import usePageDraftsStore from "@stores/pageDrafts";
 import { historyPageSize } from "@assets/config";
@@ -38,6 +38,8 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   range: "7d",
   analytics: null,
   isAnalyticsLoading: false,
+  access: null,
+  hasLoadedAccess: false,
   load: async (pageId) => {
     const requestKey = pageId ?? "new";
     set({
@@ -53,6 +55,8 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       historyFilter: "all",
       historyActor: "all",
       analytics: null,
+      access: null,
+      hasLoadedAccess: false,
       draft: { html: "", restoredFrom: null, message: "" },
       versions: [],
       versionHtml: {},
@@ -132,6 +136,19 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       if (get().range === range) set({ isAnalyticsLoading: false });
     }
   },
+  loadAccess: async () => {
+    const { sitePage, requestKey } = get();
+    if (!sitePage) return;
+    try {
+      const access = await getPageAccess(sitePage.id);
+      if (get().requestKey !== requestKey) return;
+      set({ access, hasLoadedAccess: true });
+    } catch (error) {
+      logger.error(error);
+      toast.error(getErrorMessage(error, "Não foi possível carregar o acesso da página"));
+    }
+  },
+  setAccess: (access) => set({ access, hasLoadedAccess: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
   setRange: (range) => set({ range }),
   setHistoryFilter: (historyFilter) => set({ historyFilter }),
   setHistoryActor: (historyActor) => set({ historyActor }),

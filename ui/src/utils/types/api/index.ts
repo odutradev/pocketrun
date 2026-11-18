@@ -33,7 +33,18 @@ export type ApiErrorCode =
   | "page_not_found"
   | "page_too_large"
   | "invalid_version"
-  | "version_not_found";
+  | "version_not_found"
+  | "invalid_key_id"
+  | "invalid_pin"
+  | "weak_pin"
+  | "invalid_role"
+  | "no_access_keys"
+  | "last_access_key"
+  | "too_many_access_keys"
+  | "access_key_not_found"
+  | "pin_in_use"
+  | "role_taken"
+  | "access_conflict";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

@@ -31,6 +31,8 @@ const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 
 const QrCodeTab = lazy(() => import("./tabs/qrCode"));
 
+const AccessTab = lazy(() => import("./tabs/access"));
+
 const PageEditorPage = () => {
   const {
     pageId,
@@ -95,6 +97,11 @@ const PageEditorPage = () => {
     versions: (
       <Suspense fallback={<Loader label="Carregando as versões" isCentered />}>
         <VersionsTab />
+      </Suspense>
+    ),
+    access: (
+      <Suspense fallback={<Loader label="Carregando o acesso" isCentered />}>
+        <AccessTab />
       </Suspense>
     ),
     qrcode: (

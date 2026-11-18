@@ -64,6 +64,12 @@ export const pagePreviewDelay = 600;
 
 export const pageVersionMessageMaxLength = 80;
 
+export const pageAccessPinLength = 6;
+
+export const pageAccessSessionHours = 12;
+
+export const pageAccessKeysMax = 20;
+
 export const pageVersionsKept = 50;
 
 export const pageDraftSaveDelay = 1000;

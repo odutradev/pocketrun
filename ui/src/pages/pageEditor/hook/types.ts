@@ -2,6 +2,7 @@ import type {
   AnalyticsRange,
   HistoryFilter,
   LinkAnalytics,
+  PageAccess,
   PageDraft,
   PageEditorTab,
   PageEvent,
@@ -37,7 +38,11 @@ export interface PageEditorStore {
   range: AnalyticsRange;
   analytics: LinkAnalytics | null;
   isAnalyticsLoading: boolean;
+  access: PageAccess | null;
+  hasLoadedAccess: boolean;
   load: (pageId?: string) => Promise<void>;
+  loadAccess: () => Promise<void>;
+  setAccess: (access: PageAccess) => void;
   addGroup: (group: PageGroup) => void;
   setSavedPage: (sitePage: SitePage) => void;
   loadHistory: (page?: number) => Promise<void>;
@@ -96,7 +101,11 @@ export interface UsePageEditorPageReturn {
   range: AnalyticsRange;
   analytics: LinkAnalytics | null;
   isAnalyticsLoading: boolean;
+  access: PageAccess | null;
+  hasLoadedAccess: boolean;
   load: (pageId?: string) => Promise<void>;
+  loadAccess: () => Promise<void>;
+  handleAccessChange: (access: PageAccess) => void;
   loadHistory: (page?: number) => Promise<void>;
   loadAnalytics: () => Promise<void>;
   handleGroupCreated: (group: PageGroup) => void;

@@ -24,6 +24,7 @@ import type { EventItemProps } from "./types";
 const isEmptyValue = (value: LinkChangeValue) => value === null || value === "";
 
 const formatValue = (change: PageChange, value: LinkChangeValue, groupNames: Record<string, string>) => {
+  if (change.field === "role") return value ? String(value) : "PIN geral";
   if (isEmptyValue(value)) return change.field === "groupId" ? "Sem grupo" : "—";
   if (change.field === "mode") return linkModeOptions.find((option) => option.value === value)?.label ?? String(value);
   if (change.field === "groupId") return groupNames[String(value)] ?? "Grupo excluído";
@@ -60,15 +61,17 @@ const EventItem = ({ event, groupNames, now }: EventItemProps) => {
         {changes.length > 0 && (
           <ChangeList>
             {changes.map((change) => {
-              const hasLabelForEmpty = change.field === "groupId";
+              const isRole = change.field === "role";
+              const hasLabelForEmpty = change.field === "groupId" || isRole;
               const wasEmpty = !isCreation && !hasLabelForEmpty && isEmptyValue(change.from);
-              const isCleared = !hasLabelForEmpty && isEmptyValue(change.to);
+              const isCleared = isRole ? change.to === null : !hasLabelForEmpty && isEmptyValue(change.to);
+              const hasOldValue = !isCreation && !wasEmpty && !(isRole && change.from === null);
 
               return (
                 <Change key={change.field}>
                   <FieldLabel>{pageChangeLabels[change.field]}</FieldLabel>
                   <Values>
-                    {!isCreation && !wasEmpty && (
+                    {hasOldValue && (
                       <>
                         <OldValue>{formatValue(change, change.from, groupNames)}</OldValue>
                         <ArrowRightIcon aria-label="para" />
