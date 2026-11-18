@@ -53,6 +53,7 @@ export interface LinksStore {
   total: number;
   query: LinksListQuery | null;
   loadedQuery: LinksListQuery | null;
+  localSearch: string;
   hasLoaded: boolean;
   isLoading: boolean;
   isRefreshing: boolean;

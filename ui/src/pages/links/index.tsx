@@ -80,9 +80,14 @@ const LinksPage = () => {
     listRef.current?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" });
   };
 
+  const getSearchPlaceholder = () => {
+    if (activeGroup) return `Buscar em ${activeGroup.name}`;
+    return groups.length > 0 ? "Buscar nos links sem grupo" : "Buscar por título, slug ou destino";
+  };
+
   const getListCaption = () => {
-    if (activeGroup) return `Links de ${activeGroup.name}`;
     if (isSearching) return "Links encontrados";
+    if (activeGroup) return `Links de ${activeGroup.name}`;
     return groups.length > 0 ? "Links sem grupo" : "Links";
   };
 
@@ -93,7 +98,7 @@ const LinksPage = () => {
         <EmptyState
           isCompact
           title="Nada encontrado"
-          description={activeGroup ? "Nenhum link deste grupo combina com a busca." : "Nenhum link combina com a busca."}
+          description={activeGroup ? "Nenhum link deste grupo combina com a busca." : "Nenhum link sem grupo combina com a busca."}
         />
       );
     }
@@ -139,7 +144,7 @@ const LinksPage = () => {
             <SearchInput
               key={scope}
               label="Buscar links"
-              placeholder={activeGroup ? `Buscar em ${activeGroup.name}` : "Buscar por título, slug ou destino"}
+              placeholder={getSearchPlaceholder()}
               defaultValue={search}
               isLoading={isSearchLoading}
               onSearch={handleSearch}
@@ -170,7 +175,7 @@ const LinksPage = () => {
         info={
           activeGroup
             ? "Os links deste grupo. Para mudar o grupo de um link, abra o link e escolha outro grupo."
-            : "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele; a busca procura em todos os links."
+            : "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele; a busca procura nos links da lista."
         }
         actions={navbarActions}
         onReload={loadLinks}

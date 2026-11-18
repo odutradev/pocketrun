@@ -12,7 +12,7 @@ import type { LinkListParams } from "@utils/types/link";
 const logger = createLocalLogger("linksPage");
 
 const toListParams = ({ scope, search, page }: LinksListQuery): LinkListParams => ({
-  groupId: scope || (search ? undefined : "none"),
+  groupId: scope || "none",
   search: search || undefined,
   page,
   limit: linksPageSize
@@ -28,6 +28,7 @@ const useLinksStore = create<LinksStore>()(
       total: 0,
       query: null,
       loadedQuery: null,
+      localSearch: "",
       hasLoaded: false,
       isLoading: true,
       isRefreshing: false,
@@ -61,6 +62,11 @@ const useLinksStore = create<LinksStore>()(
             return;
           }
           set({ links: result.data, total: result.total, loadedQuery: query });
+          const { localSearch } = get();
+          if (localSearch && !query.search && result.total > linksPageSize) {
+            set({ localSearch: "" });
+            get().loadList({ ...query, search: localSearch, page: 1 });
+          }
         } catch (error) {
           if (get().listRequestId !== listRequestId) return;
           logger.error(error);
@@ -76,11 +82,19 @@ const useLinksStore = create<LinksStore>()(
       openScope: async (scope) => {
         const { query, loadList } = get();
         if (query?.scope === scope) return;
+        set({ localSearch: "" });
         await loadList({ scope, search: "", page: 1 });
       },
       searchLinks: async (search) => {
-        const { query, loadList } = get();
+        const { query, loadedQuery, total, loadList } = get();
         if (!query) return;
+        const isWholeScopeLoaded =
+          loadedQuery !== null && loadedQuery.scope === query.scope && !loadedQuery.search && total <= linksPageSize;
+        if (isWholeScopeLoaded) {
+          set({ localSearch: search });
+          return;
+        }
+        set({ localSearch: "" });
         await loadList({ ...query, search, page: 1 });
       },
       goToPage: async (page) => {

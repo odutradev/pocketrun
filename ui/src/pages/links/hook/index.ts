@@ -3,8 +3,13 @@ import { useSearchParams } from "react-router-dom";
 import { linksPageSize } from "@assets/config";
 import useLinksStore from "./store";
 
-import type { LinkGroupTotals } from "@utils/types/link";
+import type { Link, LinkGroupTotals } from "@utils/types/link";
 import type { UseLinksPageReturn } from "./types";
+
+const matchesSearch = (link: Link, search: string) => {
+  const term = search.toLowerCase();
+  return [link.title, link.slug, link.url].some((value) => value.toLowerCase().includes(term));
+};
 
 const findTotals = (totals: LinkGroupTotals[], groupId: string) => totals.find((item) => item.groupId === groupId);
 
@@ -18,6 +23,7 @@ const useLinksPage = (): UseLinksPageReturn => {
     total,
     query,
     loadedQuery,
+    localSearch,
     hasLoaded,
     isLoading,
     isRefreshing,
@@ -36,15 +42,17 @@ const useLinksPage = (): UseLinksPageReturn => {
 
   const scope = searchParams.get("group") ?? "";
   const activeGroup = groups.find((group) => group.id === scope) ?? null;
+  const visibleLinks = localSearch ? links.filter((link) => matchesSearch(link, localSearch)) : links;
+  const visibleTotal = localSearch ? visibleLinks.length : total;
 
   return {
     view,
-    links,
-    total,
+    links: visibleLinks,
+    total: visibleTotal,
     page: loadedQuery?.page ?? 1,
-    totalPages: Math.max(1, Math.ceil(total / linksPageSize)),
-    search: query?.scope === scope ? query.search : "",
-    transitionKey: loadedQuery ? `${loadedQuery.scope}|${loadedQuery.search}|${loadedQuery.page}` : "",
+    totalPages: Math.max(1, Math.ceil(visibleTotal / linksPageSize)),
+    search: query?.scope === scope ? query.search || localSearch : "",
+    transitionKey: loadedQuery ? `${loadedQuery.scope}|${loadedQuery.search}|${localSearch}|${loadedQuery.page}` : "",
     groups,
     groupSummaries: groups.map((group) => ({
       group,
@@ -55,7 +63,7 @@ const useLinksPage = (): UseLinksPageReturn => {
     scope,
     hasNoLinks: hasLoaded && summary.total === 0 && groups.length === 0,
     isGroupMissing: scope !== "" && hasLoaded && activeGroup === null && !isRefreshing,
-    isSearching: Boolean(loadedQuery?.search),
+    isSearching: Boolean(loadedQuery?.search || localSearch),
     isLoading,
     isRefreshing,
     isScopePending: loadedQuery?.scope !== scope,
