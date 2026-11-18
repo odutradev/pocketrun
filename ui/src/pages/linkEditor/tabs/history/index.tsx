@@ -1,14 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+import { ActorSelect, Container, Count, Day, DayHeading, Filters, FiltersAside, Timeline } from "./styles";
 import { currentTimestamp, formatDayHeading, pluralize, toDayKey } from "@utils/functions";
-import { Container, Day, DayHeading, Filters, Footer, Timeline } from "./styles";
 import SegmentedControl from "@components/segmentedControl";
 import { historyFilterOptions } from "@assets/data";
 import EventItem from "./subcomponents/eventItem";
+import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
 import Skeleton from "@components/skeleton";
 import useLinkEditorPage from "../../hook";
-import Button from "@components/button";
 import Select from "@components/select";
 
 import type { LinkEvent } from "@utils/types/link";
@@ -23,18 +23,20 @@ const groupByDay = (events: LinkEvent[]) =>
   }, []);
 
 const HistoryTab = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const {
-    events,
     visibleEvents,
     actorOptions,
     groupNames,
-    nextCursor,
+    historyPage,
+    historyTotal,
+    historyTotalPages,
     hasLoadedHistory,
     isHistoryLoading,
-    isHistoryLoadingMore,
     historyFilter,
     historyActor,
     loadHistory,
+    handleHistoryPageChange,
     handleHistoryFilterChange,
     handleHistoryActorChange
   } = useLinkEditorPage();
@@ -43,7 +45,12 @@ const HistoryTab = () => {
     if (!hasLoadedHistory) loadHistory();
   }, [hasLoadedHistory, loadHistory]);
 
-  if (!hasLoadedHistory || isHistoryLoading) {
+  const handlePageChange = (page: number) => {
+    handleHistoryPageChange(page);
+    containerRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+  };
+
+  if (!hasLoadedHistory) {
     return (
       <Container aria-busy="true">
         <Skeleton height="40px" />
@@ -53,7 +60,7 @@ const HistoryTab = () => {
     );
   }
 
-  if (events.length === 0) {
+  if (historyTotal === 0) {
     return (
       <EmptyState
         isCompact
@@ -65,38 +72,51 @@ const HistoryTab = () => {
 
   const now = currentTimestamp();
 
+  const renderTimeline = () => {
+    if (isHistoryLoading) {
+      return (
+        <Timeline aria-busy="true">
+          <Skeleton height="96px" radius="panel" />
+          <Skeleton height="96px" radius="panel" />
+        </Timeline>
+      );
+    }
+    if (visibleEvents.length === 0) {
+      return (
+        <EmptyState isCompact title="Nada com esse filtro" description="Nenhuma alteração desta página combina com o filtro escolhido." />
+      );
+    }
+    return (
+      <Timeline>
+        {groupByDay(visibleEvents).map((day) => (
+          <Day key={day.key}>
+            <DayHeading>{formatDayHeading(day.at, now)}</DayHeading>
+            <ol>
+              {day.events.map((event) => (
+                <EventItem key={event.id} event={event} groupNames={groupNames} now={now} />
+              ))}
+            </ol>
+          </Day>
+        ))}
+      </Timeline>
+    );
+  };
+
   return (
-    <Container>
+    <Container ref={containerRef}>
       <Filters>
         <SegmentedControl label="Filtrar por autor" options={historyFilterOptions} value={historyFilter} onValueChange={handleHistoryFilterChange} />
-        {actorOptions.length > 2 && (
-          <Select label="Pessoa" isLabelHidden options={actorOptions} value={historyActor} onValueChange={handleHistoryActorChange} />
-        )}
+        <FiltersAside>
+          <Count>{pluralize(historyTotal, "alteração", "alterações")}</Count>
+          {actorOptions.length > 2 && (
+            <ActorSelect>
+              <Select label="Pessoa" isLabelHidden options={actorOptions} value={historyActor} onValueChange={handleHistoryActorChange} />
+            </ActorSelect>
+          )}
+        </FiltersAside>
       </Filters>
-      {visibleEvents.length === 0 ? (
-        <EmptyState isCompact title="Nada com esse filtro" description="Nenhuma alteração carregada combina com o filtro escolhido." />
-      ) : (
-        <Timeline>
-          {groupByDay(visibleEvents).map((day) => (
-            <Day key={day.key}>
-              <DayHeading>{formatDayHeading(day.at, now)}</DayHeading>
-              <ol>
-                {day.events.map((event) => (
-                  <EventItem key={event.id} event={event} groupNames={groupNames} now={now} />
-                ))}
-              </ol>
-            </Day>
-          ))}
-        </Timeline>
-      )}
-      <Footer>
-        <span>{pluralize(events.length, "alteração carregada", "alterações carregadas")}</span>
-        {nextCursor && (
-          <Button variant="secondary" size="sm" isLoading={isHistoryLoadingMore} loadingLabel="Carregando…" onClick={() => loadHistory(true)}>
-            Carregar mais
-          </Button>
-        )}
-      </Footer>
+      {renderTimeline()}
+      {historyTotalPages > 1 && <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={handlePageChange} />}
     </Container>
   );
 };

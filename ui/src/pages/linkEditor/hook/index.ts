@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { historyPageSize } from "@assets/config";
 import { linkEditorTabs } from "@assets/data";
 import useLinkEditorStore from "./store";
 
@@ -53,10 +54,11 @@ const useLinkEditorPage = (): UseLinkEditorPageReturn => {
     events: store.events,
     visibleEvents: store.events.filter((event) => matchesFilter(event, store.historyFilter, store.historyActor)),
     actorOptions,
-    nextCursor: store.nextCursor,
+    historyPage: store.historyPage,
+    historyTotal: store.historyTotal,
+    historyTotalPages: Math.max(1, Math.ceil(store.historyTotal / historyPageSize)),
     hasLoadedHistory: store.hasLoadedHistory,
     isHistoryLoading: store.isHistoryLoading,
-    isHistoryLoadingMore: store.isHistoryLoadingMore,
     historyFilter: store.historyFilter,
     historyActor: store.historyActor,
     range: store.range,
@@ -68,6 +70,9 @@ const useLinkEditorPage = (): UseLinkEditorPageReturn => {
     handleGroupCreated: store.addGroup,
     handleLinkSaved,
     handleTabChange: (next) => setSearchParams(next === "settings" ? {} : { tab: next }, { replace: true }),
+    handleHistoryPageChange: (page) => {
+      store.loadHistory(page);
+    },
     handleRangeChange: store.setRange,
     handleHistoryFilterChange: store.setHistoryFilter,
     handleHistoryActorChange: store.setHistoryActor

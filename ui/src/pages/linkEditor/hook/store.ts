@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 import { getLink, getLinkAnalytics, getLinkHistory, listLinkGroups } from "@actions/links";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
+import { historyPageSize } from "@assets/config";
 
 import type { LinkEditorStore } from "./types";
 
@@ -15,10 +16,12 @@ const useLinkEditorStore = create<LinkEditorStore>()((set, get) => ({
   isLoading: true,
   hasFailed: false,
   events: [],
-  nextCursor: null,
+  historyPage: 1,
+  historyTotal: 0,
+  historyCursors: {},
+  historyRequestId: 0,
   hasLoadedHistory: false,
   isHistoryLoading: false,
-  isHistoryLoadingMore: false,
   historyFilter: "all",
   historyActor: "all",
   range: "7d",
@@ -32,7 +35,9 @@ const useLinkEditorStore = create<LinkEditorStore>()((set, get) => ({
       isLoading: true,
       hasFailed: false,
       events: [],
-      nextCursor: null,
+      historyPage: 1,
+      historyTotal: 0,
+      historyCursors: {},
       hasLoadedHistory: false,
       historyFilter: "all",
       historyActor: "all",
@@ -53,24 +58,29 @@ const useLinkEditorStore = create<LinkEditorStore>()((set, get) => ({
   },
   addGroup: (group) =>
     set((state) => ({ groups: [...state.groups, group].sort((a, b) => a.name.localeCompare(b.name, "pt-BR")) })),
-  setSavedLink: (link) => set({ link, events: [], nextCursor: null, hasLoadedHistory: false }),
-  loadHistory: async (isMore = false) => {
-    const { link, nextCursor, requestKey } = get();
-    if (!link) return;
-    set(isMore ? { isHistoryLoadingMore: true } : { isHistoryLoading: true });
+  setSavedLink: (link) =>
+    set({ link, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
+  loadHistory: async (page = 1) => {
+    const { link, historyCursors, historyRequestId: previousRequestId, requestKey } = get();
+    const before = historyCursors[page];
+    if (!link || (page > 1 && !before)) return;
+    const historyRequestId = previousRequestId + 1;
+    set({ isHistoryLoading: true, historyRequestId });
     try {
-      const page = await getLinkHistory(link.id, isMore ? nextCursor ?? undefined : undefined);
-      if (get().requestKey !== requestKey) return;
+      const result = await getLinkHistory(link.id, { before, limit: historyPageSize });
+      if (get().requestKey !== requestKey || get().historyRequestId !== historyRequestId) return;
       set((state) => ({
-        events: isMore ? [...state.events, ...page.events] : page.events,
-        nextCursor: page.nextCursor,
+        events: result.events,
+        historyPage: page,
+        historyTotal: result.total,
+        historyCursors: result.nextCursor ? { ...state.historyCursors, [page + 1]: result.nextCursor } : state.historyCursors,
         hasLoadedHistory: true
       }));
     } catch (error) {
       logger.error(error);
       toast.error(getErrorMessage(error, "Não foi possível carregar o histórico"));
     } finally {
-      set({ isHistoryLoading: false, isHistoryLoadingMore: false });
+      if (get().historyRequestId === historyRequestId) set({ isHistoryLoading: false });
     }
   },
   loadAnalytics: async () => {

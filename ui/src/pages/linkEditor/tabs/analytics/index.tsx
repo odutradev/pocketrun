@@ -55,16 +55,26 @@ const describeLimit = (link: Link, analytics: LinkAnalytics, now: number) => {
 };
 
 const AnalyticsTab = () => {
-  const { link, analytics, range, isAnalyticsLoading, events, hasLoadedHistory, loadAnalytics, loadHistory, handleRangeChange } =
-    useLinkEditorPage();
+  const {
+    link,
+    analytics,
+    range,
+    isAnalyticsLoading,
+    events,
+    historyPage,
+    hasLoadedHistory,
+    loadAnalytics,
+    loadHistory,
+    handleRangeChange
+  } = useLinkEditorPage();
 
   useEffect(() => {
     loadAnalytics();
   }, [range, loadAnalytics]);
 
   useEffect(() => {
-    if (!hasLoadedHistory) loadHistory();
-  }, [hasLoadedHistory, loadHistory]);
+    if (!hasLoadedHistory || historyPage !== 1) loadHistory(1);
+  }, [hasLoadedHistory, historyPage, loadHistory]);
 
   const toolbar = (
     <Toolbar>

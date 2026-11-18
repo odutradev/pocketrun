@@ -5,17 +5,35 @@ export const Container = styled.div`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing(5)};
   width: 100%;
+  scroll-margin-top: ${({ theme }) => theme.spacing(6)};
 `;
 
 export const Filters = styled.div`
-  display: grid;
-  gap: ${({ theme }) => theme.spacing(3)};
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
 
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: auto 240px;
-    justify-content: space-between;
-  }
+export const FiltersAside = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.spacing(3)};
+  margin-left: auto;
+`;
+
+export const Count = styled.span`
+  font-size: 13px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+  white-space: nowrap;
+`;
+
+export const ActorSelect = styled.div`
+  width: 240px;
+  max-width: 100%;
 `;
 
 export const Timeline = styled.div`
@@ -48,14 +66,4 @@ export const DayHeading = styled.h3`
   &::first-letter {
     text-transform: uppercase;
   }
-`;
-
-export const Footer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing(3)};
-  font-size: 13px;
-  color: ${({ theme }) => theme.brand.steelMuted};
 `;

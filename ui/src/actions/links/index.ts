@@ -1,6 +1,16 @@
 import api from "@utils/api";
 
-import type { AnalyticsRange, Link, LinkAnalytics, LinkGroup, LinkGroupValues, LinkHistoryPage, LinkPayload, SlugAvailability } from "@utils/types/link";
+import type {
+  AnalyticsRange,
+  Link,
+  LinkAnalytics,
+  LinkGroup,
+  LinkGroupValues,
+  LinkHistoryPage,
+  LinkHistoryParams,
+  LinkPayload,
+  SlugAvailability
+} from "@utils/types/link";
 import type { MessageResponse } from "@utils/types/api";
 
 export const listLinks = async (signal?: AbortSignal) => {
@@ -53,8 +63,8 @@ export const deleteLinkGroup = async (groupId: string) => {
   return response.data;
 };
 
-export const getLinkHistory = async (linkId: string, before?: string, signal?: AbortSignal) => {
-  const response = await api.get<LinkHistoryPage>(`/links/${linkId}/history/list`, { params: { before }, signal });
+export const getLinkHistory = async (linkId: string, params: LinkHistoryParams, signal?: AbortSignal) => {
+  const response = await api.get<LinkHistoryPage>(`/links/${linkId}/history/list`, { params, signal });
   return response.data;
 };
 

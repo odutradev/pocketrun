@@ -103,6 +103,12 @@ export interface LinkEvent {
 export interface LinkHistoryPage {
   events: LinkEvent[];
   nextCursor: string | null;
+  total: number;
+}
+
+export interface LinkHistoryParams {
+  before?: string;
+  limit: number;
 }
 
 export type AnalyticsRange = "24h" | "7d" | "30d" | "90d" | "all";
