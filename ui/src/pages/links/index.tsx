@@ -137,7 +137,6 @@ const LinksPage = () => {
         {!activeGroup && groups.length > 0 && <GroupCards />}
         <ListArea ref={listRef}>
           <Toolbar>
-            <Count>{pluralize(scopeTotal, "link", "links")}</Count>
             <SearchInput
               key={scope}
               label="Buscar links"
@@ -146,6 +145,7 @@ const LinksPage = () => {
               isLoading={isSearchLoading}
               onSearch={handleSearch}
             />
+            <Count>{pluralize(scopeTotal, "link", "links")}</Count>
             {!isMobile && (
               <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
             )}

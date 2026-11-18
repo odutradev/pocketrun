@@ -16,12 +16,12 @@ export const ListArea = styled.div`
 
 export const Toolbar = styled.div`
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: ${({ theme }) => theme.spacing(3)};
   align-items: center;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto auto;
   }
 `;
 
