@@ -7,4 +7,10 @@ export interface AccentColors {
   contrast: string;
 }
 
+export interface GroupColorTokens {
+  base: string;
+  text: string;
+  soft: string;
+}
+
 export type AppTheme = typeof theme;

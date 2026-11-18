@@ -45,6 +45,8 @@ export const randomSlugLength = 8;
 
 export const linkTitleMaxLength = 20;
 
+export const defaultGroupAppearance = { color: "gray", icon: "stack" } as const;
+
 export const historyPageSize = 20;
 
 export const linksPageSize = 20;

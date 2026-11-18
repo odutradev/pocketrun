@@ -1,6 +1,7 @@
+import type { AccentColors, GroupColorTokens } from "./types";
 import type { BrandContext } from "@utils/types/brand";
+import type { GroupColor } from "@utils/types/link";
 import type { ThemeProps } from "@radix-ui/themes";
-import type { AccentColors } from "./types";
 
 export const radixTheme: ThemeProps = {
   appearance: "dark",
@@ -16,6 +17,17 @@ const generalAccent: AccentColors = {
   text: "#EEEEEE",
   soft: "rgba(238, 238, 238, 0.12)",
   contrast: "#111111"
+};
+
+const groupColors: Record<GroupColor, GroupColorTokens> = {
+  gray: { base: "#8D8D8D", text: "#B4B4B4", soft: "rgba(180, 180, 180, 0.12)" },
+  red: { base: "#E54D2E", text: "#FF977D", soft: "rgba(229, 77, 46, 0.18)" },
+  orange: { base: "#F76B15", text: "#FFA057", soft: "rgba(247, 107, 21, 0.18)" },
+  yellow: { base: "#FFE629", text: "#F5E147", soft: "rgba(255, 230, 41, 0.14)" },
+  green: { base: "#29A383", text: "#1FD8A4", soft: "rgba(41, 163, 131, 0.18)" },
+  blue: { base: "#0090FF", text: "#70B8FF", soft: "rgba(0, 144, 255, 0.18)" },
+  purple: { base: "#8E4EC6", text: "#D19DFF", soft: "rgba(142, 78, 198, 0.22)" },
+  pink: { base: "#D6409F", text: "#FF8DCC", soft: "rgba(214, 64, 159, 0.18)" }
 };
 
 const baseTheme = {
@@ -106,6 +118,7 @@ const baseTheme = {
       errorTint: "#FFD1CF"
     },
     general: generalAccent,
+    groups: groupColors,
     chart: {
       clicks: "#46A758",
       visitors: "#5B7BE6",

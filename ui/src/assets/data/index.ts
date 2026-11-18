@@ -1,7 +1,9 @@
+import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, CodeIcon, GlobeIcon, HeartIcon, HomeIcon, LightningBoltIcon, MagicWandIcon, PersonIcon, RocketIcon, StackIcon, StarIcon, TargetIcon } from "@radix-ui/react-icons";
+
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { AnalyticsRange, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
+import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkState, PeriodPresetOption, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -580,6 +582,41 @@ export const linkEditorTabs: { value: LinkEditorTab; label: string }[] = [
   { value: "settings", label: "Configuração" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
+];
+
+export const linkGroupTabs: { value: LinkGroupTab; label: string }[] = [
+  { value: "links", label: "Links" },
+  { value: "settings", label: "Configurações" }
+];
+
+export const groupColorOptions: GroupColorOption[] = [
+  { value: "gray", label: "Cinza" },
+  { value: "red", label: "Vermelho" },
+  { value: "orange", label: "Laranja" },
+  { value: "yellow", label: "Amarelo" },
+  { value: "green", label: "Verde" },
+  { value: "blue", label: "Azul" },
+  { value: "purple", label: "Roxo" },
+  { value: "pink", label: "Rosa" }
+];
+
+export const groupIconOptions: GroupIconOption[] = [
+  { value: "stack", label: "Camadas", icon: StackIcon },
+  { value: "bookmark", label: "Marcador", icon: BookmarkIcon },
+  { value: "star", label: "Estrela", icon: StarIcon },
+  { value: "heart", label: "Coração", icon: HeartIcon },
+  { value: "rocket", label: "Foguete", icon: RocketIcon },
+  { value: "lightning", label: "Raio", icon: LightningBoltIcon },
+  { value: "globe", label: "Globo", icon: GlobeIcon },
+  { value: "chat", label: "Conversa", icon: ChatBubbleIcon },
+  { value: "calendar", label: "Calendário", icon: CalendarIcon },
+  { value: "target", label: "Alvo", icon: TargetIcon },
+  { value: "archive", label: "Arquivo", icon: ArchiveIcon },
+  { value: "backpack", label: "Mochila", icon: BackpackIcon },
+  { value: "home", label: "Casa", icon: HomeIcon },
+  { value: "person", label: "Pessoa", icon: PersonIcon },
+  { value: "code", label: "Código", icon: CodeIcon },
+  { value: "magic", label: "Varinha", icon: MagicWandIcon }
 ];
 
 export const analyticsRangeOptions: { value: AnalyticsRange; label: string; days: number | null }[] = [

@@ -61,7 +61,7 @@ export const createLinkGroup = async (data: LinkGroupValues) => {
 };
 
 export const updateLinkGroup = async (groupId: string, data: LinkGroupValues) => {
-  const response = await api.patch<MessageResponse>(`/links/groups/${groupId}/update`, data);
+  const response = await api.patch<LinkGroup>(`/links/groups/${groupId}/update`, data);
   return response.data;
 };
 

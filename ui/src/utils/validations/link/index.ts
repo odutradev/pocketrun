@@ -49,5 +49,24 @@ export const linkFormSchema = z
   });
 
 export const linkGroupSchema = z.object({
-  name: z.string().trim().min(1, "Dê um nome ao grupo").max(60, "Nome muito longo")
+  name: z.string().trim().min(1, "Dê um nome ao grupo").max(60, "Nome muito longo"),
+  color: z.enum(["gray", "red", "orange", "yellow", "green", "blue", "purple", "pink"]),
+  icon: z.enum([
+    "stack",
+    "bookmark",
+    "star",
+    "heart",
+    "rocket",
+    "lightning",
+    "globe",
+    "chat",
+    "calendar",
+    "target",
+    "archive",
+    "backpack",
+    "home",
+    "person",
+    "code",
+    "magic"
+  ])
 });

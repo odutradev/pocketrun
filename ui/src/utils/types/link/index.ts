@@ -1,4 +1,5 @@
 import type { linkFormSchema, linkGroupSchema } from "@utils/validations/link";
+import type { ComponentType } from "react";
 import type { z } from "zod";
 
 export type LinkMode = "active" | "inactive" | "period" | "clicks";
@@ -45,9 +46,24 @@ export interface LinkGroup {
   id: string;
   kind: "links";
   name: string;
+  color: GroupColor;
+  icon: GroupIcon;
   createdAt: string;
   updatedAt: string;
 }
+
+export interface GroupColorOption {
+  value: GroupColor;
+  label: string;
+}
+
+export interface GroupIconOption {
+  value: GroupIcon;
+  label: string;
+  icon: ComponentType;
+}
+
+export type LinkGroupTab = "links" | "settings";
 
 export interface LinkListParams {
   groupId?: string;
@@ -87,6 +103,8 @@ export interface LinkPayload {
 
 export type LinkFormValues = z.infer<typeof linkFormSchema>;
 export type LinkGroupValues = z.infer<typeof linkGroupSchema>;
+export type GroupColor = LinkGroupValues["color"];
+export type GroupIcon = LinkGroupValues["icon"];
 
 export type LinkEditorTab = "settings" | "analytics" | "history";
 

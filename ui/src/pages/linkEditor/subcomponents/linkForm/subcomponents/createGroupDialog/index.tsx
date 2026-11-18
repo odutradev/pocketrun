@@ -1,4 +1,5 @@
 import { linkGroupSchema } from "@utils/validations/link";
+import { defaultGroupAppearance } from "@assets/config";
 import { createLinkGroup } from "@actions/links";
 import { Actions, Form } from "./styles";
 import useAction from "@hooks/useAction";
@@ -22,7 +23,7 @@ const CreateGroupDialog = ({ isOpen, onClose, onCreated }: CreateGroupDialogProp
 
   const { values, errors, isSubmitting, handleChange, handleSubmit } = useForm({
     schema: linkGroupSchema,
-    initialValues: { name: "" },
+    initialValues: { name: "", ...defaultGroupAppearance },
     onSubmit: execute
   });
 
