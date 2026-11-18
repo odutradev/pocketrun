@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 import { getPage, getPageAnalytics, getPageHistory, getPageVersion, listPageGroups, listPageVersions } from "@actions/sitePages";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
+import usePageDraftsStore from "@stores/pageDrafts";
 import { historyPageSize } from "@assets/config";
 
 import type { PageDraft, SitePage } from "@utils/types/sitePage";
@@ -20,6 +21,7 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   hasLoadedVersions: false,
   isVersionsLoading: false,
   selectedVersion: null,
+  recoverableDraft: null,
   sitePage: null,
   groups: [],
   isLoading: true,
@@ -55,12 +57,16 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       versions: [],
       versionHtml: {},
       hasLoadedVersions: false,
-      selectedVersion: null
+      selectedVersion: null,
+      recoverableDraft: null
     });
     try {
       const [groups, sitePage] = await Promise.all([listPageGroups(), pageId ? getPage(pageId) : Promise.resolve(null)]);
       if (get().requestKey !== requestKey) return;
-      set({ groups, sitePage, draft: toDraft(sitePage) });
+      const stored = sitePage ? usePageDraftsStore.getState().drafts[sitePage.id] : undefined;
+      const recoverableDraft = stored && stored.html !== (sitePage?.html ?? "") ? stored : null;
+      if (sitePage && stored && !recoverableDraft) usePageDraftsStore.getState().clearDraft(sitePage.id);
+      set({ groups, sitePage, draft: toDraft(sitePage), recoverableDraft });
     } catch (error) {
       if (get().requestKey !== requestKey) return;
       logger.error(error);
@@ -131,6 +137,17 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   setHistoryActor: (historyActor) => set({ historyActor }),
   setDraftHtml: (html) => set((state) => ({ draft: { ...state.draft, html } })),
   setDraftMessage: (message) => set((state) => ({ draft: { ...state.draft, message } })),
+  recoverDraft: () =>
+    set((state) => {
+      if (!state.recoverableDraft) return state;
+      const { html, restoredFrom, message } = state.recoverableDraft;
+      return { draft: { html, restoredFrom, message }, recoverableDraft: null };
+    }),
+  dismissRecoverableDraft: () => {
+    const { sitePage } = get();
+    if (sitePage) usePageDraftsStore.getState().clearDraft(sitePage.id);
+    set({ recoverableDraft: null });
+  },
   discardDraft: () => set((state) => ({ draft: toDraft(state.sitePage) })),
   loadVersions: async () => {
     const { sitePage, requestKey } = get();

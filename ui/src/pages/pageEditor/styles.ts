@@ -8,6 +8,12 @@ export const Container = styled.div`
   width: 100%;
 `;
 
+export const DraftActions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing(2)};
+`;
+
 export const TabArea = styled.div`
   display: flex;
   flex-direction: column;

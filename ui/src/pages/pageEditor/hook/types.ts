@@ -1,4 +1,15 @@
-import type { AnalyticsRange, HistoryFilter, LinkAnalytics, PageDraft, PageEditorTab, PageEvent, PageGroup, PageVersion, SitePage } from "@utils/types/sitePage";
+import type {
+  AnalyticsRange,
+  HistoryFilter,
+  LinkAnalytics,
+  PageDraft,
+  PageEditorTab,
+  PageEvent,
+  PageGroup,
+  PageVersion,
+  SitePage,
+  StoredPageDraft
+} from "@utils/types/sitePage";
 import type { SelectOption } from "@components/select/types";
 
 export interface PageEditorStore {
@@ -9,6 +20,7 @@ export interface PageEditorStore {
   hasLoadedVersions: boolean;
   isVersionsLoading: boolean;
   selectedVersion: number | null;
+  recoverableDraft: StoredPageDraft | null;
   sitePage: SitePage | null;
   groups: PageGroup[];
   isLoading: boolean;
@@ -36,6 +48,8 @@ export interface PageEditorStore {
   setDraftHtml: (html: string) => void;
   setDraftMessage: (message: string) => void;
   discardDraft: () => void;
+  recoverDraft: () => void;
+  dismissRecoverableDraft: () => void;
   loadVersions: () => Promise<void>;
   loadVersionHtml: (number: number) => Promise<string | null>;
   selectVersion: (number: number | null) => void;
@@ -51,6 +65,9 @@ export interface UsePageEditorPageReturn {
   hasLoadedVersions: boolean;
   isVersionsLoading: boolean;
   selectedVersion: number | null;
+  recoverableDraft: StoredPageDraft | null;
+  handleDraftRecover: () => void;
+  handleDraftDismiss: () => void;
   setDraftHtml: (html: string) => void;
   setDraftMessage: (message: string) => void;
   discardDraft: () => void;

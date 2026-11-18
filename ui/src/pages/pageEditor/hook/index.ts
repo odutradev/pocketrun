@@ -61,6 +61,12 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
     hasLoadedVersions: store.hasLoadedVersions,
     isVersionsLoading: store.isVersionsLoading,
     selectedVersion: store.selectedVersion,
+    recoverableDraft: store.recoverableDraft,
+    handleDraftRecover: () => {
+      store.recoverDraft();
+      setSearchParams({}, { replace: true });
+    },
+    handleDraftDismiss: store.dismissRecoverableDraft,
     setDraftHtml: store.setDraftHtml,
     setDraftMessage: store.setDraftMessage,
     discardDraft: store.discardDraft,

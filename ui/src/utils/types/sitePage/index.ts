@@ -141,6 +141,11 @@ export interface PageDraft {
   message: string;
 }
 
+export interface StoredPageDraft extends PageDraft {
+  baseVersion: number;
+  savedAt: string;
+}
+
 export type VersionBase = "previous" | "draft" | `${number}`;
 
 export interface RankedPage {

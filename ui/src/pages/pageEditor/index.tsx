@@ -1,14 +1,19 @@
 import { Suspense, lazy, useEffect } from "react";
 
+import { currentTimestamp, formatRelativeTime, versionLabel } from "@utils/functions";
 import ContentNavbar from "@components/contentNavbar";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
-import { Container, TabArea } from "./styles";
+import { Container, DraftActions, TabArea } from "./styles";
 import PageForm from "./subcomponents/pageForm";
+import usePageDraftsStore from "@stores/pageDrafts";
+import { pageDraftSaveDelay } from "@assets/config";
 import { pageEditorTabs } from "@assets/data";
 import TabPanel from "@components/tabPanel";
 import HistoryTab from "./tabs/history";
 import Loader from "@components/loader";
+import Button from "@components/button";
+import Alert from "@components/alert";
 import TabNav from "@components/tabNav";
 import usePageEditorPage from "./hook";
 
@@ -27,8 +32,25 @@ const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 const QrCodeTab = lazy(() => import("./tabs/qrCode"));
 
 const PageEditorPage = () => {
-  const { pageId, defaultGroupId, sitePage, groups, isLoading, hasFailed, tab, load, handleGroupCreated, handlePageSaved, handleTabChange } =
-    usePageEditorPage();
+  const {
+    pageId,
+    defaultGroupId,
+    sitePage,
+    groups,
+    isLoading,
+    hasFailed,
+    tab,
+    draft,
+    isDirty,
+    recoverableDraft,
+    load,
+    handleGroupCreated,
+    handlePageSaved,
+    handleTabChange,
+    handleDraftRecover,
+    handleDraftDismiss
+  } = usePageEditorPage();
+  const { saveDraft, clearDraft } = usePageDraftsStore();
   const isEditing = Boolean(pageId);
   const pageGroup = groups.find((group) => group.id === (sitePage ? sitePage.groupId : defaultGroupId));
   const parents: ContentNavbarCrumb[] = [
@@ -39,6 +61,18 @@ const PageEditorPage = () => {
   useEffect(() => {
     load(pageId);
   }, [pageId, load]);
+
+  useEffect(() => {
+    if (!sitePage || recoverableDraft) return;
+    const timeout = window.setTimeout(() => {
+      if (!isDirty) {
+        clearDraft(sitePage.id);
+        return;
+      }
+      saveDraft(sitePage.id, { ...draft, baseVersion: sitePage.version, savedAt: new Date().toISOString() });
+    }, pageDraftSaveDelay);
+    return () => window.clearTimeout(timeout);
+  }, [sitePage, draft, isDirty, recoverableDraft, saveDraft, clearDraft]);
 
   const form = (
     <PageForm
@@ -94,6 +128,26 @@ const PageEditorPage = () => {
       {!isLoading && !hasFailed && !isEditing && form}
       {!isLoading && !hasFailed && isEditing && (
         <TabArea>
+          {sitePage && recoverableDraft && (
+            <Alert
+              tone="warning"
+              title="Rascunho não salvo"
+              action={
+                <DraftActions>
+                  <Button size="sm" onClick={handleDraftRecover}>
+                    Recuperar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={handleDraftDismiss}>
+                    Descartar
+                  </Button>
+                </DraftActions>
+              }
+            >
+              Você editou o HTML {formatRelativeTime(recoverableDraft.savedAt, currentTimestamp())} e não salvou.
+              {recoverableDraft.baseVersion !== sitePage.version &&
+                ` Ele partiu da ${versionLabel(recoverableDraft.baseVersion)}, e a página já está na ${versionLabel(sitePage.version)}: confira a comparação antes de salvar.`}
+            </Alert>
+          )}
           <TabNav
             label="Seções da página"
             idPrefix={tabIdPrefix}
