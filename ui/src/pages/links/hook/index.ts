@@ -1,9 +1,10 @@
-import { useSearchParams } from "react-router-dom";
+import { useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { linksPageSize } from "@assets/config";
+import { linkGroupTabs } from "@assets/data";
 import useLinksStore from "./store";
 
-import type { Link, LinkGroupTotals } from "@utils/types/link";
+import type { Link, LinkGroupTab, LinkGroupTotals } from "@utils/types/link";
 import type { UseLinksPageReturn } from "./types";
 
 const matchesSearch = (link: Link, search: string) => {
@@ -13,8 +14,13 @@ const matchesSearch = (link: Link, search: string) => {
 
 const findTotals = (totals: LinkGroupTotals[], groupId: string) => totals.find((item) => item.groupId === groupId);
 
+const toGroupTab = (value: string | null): LinkGroupTab => linkGroupTabs.find((tab) => tab.value === value)?.value ?? "links";
+
 const useLinksPage = (): UseLinksPageReturn => {
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { groupId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isCreatingGroup = useMatch("/links/groups/new") !== null;
   const {
     view,
     groups,
@@ -29,18 +35,19 @@ const useLinksPage = (): UseLinksPageReturn => {
     isRefreshing,
     isListLoading,
     isSearchLoading,
-    isGroupsOpen,
     removeTarget,
     loadLinks,
     openScope,
     searchLinks,
     goToPage,
-    setGroupsOpen,
+    addGroup,
+    replaceGroup,
+    removeGroup,
     setRemoveTarget,
     setView
   } = useLinksStore();
 
-  const scope = searchParams.get("group") ?? "";
+  const scope = groupId ?? "";
   const activeGroup = groups.find((group) => group.id === scope) ?? null;
   const visibleLinks = localSearch ? links.filter((link) => matchesSearch(link, localSearch)) : links;
   const visibleTotal = localSearch ? visibleLinks.length : total;
@@ -62,6 +69,8 @@ const useLinksPage = (): UseLinksPageReturn => {
     })),
     activeGroup,
     scope,
+    tab: toGroupTab(searchParams.get("tab")),
+    isCreatingGroup,
     hasNoLinks: hasLoaded && summary.total === 0 && groups.length === 0,
     isGroupMissing: scope !== "" && hasLoaded && activeGroup === null && !isRefreshing,
     isSearching: Boolean(loadedQuery?.search || localSearch),
@@ -70,7 +79,6 @@ const useLinksPage = (): UseLinksPageReturn => {
     isScopePending: loadedQuery?.scope !== scope,
     isListLoading,
     isSearchLoading,
-    isGroupsOpen,
     removeTarget,
     loadLinks,
     openScope,
@@ -80,8 +88,16 @@ const useLinksPage = (): UseLinksPageReturn => {
     handlePageChange: (page) => {
       goToPage(page);
     },
-    handleOpenGroups: () => setGroupsOpen(true),
-    handleCloseGroups: () => setGroupsOpen(false),
+    handleTabChange: (next) => setSearchParams(next === "links" ? {} : { tab: next }, { replace: true }),
+    handleGroupCreated: (group) => {
+      addGroup(group);
+      navigate(`/links/groups/${group.id}`, { replace: true });
+    },
+    handleGroupSaved: replaceGroup,
+    handleGroupRemoved: (removedId) => {
+      navigate("/links", { replace: true });
+      removeGroup(removedId);
+    },
     handleOpenRemove: setRemoveTarget,
     handleCloseRemove: () => setRemoveTarget(null),
     handleViewChange: setView

@@ -3,26 +3,41 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useRef } from "react";
 
+import { Container, Count, ListArea, TabArea, Toolbar } from "./styles";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
-import { Container, Count, ListArea, Toolbar } from "./styles";
 import ListTransition from "@components/listTransition";
-import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
 import GroupCards from "./subcomponents/groupCards";
 import SearchInput from "@components/searchInput";
+import GroupForm from "./subcomponents/groupForm";
 import useMediaQuery from "@hooks/useMediaQuery";
 import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
 import { pluralize } from "@utils/functions";
+import { linkGroupTabs } from "@assets/data";
+import TabPanel from "@components/tabPanel";
 import Skeleton from "@components/skeleton";
+import TabNav from "@components/tabNav";
 import Button from "@components/button";
 import LinksSkeleton from "./skeleton";
 import useLinksPage from "./hook";
 
+import type { ContentNavbarAction, ContentNavbarCrumb } from "@components/contentNavbar/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
 import type { LinksView } from "@utils/types/link";
+
+const tabIdPrefix = "link-group";
+
+const navbarInfo = {
+  links:
+    "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele e mudar o nome, a cor e o ícone; a busca procura nos links da lista.",
+  group:
+    "Os links deste grupo. Para mudar o grupo de um link, abra o link e escolha outro grupo. Em Configurações, mude o nome, a cor e o ícone do grupo, ou exclua o grupo sem apagar os links.",
+  newGroup:
+    "O grupo só organiza a lista de links: não muda os endereços nem conta acessos. A cor e o ícone ajudam a achar o grupo na lista."
+};
 
 const LinksPage = () => {
   const navigate = useNavigate();
@@ -42,6 +57,8 @@ const LinksPage = () => {
     groups,
     activeGroup,
     scope,
+    tab,
+    isCreatingGroup,
     hasNoLinks,
     isGroupMissing,
     isSearching,
@@ -54,17 +71,19 @@ const LinksPage = () => {
     openScope,
     handleSearch,
     handlePageChange,
-    handleOpenGroups,
+    handleTabChange,
     handleViewChange
   } = useLinksPage();
 
   useEffect(() => {
+    if (isCreatingGroup) return;
     loadLinks();
-  }, [loadLinks]);
+  }, [isCreatingGroup, loadLinks]);
 
   useEffect(() => {
+    if (isCreatingGroup) return;
     openScope(scope);
-  }, [scope, openScope]);
+  }, [isCreatingGroup, scope, openScope]);
 
   const viewOptions: SegmentedOption<LinksView>[] = [
     { value: "list", label: "Ver em lista", icon: <ListBulletIcon /> },
@@ -116,9 +135,57 @@ const LinksPage = () => {
     );
   };
 
+  const renderListArea = () => (
+    <ListArea ref={listRef}>
+      <Toolbar>
+        <SearchInput
+          key={scope}
+          label="Buscar links"
+          placeholder={getSearchPlaceholder()}
+          defaultValue={search}
+          isLoading={isSearchLoading}
+          onSearch={handleSearch}
+        />
+        <Count>{pluralize(scopeTotal, "link", "links")}</Count>
+        {!isMobile && (
+          <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
+        )}
+      </Toolbar>
+      {isScopePending ? (
+        <Skeleton height="320px" radius="panel" />
+      ) : (
+        <ListTransition transitionKey={transitionKey} isBusy={isListLoading}>
+          {renderListContent()}
+        </ListTransition>
+      )}
+      {!isScopePending && totalPages > 1 && (
+        <Pagination page={page} totalPages={totalPages} onPageChange={handleListPageChange} isCentered />
+      )}
+    </ListArea>
+  );
+
+  const renderGroup = (groupKey: string) => (
+    <TabArea>
+      <TabNav
+        label="Seções do grupo"
+        idPrefix={tabIdPrefix}
+        items={linkGroupTabs}
+        value={tab}
+        onValueChange={handleTabChange}
+        isFullWidth
+      />
+      <TabPanel idPrefix={tabIdPrefix} value={tab}>
+        {tab === "settings" ? <GroupForm key={groupKey} /> : renderListArea()}
+      </TabPanel>
+    </TabArea>
+  );
+
   const renderContent = () => {
+    if (isCreatingGroup) return <GroupForm key="new" />;
     if (isLoading) return <LinksSkeleton />;
     if (isGroupMissing) return <Navigate to="/links" replace />;
+    if (activeGroup) return renderGroup(`${activeGroup.id}-${activeGroup.updatedAt}`);
+    if (scope) return <LinksSkeleton />;
     if (hasNoLinks) {
       return (
         <EmptyState
@@ -134,54 +201,40 @@ const LinksPage = () => {
     }
     return (
       <>
-        {!activeGroup && groups.length > 0 && <GroupCards />}
-        <ListArea ref={listRef}>
-          <Toolbar>
-            <SearchInput
-              key={scope}
-              label="Buscar links"
-              placeholder={getSearchPlaceholder()}
-              defaultValue={search}
-              isLoading={isSearchLoading}
-              onSearch={handleSearch}
-            />
-            <Count>{pluralize(scopeTotal, "link", "links")}</Count>
-            {!isMobile && (
-              <SegmentedControl label="Visualização" options={viewOptions} value={view} onValueChange={handleViewChange} isIconOnly />
-            )}
-          </Toolbar>
-          {isScopePending ? (
-            <Skeleton height="320px" radius="panel" />
-          ) : (
-            <ListTransition transitionKey={transitionKey} isBusy={isListLoading}>
-              {renderListContent()}
-            </ListTransition>
-          )}
-          {!isScopePending && totalPages > 1 && (
-            <Pagination page={page} totalPages={totalPages} onPageChange={handleListPageChange} isCentered />
-          )}
-        </ListArea>
+        {groups.length > 0 && <GroupCards />}
+        {renderListArea()}
       </>
     );
+  };
+
+  const getTitle = () => {
+    if (isCreatingGroup) return "Novo grupo";
+    if (scope) return activeGroup?.name ?? "Grupo";
+    return "Links";
+  };
+
+  const isNested = isCreatingGroup || scope !== "";
+  const parents: ContentNavbarCrumb[] | undefined = isNested ? [{ label: "Links", to: "/links" }] : undefined;
+  const newGroupAction: ContentNavbarAction = { label: "Novo grupo", icon: <StackIcon />, to: "/links/groups/new" };
+  const newLinkAction: ContentNavbarAction = { label: "Novo link", icon: <PlusIcon />, to: "/links/new" };
+
+  const getInfo = () => {
+    if (isCreatingGroup) return navbarInfo.newGroup;
+    return scope ? navbarInfo.group : navbarInfo.links;
   };
 
   return (
     <Container>
       <ContentNavbar
-        title={activeGroup?.name ?? "Links"}
-        parents={activeGroup ? [{ label: "Links", to: "/links" }] : undefined}
-        info={
-          activeGroup
-            ? "Os links deste grupo. Para mudar o grupo de um link, abra o link e escolha outro grupo."
-            : "Endereços curtos que redirecionam para qualquer URL. Cada link pode ficar ativo, desativado, ativo por um período ou até atingir um número de acessos. Abra um grupo para ver os links dele; a busca procura nos links da lista."
-        }
-        actions={[{ label: "Grupos", icon: <StackIcon />, onClick: handleOpenGroups }]}
-        onReload={loadLinks}
+        title={getTitle()}
+        parents={parents}
+        info={getInfo()}
+        actions={isNested ? undefined : [newGroupAction]}
+        onReload={isCreatingGroup ? undefined : loadLinks}
         isReloading={isLoading || isRefreshing}
-        action={{ label: "Novo link", icon: <PlusIcon />, to: "/links/new" }}
+        action={isCreatingGroup ? undefined : newLinkAction}
       />
       {renderContent()}
-      <GroupsDialog />
       <RemoveLinkDialog />
     </Container>
   );

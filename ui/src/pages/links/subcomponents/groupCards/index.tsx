@@ -1,8 +1,9 @@
-import { ChevronRightIcon, StackIcon } from "@radix-ui/react-icons";
+import { ChevronRightIcon } from "@radix-ui/react-icons";
 
-import { Arrow, Grid, Icon, Info, Meta, Name, Row } from "./styles";
+import { Arrow, Grid, Info, Meta, Name, Row } from "./styles";
 import { pluralize } from "@utils/functions";
 import useLinksPage from "../../hook";
+import GroupTile from "../groupTile";
 import Card from "@components/card";
 
 const GroupCards = () => {
@@ -12,11 +13,9 @@ const GroupCards = () => {
     <Grid>
       {groupSummaries.map(({ group, linkCount, clicks }) => (
         <li key={group.id}>
-          <Card to={`/links?group=${group.id}`} padding="sm">
+          <Card to={`/links/groups/${group.id}`} padding="sm">
             <Row>
-              <Icon aria-hidden="true">
-                <StackIcon />
-              </Icon>
+              <GroupTile color={group.color} icon={group.icon} />
               <Info>
                 <Name title={group.name}>{group.name}</Name>
                 <Meta>

@@ -1,4 +1,4 @@
-import type { Link, LinkGroup, LinkSummary, LinksView } from "@utils/types/link";
+import type { Link, LinkGroup, LinkGroupTab, LinkSummary, LinksView } from "@utils/types/link";
 
 export interface LinkGroupSummary {
   group: LinkGroup;
@@ -31,6 +31,8 @@ export interface UseLinksPageReturn {
   groupSummaries: LinkGroupSummary[];
   activeGroup: LinkGroup | null;
   scope: string;
+  tab: LinkGroupTab;
+  isCreatingGroup: boolean;
   hasNoLinks: boolean;
   isGroupMissing: boolean;
   isSearching: boolean;
@@ -39,14 +41,15 @@ export interface UseLinksPageReturn {
   isScopePending: boolean;
   isListLoading: boolean;
   isSearchLoading: boolean;
-  isGroupsOpen: boolean;
   removeTarget: Link | null;
   loadLinks: () => Promise<void>;
   openScope: (scope: string) => Promise<void>;
   handleSearch: (search: string) => void;
   handlePageChange: (page: number) => void;
-  handleOpenGroups: () => void;
-  handleCloseGroups: () => void;
+  handleTabChange: (tab: LinkGroupTab) => void;
+  handleGroupCreated: (group: LinkGroup) => void;
+  handleGroupSaved: (group: LinkGroup) => void;
+  handleGroupRemoved: (groupId: string) => void;
   handleOpenRemove: (link: Link) => void;
   handleCloseRemove: () => void;
   handleViewChange: (view: LinksView) => void;
@@ -68,7 +71,6 @@ export interface LinksStore {
   isListLoading: boolean;
   isSearchLoading: boolean;
   listRequestId: number;
-  isGroupsOpen: boolean;
   removeTarget: Link | null;
   loadOverview: () => Promise<void>;
   loadList: (query: LinksListQuery) => Promise<void>;
@@ -76,7 +78,9 @@ export interface LinksStore {
   openScope: (scope: string) => Promise<void>;
   searchLinks: (search: string) => Promise<void>;
   goToPage: (page: number) => Promise<void>;
-  setGroupsOpen: (isOpen: boolean) => void;
+  addGroup: (group: LinkGroup) => void;
+  replaceGroup: (group: LinkGroup) => void;
+  removeGroup: (groupId: string) => Promise<void>;
   setRemoveTarget: (link: Link | null) => void;
   setView: (view: LinksView) => void;
 }

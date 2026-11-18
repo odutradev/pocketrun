@@ -50,6 +50,8 @@ const router = createBrowserRouter([
       pageRoute("/kv", KvPage, kvMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
       pageRoute("/links", LinksPage, linksMetadata),
+      pageRoute("/links/groups/new", LinksPage, linksMetadata),
+      pageRoute("/links/groups/:groupId", LinksPage, linksMetadata),
       pageRoute("/links/new", LinkEditorPage, linkEditorMetadata),
       pageRoute("/links/:linkId/edit", LinkEditorPage, linkEditorMetadata),
       pageRoute("/users", UsersPage, usersMetadata),

@@ -6,8 +6,8 @@ import { getLinkSummary, listLinkGroups, listLinks } from "@actions/links";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { linksPageSize } from "@assets/config";
 
+import type { LinkGroup, LinkListParams } from "@utils/types/link";
 import type { LinksListQuery, LinksStore } from "./types";
-import type { LinkListParams } from "@utils/types/link";
 
 const logger = createLocalLogger("linksPage");
 
@@ -17,6 +17,8 @@ const toListParams = ({ scope, search, page }: LinksListQuery): LinkListParams =
   page,
   limit: linksPageSize
 });
+
+const sortGroups = (groups: LinkGroup[]) => [...groups].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 
 const useLinksStore = create<LinksStore>()(
   persist(
@@ -36,7 +38,6 @@ const useLinksStore = create<LinksStore>()(
       isListLoading: false,
       isSearchLoading: false,
       listRequestId: 0,
-      isGroupsOpen: false,
       removeTarget: null,
       loadOverview: async () => {
         set(get().hasLoaded ? { isRefreshing: true } : { isLoading: true });
@@ -117,7 +118,13 @@ const useLinksStore = create<LinksStore>()(
         if (!query) return;
         await loadList({ ...query, page });
       },
-      setGroupsOpen: (isGroupsOpen) => set({ isGroupsOpen }),
+      addGroup: (group) => set((state) => ({ groups: sortGroups([...state.groups, group]) })),
+      replaceGroup: (group) =>
+        set((state) => ({ groups: sortGroups(state.groups.map((item) => (item.id === group.id ? group : item))) })),
+      removeGroup: async (groupId) => {
+        set((state) => ({ groups: state.groups.filter((group) => group.id !== groupId), emptySearchCache: null }));
+        await get().loadOverview();
+      },
       setRemoveTarget: (removeTarget) => set({ removeTarget }),
       setView: (view) => set({ view })
     }),

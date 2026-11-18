@@ -19,23 +19,6 @@ export const Row = styled.span`
   min-width: 0;
 `;
 
-export const Icon = styled.span`
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: ${({ theme }) => theme.spacing(10)};
-  height: ${({ theme }) => theme.spacing(10)};
-  border-radius: ${({ theme }) => theme.radii.control};
-  background-color: ${({ theme }) => theme.brand.raised};
-  color: ${({ theme }) => theme.brand.steelMuted};
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
 export const Info = styled.span`
   display: flex;
   flex: 1;

@@ -27,7 +27,7 @@ const LinkEditorPage = () => {
   const linkGroup = groups.find((group) => group.id === link?.groupId);
   const parents: ContentNavbarCrumb[] = [
     { label: "Links", to: "/links" },
-    ...(linkGroup ? [{ label: linkGroup.name, to: `/links?group=${linkGroup.id}` }] : [])
+    ...(linkGroup ? [{ label: linkGroup.name, to: `/links/groups/${linkGroup.id}` }] : [])
   ];
 
   useEffect(() => {
