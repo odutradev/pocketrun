@@ -28,7 +28,12 @@ export type ApiErrorCode =
   | "invalid_slug"
   | "reserved_slug"
   | "slug_taken"
-  | "self_redirect";
+  | "self_redirect"
+  | "invalid_page_id"
+  | "page_not_found"
+  | "page_too_large"
+  | "invalid_version"
+  | "version_not_found";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

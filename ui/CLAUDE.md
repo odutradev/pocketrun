@@ -201,9 +201,9 @@ Every list that pages through the API (links, and any future one) follows these 
 - **Search waits for typing to stop:** the search field is always `SearchInput`, which emits the term only after `searchDelay` (`@assets/config`, 800 ms) without typing or deleting. Enter and the clear button (or Esc) search right away. The same term twice never searches again. Never call the API from `onChange` and never write another debounce: use the component and its `delay` prop.
 - **One page means local:** when the unfiltered list (no search, no state filter) came back with `total <= pageSize`, every item is already in memory. Search, state filters and sort then run in memory, with no request, like pagination, which with a single page has nothing to load. Check this with `holdsWholeList` (`@utils/functions`).
 - **More than one page means the API:** if the scope has more items than one page, or the loaded list was already filtered, search, filters, sort and page changes go to the API, which filters and sorts over every item.
-- **Local matches the API:** the in-memory filter and sort reproduce the API's rules exactly (same fields, same order, same tiebreaker), so the result is the same either way. Keep these helpers in `@utils/functions` (e.g. `matchesLinkFilters`, `sortLinksBy`) and update them in the same work when the API changes.
+- **Local matches the API:** the in-memory filter and sort reproduce the API's rules exactly (same fields, same order, same tiebreaker), so the result is the same either way. Keep these helpers in `@utils/functions` (e.g. `matchesListFilters`, `matchesLinkFilters`, `sortListBy`) and update them in the same work when the API changes.
 - **One entry point:** the page store keeps the selection the user wants (`query`) apart from what was loaded (`loadedQuery`). Every change (search, filter, sort, page, scope) goes through a single `applyQuery`, which decides between local and API and drops stale responses by request id. A refresh in local mode reloads the unfiltered scope and keeps the user's selection.
-- **Reference:** `src/pages/links/hook/store.ts` and `src/pages/links/hook/index.ts`.
+- **Reference:** `src/pages/links/hook/store.ts` and `src/pages/links/hook/index.ts` (pages follow the same store in `src/pages/pages/hook`).
 
 ## 7. Forms
 

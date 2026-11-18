@@ -3,6 +3,7 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
+import type { PageChangeField, PageEditorTab, PageGroupTab } from "@utils/types/sitePage";
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -32,6 +33,11 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   user_has_applications: "Este usuário ainda tem aplicações. Remova-as antes de excluir a conta.",
   invalid_current_password: "A senha atual está incorreta.",
   invalid_link_id: "Link inválido.",
+  invalid_page_id: "Página inválida.",
+  page_not_found: "Página não encontrada.",
+  page_too_large: "O HTML passou do limite de tamanho da página.",
+  invalid_version: "Versão inválida.",
+  version_not_found: "Versão não encontrada.",
   link_not_found: "Link não encontrado.",
   invalid_group_id: "Grupo inválido.",
   group_not_found: "Grupo não encontrado.",
@@ -585,6 +591,59 @@ export const linkEditorTabs: { value: LinkEditorTab; label: string }[] = [
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
 ];
+
+export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
+  { value: "editor", label: "Editor" },
+  { value: "settings", label: "Configuração" },
+  { value: "versions", label: "Versões" },
+  { value: "qrcode", label: "QR code" },
+  { value: "analytics", label: "Análise" },
+  { value: "history", label: "Histórico" }
+];
+
+export const pageGroupTabs: { value: PageGroupTab; label: string }[] = [
+  { value: "pages", label: "Páginas" },
+  { value: "settings", label: "Configurações" }
+];
+
+export const pageEventLabels: Record<LinkEventType, string> = {
+  created: "criou a página",
+  updated: "editou a página",
+  deleted: "excluiu a página",
+  expired: "encerrou a página no fim do período",
+  exhausted: "encerrou a página ao atingir o limite de acessos",
+  group_detached: "removeu a página do grupo ao excluir o grupo"
+};
+
+export const pageChangeLabels: Record<PageChangeField, string> = {
+  title: "Título",
+  slug: "Slug",
+  version: "Versão do código",
+  groupId: "Grupo",
+  mode: "Ativação",
+  startsAt: "Início",
+  endsAt: "Fim",
+  maxClicks: "Limite de acessos"
+};
+
+export const pageStarterHtml = `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha página</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Olá!</h1>
+    <p>Edite o HTML desta página no PocketRun.</p>
+  </main>
+</body>
+</html>
+`;
 
 export const linkStateFilterOptions: { value: LinkStateFilter; label: string }[] = [
   { value: "all", label: "Todos os estados" },

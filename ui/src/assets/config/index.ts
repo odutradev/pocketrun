@@ -53,6 +53,14 @@ export const historyPageSize = 20;
 
 export const linksPageSize = 20;
 
+export const pagesPageSize = 20;
+
+export const pageTitleMaxLength = 20;
+
+export const pageHtmlMaxBytes = 512 * 1024;
+
+export const pagePreviewDelay = 600;
+
 export const searchDelay = 800;
 
 export const searchSpinnerMinDuration = 500;

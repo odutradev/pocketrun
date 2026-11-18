@@ -1,6 +1,6 @@
 import { useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
-import { currentTimestamp, matchesLinkFilters, sortLinksBy } from "@utils/functions";
+import { currentTimestamp, matchesLinkFilters, sortListBy } from "@utils/functions";
 import { linksPageSize } from "@assets/config";
 import { linkGroupTabs } from "@assets/data";
 import useLinksStore from "./store";
@@ -50,7 +50,7 @@ const useLinksPage = (): UseLinksPageReturn => {
   const localQuery = isWholeScopeLoaded && query && loadedQuery?.scope === query.scope ? query : null;
   const listing = localQuery ?? loadedQuery;
   const visibleLinks = localQuery
-    ? sortLinksBy(
+    ? sortListBy(
         links.filter((link) => matchesLinkFilters(link, localQuery.search, localQuery.state)),
         localQuery.sort,
         currentTimestamp()

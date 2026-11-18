@@ -46,6 +46,10 @@ export interface Link {
   updatedAt: string;
 }
 
+export type ListItem = Pick<Link, "id" | "title" | "state" | "clicks" | "endsAt" | "createdAt">;
+
+export type RuleItem = Pick<Link, "mode" | "state" | "startsAt" | "endsAt">;
+
 export interface LinkGroup {
   id: string;
   kind: "links";

@@ -4,7 +4,8 @@ import { isApiError } from "@utils/api";
 
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
-import type { Link, LinkSort, LinkStateFilter } from "@utils/types/link";
+import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
+import type { SitePage } from "@utils/types/sitePage";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -71,30 +72,36 @@ export const publicLinkUrl = (slug: string): string => `${linksUrl}/${slug}`;
 
 export const holdsWholeList = (total: number, pageSize: number, isFiltered: boolean): boolean => !isFiltered && total <= pageSize;
 
-export const matchesLinkFilters = (link: Link, search: string, state: LinkStateFilter): boolean => {
+export const matchesListFilters = (item: ListItem, search: string, state: LinkStateFilter, fields: string[]): boolean => {
   const term = search.trim().toLowerCase();
-  const matchesState = state === "all" || link.state === state;
-  return matchesState && (!term || [link.title, link.slug, link.url].some((value) => value.toLowerCase().includes(term)));
+  const matchesState = state === "all" || item.state === state;
+  return matchesState && (!term || fields.some((value) => value.toLowerCase().includes(term)));
 };
 
-const compareNewest = (first: Link, second: Link): number =>
+export const matchesLinkFilters = (link: Link, search: string, state: LinkStateFilter): boolean =>
+  matchesListFilters(link, search, state, [link.title, link.slug, link.url]);
+
+export const matchesPageFilters = (page: SitePage, search: string, state: LinkStateFilter): boolean =>
+  matchesListFilters(page, search, state, [page.title, page.slug]);
+
+const compareNewest = (first: ListItem, second: ListItem): number =>
   new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime() || second.id.localeCompare(first.id);
 
-const upcomingExpiry = (link: Link, now: number): number => {
-  const endsAt = link.endsAt ? new Date(link.endsAt).getTime() : Number.POSITIVE_INFINITY;
+const upcomingExpiry = (item: ListItem, now: number): number => {
+  const endsAt = item.endsAt ? new Date(item.endsAt).getTime() : Number.POSITIVE_INFINITY;
   return endsAt > now ? endsAt : Number.POSITIVE_INFINITY;
 };
 
 const compareExpiry = (first: number, second: number): number => (first === second ? 0 : first < second ? -1 : 1);
 
-export const sortLinksBy = (links: Link[], sort: LinkSort, now: number): Link[] => {
-  const compareBySort = (first: Link, second: Link): number => {
+export const sortListBy = <T extends ListItem>(items: T[], sort: LinkSort, now: number): T[] => {
+  const compareBySort = (first: T, second: T): number => {
     if (sort === "clicks") return second.clicks - first.clicks;
     if (sort === "title") return first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" });
     if (sort === "expiring") return compareExpiry(upcomingExpiry(first, now), upcomingExpiry(second, now));
     return 0;
   };
-  return [...links].sort((first, second) => compareBySort(first, second) || compareNewest(first, second));
+  return [...items].sort((first, second) => compareBySort(first, second) || compareNewest(first, second));
 };
 
 export const formatShortDateTime = (value: string): string =>
@@ -108,7 +115,7 @@ export const urlHost = (value: string): string => {
   }
 };
 
-export const describeLinkRule = (link: Link): string | null => {
+export const describeLinkRule = (link: RuleItem): string | null => {
   if (link.mode !== "period") return null;
   if (link.state === "scheduled" && link.startsAt) return `Começa ${formatShortDateTime(link.startsAt)}`;
   if (!link.endsAt) return null;
@@ -116,6 +123,13 @@ export const describeLinkRule = (link: Link): string | null => {
 };
 
 export const currentTimestamp = (): number => Date.now();
+
+export const measureBytes = (value: string): number => new TextEncoder().encode(value).length;
+
+export const formatBytes = (bytes: number): string =>
+  bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
+
+export const versionLabel = (number: number): string => `1.${Math.max(number, 1) - 1}`;
 
 export const formatRelativeTime = (value: string, now: number): string => {
   const seconds = Math.round((new Date(value).getTime() - now) / 1000);

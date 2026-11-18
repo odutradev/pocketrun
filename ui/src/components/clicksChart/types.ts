@@ -3,8 +3,10 @@ import type { AnalyticsBucket, AnalyticsPoint, LinkEvent } from "@utils/types/li
 export interface ClicksChartProps {
   series: AnalyticsPoint[];
   bucket: AnalyticsBucket;
-  markers: LinkEvent[];
+  markers: ChartMarker[];
 }
+
+export type ChartMarker = Pick<LinkEvent, "id" | "at">;
 
 export interface ChartPoint {
   time: number;
