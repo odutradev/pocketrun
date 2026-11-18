@@ -145,6 +145,13 @@ export const MeterBar = styled.div<MeterStyleProps>`
   }
 `;
 
+export const FooterGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
+
 export const Hint = styled.span`
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};

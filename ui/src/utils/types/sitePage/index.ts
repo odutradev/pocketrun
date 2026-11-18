@@ -146,6 +146,12 @@ export interface StoredPageDraft extends PageDraft {
   savedAt: string;
 }
 
+export interface HtmlIssue {
+  start: number;
+  end: number;
+  message: string;
+}
+
 export type VersionBase = "previous" | "draft" | `${number}`;
 
 export interface RankedPage {

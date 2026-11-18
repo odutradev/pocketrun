@@ -626,6 +626,32 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   maxClicks: "Limite de acessos"
 };
 
+export const htmlVoidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
+
+export const htmlOptionalCloseTags = new Set([
+  "html",
+  "head",
+  "body",
+  "p",
+  "li",
+  "dt",
+  "dd",
+  "option",
+  "optgroup",
+  "tr",
+  "td",
+  "th",
+  "thead",
+  "tbody",
+  "tfoot",
+  "colgroup",
+  "caption",
+  "rt",
+  "rp"
+]);
+
+export const htmlRawTextTags = new Set(["script", "style", "textarea", "title"]);
+
 export const pageStarterHtml = `<!doctype html>
 <html lang="pt-BR">
 <head>

@@ -1,8 +1,18 @@
-import { CodeIcon, EnterFullScreenIcon, ExitFullScreenIcon, ExternalLinkIcon, EyeOpenIcon, ResetIcon, ViewVerticalIcon } from "@radix-ui/react-icons";
+import {
+  CodeIcon,
+  EnterFullScreenIcon,
+  ExclamationTriangleIcon,
+  ExitFullScreenIcon,
+  ExternalLinkIcon,
+  EyeOpenIcon,
+  MagicWandIcon,
+  ResetIcon,
+  ViewVerticalIcon
+} from "@radix-ui/react-icons";
 import { useTheme } from "styled-components";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { Bar, BarGroup, Footer, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
+import { Bar, BarGroup, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
 import { formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
 import { pageHtmlMaxBytes, pagePreviewDelay, pageVersionMessageMaxLength } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
@@ -17,6 +27,7 @@ import Input from "@components/input";
 import Badge from "@components/badge";
 
 import type { PageDraft, PagePayload, SitePage } from "@utils/types/sitePage";
+import type { CodeEditorHandle } from "../../subcomponents/codeEditor/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
 import type { EditorView } from "./types";
 
@@ -46,6 +57,8 @@ const EditorTab = () => {
   const { sitePage, draft, isDirty, draftSize, setDraftHtml, setDraftMessage, discardDraft, handlePageSaved } = usePageEditorPage();
   const [view, setView] = useState<EditorView>("split");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [issueCount, setIssueCount] = useState(0);
+  const codeEditorRef = useRef<CodeEditorHandle>(null);
   const [previewHtml, setPreviewHtml] = useState(draft.html);
   const isOverLimit = draftSize > pageHtmlMaxBytes;
   const usedPercent = Math.min(100, Math.round((draftSize / pageHtmlMaxBytes) * 100));
@@ -133,6 +146,9 @@ const EditorTab = () => {
           <Button size="sm" disabled={!isDirty || isOverLimit} isLoading={isPending} loadingLabel="Salvando…" onClick={handleSave}>
             Salvar {versionLabel(sitePage.version + 1)}
           </Button>
+          {activeView !== "preview" && (
+            <IconButton label="Formatar o HTML (Shift+Alt+F)" icon={<MagicWandIcon />} size="sm" onClick={() => codeEditorRef.current?.format()} />
+          )}
           <IconButton
             label="Abrir a página publicada em nova aba"
             icon={<ExternalLinkIcon />}
@@ -150,7 +166,14 @@ const EditorTab = () => {
       <Panes $isSplit={activeView === "split"}>
         {activeView !== "preview" && (
           <Pane>
-            <CodeEditor value={draft.html} label="HTML da página" onChange={setDraftHtml} onSave={handleSave} />
+            <CodeEditor
+              ref={codeEditorRef}
+              value={draft.html}
+              label="HTML da página"
+              onChange={setDraftHtml}
+              onSave={handleSave}
+              onIssuesChange={setIssueCount}
+            />
           </Pane>
         )}
         {activeView !== "code" && (
@@ -178,7 +201,14 @@ const EditorTab = () => {
             <span style={{ width: `${usedPercent}%` }} />
           </MeterBar>
         </Meter>
-        <Hint>{isExpanded ? "Ctrl+S salva · Esc sai da tela cheia" : "Ctrl+S salva"}</Hint>
+        <FooterGroup>
+          {activeView !== "preview" && issueCount > 0 && (
+            <Button variant="ghost" size="sm" leftIcon={<ExclamationTriangleIcon />} onClick={() => codeEditorRef.current?.goToNextIssue()}>
+              {issueCount === 1 ? "1 aviso no HTML" : `${issueCount} avisos no HTML`}
+            </Button>
+          )}
+          <Hint>{isExpanded ? "Ctrl+S salva · Shift+Alt+F formata · Esc sai da tela cheia" : "Ctrl+S salva · Shift+Alt+F formata"}</Hint>
+        </FooterGroup>
       </Footer>
     </Workbench>
   );

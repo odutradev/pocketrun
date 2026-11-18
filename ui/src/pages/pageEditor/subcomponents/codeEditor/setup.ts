@@ -1,4 +1,7 @@
 import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution";
+import "monaco-editor/esm/vs/editor/contrib/hover/browser/hoverContribution";
+import "monaco-editor/esm/vs/editor/contrib/format/browser/formatActions";
+import "monaco-editor/esm/vs/editor/contrib/gotoError/browser/gotoError";
 import HtmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import "monaco-editor/esm/vs/base/browser/ui/codicons/codicon/codicon.css";
@@ -12,6 +15,8 @@ import type { DefaultTheme } from "styled-components";
 import type { Monaco } from "@monaco-editor/react";
 
 export const editorThemeName = "pocketrun";
+
+export const issuesOwner = "pocketrun-html";
 
 self.MonacoEnvironment = {
   getWorker: (_workerId: string, label: string) => (label === "html" ? new HtmlWorker() : new EditorWorker())

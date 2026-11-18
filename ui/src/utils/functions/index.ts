@@ -1,11 +1,11 @@
 import { expiryWarningDays, linksUrl } from "@assets/config";
-import { errorMessages } from "@assets/data";
+import { errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags } from "@assets/data";
 import { isApiError } from "@utils/api";
 
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
-import type { SitePage } from "@utils/types/sitePage";
+import type { HtmlIssue, SitePage } from "@utils/types/sitePage";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -130,6 +130,73 @@ export const formatBytes = (bytes: number): string =>
   bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
 
 export const versionLabel = (number: number): string => `1.${Math.max(number, 1) - 1}`;
+
+const htmlTokenPattern = /<!--[\s\S]*?(?:-->|$)|<![^>]*>?|<(\/?)([a-zA-Z][\w:-]*)((?:[^>"']|"[^"]*"|'[^']*')*?)(\/?)(>|$)/g;
+
+export const findHtmlIssues = (html: string): HtmlIssue[] => {
+  const issues: HtmlIssue[] = [];
+  const open: { name: string; start: number; end: number }[] = [];
+  const pattern = new RegExp(htmlTokenPattern.source, "g");
+  const lowerHtml = html.toLowerCase();
+
+  for (let match = pattern.exec(html); match; match = pattern.exec(html)) {
+    const [token, slash, rawName, , selfClose, closing] = match;
+    const start = match.index;
+    const end = start + token.length;
+    if (token.length === 0) {
+      pattern.lastIndex += 1;
+      continue;
+    }
+
+    if (token.startsWith("<!--")) {
+      if (!token.endsWith("-->")) issues.push({ start, end: start + 4, message: 'O comentário não foi fechado: falta o "-->".' });
+      continue;
+    }
+    if (!rawName) continue;
+
+    const name = rawName.toLowerCase();
+    if (closing !== ">") {
+      issues.push({ start, end: start + 1 + slash.length + rawName.length, message: `A tag <${slash}${name}> não terminou: falta o ">".` });
+      break;
+    }
+
+    if (slash) {
+      if (htmlVoidTags.has(name)) {
+        issues.push({ start, end, message: `<${name}> não tem fechamento: tire o </${name}>.` });
+        continue;
+      }
+      const index = open.findLastIndex((tag) => tag.name === name);
+      if (index === -1) {
+        issues.push({ start, end, message: `</${name}> fecha uma tag que não está aberta.` });
+        continue;
+      }
+      open
+        .splice(index)
+        .slice(1)
+        .filter((tag) => !htmlOptionalCloseTags.has(tag.name))
+        .forEach((tag) => issues.push({ start: tag.start, end: tag.end, message: `A tag <${tag.name}> não foi fechada antes do </${name}>.` }));
+      continue;
+    }
+
+    if (selfClose || htmlVoidTags.has(name)) continue;
+
+    if (htmlRawTextTags.has(name)) {
+      const closeIndex = lowerHtml.indexOf(`</${name}`, end);
+      if (closeIndex === -1) {
+        issues.push({ start, end, message: `A tag <${name}> foi aberta e não foi fechada.` });
+        break;
+      }
+      pattern.lastIndex = closeIndex;
+    }
+    open.push({ name, start, end });
+  }
+
+  open
+    .filter((tag) => !htmlOptionalCloseTags.has(tag.name))
+    .forEach((tag) => issues.push({ start: tag.start, end: tag.end, message: `A tag <${tag.name}> foi aberta e não foi fechada.` }));
+
+  return issues.sort((a, b) => a.start - b.start);
+};
 
 export const formatRelativeTime = (value: string, now: number): string => {
   const seconds = Math.round((new Date(value).getTime() - now) / 1000);
