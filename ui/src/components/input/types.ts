@@ -1,8 +1,9 @@
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { InputHTMLAttributes, ReactNode, Ref } from "react";
 
 export type InputSize = "md" | "lg";
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size" | "prefix"> {
+  ref?: Ref<HTMLInputElement>;
   label?: string;
   isLabelHidden?: boolean;
   hint?: ReactNode;
