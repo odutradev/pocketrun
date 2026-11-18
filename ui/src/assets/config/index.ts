@@ -53,7 +53,7 @@ export const historyPageSize = 20;
 
 export const linksPageSize = 20;
 
-export const searchDelay = 400;
+export const searchDelay = 800;
 
 export const searchSpinnerMinDuration = 500;
 
