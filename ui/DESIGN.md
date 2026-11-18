@@ -64,6 +64,15 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - The sorted column is marked with `aria-sort`.
   - A selected row uses a soft tint plus a 3 px inset stroke.
   - Bulk actions appear in a bar while rows are selected.
+  - Pagination (`pagination`) shows previous and next arrows with "Página X de Y". With a summary, the summary sits left and the arrows right; a list closed by pagination without a summary centers it (`isCentered`) and hides it when everything fits in one page.
+  - Changing pages is never an instant swap. A paginated list must:
+    1. Keep the current page on screen while the next one loads, at 45 % opacity, without clicks and with `aria-busy`. Never replace it with a skeleton; skeletons are only for the first load.
+    2. Animate the list area's height from the old page to the new one (`motion.base`, `easing.standard`), so going from 20 items to 2 shrinks instead of jumping.
+    3. Fade the new items in, rising 6 px (`motion.base`).
+    4. Scroll smoothly to the top of the list.
+    5. With `prefers-reduced-motion`, swap and scroll instantly.
+
+    The reference is `pages/linkEditor/tabs/history`. When a second list needs it, move the behavior into a shared hook instead of copying it.
   - Charts use Recharts, loaded lazily with the screen that needs them. Series colors come from `brand.chart` (clicks green, visitors blue, devices green/blue/pink in fixed order), validated for color blindness on the dark surface; a color follows its entity, never its rank. The first series gets a soft area fill, the rest are 2 px lines. Two or more series always have a legend, tooltips use the raised surface, and grids are dashed and recessive. Rankings use horizontal share bars instead of pies; the donut is only for a small fixed set (devices). Every chart has a text `aria-label` or a legend that names it.
 - **Navigation:**
   - Side menu (`sidebar`): logo on the left and the API status dot (`apiStatus variant="dot"`) on the opposite side, then the panel areas grouped by area with a mono label; the profile link (with sign out) at the bottom. The active item gets the raised fill plus a 3 px left stroke in the context color. Items a role cannot use are hidden. On mobile it becomes a drawer opened from a slim top bar.
@@ -127,7 +136,7 @@ Reuse before creating. Add every new shared component here in the same work.
 | Empty list or section | `@components/emptyState` |
 | Loading placeholder | `@components/skeleton` |
 | Data table with selectable rows | `@components/dataTable` |
-| Pagination | `@components/pagination` |
+| Pagination with arrows and "Página X de Y" (`summary` on the left, or `isCentered`); page changes follow the transition rule in Data | `@components/pagination` |
 | Dialog | `@components/dialog` |
 | Destructive confirmation (typed Project ID) | `@components/confirmDialog` |
 | Show a secret once | `@components/secretReveal` |
