@@ -6,6 +6,7 @@ import linksAnalyticsMetadata from "@pages/linksAnalytics/metadata";
 import pageEditorMetadata from "@pages/pageEditor/metadata";
 import linkEditorMetadata from "@pages/linkEditor/metadata";
 import appEditorMetadata from "@pages/appEditor/metadata";
+import kvDocsMetadata from "@pages/kvDocs/metadata";
 import profileMetadata from "@pages/profile/metadata";
 import brandMetadata from "@pages/brand/metadata";
 import linksMetadata from "@pages/links/metadata";
@@ -27,6 +28,7 @@ const UsersPage = lazy(() => import("@pages/users"));
 const ProfilePage = lazy(() => import("@pages/profile"));
 const KvPage = lazy(() => import("@pages/kv"));
 const AppEditorPage = lazy(() => import("@pages/appEditor"));
+const KvDocsPage = lazy(() => import("@pages/kvDocs"));
 const PagesPage = lazy(() => import("@pages/pages"));
 const LinksPage = lazy(() => import("@pages/links"));
 const LinkEditorPage = lazy(() => import("@pages/linkEditor"));
@@ -53,6 +55,7 @@ const router = createBrowserRouter([
       pageRoute("/auth", AuthPage, authMetadata),
       pageRoute("/setup", SetupPage, setupMetadata),
       pageRoute("/kv", KvPage, kvMetadata),
+      pageRoute("/kv/docs", KvDocsPage, kvDocsMetadata),
       pageRoute("/kv/new", AppEditorPage, appEditorMetadata),
       pageRoute("/kv/:applicationId/edit", AppEditorPage, appEditorMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
