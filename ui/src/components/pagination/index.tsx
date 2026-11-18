@@ -5,9 +5,9 @@ import IconButton from "@components/iconButton";
 
 import type { PaginationProps } from "./types";
 
-const Pagination = ({ page, totalPages, onPageChange, summary }: PaginationProps) => (
-  <Container aria-label="Paginação">
-    <span>{summary}</span>
+const Pagination = ({ page, totalPages, onPageChange, summary, isCentered = false }: PaginationProps) => (
+  <Container aria-label="Paginação" $isCentered={isCentered}>
+    {(!isCentered || summary) && <span>{summary}</span>}
     <Controls>
       <IconButton
         variant="secondary"

@@ -1,10 +1,10 @@
 import styled from "styled-components";
 
-export const Container = styled.nav`
+export const Container = styled.nav<{ $isCentered: boolean }>`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: ${({ $isCentered }) => ($isCentered ? "center" : "space-between")};
   gap: ${({ theme }) => theme.spacing(3)};
   font-size: 14px;
   color: ${({ theme }) => theme.brand.steelMuted};

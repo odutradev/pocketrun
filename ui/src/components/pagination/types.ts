@@ -5,4 +5,5 @@ export interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   summary?: ReactNode;
+  isCentered?: boolean;
 }

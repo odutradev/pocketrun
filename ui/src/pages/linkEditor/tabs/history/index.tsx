@@ -116,7 +116,9 @@ const HistoryTab = () => {
         </FiltersAside>
       </Filters>
       {renderTimeline()}
-      {historyTotalPages > 1 && <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={handlePageChange} />}
+      {historyTotalPages > 1 && (
+        <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={handlePageChange} isCentered />
+      )}
     </Container>
   );
 };
