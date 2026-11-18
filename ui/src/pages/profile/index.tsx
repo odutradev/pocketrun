@@ -2,6 +2,7 @@ import { ExitIcon } from "@radix-ui/react-icons";
 
 import IdentitySection from "./subcomponents/identity";
 import PasswordSection from "./subcomponents/password";
+import SessionsSection from "./subcomponents/sessions";
 import ContentNavbar from "@components/contentNavbar";
 import { formatDate } from "@utils/functions";
 import { roleLabels } from "@assets/data";
@@ -22,6 +23,7 @@ const ProfilePage = () => {
       />
       <IdentitySection />
       <PasswordSection />
+      <SessionsSection />
     </Container>
   );
 };

@@ -24,13 +24,8 @@ export const isApiError = (error: unknown): error is ApiError =>
 
 const api = axios.create({
   baseURL: adminApiUrl,
-  headers: { "Content-Type": "application/json" }
-});
-
-api.interceptors.request.use((config) => {
-  const { token } = useAuthStore.getState();
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+  withCredentials: true,
+  headers: { "Content-Type": "application/json", "X-Pocketrun-Client": "panel" }
 });
 
 api.interceptors.response.use(

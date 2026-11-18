@@ -8,13 +8,17 @@ import type { AuthStore } from "./types";
 const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      token: null,
       user: null,
-      setSession: ({ token, user }) => set({ token, user }),
+      setSession: ({ user }) => set({ user }),
       setUser: (user) => set({ user }),
-      clearSession: () => set({ token: null, user: null })
+      clearSession: () => set({ user: null })
     }),
-    { name: storageKeys.auth }
+    {
+      name: storageKeys.auth,
+      version: 1,
+      partialize: ({ user }) => ({ user }),
+      migrate: () => ({ user: null })
+    }
   )
 );
 

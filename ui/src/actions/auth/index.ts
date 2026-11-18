@@ -1,3 +1,4 @@
+import useAuthStore from "@stores/auth";
 import api from "@utils/api";
 
 import type { ChangePasswordPayload, ProfileValues, Session, User } from "@utils/types/user";
@@ -6,6 +7,19 @@ import type { SignInValues } from "@utils/types/auth";
 export const signIn = async (data: SignInValues) => {
   const response = await api.post<Session>("/auth/login", data);
   return response.data;
+};
+
+export const signOut = async () => {
+  try {
+    await api.post("/auth/logout");
+  } finally {
+    useAuthStore.getState().clearSession();
+  }
+};
+
+export const revokeSessions = async () => {
+  await api.post("/auth/sessions/revoke");
+  useAuthStore.getState().clearSession();
 };
 
 export const getProfile = async () => {

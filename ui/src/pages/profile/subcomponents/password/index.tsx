@@ -31,7 +31,7 @@ const PasswordSection = () => {
         <SectionHeader
           titleId="profile-password"
           title="Senha"
-          description="No mínimo 8 caracteres, com uma letra e um número ou símbolo."
+          description="No mínimo 8 caracteres, com uma letra e um número ou símbolo. Trocar a senha encerra a sessão nos outros dispositivos."
         />
         <Form onSubmit={handleSubmit} noValidate>
           <Input

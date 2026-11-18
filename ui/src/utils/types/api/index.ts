@@ -7,6 +7,8 @@ export type ApiErrorCode =
   | "invalid_authorization"
   | "invalid_token"
   | "invalid_credentials"
+  | "too_many_login_attempts"
+  | "invalid_client"
   | "setup_completed"
   | "user_not_found"
   | "email_taken"

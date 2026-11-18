@@ -13,12 +13,13 @@ import AppRouter from "@routes/index";
 const logger = createLocalLogger("appProviders");
 
 const AppProviders = () => {
-  const { token, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
+  const isSignedIn = user !== null;
 
   useEffect(() => {
-    if (!token) return;
+    if (!isSignedIn) return;
     getProfile().then(setUser).catch(logger.warn);
-  }, [token, setUser]);
+  }, [isSignedIn, setUser]);
 
   return (
     <ThemeProvider theme={theme}>

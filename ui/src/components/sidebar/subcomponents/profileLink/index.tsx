@@ -4,13 +4,11 @@ import { Avatar, Container, Identity, Name, Profile, Role } from "./styles";
 import IconButton from "@components/iconButton";
 import { getInitial } from "@utils/functions";
 import { roleLabels } from "@assets/data";
-import useAuthStore from "@stores/auth";
+import { signOut } from "@actions/auth";
 
 import type { ProfileLinkProps } from "./types";
 
 const ProfileLink = ({ user, isActive }: ProfileLinkProps) => {
-  const { clearSession } = useAuthStore();
-
   return (
     <Container>
       <Profile to="/profile" aria-current={isActive ? "page" : undefined} $isActive={isActive}>
@@ -20,7 +18,7 @@ const ProfileLink = ({ user, isActive }: ProfileLinkProps) => {
           <Role>{roleLabels[user.role]}</Role>
         </Identity>
       </Profile>
-      <IconButton label="Sair" icon={<ExitIcon />} onClick={clearSession} />
+      <IconButton label="Sair" icon={<ExitIcon />} onClick={signOut} />
     </Container>
   );
 };

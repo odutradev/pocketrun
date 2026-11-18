@@ -8,11 +8,11 @@ import useAuthStore from "@stores/auth";
 import type { RouteGuardProps } from "./types";
 
 const RouteGuard = ({ metadata, children }: RouteGuardProps) => {
-  const { token, user } = useAuthStore();
+  const { user } = useAuthStore();
   const { apiStatus, isSetupRequired, hasPermissions } = useSystemStore();
 
-  if (metadata.privateRoute && !token) return <Navigate to="/auth" replace />;
-  if (metadata.publicOnly && token) return <Navigate to="/" replace />;
+  if (metadata.privateRoute && !user) return <Navigate to="/auth" replace />;
+  if (metadata.publicOnly && user) return <Navigate to="/" replace />;
   if (metadata.setupOnly && isSetupRequired === false) return <Navigate to="/auth" replace />;
   if (metadata.setupOnly && isSetupRequired === null && apiStatus !== "offline") {
     return <Loader label="Verificando a instância" isCentered />;
