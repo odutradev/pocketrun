@@ -54,12 +54,12 @@ Depende de 1.1 e 1.2.
 - Rotas internas do domínio (ex: o ping de analytics do 5.2) usam o prefixo `/_/`, que nenhum slug pode ter.
 - O CSS e o JS da página vão embutidos no HTML entregue, sem rota própria para arquivos.
 
-- **3.1** ⬜ Criar o domínio de páginas: modelo (slug, HTML, CSS, JS, ativo, datas) e repositório, vinculado à aplicação, e a coleção única de slugs compartilhada com os links, com índice único.
+- **3.1** ✅ Feito. Criar o domínio de páginas: modelo e repositório, na coleção única de slugs compartilhada com os links. Decisões do dono: páginas são globais da instância (como os links), têm só HTML (sem CSS e JS separados) com limite de 512 KB, a mesma ativação dos links (ativo, desativado, por período, por acessos) e uma versão do código a cada alteração do HTML (1.0, 1.1, 1.2…).
 - **3.2** ✅ Feito. Criar o domínio de links: modelo (slug, URL de destino, ativo, datas) e repositório, registrando o slug na coleção única de slugs. Decisão do dono: links são globais da instância (não pertencem a aplicações) e se organizam em grupos de links.
-- **3.3** ⬜ Rotas admin de páginas: listar, criar, ver, editar, excluir, ativar e desativar.
+- **3.3** ✅ Feito. Rotas admin de páginas: listar, criar, ver, editar, excluir, ativar e desativar (`PATCH /admin/pages/{id}/status/set`), histórico, versões (`/versions/list` e `/versions/{number}/details`), análise e grupos de páginas.
 - **3.4** ✅ Feito. Rotas admin de links: listar, criar, ver, editar, excluir, ativar e desativar.
 - **3.5** ✅ Feito. Geração de slug aleatório e validação de slug personalizado: formato (minúsculas, números e hífen), nomes reservados da raiz e unicidade entre páginas e links da instância inteira.
-- **3.6** ⬜ Rota `/{slug}` no domínio de páginas: busca o slug na coleção única e, se for página, entrega o HTML com CSS e JS embutidos, cache e headers de segurança.
+- **3.6** ✅ Feito. Rota `/{slug}`: busca o slug na coleção única e, se for página, entrega o HTML (num esqueleto com `charset`, `viewport` e título quando o HTML é um trecho solto), com `no-store` e headers de segurança. Com `LINKS_URL` definido, a página só abre nesse domínio; fora dele responde "Página indisponível".
 - **3.7** ✅ Feito. Na mesma rota `/{slug}`, se o slug for link, responde `302` para a URL de destino. Por enquanto na raiz da API pública, até o 3.8.
 - **3.8** ⬜ Roteamento por host na API: variável de ambiente com o domínio de páginas e links (em `.env.example` e no compose), grupo de rotas servido só nesse domínio, decisão do que a raiz `/` mostra (404 ou redirect para um site configurado) e o passo a passo do domínio extra no Dokploy no `README.md`. Os links já funcionam sem ele: o redirect responde na raiz da API pública (ver 3.7), e o link curto fica no domínio da API.
 
@@ -69,20 +69,20 @@ Depende dos itens da seção 3 correspondentes.
 
 O painel de links já tem mais do que os itens abaixo: grupos com nome, cor e ícone, histórico de alterações, análise de acessos, busca e paginação. A descrição completa fica em `.claude/PRODUCT.md`, seção 5.3.
 
-- **4.1** ⬜ Aba de páginas e links nos detalhes da aplicação, com listagem, status e ações. Links: não se aplica, porque links são globais da instância (decisão do 3.2); a listagem com status e ações é a página Links (`/links`). Fica só a parte de páginas.
-- **4.2** ⬜ Editor de página com Monaco (abas HTML, CSS e JS) e pré-visualização.
+- **4.1** ✅ Feito. Listagem com status e ações. Como links e páginas são globais da instância, não fica nos detalhes da aplicação: a de links é `/links` e a de páginas é `/pages`, com grupos, busca, filtro, ordenação e paginação.
+- **4.2** ✅ Feito. Editor de página com Monaco (só HTML, decisão do dono), pré-visualização ao lado, medidor do tamanho com quanto falta para o limite, e aba Versões com comparação (diff) e restauração.
 - **4.3** ✅ Feito. Formulário de criação e edição de link.
-- **4.4** 🔄 Em andamento. Ativar e desativar página ou link direto da listagem, e copiar a URL pública. Links: copiar a URL pública da listagem está feito; ativar e desativar da listagem falta (hoje só pelo formulário do link). Páginas: tudo pendente.
+- **4.4** 🔄 Em andamento. Ativar e desativar página ou link direto da listagem, e copiar a URL pública. Páginas: feito. Links: copiar a URL pública da listagem está feito; ativar e desativar da listagem falta (hoje só pelo formulário do link).
 
 ## 5. Analytics
 
 Depende de 3.6 e 3.7.
 
-- **5.1** 🔄 Em andamento. Registrar visualização a cada acesso de página e de link. Links: feito; cada abertura grava data, origem, dispositivo, sistema, navegador e um visitante anônimo, fora robôs e prévias de link, e fica guardada por 12 meses. Páginas: pendente.
+- **5.1** ✅ Feito. Registrar visualização a cada acesso de página e de link. Feito para links e páginas; cada abertura grava data, origem, dispositivo, sistema, navegador e um visitante anônimo, fora robôs e prévias de link, e fica guardada por 12 meses.
 - **5.2** ⬜ Script de ping de atividade injetado nas páginas publicadas, e rota pública que recebe os pings.
-- **5.3** 🔄 Em andamento. Rotas admin de métricas: visualizações por dia (14 dias), tempo médio e total, total de pings, por item e por aplicação. Links: feito por link (`GET /admin/links/{id}/analytics/details`, com períodos de 24h a tudo); tempo e pings são só de páginas, e "por aplicação" não se aplica a links, que são globais. Páginas: pendente.
-- **5.4** 🔄 Em andamento. Dashboard no painel com gráfico de área dos últimos 14 dias. Links: feito em `/links/analytics`, com os acessos de todos os links juntos (períodos de 24h a tudo), os links mais acessados, origens, horários e dispositivos. Páginas: pendente.
-- **5.5** 🔄 Em andamento. Métricas por página e por link na tela de detalhes do item. Links: feito, na aba Análise do link (cliques, visitantes, comparação com o período anterior, gráfico, mapa de calor, origens, dispositivos, sistemas, navegadores e exportação em CSV). Páginas: pendente.
+- **5.3** ✅ Feito. Rotas admin de métricas: visualizações por dia (14 dias), tempo médio e total, total de pings, por item e por aplicação. Feito por link e por página (`/analytics/details`, com períodos de 24h a tudo). Decisão do dono: a análise das páginas é igual à dos links, então tempo e pings ficam de fora (ver 5.2), e "por aplicação" não se aplica, porque links e páginas são globais.
+- **5.4** ✅ Feito. Dashboard no painel com gráfico de área dos últimos 14 dias. Feito em `/links/analytics` e `/pages/analytics`, com os acessos de todos os itens juntos (períodos de 24h a tudo), os mais acessados, origens, horários e dispositivos.
+- **5.5** ✅ Feito. Métricas por página e por link na tela de detalhes do item. Feito na aba Análise do link e da página (cliques, visitantes, comparação com o período anterior, gráfico, mapa de calor, origens, dispositivos, sistemas, navegadores e exportação em CSV).
 
 ## 6. Backup e migração
 

@@ -42,7 +42,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 | **Origens permitidas** | Lista de CORS por aplicação. Chamadas de navegador de outras origens são recusadas. Chamadas sem header `Origin` só passam se a aplicação liberar requisições fora do navegador. |
 | **Collection** | Grupo nomeado de documentos dentro de uma aplicação, como uma tabela. É criada na primeira escrita, sem schema. |
 | **Documento** | Um objeto JSON livre (`data`) dentro de uma collection, com id, datas e validade opcional (`expiresInDays`), após a qual é apagado. |
-| **Página** *(planejado)* | Uma micro-página feita de HTML, CSS e JS, publicada num slug. Global da instância, como os links. |
+| **Página** | Uma micro-página feita de HTML, publicada num slug no domínio dos links. Global da instância, como os links, e com uma versão do código a cada alteração. |
 | **Link** | Um slug curto que redireciona (`302`) para uma URL externa. Global da instância: todo gestor vê e edita todos os links. |
 | **Grupo** | Pasta que só organiza a lista de um serviço. Links têm os seus grupos e páginas terão os seus; um grupo não isola nada, não tem token e não é uma aplicação. Excluir um grupo deixa os itens sem grupo. |
 | **Slug** | O endereço curto de um link ou página: letras minúsculas, números e hífen. Único na instância inteira, compartilhado entre links e páginas, numa coleção própria com índice único. |
@@ -55,7 +55,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 - Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
 - Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
 - Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
-- Painel com menu lateral: o grupo **Serviços** primeiro, com KV, Páginas e Links (cada um na cor da sua ferramenta; Páginas marcada "Em breve" até o módulo chegar), depois o grupo **Painel** com Usuários, e perfil e saída embaixo. A raiz `/` abre o KV.
+- Painel com menu lateral: o grupo **Serviços** primeiro, com KV, Páginas e Links (cada um na cor da sua ferramenta), depois o grupo **Painel** com Usuários, e perfil e saída embaixo. A raiz `/` abre o KV.
 - Aplicações, dentro do KV: criar, listar, ver detalhes, editar, excluir (`/apps/*`). A gestão de aplicações fica na página do KV, porque a aplicação é exclusiva dele.
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
@@ -78,7 +78,7 @@ No painel, por aplicação: **explorador** de dados (collections e documentos), 
 
 Ainda não trazido do PocketDB: upload de arquivos.
 
-### 5.3 Páginas & Links, antigo Shareds (links prontos, páginas planejadas)
+### 5.3 Páginas & Links, antigo Shareds (pronto)
 
 Links (pronto):
 
@@ -95,18 +95,17 @@ Links (pronto):
 - Grupos de links com nome, cor e ícone, escolhidos entre oito cores e dezesseis ícones fixos. O botão **Novo grupo** da lista abre a página de criação (`/links/groups/new`). Cada grupo abre na própria página (`/links/groups/{id}`), com as abas **Links** (a lista do grupo, com busca e paginação) e **Configurações** (nome, cor, ícone e exclusão); a aba fica na URL, `?tab=`. Excluir o grupo deixa os links dele sem grupo.
 - Redirect público em `GET /{slug}` na raiz da API, com `302`, `Cache-Control: no-store` e contagem atômica de acessos. O slug aceita maiúsculas e barra no final (`/Promo/` abre `promo`), e os parâmetros do endereço vão junto para o destino (`/promo?utm_source=insta`); um parâmetro com o mesmo nome do destino troca o valor dele. O domínio dedicado (roadmap 3.8) fica para depois.
 
-Páginas (planejado):
+Páginas (pronto):
 
-- Páginas com HTML, CSS e JS editados num editor de código (Monaco) dentro do painel.
-- Slug personalizado ou id aleatório, no mesmo espaço de slugs dos links.
-- Grupos de páginas próprios, com a mesma regra dos grupos de links.
-- Ativar ou desativar uma página na hora.
-
-Analytics de páginas (planejado):
-
-- Visualizações por dia nos últimos 14 dias (gráfico de área).
-- Tempo médio e total na página, a partir de pings de atividade enviados pela página publicada.
-- Total de visualizações, pings e status de cada item.
+- Lista global de páginas (`/pages`) com as mesmas regras da lista de links: grupos próprios, busca por título e slug, filtro por estado, ordenação, paginação, lista ou cards, cópia da URL pública, ativar e desativar na hora e exclusão.
+- Só HTML, sem CSS e JS separados: o estilo e o script vão dentro do HTML. Limite de 512 KB por página, com um medidor no editor que mostra quanto já foi usado e quanto falta.
+- Uma página nova nasce de um modelo mínimo e abre no editor. Na edição, abas **Editor**, **Configuração**, **Versões**, **QR code**, **Análise** e **Histórico**.
+- Editor Monaco com pré-visualização ao lado (no celular, alterna entre código e prévia). A prévia roda num `iframe` isolado, sem acesso ao painel. `Ctrl+S` salva, e o painel avisa ao sair com alterações não salvas.
+- Versões do código: cada vez que o HTML muda e é salvo, uma versão nova fica guardada, numerada 1.0, 1.1, 1.2 e assim por diante, com quem salvou, quando e o tamanho. A aba **Versões** compara (diff) uma versão com a anterior ou com o que está no editor, e restaura uma versão antiga para o editor; ao salvar, ela vira uma versão nova, marcada como restaurada. As versões somem quando a página é excluída.
+- Ativação igual à dos links: ativa, desativada, por período ou por acessos. Fora da regra, a página responde 404 com uma página "Página indisponível", e o slug continua reservado.
+- Servida pela mesma rota `GET /{slug}` dos links, com `no-store`. Um trecho solto de HTML ganha um esqueleto com `charset`, `viewport` e o título da página. Com `LINKS_URL` definido, a página só abre nesse domínio, para o HTML do usuário nunca rodar no domínio da API.
+- Histórico de alterações igual ao dos links; a troca de código aparece como "Versão do código: 1.2 → 1.3".
+- Análise igual à dos links, por página (aba **Análise**) e geral (`/pages/analytics`), sem robôs nem prévias de link. Tempo na página e pings de atividade (roadmap 5.2) ficaram de fora por decisão do dono.
 
 Administração:
 
