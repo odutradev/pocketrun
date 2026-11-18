@@ -113,18 +113,22 @@ const LinksPage = () => {
                 onValueChange={handleGroupFilterChange}
               />
             </GroupFilter>
-            <SegmentedControl
-              label="Visualização"
-              options={viewOptions}
-              value={view}
-              onValueChange={handleViewChange}
-              isIconOnly
-            />
+            {!isMobile && (
+              <SegmentedControl
+                label="Visualização"
+                options={viewOptions}
+                value={view}
+                onValueChange={handleViewChange}
+                isIconOnly
+              />
+            )}
           </Toolbar>
           {filteredLinks.length === 0 ? (
             <EmptyState isCompact title="Nada encontrado" description="Nenhum link combina com a busca e o grupo escolhidos." />
-          ) : view === "cards" || isMobile ? (
-            <LinkCards links={filteredLinks} isCompact={view === "list"} {...linkOptions} />
+          ) : isMobile ? (
+            <LinkCards links={filteredLinks} isCompact {...linkOptions} />
+          ) : view === "cards" ? (
+            <LinkCards links={filteredLinks} isCompact={false} {...linkOptions} />
           ) : (
             <DataTable
               caption={`Links, ${pluralize(filteredLinks.length, "item", "itens")}`}

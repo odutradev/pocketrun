@@ -9,7 +9,7 @@ export const Container = styled.div`
 
 export const Toolbar = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: ${({ theme }) => theme.spacing(3)};
   align-items: center;
 
@@ -19,13 +19,7 @@ export const Toolbar = styled.div`
 `;
 
 export const GroupFilter = styled.div`
-  grid-column: 1 / -1;
-  grid-row: 2;
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-column: auto;
-    grid-row: auto;
-  }
+  min-width: 0;
 `;
 
 export const LinkCell = styled.span`

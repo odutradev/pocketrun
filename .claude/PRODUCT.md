@@ -82,7 +82,7 @@ Ainda não trazido do PocketDB: upload de arquivos.
 
 Links (pronto):
 
-- Lista global de links com busca, filtro por grupo, estado, contagem de acessos, cópia da URL pública e exclusão. Mostra em lista ou em cards, num seletor de dois ícones que fica lembrado no navegador.
+- Lista global de links com busca, filtro por grupo, estado, contagem de acessos, cópia da URL pública e exclusão. Mostra em lista ou em cards, num seletor de dois ícones que fica lembrado no navegador. O seletor só aparece no computador: no celular a lista é sempre em cards compactos.
 - Uma só página para criar e editar (`/links/new` e `/links/{id}/edit`): título, slug, URL de destino, grupo e ativação. Na edição, abas **Configuração**, **Análise** e **Histórico** (a aba fica na URL, `?tab=`).
 - Histórico de alterações: toda criação, edição e exclusão grava quem alterou (nome e e-mail copiados no momento) e o antes e depois de cada campo. O sistema também assina eventos: fim do período, limite de acessos atingido e saída do grupo quando ele é excluído. O histórico continua depois que o link é excluído.
 - Análise de acessos: cada abertura grava data, origem (só o domínio), dispositivo, sistema, navegador e um visitante anônimo (hash de IP e navegador com um sal que troca todo dia; o IP nunca é guardado). Robôs e prévias de link (WhatsApp, Slack e afins) ficam fora dos números. As aberturas são guardadas por 12 meses e somem quando o link é excluído.
