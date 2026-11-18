@@ -40,7 +40,11 @@ func NewValidator() *validator.Validate {
 }
 
 func Decode(w http.ResponseWriter, r *http.Request, validate *validator.Validate, payload any) error {
-	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, MaxBodyBytes))
+	return DecodeLimited(w, r, validate, payload, MaxBodyBytes)
+}
+
+func DecodeLimited(w http.ResponseWriter, r *http.Request, validate *validator.Validate, payload any, limit int64) error {
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, limit))
 	if err := decoder.Decode(payload); err != nil {
 		return fmt.Errorf("%w: %w", ErrInvalidBody, err)
 	}
