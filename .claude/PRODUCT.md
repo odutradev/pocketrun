@@ -56,7 +56,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 - Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
 - Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
 - Painel com menu lateral: o grupo **Serviços** primeiro, com KV, Páginas e Links (cada um na cor da sua ferramenta), depois o grupo **Painel** com Usuários, e perfil e saída embaixo. A raiz `/` abre o KV.
-- Aplicações, dentro do KV: criar, listar, ver detalhes, editar, excluir (`/apps/*`). A gestão de aplicações fica na página do KV, porque a aplicação é exclusiva dele.
+- Aplicações, dentro do KV: criar, listar, ver detalhes, editar, excluir (`/apps/*` na API). A gestão de aplicações fica na página do KV, porque a aplicação é exclusiva dele. A listagem segue o padrão de Páginas e Links, sem grupos: busca, filtro por origem, ordenação, lista ou cards e exclusão. Criar é a tela `/kv/new` e cada aplicação abre em `/kv/{id}/edit`.
 - Tokens por aplicação: criar com nome e validade, revogar, ver prefixo e último uso.
 - Controle de CORS por aplicação e opção de liberar acesso fora do navegador.
 - Uma API só, numa porta só: rotas públicas na raiz (tráfego dos clientes) e rotas do painel sob `/admin`, cada grupo com seu CORS.
@@ -74,7 +74,7 @@ API pública, autenticada por token da aplicação:
 - `DELETE /kv/{collection}/delete-all`
 - `DELETE /kv/project/delete-all`
 
-No painel, por aplicação: **explorador** de dados (collections e documentos), **tokens**, **segurança** (origens), **snippets** de código para integrar um cliente e **zona de perigo**.
+No painel, por aplicação, em abas como o editor de páginas: **Explorador** de dados (collections e documentos), **Configuração** (nome, descrição, origens permitidas e exclusão da aplicação), **Tokens** e **Snippets** de código para integrar um cliente.
 
 Ainda não trazido do PocketDB: upload de arquivos.
 
