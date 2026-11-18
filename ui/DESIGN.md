@@ -64,7 +64,7 @@ Use `theme.brand.*`, `theme.accent.*`, `theme.radii.*` and `theme.motion.*`. The
   - The sorted column is marked with `aria-sort`.
   - A selected row uses a soft tint plus a 3 px inset stroke.
   - Bulk actions appear in a bar while rows are selected.
-  - Search that queries the API uses `searchInput`: it waits `searchDelay` (400 ms) after the last key before searching, searches at once on Enter, clears on Escape or with the clear button, and shows the loader inside the field while the request runs. A search covers the list on screen (inside a group, that group's links; on a page with groups, the items without a group), across all of its pages, and sends the list back to page 1. When that whole list fits in one page, it is already loaded: filter it locally instead of asking the API, with no loader.
+  - Search that queries the API uses `searchInput`: it waits `searchDelay` (400 ms) after the last key before searching, searches at once on Enter, clears on Escape or with the clear button, and, while the request runs, swaps the magnifier for a spinner in the context color (announced as "Buscando"). A search covers the list on screen (inside a group, that group's links; on a page with groups, the items without a group), across all of its pages, and sends the list back to page 1. When that whole list fits in one page, it is already loaded: filter it locally instead of asking the API, with no spinner.
   - Pagination (`pagination`) shows previous and next arrows with "Página X de Y". With a summary, the summary sits left and the arrows right; a list closed by pagination without a summary centers it (`isCentered`) and hides it when everything fits in one page.
   - Changing pages is never an instant swap. A paginated list must:
     1. Keep the current page on screen while the next one loads, at 45 % opacity, without clicks and with `aria-busy`. Never replace it with a skeleton; skeletons are only for the first load.
@@ -94,7 +94,7 @@ The tool is Dados (`data`), Conteúdos (`content`) or Links (`links`); every oth
 2. The logo: `BrandMark` with `context={tool}`.
 3. The active nav item or tab stroke.
 4. The primary action button.
-5. The focus ring and the selected-item tint.
+5. The focus ring, the selected-item tint and the search field's loading spinner.
 
 Text, surfaces, borders and states never change. Never show two tools' colors on one screen. Text color on a tool fill: white on blue, `#21201C` (dark) on brass, graphite on olive (use `tools[tool].contrast`).
 
