@@ -49,6 +49,14 @@ export const ModeHint = styled.p`
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
 
+export const TitleCount = styled.span`
+  padding-right: ${({ theme }) => theme.spacing(2)};
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+  font-variant-numeric: tabular-nums;
+`;
+
 export const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;

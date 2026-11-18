@@ -74,7 +74,7 @@ func (l Link) StateAt(now time.Time) State {
 }
 
 type Input struct {
-	Title     string     `json:"title" validate:"required,max=120"`
+	Title     string     `json:"title" validate:"required,max=20"`
 	Slug      string     `json:"slug" validate:"max=64"`
 	URL       string     `json:"url" validate:"required,http_url,max=2048"`
 	GroupID   string     `json:"groupId" validate:"omitempty,mongodb"`

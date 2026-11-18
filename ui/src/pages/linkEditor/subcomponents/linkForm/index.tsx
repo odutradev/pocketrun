@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useCallback, useState } from "react";
 
 import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
-import { Actions, Form, Legend, ModeHint, Pair, Section } from "./styles";
-import { clickLimitRange, defaultPeriodHours } from "@assets/config";
+import { Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
+import { clickLimitRange, defaultPeriodHours, linkTitleMaxLength } from "@assets/config";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import DestinationField from "./subcomponents/destinationField";
 import SegmentedControl from "@components/segmentedControl";
@@ -87,7 +87,13 @@ const LinkForm = ({ link, groups, onGroupCreated }: LinkFormProps) => {
             name="title"
             autoComplete="off"
             placeholder="Promoção de dezembro"
+            maxLength={linkTitleMaxLength}
             hint="Só aparece no painel, para você achar o link."
+            trailing={
+              <TitleCount aria-hidden="true">
+                {values.title.length}/{linkTitleMaxLength}
+              </TitleCount>
+            }
             value={values.title}
             onChange={handleChange}
             error={errors.title}

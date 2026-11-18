@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { linkTitleMaxLength } from "@assets/config";
+
 const isValidUrl = (value: string) => {
   try {
     const url = new URL(value);
@@ -15,7 +17,7 @@ export const slugPattern = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export const linkFormSchema = z
   .object({
-    title: z.string().trim().min(1, "Dê um título ao link").max(120, "Título muito longo"),
+    title: z.string().trim().min(1, "Dê um título ao link").max(linkTitleMaxLength, `Use até ${linkTitleMaxLength} caracteres`),
     slug: z
       .string()
       .trim()
