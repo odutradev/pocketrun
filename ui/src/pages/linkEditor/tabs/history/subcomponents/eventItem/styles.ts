@@ -131,6 +131,19 @@ export const OldValue = styled.span`
   }
 `;
 
+export const ValueTag = styled.span<{ $tone: "added" | "removed" }>`
+  padding: 1px ${({ theme }) => theme.spacing(2)};
+  border: 1px ${({ $tone }) => ($tone === "added" ? "solid" : "dashed")}
+    ${({ theme, $tone }) => ($tone === "added" ? "transparent" : theme.brand.strongBorder)};
+  border-radius: ${({ theme }) => theme.radii.pill};
+  background-color: ${({ theme, $tone }) => ($tone === "added" ? theme.accent.soft : "transparent")};
+  color: ${({ theme, $tone }) => ($tone === "added" ? theme.accent.text : theme.brand.steelMuted)};
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 11px;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+`;
+
 export const NewValue = styled.span`
   color: ${({ theme }) => theme.brand.steel};
   overflow-wrap: anywhere;

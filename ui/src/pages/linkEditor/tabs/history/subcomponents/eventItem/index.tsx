@@ -1,14 +1,30 @@
 import { ArrowRightIcon, GearIcon } from "@radix-ui/react-icons";
 
-import { Actor, Avatar, Change, ChangeList, Content, FieldLabel, Headline, Item, NewValue, OldValue, Time, Values } from "./styles";
+import {
+  Actor,
+  Avatar,
+  Change,
+  ChangeList,
+  Content,
+  FieldLabel,
+  Headline,
+  Item,
+  NewValue,
+  OldValue,
+  Time,
+  Values,
+  ValueTag
+} from "./styles";
 import { formatRelativeTime, formatShortDateTime, formatTime, getInitials } from "@utils/functions";
 import { linkChangeLabels, linkEventLabels, linkModeOptions } from "@assets/data";
 
 import type { LinkChange, LinkChangeValue, LinkEvent } from "@utils/types/link";
 import type { EventItemProps } from "./types";
 
+const isEmptyValue = (value: LinkChangeValue) => value === null || value === "";
+
 const formatValue = (change: LinkChange, value: LinkChangeValue, groupNames: Record<string, string>) => {
-  if (value === null || value === "") return change.field === "groupId" ? "Sem grupo" : "—";
+  if (isEmptyValue(value)) return change.field === "groupId" ? "Sem grupo" : "—";
   if (change.field === "mode") return linkModeOptions.find((option) => option.value === value)?.label ?? String(value);
   if (change.field === "groupId") return groupNames[String(value)] ?? "Grupo excluído";
   if (change.field === "startsAt" || change.field === "endsAt") return formatShortDateTime(String(value));
@@ -27,7 +43,7 @@ const describe = (event: LinkEvent) => {
 const EventItem = ({ event, groupNames, now }: EventItemProps) => {
   const isSystem = event.actor.id === null;
   const isCreation = event.type === "created";
-  const changes = event.changes.filter((change) => !isCreation || (change.to !== null && change.to !== ""));
+  const changes = event.changes.filter((change) => !isCreation || !isEmptyValue(change.to));
 
   return (
     <Item>
@@ -43,20 +59,31 @@ const EventItem = ({ event, groupNames, now }: EventItemProps) => {
         </Headline>
         {changes.length > 0 && (
           <ChangeList>
-            {changes.map((change) => (
-              <Change key={change.field}>
-                <FieldLabel>{linkChangeLabels[change.field]}</FieldLabel>
-                <Values>
-                  {!isCreation && (
-                    <>
-                      <OldValue>{formatValue(change, change.from, groupNames)}</OldValue>
-                      <ArrowRightIcon aria-label="para" />
-                    </>
-                  )}
-                  <NewValue>{formatValue(change, change.to, groupNames)}</NewValue>
-                </Values>
-              </Change>
-            ))}
+            {changes.map((change) => {
+              const hasLabelForEmpty = change.field === "groupId";
+              const wasEmpty = !isCreation && !hasLabelForEmpty && isEmptyValue(change.from);
+              const isCleared = !hasLabelForEmpty && isEmptyValue(change.to);
+
+              return (
+                <Change key={change.field}>
+                  <FieldLabel>{linkChangeLabels[change.field]}</FieldLabel>
+                  <Values>
+                    {!isCreation && !wasEmpty && (
+                      <>
+                        <OldValue>{formatValue(change, change.from, groupNames)}</OldValue>
+                        <ArrowRightIcon aria-label="para" />
+                      </>
+                    )}
+                    {isCleared ? (
+                      <ValueTag $tone="removed">removido</ValueTag>
+                    ) : (
+                      <NewValue>{formatValue(change, change.to, groupNames)}</NewValue>
+                    )}
+                    {wasEmpty && !isCleared && <ValueTag $tone="added">definido</ValueTag>}
+                  </Values>
+                </Change>
+              );
+            })}
           </ChangeList>
         )}
       </Content>
