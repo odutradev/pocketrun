@@ -67,21 +67,32 @@ func (r *MongoRepository) Insert(ctx context.Context, group *Group) error {
 	return nil
 }
 
-func (r *MongoRepository) Rename(ctx context.Context, kind Kind, id bson.ObjectID, name string) error {
-	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id, "kind": kind}, bson.M{
-		"$set": bson.M{"name": name, "updatedAt": time.Now()},
-	})
-	if mongo.IsDuplicateKeyError(err) {
-		return ErrGroupNameTaken
+func (r *MongoRepository) Update(ctx context.Context, kind Kind, id bson.ObjectID, input Input) (*Group, error) {
+	fields := bson.M{"name": input.Name, "updatedAt": time.Now()}
+	if input.Color != "" {
+		fields["color"] = input.Color
 	}
-	if err != nil {
-		return fmt.Errorf("rename group: %w", err)
+	if input.Icon != "" {
+		fields["icon"] = input.Icon
 	}
 
-	if result.MatchedCount == 0 {
-		return ErrGroupNotFound
+	var group Group
+	err := r.collection.FindOneAndUpdate(
+		ctx,
+		bson.M{"_id": id, "kind": kind},
+		bson.M{"$set": fields},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&group)
+	if mongo.IsDuplicateKeyError(err) {
+		return nil, ErrGroupNameTaken
 	}
-	return nil
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, ErrGroupNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update group: %w", err)
+	}
+	return &group, nil
 }
 
 func (r *MongoRepository) Delete(ctx context.Context, kind Kind, id bson.ObjectID) error {

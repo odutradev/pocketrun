@@ -23,7 +23,7 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler, prefix string, kind Kind, members Detacher) {
 	mux.Handle("GET "+prefix+"/list", authenticate(h.list(kind)))
 	mux.Handle("POST "+prefix+"/create", authenticate(h.create(kind)))
-	mux.Handle("PATCH "+prefix+"/{id}/update", authenticate(h.rename(kind)))
+	mux.Handle("PATCH "+prefix+"/{id}/update", authenticate(h.update(kind)))
 	mux.Handle("DELETE "+prefix+"/{id}/delete", authenticate(h.delete(kind, members)))
 }
 
@@ -55,11 +55,11 @@ func (h *Handler) create(kind Kind) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) rename(kind Kind) http.HandlerFunc {
+func (h *Handler) update(kind Kind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := ParseID(r.PathValue("id"))
 		if err != nil {
-			h.writeError(w, r, "rename group", err)
+			h.writeError(w, r, "update group", err)
 			return
 		}
 
@@ -69,11 +69,12 @@ func (h *Handler) rename(kind Kind) http.HandlerFunc {
 			return
 		}
 
-		if err := h.service.Rename(r.Context(), kind, id, input); err != nil {
-			h.writeError(w, r, "rename group", err)
+		group, err := h.service.Update(r.Context(), kind, id, input)
+		if err != nil {
+			h.writeError(w, r, "update group", err)
 			return
 		}
-		httpx.WriteMessage(w, http.StatusOK, "Group updated successfully")
+		httpx.WriteJSON(w, http.StatusOK, group)
 	}
 }
 
