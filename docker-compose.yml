@@ -8,6 +8,7 @@ services:
     expose:
       - "80"
     environment:
+      - HOST=0.0.0.0
       - PORT=80
       - APP_ENV=production
     dns:

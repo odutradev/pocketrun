@@ -124,7 +124,7 @@ func run(logger *slog.Logger) error {
 	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins)(adminMux)))
 	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins)(publicMux))
 
-	servers := []*http.Server{httpx.NewServer(cfg.Port, root)}
+	servers := []*http.Server{httpx.NewServer(cfg.Host, cfg.Port, root)}
 	return httpx.Serve(ctx, logger, servers)
 }
 

@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	Host                    string
 	Port                    string
 	CORSAllowedOrigins      string
 	AdminCORSAllowedOrigins string
@@ -26,6 +27,7 @@ func Load() (Config, error) {
 
 	corsAllowedOrigins := lookup("CORS_ALLOWED_ORIGINS", "*")
 	cfg := Config{
+		Host:                    lookup("HOST", ""),
 		Port:                    lookup("PORT", "8080"),
 		CORSAllowedOrigins:      corsAllowedOrigins,
 		AdminCORSAllowedOrigins: lookup("ADMIN_CORS_ALLOWED_ORIGINS", corsAllowedOrigins),

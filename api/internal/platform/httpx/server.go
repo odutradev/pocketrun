@@ -5,15 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 )
 
 const ShutdownTimeout = 10 * time.Second
 
-func NewServer(port string, handler http.Handler) *http.Server {
+func NewServer(host, port string, handler http.Handler) *http.Server {
 	return &http.Server{
-		Addr:              ":" + port,
+		Addr:              net.JoinHostPort(host, port),
 		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,

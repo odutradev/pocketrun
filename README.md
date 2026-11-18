@@ -61,7 +61,7 @@ As imagens são compiladas e publicadas no **Docker Hub** pelo GitHub Actions a 
 cp .env.example .env
 ```
 
-O `.env` da raiz é lido pelo docker-compose. Para rodar os apps direto, copie também `api/.env.example` para `api/.env` e `ui/.env.example` para `ui/.env`.
+O `.env` da raiz é lido pelo docker-compose. Para rodar os apps direto, copie também `api/.env.example` para `api/.env` e `ui/.env.example` para `ui/.env`. No `api/.env`, `HOST=127.0.0.1` mantém a API só na sua máquina, e o firewall do Windows não pede liberação a cada `npm run dev`.
 
 ### Rodando diretamente
 
