@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Actions, Body, CardItem, Clicks, ClicksLabel, Footer, Grid, Group, Header, Host, Rule, Slug, Title, Usage } from "./styles";
-import { describeLinkRule, urlHost } from "@utils/functions";
+import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
@@ -23,7 +23,15 @@ const LinkCards = ({ links, groupNames, isCopied, onCopy, onEdit, onRemove, isCo
             </Badge>
           </Header>
           <Body>
-            <Slug>/{link.slug}</Slug>
+            <Slug
+              href={publicLinkUrl(link.slug)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={publicLinkUrl(link.slug)}
+              aria-label={`Abrir /${link.slug} em nova aba`}
+            >
+              /{link.slug}
+            </Slug>
             <Host title={link.url}>{urlHost(link.url)}</Host>
             {link.groupId && groupNames[link.groupId] && <Group>{groupNames[link.groupId]}</Group>}
           </Body>

@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Clicks, ClicksLimit, Group, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
-import { describeLinkRule, urlHost } from "@utils/functions";
+import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
@@ -24,7 +24,15 @@ export const getLinkColumns = ({
       <LinkCell>
         <Title>{link.title}</Title>
         <Meta>
-          <Slug>/{link.slug}</Slug>
+          <Slug
+            href={publicLinkUrl(link.slug)}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={publicLinkUrl(link.slug)}
+            aria-label={`Abrir /${link.slug} em nova aba`}
+          >
+            /{link.slug}
+          </Slug>
           <Host title={link.url}>{urlHost(link.url)}</Host>
           {link.groupId && groupNames[link.groupId] && <Group>{groupNames[link.groupId]}</Group>}
         </Meta>

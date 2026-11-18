@@ -46,9 +46,18 @@ export const Meta = styled.span`
   font-size: 13px;
 `;
 
-export const Slug = styled.span`
+export const Slug = styled.a`
+  border-radius: ${({ theme }) => theme.radii.small};
   font-family: ${({ theme }) => theme.brand.fonts.mono};
   color: ${({ theme }) => theme.accent.text};
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color ${({ theme }) => `${theme.motion.fast}ms ${theme.motion.easing.standard}`};
+
+  &:hover {
+    text-decoration-color: currentColor;
+  }
 `;
 
 export const Host = styled.span`
