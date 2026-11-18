@@ -11,7 +11,8 @@ const TabNav = <TValue extends string>({
   idPrefix,
   items,
   value,
-  onValueChange
+  onValueChange,
+  isFullWidth = false
 }: TabNavProps<TValue>): React.ReactElement => {
   useEffect(() => {
     document.getElementById(getTabIds(idPrefix, value).tabId)?.scrollIntoView({ block: "nearest", inline: "nearest" });
@@ -52,6 +53,7 @@ const TabNav = <TValue extends string>({
             onClick={() => onValueChange(item.value)}
             $isActive={isActive}
             $isDanger={Boolean(item.isDanger)}
+            $isFullWidth={isFullWidth}
           >
             {item.label}
             {item.count !== undefined && <Count>{item.count}</Count>}

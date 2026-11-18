@@ -11,4 +11,5 @@ export interface TabNavProps<TValue extends string> {
   items: TabNavItem<TValue>[];
   value: TValue;
   onValueChange: (value: TValue) => void;
+  isFullWidth?: boolean;
 }

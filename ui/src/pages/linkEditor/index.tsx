@@ -58,7 +58,14 @@ const LinkEditorPage = () => {
       {!isLoading && !hasFailed && !isEditing && form}
       {!isLoading && !hasFailed && isEditing && (
         <TabArea>
-          <TabNav label="Seções do link" idPrefix={tabIdPrefix} items={linkEditorTabs} value={tab} onValueChange={handleTabChange} />
+          <TabNav
+            label="Seções do link"
+            idPrefix={tabIdPrefix}
+            items={linkEditorTabs}
+            value={tab}
+            onValueChange={handleTabChange}
+            isFullWidth
+          />
           <TabPanel idPrefix={tabIdPrefix} value={tab}>
             {tabContent[tab]}
           </TabPanel>

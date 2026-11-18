@@ -9,12 +9,13 @@ export const List = styled.div`
   scrollbar-width: none;
 `;
 
-export const Tab = styled.button<{ $isActive: boolean; $isDanger: boolean }>`
-  ${({ theme, $isActive, $isDanger }) => css`
+export const Tab = styled.button<{ $isActive: boolean; $isDanger: boolean; $isFullWidth: boolean }>`
+  ${({ theme, $isActive, $isDanger, $isFullWidth }) => css`
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: ${theme.spacing(2)};
-    flex-shrink: 0;
+    flex: ${$isFullWidth ? "1 0 auto" : "0 0 auto"};
     height: 46px;
     padding: 0 ${theme.spacing(3)};
     border: 0;
