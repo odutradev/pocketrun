@@ -4,7 +4,7 @@ import { isApiError } from "@utils/api";
 
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
-import type { Link } from "@utils/types/link";
+import type { Link, LinkSort, LinkStateFilter } from "@utils/types/link";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -68,6 +68,34 @@ export const cancelFrame = (frameRef: { current: number | null }) => {
 };
 
 export const publicLinkUrl = (slug: string): string => `${linksUrl}/${slug}`;
+
+export const holdsWholeList = (total: number, pageSize: number, isFiltered: boolean): boolean => !isFiltered && total <= pageSize;
+
+export const matchesLinkFilters = (link: Link, search: string, state: LinkStateFilter): boolean => {
+  const term = search.trim().toLowerCase();
+  const matchesState = state === "all" || link.state === state;
+  return matchesState && (!term || [link.title, link.slug, link.url].some((value) => value.toLowerCase().includes(term)));
+};
+
+const compareNewest = (first: Link, second: Link): number =>
+  new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime() || second.id.localeCompare(first.id);
+
+const upcomingExpiry = (link: Link, now: number): number => {
+  const endsAt = link.endsAt ? new Date(link.endsAt).getTime() : Number.POSITIVE_INFINITY;
+  return endsAt > now ? endsAt : Number.POSITIVE_INFINITY;
+};
+
+const compareExpiry = (first: number, second: number): number => (first === second ? 0 : first < second ? -1 : 1);
+
+export const sortLinksBy = (links: Link[], sort: LinkSort, now: number): Link[] => {
+  const compareBySort = (first: Link, second: Link): number => {
+    if (sort === "clicks") return second.clicks - first.clicks;
+    if (sort === "title") return first.title.localeCompare(second.title, "pt-BR", { sensitivity: "base" });
+    if (sort === "expiring") return compareExpiry(upcomingExpiry(first, now), upcomingExpiry(second, now));
+    return 0;
+  };
+  return [...links].sort((first, second) => compareBySort(first, second) || compareNewest(first, second));
+};
 
 export const formatShortDateTime = (value: string): string =>
   new Date(value).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });

@@ -1,16 +1,12 @@
 import { useMatch, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { currentTimestamp, matchesLinkFilters, sortLinksBy } from "@utils/functions";
 import { linksPageSize } from "@assets/config";
 import { linkGroupTabs } from "@assets/data";
 import useLinksStore from "./store";
 
-import type { Link, LinkGroupTab, LinkGroupTotals } from "@utils/types/link";
+import type { LinkGroupTab, LinkGroupTotals } from "@utils/types/link";
 import type { UseLinksPageReturn } from "./types";
-
-const matchesSearch = (link: Link, search: string) => {
-  const term = search.toLowerCase();
-  return [link.title, link.slug, link.url].some((value) => value.toLowerCase().includes(term));
-};
 
 const findTotals = (totals: LinkGroupTotals[], groupId: string) => totals.find((item) => item.groupId === groupId);
 
@@ -29,7 +25,7 @@ const useLinksPage = (): UseLinksPageReturn => {
     total,
     query,
     loadedQuery,
-    localSearch,
+    isWholeScopeLoaded,
     hasLoaded,
     isLoading,
     isRefreshing,
@@ -51,22 +47,29 @@ const useLinksPage = (): UseLinksPageReturn => {
 
   const scope = groupId ?? "";
   const activeGroup = groups.find((group) => group.id === scope) ?? null;
-  const visibleLinks = localSearch ? links.filter((link) => matchesSearch(link, localSearch)) : links;
-  const visibleTotal = localSearch ? visibleLinks.length : total;
+  const localQuery = isWholeScopeLoaded && query && loadedQuery?.scope === query.scope ? query : null;
+  const listing = localQuery ?? loadedQuery;
+  const visibleLinks = localQuery
+    ? sortLinksBy(
+        links.filter((link) => matchesLinkFilters(link, localQuery.search, localQuery.state)),
+        localQuery.sort,
+        currentTimestamp()
+      )
+    : links;
+  const visibleTotal = localQuery ? visibleLinks.length : total;
+  const isSearching = Boolean(listing?.search);
 
   return {
     view,
     links: visibleLinks,
     total: visibleTotal,
     scopeTotal: scope ? (findTotals(summary.groups, scope)?.links ?? 0) : summary.ungrouped,
-    page: loadedQuery?.page ?? 1,
+    page: localQuery ? 1 : (loadedQuery?.page ?? 1),
     totalPages: Math.max(1, Math.ceil(visibleTotal / linksPageSize)),
-    search: query?.scope === scope ? query.search || localSearch : "",
+    search: query?.scope === scope ? query.search : "",
     state: query?.state ?? "all",
     sort: query?.sort ?? "recent",
-    transitionKey: loadedQuery
-      ? [loadedQuery.scope, loadedQuery.search, localSearch, loadedQuery.state, loadedQuery.sort, loadedQuery.page].join("|")
-      : "",
+    transitionKey: listing ? [listing.scope, listing.search, listing.state, listing.sort, localQuery ? 1 : listing.page].join("|") : "",
     groups,
     groupSummaries: groups.map((group) => ({
       group,
@@ -79,8 +82,8 @@ const useLinksPage = (): UseLinksPageReturn => {
     isCreatingGroup,
     hasNoLinks: hasLoaded && summary.total === 0 && groups.length === 0,
     isGroupMissing: scope !== "" && hasLoaded && activeGroup === null && !isRefreshing,
-    isSearching: Boolean(loadedQuery?.search || localSearch),
-    isFiltered: Boolean(loadedQuery?.search || localSearch) || (loadedQuery?.state ?? "all") !== "all",
+    isSearching,
+    isFiltered: isSearching || (listing?.state ?? "all") !== "all",
     isLoading,
     isRefreshing,
     isScopePending: loadedQuery?.scope !== scope,

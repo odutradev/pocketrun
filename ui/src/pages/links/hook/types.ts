@@ -70,7 +70,7 @@ export interface LinksStore {
   total: number;
   query: LinksListQuery | null;
   loadedQuery: LinksListQuery | null;
-  localSearch: string;
+  isWholeScopeLoaded: boolean;
   emptySearchCache: LinksListCache | null;
   hasLoaded: boolean;
   isLoading: boolean;
@@ -80,7 +80,8 @@ export interface LinksStore {
   listRequestId: number;
   removeTarget: Link | null;
   loadOverview: () => Promise<void>;
-  loadList: (query: LinksListQuery) => Promise<void>;
+  loadList: (request: LinksListQuery) => Promise<void>;
+  applyQuery: (query: LinksListQuery) => Promise<void>;
   loadLinks: () => Promise<void>;
   openScope: (scope: string) => Promise<void>;
   searchLinks: (search: string) => Promise<void>;
