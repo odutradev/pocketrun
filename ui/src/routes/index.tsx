@@ -4,8 +4,8 @@ import { lazy } from "react";
 import pagesAnalyticsMetadata from "@pages/pagesAnalytics/metadata";
 import linksAnalyticsMetadata from "@pages/linksAnalytics/metadata";
 import pageEditorMetadata from "@pages/pageEditor/metadata";
-import appDetailsMetadata from "@pages/appDetails/metadata";
 import linkEditorMetadata from "@pages/linkEditor/metadata";
+import appEditorMetadata from "@pages/appEditor/metadata";
 import profileMetadata from "@pages/profile/metadata";
 import brandMetadata from "@pages/brand/metadata";
 import linksMetadata from "@pages/links/metadata";
@@ -22,11 +22,11 @@ import type { PageMetadata } from "@utils/types/page";
 
 const AuthPage = lazy(() => import("@pages/auth"));
 const SetupPage = lazy(() => import("@pages/setup"));
-const AppDetailsPage = lazy(() => import("@pages/appDetails"));
 const BrandPage = lazy(() => import("@pages/brand"));
 const UsersPage = lazy(() => import("@pages/users"));
 const ProfilePage = lazy(() => import("@pages/profile"));
 const KvPage = lazy(() => import("@pages/kv"));
+const AppEditorPage = lazy(() => import("@pages/appEditor"));
 const PagesPage = lazy(() => import("@pages/pages"));
 const LinksPage = lazy(() => import("@pages/links"));
 const LinkEditorPage = lazy(() => import("@pages/linkEditor"));
@@ -52,8 +52,9 @@ const router = createBrowserRouter([
       { path: "/", element: <Navigate to="/kv" replace /> },
       pageRoute("/auth", AuthPage, authMetadata),
       pageRoute("/setup", SetupPage, setupMetadata),
-      pageRoute("/apps/:applicationId", AppDetailsPage, appDetailsMetadata),
       pageRoute("/kv", KvPage, kvMetadata),
+      pageRoute("/kv/new", AppEditorPage, appEditorMetadata),
+      pageRoute("/kv/:applicationId/edit", AppEditorPage, appEditorMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
       pageRoute("/pages/analytics", PagesAnalyticsPage, pagesAnalyticsMetadata),
       pageRoute("/pages/groups/new", PagesPage, pagesMetadata),

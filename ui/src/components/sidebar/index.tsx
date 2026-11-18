@@ -18,7 +18,7 @@ const groups: SidebarGroup[] = [
   {
     label: "Serviços",
     items: [
-      { label: "KV", to: "/kv", icon: <StackIcon />, matches: ["/kv", "/apps"], requiredPermissions: ["manage_apps"] },
+      { label: "KV", to: "/kv", icon: <StackIcon />, matches: ["/kv"], requiredPermissions: ["manage_apps"] },
       {
         label: "Páginas",
         to: "/pages",
