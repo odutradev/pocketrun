@@ -119,7 +119,16 @@ export const Values = styled.span`
 export const OldValue = styled.span`
   color: ${({ theme }) => theme.brand.steelMuted};
   text-decoration: line-through;
+  text-decoration-color: currentColor;
   overflow-wrap: anywhere;
+  transition:
+    color ${({ theme }) => theme.motion.fast}ms ${({ theme }) => theme.motion.easing.standard},
+    text-decoration-color ${({ theme }) => theme.motion.fast}ms ${({ theme }) => theme.motion.easing.standard};
+
+  ${Change}:hover & {
+    color: ${({ theme }) => theme.brand.steel};
+    text-decoration-color: transparent;
+  }
 `;
 
 export const NewValue = styled.span`
