@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
-import { useTheme } from "styled-components";
+import { useEffect, useRef } from "react";
 
-import { ActorSelect, Container, Count, Day, DayHeading, Filters, FiltersAside, Timeline, TimelineFrame } from "./styles";
+import { ActorSelect, Container, Count, Day, DayHeading, Filters, FiltersAside, Timeline } from "./styles";
 import { currentTimestamp, formatDayHeading, pluralize, toDayKey } from "@utils/functions";
 import SegmentedControl from "@components/segmentedControl";
+import ListTransition from "@components/listTransition";
 import { historyFilterOptions } from "@assets/data";
 import EventItem from "./subcomponents/eventItem";
 import useMediaQuery from "@hooks/useMediaQuery";
@@ -25,10 +25,7 @@ const groupByDay = (events: LinkEvent[]) =>
   }, []);
 
 const HistoryTab = () => {
-  const { motion } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const previousHeight = useRef<number | null>(null);
   const shouldReduceMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const {
     visibleEvents,
@@ -51,27 +48,7 @@ const HistoryTab = () => {
     if (!hasLoadedHistory) loadHistory();
   }, [hasLoadedHistory, loadHistory]);
 
-  useLayoutEffect(() => {
-    const frame = frameRef.current;
-    const fromHeight = previousHeight.current;
-    if (isHistoryLoading || !frame || fromHeight === null) return;
-    previousHeight.current = null;
-
-    const toHeight = frame.offsetHeight;
-    if (shouldReduceMotion || fromHeight === toHeight) return;
-
-    frame.style.overflow = "hidden";
-    const animation = frame.animate([{ height: `${fromHeight}px` }, { height: `${toHeight}px` }], {
-      duration: motion.base,
-      easing: motion.easing.standard
-    });
-    const releaseOverflow = () => frame.style.removeProperty("overflow");
-    animation.onfinish = releaseOverflow;
-    animation.oncancel = releaseOverflow;
-  }, [historyPage, isHistoryLoading, shouldReduceMotion, motion]);
-
   const handlePageChange = (page: number) => {
-    previousHeight.current = frameRef.current?.offsetHeight ?? null;
     handleHistoryPageChange(page);
     containerRef.current?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" });
   };
@@ -105,7 +82,7 @@ const HistoryTab = () => {
       );
     }
     return (
-      <Timeline key={historyPage}>
+      <Timeline>
         {groupByDay(visibleEvents).map((day) => (
           <Day key={day.key}>
             <DayHeading>{formatDayHeading(day.at, now)}</DayHeading>
@@ -133,9 +110,9 @@ const HistoryTab = () => {
           )}
         </FiltersAside>
       </Filters>
-      <TimelineFrame ref={frameRef} aria-busy={isHistoryLoading} $isBusy={isHistoryLoading}>
+      <ListTransition transitionKey={historyPage} isBusy={isHistoryLoading}>
         {renderTimeline()}
-      </TimelineFrame>
+      </ListTransition>
       {historyTotalPages > 1 && (
         <Pagination page={historyPage} totalPages={historyTotalPages} onPageChange={handlePageChange} isCentered />
       )}
