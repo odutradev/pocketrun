@@ -60,7 +60,14 @@ export const TitleCount = styled.span`
 export const Actions = styled.div`
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  align-items: center;
   gap: ${({ theme }) => theme.spacing(2)};
+`;
+
+export const ActionGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing(2)};
+  margin-left: auto;
 `;
 

@@ -1,11 +1,12 @@
-import { PlusIcon } from "@radix-ui/react-icons";
+import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 import { useCallback, useState } from "react";
 
 import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
-import { Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
+import { ActionGroup, Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
 import { clickLimitRange, defaultPeriodHours, linkTitleMaxLength } from "@assets/config";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import DestinationField from "./subcomponents/destinationField";
+import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import SegmentedControl from "@components/segmentedControl";
 import { linkFormSchema } from "@utils/validations/link";
 import { createLink, updateLink } from "@actions/links";
@@ -44,6 +45,7 @@ const toPayload = (values: LinkFormValues): LinkPayload => ({
 
 const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [slugCheck, setSlugCheck] = useState<SlugCheck>({ status: "idle" });
   const handleSlugCheck = useCallback((check: SlugCheck) => setSlugCheck(check), []);
 
@@ -157,16 +159,24 @@ const LinkForm = ({ link, groups, onGroupCreated, onSaved }: LinkFormProps) => {
         )}
       </Section>
       <Actions>
-        <LinkButton to="/links">Cancelar</LinkButton>
-        <Button
-          type="submit"
-          disabled={isSlugBlocked}
-          isLoading={isSubmitting}
-          loadingLabel={link ? "Salvando…" : "Criando…"}
-        >
-          {link ? "Salvar alterações" : "Criar link"}
-        </Button>
+        {link && (
+          <Button type="button" variant="danger" leftIcon={<TrashIcon />} onClick={() => setIsRemoving(true)}>
+            Excluir link
+          </Button>
+        )}
+        <ActionGroup>
+          <LinkButton to="/links">Cancelar</LinkButton>
+          <Button
+            type="submit"
+            disabled={isSlugBlocked}
+            isLoading={isSubmitting}
+            loadingLabel={link ? "Salvando…" : "Criando…"}
+          >
+            {link ? "Salvar alterações" : "Criar link"}
+          </Button>
+        </ActionGroup>
       </Actions>
+      {link && <RemoveLinkDialog link={link} isOpen={isRemoving} onClose={() => setIsRemoving(false)} />}
       <CreateGroupDialog
         isOpen={isCreatingGroup}
         onClose={() => setIsCreatingGroup(false)}
