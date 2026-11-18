@@ -13,12 +13,21 @@ const PageSize = 30
 type EventType string
 
 const (
-	EventCreated       EventType = "created"
-	EventUpdated       EventType = "updated"
-	EventDeleted       EventType = "deleted"
-	EventExpired       EventType = "expired"
-	EventExhausted     EventType = "exhausted"
-	EventGroupDetached EventType = "group_detached"
+	EventCreated          EventType = "created"
+	EventUpdated          EventType = "updated"
+	EventDeleted          EventType = "deleted"
+	EventExpired          EventType = "expired"
+	EventExhausted        EventType = "exhausted"
+	EventGroupDetached    EventType = "group_detached"
+	EventAccessEnabled    EventType = "access_enabled"
+	EventAccessDisabled   EventType = "access_disabled"
+	EventAccessKeyCreated EventType = "access_key_created"
+	EventAccessKeyRenamed EventType = "access_key_renamed"
+	EventAccessPINReset   EventType = "access_pin_reset"
+	EventAccessKeyRemoved EventType = "access_key_removed"
+	EventAccessRevoked    EventType = "access_sessions_revoked"
+	EventAccessLocked     EventType = "access_locked"
+	EventUnlocked         EventType = "unlocked"
 )
 
 type Change struct {

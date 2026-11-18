@@ -48,9 +48,16 @@ type Availability struct {
 	Reason      string `json:"reason,omitempty"`
 }
 
-func Validate(value string) error {
+func CheckFormat(value string) error {
 	if len(value) == 0 || len(value) > MaxLength || !pattern.MatchString(value) {
 		return ErrInvalidSlug
+	}
+	return nil
+}
+
+func Validate(value string) error {
+	if err := CheckFormat(value); err != nil {
+		return err
 	}
 	if isReserved(value) {
 		return ErrReservedSlug
