@@ -36,7 +36,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 
 | Conceito | Significado |
 | :--- | :--- |
-| **Gestor** | Pessoa que entra no painel (JWT). O primeiro gestor é criado pelo fluxo de setup (`/setup/*`) como superadmin. Um gestor é dono de aplicações. Cargos: **Gestor** (`admin`) cuida das próprias aplicações; **Superadmin** (`superadmin`) também gerencia os usuários. |
+| **Gestor** | Pessoa que entra no painel (JWT num cookie `HttpOnly`). O primeiro gestor é criado pelo fluxo de setup (`/setup/*`) como superadmin. Um gestor é dono de aplicações. Cargos: **Gestor** (`admin`) cuida das próprias aplicações; **Superadmin** (`superadmin`) também gerencia os usuários. |
 | **Aplicação** | Um projeto do KV. Tem nome, `projectId` único, descrição, origens permitidas e tokens de acesso. A aplicação existe só para o KV: as collections e os documentos pertencem a exatamente uma aplicação e são invisíveis para as outras. Páginas e links não pertencem a aplicações. |
 | **Token de acesso** | Segredo usado por um app cliente para chamar a API pública. Formato `pk_live_...`, guardado só como hash, exibido uma única vez na criação, validade opcional, revogável, com registro de último uso. Enviado como `controlAccess`, `X-Pocket-Token` ou `Authorization: Bearer`. |
 | **Origens permitidas** | Lista de CORS por aplicação. Chamadas de navegador de outras origens são recusadas. Chamadas sem header `Origin` só passam se a aplicação liberar requisições fora do navegador. |
@@ -52,7 +52,7 @@ Funciona com qualquer cliente: React, Vue, Flutter, mobile, scripts.
 ### 5.1 Plataforma (pronto)
 
 - Setup inicial que cria o primeiro gestor.
-- Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial.
+- Login e sessão do gestor (`/auth/*`). Não há cadastro público: o único cadastro aberto é o setup inicial. A senha é guardada com Argon2id; hashes antigos são convertidos no próximo login certo. O login aceita 5 erros por e-mail em 15 min (10 em 1 h, 20 em 24 h) e 20 por IP em 15 min (50 em 1 h, 100 em 24 h); depois responde 429. A sessão vale 7 dias num cookie `HttpOnly; Secure; SameSite=Strict` que o JavaScript do painel não lê, e toda chamada do painel leva o header `X-Pocketrun-Client` contra CSRF. Trocar a senha ou o cargo, ou **Sair de todos os dispositivos** no perfil, encerra as sessões abertas; trocar a própria senha mantém só a sessão atual.
 - Usuários (`/users/*`, só superadmin): listar, criar com senha inicial, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário com aplicações não pode ser removido.
 - Perfil (`/auth/me/*`): cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
 - Painel com menu lateral: o grupo **Serviços** primeiro, com KV, Páginas e Links (cada um na cor da sua ferramenta), depois o grupo **Painel** com Usuários, e perfil e saída embaixo. A raiz `/` abre o KV.
