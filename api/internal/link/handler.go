@@ -12,8 +12,8 @@ import (
 
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/slug"
-	"pocketrun-api/internal/traffic"
 	"pocketrun-api/internal/user"
 )
 

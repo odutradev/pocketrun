@@ -7,7 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/activation"
+	"pocketrun-api/internal/platform/activation"
 )
 
 const (

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/platform/httpx"
-	"pocketrun-api/internal/traffic"
+	"pocketrun-api/internal/platform/traffic"
 )
 
 const (

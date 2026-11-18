@@ -7,11 +7,11 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"pocketrun-api/internal/activation"
 	"pocketrun-api/internal/group"
+	"pocketrun-api/internal/platform/activation"
 	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/slug"
-	"pocketrun-api/internal/traffic"
 	"pocketrun-api/internal/user"
 )
 
