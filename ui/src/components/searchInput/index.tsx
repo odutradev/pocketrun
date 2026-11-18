@@ -1,10 +1,10 @@
 import { Cross2Icon, MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Container, LoaderSlot, Status } from "./styles";
+import VisuallyHidden from "@components/visuallyHidden";
 import IconButton from "@components/iconButton";
 import { searchDelay } from "@assets/config";
-import Loader from "@components/loader";
+import { Container, Spinner } from "./styles";
 import Input from "@components/input";
 
 import type { SearchInputProps } from "./types";
@@ -59,25 +59,15 @@ const SearchInput = ({ label, placeholder, defaultValue = "", isLoading = false,
         label={label}
         isLabelHidden
         type="search"
-        leftIcon={<MagnifyingGlassIcon />}
+        leftIcon={isLoading ? <Spinner /> : <MagnifyingGlassIcon />}
         placeholder={placeholder}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={handleKeyDown}
         aria-busy={isLoading || undefined}
-        trailing={
-          (isLoading || hasValue) && (
-            <Status>
-              {isLoading && (
-                <LoaderSlot>
-                  <Loader size={16} label="Buscando" />
-                </LoaderSlot>
-              )}
-              {hasValue && <IconButton size="sm" label="Limpar a busca" icon={<Cross2Icon />} onClick={handleClear} />}
-            </Status>
-          )
-        }
+        trailing={hasValue && <IconButton size="sm" label="Limpar a busca" icon={<Cross2Icon />} onClick={handleClear} />}
       />
+      <VisuallyHidden role="status">{isLoading ? "Buscando" : ""}</VisuallyHidden>
     </Container>
   );
 };

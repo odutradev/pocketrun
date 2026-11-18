@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { AriaRole, ReactNode } from "react";
 
 export interface VisuallyHiddenProps {
   children: ReactNode;
+  role?: AriaRole;
 }
