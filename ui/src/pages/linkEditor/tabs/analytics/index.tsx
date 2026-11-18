@@ -3,13 +3,13 @@ import { useEffect } from "react";
 
 import { currentTimestamp, downloadCsv, formatPercentChange, formatRelativeTime, formatShortDateTime, pluralize } from "@utils/functions";
 import { BotNote, Container, Panel, PanelTitle, Progress, ProgressBar, ProgressText, Row, Stats, Toolbar, Trio } from "./styles";
-import ActivityHeatmap from "./subcomponents/activityHeatmap";
 import SegmentedControl from "@components/segmentedControl";
-import DevicesChart from "./subcomponents/devicesChart";
-import ClicksChart from "./subcomponents/clicksChart";
+import ActivityHeatmap from "@components/activityHeatmap";
 import { analyticsRangeOptions } from "@assets/data";
-import ShareList from "./subcomponents/shareList";
+import DevicesChart from "@components/devicesChart";
+import ClicksChart from "@components/clicksChart";
 import EmptyState from "@components/emptyState";
+import ShareList from "@components/shareList";
 import Skeleton from "@components/skeleton";
 import StatCard from "@components/statCard";
 import useLinkEditorPage from "../../hook";
