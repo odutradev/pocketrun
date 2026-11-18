@@ -1,42 +1,62 @@
-import { allowsAnyOrigin } from "@utils/functions";
+import { matchesApplicationFilters, sortApplications } from "@utils/functions";
+import { applicationsPageSize } from "@assets/config";
 import useKvStore from "./store";
 
-import type { Application } from "@utils/types/application";
 import type { UseKvPageReturn } from "./types";
-
-const matchesSearch = (application: Application, search: string) => {
-  const term = search.trim().toLowerCase();
-  if (!term) return true;
-  return [application.name, application.projectId, application.description].some((value) =>
-    value.toLowerCase().includes(term)
-  );
-};
 
 const useKvPage = (): UseKvPageReturn => {
   const {
+    view,
     applications,
+    hasLoaded,
     isLoading,
     isRefreshing,
     search,
-    isCreateModalOpen,
+    filter,
+    sort,
+    page,
+    removeTarget,
     loadApplications,
     setSearch,
-    setCreateModalOpen
+    setFilter,
+    setSort,
+    setPage,
+    setView,
+    setRemoveTarget
   } = useKvStore();
 
+  const visible = sortApplications(
+    applications.filter((application) => matchesApplicationFilters(application, search, filter)),
+    sort
+  );
+  const totalPages = Math.max(1, Math.ceil(visible.length / applicationsPageSize));
+  const currentPage = Math.min(page, totalPages);
+  const start = (currentPage - 1) * applicationsPageSize;
+
   return {
-    applications,
-    filteredApplications: applications.filter((application) => matchesSearch(application, search)),
+    view,
+    applications: visible.slice(start, start + applicationsPageSize),
+    total: visible.length,
+    scopeTotal: applications.length,
+    page: currentPage,
+    totalPages,
+    search,
+    filter,
+    sort,
+    transitionKey: [search, filter, sort, currentPage].join("|"),
+    hasNoApplications: hasLoaded && applications.length === 0,
+    isFiltered: Boolean(search.trim()) || filter !== "all",
     isLoading,
     isRefreshing,
-    search,
-    totalTokens: applications.reduce((total, application) => total + (application.tokens?.length ?? 0), 0),
-    openOriginCount: applications.filter((application) => allowsAnyOrigin(application.allowedOrigins)).length,
-    isCreateModalOpen,
+    removeTarget,
     loadApplications,
-    handleSearchChange: setSearch,
-    handleOpenCreate: () => setCreateModalOpen(true),
-    handleCloseCreate: () => setCreateModalOpen(false)
+    handleSearch: setSearch,
+    handleFilterChange: setFilter,
+    handleSortChange: setSort,
+    handlePageChange: setPage,
+    handleViewChange: setView,
+    handleOpenRemove: setRemoveTarget,
+    handleCloseRemove: () => setRemoveTarget(null)
   };
 };
 
