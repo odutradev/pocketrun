@@ -36,6 +36,7 @@ type VersionRepository interface {
 	InsertVersion(ctx context.Context, version *Version) error
 	FindVersions(ctx context.Context, pageID bson.ObjectID) ([]Version, error)
 	FindVersion(ctx context.Context, pageID bson.ObjectID, number int) (*Version, error)
+	PruneVersions(ctx context.Context, pageID bson.ObjectID, keepFrom int) error
 	DeleteVersions(ctx context.Context, pageID bson.ObjectID) error
 }
 
@@ -195,7 +196,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 	}
 
 	actor := s.actor(ctx)
-	s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, nil, actor, now))
+	s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, input.Message, nil, actor, now))
 	s.record(ctx, newEvent(page.ID, EventCreated, actor, snapshot(*page), now))
 	page.State = page.StateAt(now)
 	return page, nil
@@ -253,7 +254,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*P
 
 	actor := s.actor(ctx)
 	if isNewVersion {
-		s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, restoredFrom(input.RestoredFrom, page.Version), actor, page.UpdatedAt))
+		s.saveVersion(ctx, newVersion(page.ID, page.Version, page.HTML, input.Message, restoredFrom(input.RestoredFrom, page.Version), actor, page.UpdatedAt))
 	}
 	if changes := diff(previous, *page); len(changes) > 0 {
 		s.record(ctx, newEvent(page.ID, EventUpdated, actor, changes, page.UpdatedAt))
@@ -555,6 +556,13 @@ func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit
 func (s *Service) saveVersion(ctx context.Context, version *Version) {
 	if err := s.versions.InsertVersion(ctx, version); err != nil {
 		s.logger.WarnContext(ctx, "save page version", "pageId", version.PageID.Hex(), "number", version.Number, "error", err)
+		return
+	}
+	if version.Number <= MaxVersions {
+		return
+	}
+	if err := s.versions.PruneVersions(ctx, version.PageID, version.Number-MaxVersions+1); err != nil {
+		s.logger.WarnContext(ctx, "prune page versions", "pageId", version.PageID.Hex(), "error", err)
 	}
 }
 

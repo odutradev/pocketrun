@@ -66,6 +66,14 @@ func (r *MongoVersionRepository) FindVersion(ctx context.Context, pageID bson.Ob
 	return &version, nil
 }
 
+func (r *MongoVersionRepository) PruneVersions(ctx context.Context, pageID bson.ObjectID, keepFrom int) error {
+	filter := bson.M{"pageId": pageID, "number": bson.M{"$lt": keepFrom}}
+	if _, err := r.collection.DeleteMany(ctx, filter); err != nil {
+		return fmt.Errorf("prune page versions: %w", err)
+	}
+	return nil
+}
+
 func (r *MongoVersionRepository) DeleteVersions(ctx context.Context, pageID bson.ObjectID) error {
 	if _, err := r.collection.DeleteMany(ctx, bson.M{"pageId": pageID}); err != nil {
 		return fmt.Errorf("delete page versions: %w", err)

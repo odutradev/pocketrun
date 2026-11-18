@@ -16,6 +16,7 @@ type Version struct {
 	HTML         string        `json:"html,omitempty" bson:"html,omitempty"`
 	Size         int64         `json:"size" bson:"size"`
 	RestoredFrom *int          `json:"restoredFrom" bson:"restoredFrom,omitempty"`
+	Message      string        `json:"message" bson:"message,omitempty"`
 	Actor        Actor         `json:"actor" bson:"actor"`
 	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
 }
@@ -32,7 +33,7 @@ func ParseVersionNumber(value string) (int, error) {
 	return number, nil
 }
 
-func newVersion(pageID bson.ObjectID, number int, html string, restoredFrom *int, actor Actor, at time.Time) *Version {
+func newVersion(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor Actor, at time.Time) *Version {
 	return &Version{
 		ID:           bson.NewObjectID(),
 		PageID:       pageID,
@@ -40,6 +41,7 @@ func newVersion(pageID bson.ObjectID, number int, html string, restoredFrom *int
 		HTML:         html,
 		Size:         int64(len(html)),
 		RestoredFrom: restoredFrom,
+		Message:      message,
 		Actor:        actor,
 		CreatedAt:    at,
 	}

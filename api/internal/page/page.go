@@ -13,6 +13,7 @@ import (
 const (
 	MaxHTMLBytes     = 512 * 1024
 	MaxBodyBytes     = 4 * MaxHTMLBytes
+	MaxVersions      = 50
 	DefaultListLimit = 20
 	UngroupedFilter  = "none"
 )
@@ -63,12 +64,14 @@ type Input struct {
 	EndsAt       *time.Time      `json:"endsAt"`
 	MaxClicks    *int64          `json:"maxClicks" validate:"omitempty,min=1"`
 	RestoredFrom *int            `json:"restoredFrom" validate:"omitempty,min=1"`
+	Message      string          `json:"message" validate:"max=80"`
 }
 
 func (i *Input) Normalize() {
 	i.Title = strings.TrimSpace(i.Title)
 	i.Slug = strings.ToLower(strings.TrimSpace(i.Slug))
 	i.GroupID = strings.TrimSpace(i.GroupID)
+	i.Message = strings.Join(strings.Fields(i.Message), " ")
 
 	rule := i.Rule()
 	rule.Normalize()
