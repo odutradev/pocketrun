@@ -30,6 +30,7 @@ func NewHandler(service *Service, pages PageChecker, validate *validator.Validat
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /pages/{id}/access/details", authenticate(http.HandlerFunc(h.details)))
 	mux.Handle("PATCH /pages/{id}/access/status/set", authenticate(http.HandlerFunc(h.update)))
+	mux.Handle("PATCH /pages/{id}/access/session/set", authenticate(http.HandlerFunc(h.setSession)))
 	mux.Handle("POST /pages/{id}/access/sessions/revoke", authenticate(http.HandlerFunc(h.revoke)))
 	mux.Handle("POST /pages/{id}/access/keys/create", authenticate(http.HandlerFunc(h.createKey)))
 	mux.Handle("PATCH /pages/{id}/access/keys/{keyId}/update", authenticate(http.HandlerFunc(h.renameKey)))
@@ -66,6 +67,26 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	access, err := h.service.SetEnabled(r.Context(), pageID, *input.IsEnabled)
 	if err != nil {
 		h.writeError(w, r, "update page access", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, access)
+}
+
+func (h *Handler) setSession(w http.ResponseWriter, r *http.Request) {
+	pageID, ok := h.pageID(w, r)
+	if !ok {
+		return
+	}
+
+	var input SessionInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	access, err := h.service.SetSessionHours(r.Context(), pageID, *input.SessionHours)
+	if err != nil {
+		h.writeError(w, r, "set page access session", err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, access)

@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	PINLength       = 6
-	MaxKeys         = 20
-	SessionDuration = 12 * time.Hour
-	MaxFormBytes    = 1024
+	PINLength           = 6
+	MaxKeys             = 20
+	DefaultSessionHours = 24
+	MaxSessionHours     = 720
+	MaxFormBytes        = 1024
 )
 
 var (
@@ -43,16 +44,28 @@ type Key struct {
 }
 
 type Access struct {
-	PageID    bson.ObjectID `json:"pageId" bson:"_id"`
-	IsEnabled bool          `json:"isEnabled" bson:"isEnabled"`
-	Keys      []Key         `json:"keys" bson:"keys"`
-	Revision  int           `json:"-" bson:"revision"`
-	Version   int           `json:"-" bson:"version"`
-	UpdatedAt *time.Time    `json:"updatedAt" bson:"updatedAt,omitempty"`
+	PageID       bson.ObjectID `json:"pageId" bson:"_id"`
+	IsEnabled    bool          `json:"isEnabled" bson:"isEnabled"`
+	Keys         []Key         `json:"keys" bson:"keys"`
+	SessionHours int           `json:"sessionHours" bson:"sessionHours"`
+	Revision     int           `json:"-" bson:"revision"`
+	Version      int           `json:"-" bson:"version"`
+	UpdatedAt    *time.Time    `json:"updatedAt" bson:"updatedAt,omitempty"`
 }
 
 func newAccess(pageID bson.ObjectID) *Access {
-	return &Access{PageID: pageID, Keys: []Key{}}
+	return &Access{PageID: pageID, Keys: []Key{}, SessionHours: DefaultSessionHours}
+}
+
+func (a *Access) applyDefaults() {
+	if a.SessionHours <= 0 {
+		a.SessionHours = DefaultSessionHours
+	}
+}
+
+func (a *Access) sessionDuration() time.Duration {
+	a.applyDefaults()
+	return time.Duration(a.SessionHours) * time.Hour
 }
 
 func (a *Access) key(id bson.ObjectID) (*Key, error) {
@@ -95,6 +108,10 @@ type Grant struct {
 
 type StatusInput struct {
 	IsEnabled *bool `json:"isEnabled" validate:"required"`
+}
+
+type SessionInput struct {
+	SessionHours *int `json:"sessionHours" validate:"required,min=1,max=720"`
 }
 
 type KeyInput struct {

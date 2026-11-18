@@ -15,7 +15,10 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const maxGenerateTries = 50
+const (
+	maxGenerateTries = 50
+	clockSkew        = time.Minute
+)
 
 var pinPattern = regexp.MustCompile(`^[0-9]{6}$`)
 
@@ -53,15 +56,15 @@ func (s secrets) hashClient(pageID bson.ObjectID, client string) string {
 	return sign(s.client, pageID.Hex(), client)[:32]
 }
 
-func (s secrets) issueToken(pageID bson.ObjectID, key Key, revision int, expiresAt time.Time) string {
-	payload := []string{key.ID.Hex(), strconv.Itoa(revision), strconv.FormatInt(expiresAt.Unix(), 10)}
+func (s secrets) issueToken(pageID bson.ObjectID, key Key, revision int, issuedAt, expiresAt time.Time) string {
+	payload := []string{key.ID.Hex(), strconv.Itoa(revision), strconv.FormatInt(issuedAt.Unix(), 10), strconv.FormatInt(expiresAt.Unix(), 10)}
 	signature := sign(s.session, append([]string{pageID.Hex(), key.Secret}, payload...)...)
 	return strings.Join(append(payload, signature), ".")
 }
 
 func (s secrets) verifyToken(access *Access, token string, now time.Time) bool {
 	parts := strings.Split(token, ".")
-	if len(parts) != 4 {
+	if len(parts) != 5 {
 		return false
 	}
 
@@ -76,13 +79,20 @@ func (s secrets) verifyToken(access *Access, token string, now time.Time) bool {
 	if parts[1] != strconv.Itoa(access.Revision) {
 		return false
 	}
-	expiresAt, err := strconv.ParseInt(parts[2], 10, 64)
+	issuedAt, err := strconv.ParseInt(parts[2], 10, 64)
+	if err != nil || time.Unix(issuedAt, 0).After(now.Add(clockSkew)) {
+		return false
+	}
+	expiresAt, err := strconv.ParseInt(parts[3], 10, 64)
 	if err != nil || now.Unix() >= expiresAt {
 		return false
 	}
+	if !now.Before(time.Unix(issuedAt, 0).Add(access.sessionDuration())) {
+		return false
+	}
 
-	expected := sign(s.session, access.PageID.Hex(), key.Secret, parts[0], parts[1], parts[2])
-	return hmac.Equal([]byte(expected), []byte(parts[3]))
+	expected := sign(s.session, access.PageID.Hex(), key.Secret, parts[0], parts[1], parts[2], parts[3])
+	return hmac.Equal([]byte(expected), []byte(parts[4]))
 }
 
 func newKeySecret() (string, error) {

@@ -21,6 +21,7 @@ const (
 	pageLimitMax     = 50
 	visitorActorName = "Visitante"
 	roleField        = "role"
+	sessionField     = "sessionHours"
 )
 
 type limit struct {
@@ -114,6 +115,24 @@ func (s *Service) SetEnabled(ctx context.Context, pageID bson.ObjectID, isEnable
 		eventType = history.EventAccessEnabled
 	}
 	s.record(ctx, pageID, eventType, s.actor(ctx), nil)
+	return access, nil
+}
+
+func (s *Service) SetSessionHours(ctx context.Context, pageID bson.ObjectID, hours int) (*Access, error) {
+	access, err := s.load(ctx, pageID)
+	if err != nil {
+		return nil, fmt.Errorf("set page access session %s: %w", pageID.Hex(), err)
+	}
+	if access.SessionHours == hours {
+		return access, nil
+	}
+
+	previous := access.SessionHours
+	access.SessionHours = hours
+	if err := s.save(ctx, access); err != nil {
+		return nil, fmt.Errorf("set page access session %s: %w", pageID.Hex(), err)
+	}
+	s.record(ctx, pageID, history.EventAccessSessionChanged, s.actor(ctx), []history.Change{{Field: sessionField, From: previous, To: hours}})
 	return access, nil
 }
 
@@ -319,8 +338,8 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 		return Grant{}, ErrWrongPIN
 	}
 
-	expiresAt := now.Add(SessionDuration)
-	grant := Grant{Token: s.secrets.issueToken(pageID, *match, access.Revision, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
+	expiresAt := now.Add(access.sessionDuration())
+	grant := Grant{Token: s.secrets.issueToken(pageID, *match, access.Revision, now, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
 	s.record(ctx, pageID, history.EventUnlocked, user.Actor{Name: visitorActorName}, []history.Change{{Field: roleField, From: nil, To: match.Role}})
 	return grant, nil
 }
@@ -396,6 +415,7 @@ func (s *Service) load(ctx context.Context, pageID bson.ObjectID) (*Access, erro
 	if err != nil {
 		return nil, err
 	}
+	access.applyDefaults()
 	return access, nil
 }
 

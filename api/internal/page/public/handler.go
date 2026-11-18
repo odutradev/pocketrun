@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
@@ -130,7 +131,7 @@ func (h *Handler) UnlockPage(w http.ResponseWriter, r *http.Request, id bson.Obj
 			Value:    grant.Token,
 			Path:     "/" + target.Slug,
 			Expires:  grant.ExpiresAt,
-			MaxAge:   int(access.SessionDuration.Seconds()),
+			MaxAge:   int(time.Until(grant.ExpiresAt).Seconds()),
 			HttpOnly: true,
 			Secure:   isSecure(r),
 			SameSite: http.SameSiteLaxMode,
