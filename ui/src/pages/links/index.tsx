@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
 import LinkCollection from "./subcomponents/linkCollection";
 import SegmentedControl from "@components/segmentedControl";
-import { Container, ListArea, Toolbar } from "./styles";
+import { Container, Count, ListArea, Toolbar } from "./styles";
 import ListTransition from "@components/listTransition";
 import GroupsDialog from "./subcomponents/groupsDialog";
 import ContentNavbar from "@components/contentNavbar";
@@ -15,6 +15,7 @@ import SearchInput from "@components/searchInput";
 import useMediaQuery from "@hooks/useMediaQuery";
 import Pagination from "@components/pagination";
 import EmptyState from "@components/emptyState";
+import { pluralize } from "@utils/functions";
 import Skeleton from "@components/skeleton";
 import Button from "@components/button";
 import LinksSkeleton from "./skeleton";
@@ -33,6 +34,7 @@ const LinksPage = () => {
     view,
     links,
     total,
+    scopeTotal,
     page,
     totalPages,
     search,
@@ -135,6 +137,7 @@ const LinksPage = () => {
         {!activeGroup && groups.length > 0 && <GroupCards />}
         <ListArea ref={listRef}>
           <Toolbar>
+            <Count>{pluralize(scopeTotal, "link", "links")}</Count>
             <SearchInput
               key={scope}
               label="Buscar links"

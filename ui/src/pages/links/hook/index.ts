@@ -49,6 +49,7 @@ const useLinksPage = (): UseLinksPageReturn => {
     view,
     links: visibleLinks,
     total: visibleTotal,
+    scopeTotal: scope ? (findTotals(summary.groups, scope)?.links ?? 0) : summary.ungrouped,
     page: loadedQuery?.page ?? 1,
     totalPages: Math.max(1, Math.ceil(visibleTotal / linksPageSize)),
     search: query?.scope === scope ? query.search || localSearch : "",

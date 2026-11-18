@@ -16,13 +16,20 @@ export const ListArea = styled.div`
 
 export const Toolbar = styled.div`
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   gap: ${({ theme }) => theme.spacing(3)};
   align-items: center;
 
   @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
+`;
+
+export const Count = styled.span`
+  font-size: 14px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 `;
 
 export const LinkCell = styled.span`

@@ -16,6 +16,7 @@ export interface UseLinksPageReturn {
   view: LinksView;
   links: Link[];
   total: number;
+  scopeTotal: number;
   page: number;
   totalPages: number;
   search: string;
