@@ -12,6 +12,7 @@ import (
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/platform/httpx"
 	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/traffic"
 	"pocketrun-api/internal/user"
 )
 
@@ -191,7 +192,7 @@ func (h *Handler) analytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var params AnalyticsParams
+	var params traffic.AnalyticsParams
 	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return
@@ -206,7 +207,7 @@ func (h *Handler) analytics(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) overview(w http.ResponseWriter, r *http.Request) {
-	var params AnalyticsParams
+	var params traffic.AnalyticsParams
 	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return
@@ -221,7 +222,7 @@ func (h *Handler) overview(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
-	link, err := h.service.Open(r.Context(), r.PathValue("slug"), VisitFromRequest(r))
+	link, err := h.service.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
 	if errors.Is(err, ErrLinkNotFound) || errors.Is(err, ErrLinkUnavailable) {
 		h.writeNotFoundPage(w, r)
 		return

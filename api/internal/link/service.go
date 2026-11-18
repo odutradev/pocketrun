@@ -12,6 +12,7 @@ import (
 
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/traffic"
 	"pocketrun-api/internal/user"
 )
 
@@ -76,7 +77,7 @@ type Service struct {
 	slugs      SlugRegistry
 	groups     GroupChecker
 	actors     ActorFinder
-	visitors   *VisitorHasher
+	visitors   *traffic.VisitorHasher
 	logger     *slog.Logger
 }
 
@@ -88,7 +89,7 @@ func NewService(dependencies Dependencies) *Service {
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
-		visitors:   NewVisitorHasher(),
+		visitors:   traffic.NewVisitorHasher(),
 		logger:     dependencies.Logger,
 	}
 }
@@ -310,10 +311,10 @@ func (s *Service) History(ctx context.Context, id bson.ObjectID, query HistoryQu
 	return page, nil
 }
 
-func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query AnalyticsQuery) (Analytics, error) {
+func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query traffic.AnalyticsQuery) (traffic.Analytics, error) {
 	link, err := s.repository.FindByID(ctx, id)
 	if err != nil {
-		return Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
+		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
 	}
 
 	to := time.Now()
@@ -325,27 +326,27 @@ func (s *Service) Analytics(ctx context.Context, id bson.ObjectID, query Analyti
 
 	opens, err := s.opens.FindOpens(ctx, id, from, to)
 	if err != nil {
-		return Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
+		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
 	}
-	analytics := buildAnalytics(query, from, to, opens)
+	analytics := traffic.Build(query, from, to, hitsOf(opens))
 	if span == 0 {
 		return analytics, nil
 	}
 
 	previous, err := s.opens.FindOpens(ctx, id, from.Add(-span), from)
 	if err != nil {
-		return Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
+		return traffic.Analytics{}, fmt.Errorf("link analytics %s: %w", id.Hex(), err)
 	}
-	clicks, visitors := summarize(previous)
+	clicks, visitors := traffic.Summarize(hitsOf(previous))
 	analytics.Totals.PreviousClicks = &clicks
 	analytics.Totals.PreviousVisitors = &visitors
 	return analytics, nil
 }
 
-func (s *Service) Overview(ctx context.Context, query AnalyticsQuery) (Overview, error) {
+func (s *Service) Overview(ctx context.Context, query traffic.AnalyticsQuery) (Overview, error) {
 	to := time.Now()
 	span := query.Range.Duration()
-	from := to.Add(-OpenRetention)
+	from := to.Add(-traffic.Retention)
 	if span > 0 {
 		from = to.Add(-span)
 	}
@@ -361,13 +362,13 @@ func (s *Service) Overview(ctx context.Context, query AnalyticsQuery) (Overview,
 		}
 	}
 
-	overview := Overview{Analytics: buildAnalytics(query, from, to, opens), TopLinks: []RankedLink{}}
+	overview := Overview{Analytics: traffic.Build(query, from, to, hitsOf(opens)), TopLinks: []RankedLink{}}
 	if span > 0 {
 		previous, err := s.opens.FindOpensBetween(ctx, from.Add(-span), from)
 		if err != nil {
 			return Overview{}, fmt.Errorf("links overview: %w", err)
 		}
-		clicks, visitors := summarize(previous)
+		clicks, visitors := traffic.Summarize(hitsOf(previous))
 		overview.Totals.PreviousClicks = &clicks
 		overview.Totals.PreviousVisitors = &visitors
 	}
@@ -402,7 +403,7 @@ func (s *Service) Overview(ctx context.Context, query AnalyticsQuery) (Overview,
 	return overview, nil
 }
 
-func (s *Service) Open(ctx context.Context, value string, visit Visit) (*Link, error) {
+func (s *Service) Open(ctx context.Context, value string, visit traffic.Visit) (*Link, error) {
 	value = NormalizeSlug(value)
 	entry, err := s.slugs.Find(ctx, value)
 	if errors.Is(err, slug.ErrSlugNotFound) {
@@ -462,7 +463,7 @@ func (s *Service) reserveSlug(ctx context.Context, value string, targetID bson.O
 	return value, nil
 }
 
-func (s *Service) recordOpen(ctx context.Context, link Link, visit Visit, at time.Time, isCounted bool) {
+func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit, at time.Time, isCounted bool) {
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 

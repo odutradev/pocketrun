@@ -8,6 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"pocketrun-api/internal/traffic"
 )
 
 type MongoOpenRepository struct {
@@ -21,7 +23,7 @@ func NewMongoOpenRepository(collection *mongo.Collection) *MongoOpenRepository {
 func (r *MongoOpenRepository) EnsureIndexes(ctx context.Context) error {
 	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{Keys: bson.D{{Key: "linkId", Value: 1}, {Key: "at", Value: 1}}},
-		{Keys: bson.D{{Key: "at", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(OpenRetention.Seconds()))},
+		{Keys: bson.D{{Key: "at", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(traffic.Retention.Seconds()))},
 	})
 	if err != nil {
 		return fmt.Errorf("create link opens indexes: %w", err)
