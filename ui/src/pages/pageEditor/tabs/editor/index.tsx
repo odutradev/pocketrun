@@ -1,13 +1,14 @@
-import { ExternalLinkIcon, ResetIcon } from "@radix-ui/react-icons";
+import { CodeIcon, EnterFullScreenIcon, ExitFullScreenIcon, ExternalLinkIcon, EyeOpenIcon, ResetIcon, ViewVerticalIcon } from "@radix-ui/react-icons";
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
 
-import { Container, Frame, Meter, MeterBar, MeterText, PreviewPanel, PreviewTitle, Status, Toolbar, ToolbarActions, Workspace } from "./styles";
+import { Bar, BarGroup, Footer, Frame, Hint, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
 import { formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
 import { pageHtmlMaxBytes, pagePreviewDelay } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
 import CodeEditor from "../../subcomponents/codeEditor";
 import useMediaQuery from "@hooks/useMediaQuery";
+import IconButton from "@components/iconButton";
 import { updatePage } from "@actions/sitePages";
 import usePageEditorPage from "../../hook";
 import useAction from "@hooks/useAction";
@@ -16,11 +17,12 @@ import Badge from "@components/badge";
 
 import type { PagePayload, SitePage } from "@utils/types/sitePage";
 import type { SegmentedOption } from "@components/segmentedControl/types";
-import type { EditorPane } from "./types";
+import type { EditorView } from "./types";
 
-const paneOptions: SegmentedOption<EditorPane>[] = [
-  { value: "code", label: "Código" },
-  { value: "preview", label: "Prévia" }
+const viewOptions: SegmentedOption<EditorView>[] = [
+  { value: "code", label: "Código", icon: <CodeIcon /> },
+  { value: "preview", label: "Prévia", icon: <EyeOpenIcon /> },
+  { value: "split", label: "Dividido", icon: <ViewVerticalIcon /> }
 ];
 
 const toPayload = (sitePage: SitePage, html: string, restoredFrom: number | null): PagePayload => ({
@@ -38,11 +40,14 @@ const toPayload = (sitePage: SitePage, html: string, restoredFrom: number | null
 const EditorTab = () => {
   const { breakpoints } = useTheme();
   const isWide = useMediaQuery(`(min-width: ${breakpoints.lg})`);
+  const isCompact = !useMediaQuery(`(min-width: ${breakpoints.md})`);
   const { sitePage, draft, isDirty, draftSize, setDraftHtml, discardDraft, handlePageSaved } = usePageEditorPage();
-  const [pane, setPane] = useState<EditorPane>("code");
+  const [view, setView] = useState<EditorView>("split");
+  const [isExpanded, setIsExpanded] = useState(false);
   const [previewHtml, setPreviewHtml] = useState(draft.html);
   const isOverLimit = draftSize > pageHtmlMaxBytes;
   const usedPercent = Math.min(100, Math.round((draftSize / pageHtmlMaxBytes) * 100));
+  const activeView: EditorView = !isWide && view === "split" ? "code" : view;
 
   const { execute, isPending } = useAction({
     action: (payload: { id: string; data: PagePayload }) => updatePage(payload.id, payload.data),
@@ -66,6 +71,20 @@ const EditorTab = () => {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
+  useEffect(() => {
+    if (!isExpanded) return;
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsExpanded(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isExpanded]);
+
   if (!sitePage) return null;
 
   const handleSave = () => {
@@ -74,73 +93,76 @@ const EditorTab = () => {
   };
 
   const remaining = pageHtmlMaxBytes - draftSize;
-  const showCode = isWide || pane === "code";
-  const showPreview = isWide || pane === "preview";
+  const visibleOptions = isWide ? viewOptions : viewOptions.filter((option) => option.value !== "split");
 
   return (
-    <Container>
-      <Toolbar>
-        <Status>
-          <Badge isMono>Versão {versionLabel(sitePage.version)}</Badge>
-          {isDirty && <Badge tone="warning">Alterações não salvas</Badge>}
-          {isDirty && draft.restoredFrom !== null && <Badge tone="accent">Restaurando a {versionLabel(draft.restoredFrom)}</Badge>}
-        </Status>
-        <ToolbarActions>
-          <Button
-            variant="ghost"
-            size="sm"
-            leftIcon={<ExternalLinkIcon />}
-            onClick={() => window.open(publicLinkUrl(sitePage.slug), "_blank", "noopener,noreferrer")}
-          >
-            Abrir página
-          </Button>
+    <Workbench $isExpanded={isExpanded} aria-label="Editor da página">
+      <Bar>
+        <BarGroup>
+          <SegmentedControl label="Visualização" options={visibleOptions} value={activeView} onValueChange={setView} isIconOnly={isCompact} />
+          <Status>
+            <Badge isMono>v{versionLabel(sitePage.version)}</Badge>
+            {isDirty && <Badge tone="warning">Não salvo</Badge>}
+            {isDirty && draft.restoredFrom !== null && <Badge tone="accent">Restaurando a {versionLabel(draft.restoredFrom)}</Badge>}
+          </Status>
+        </BarGroup>
+        <BarGroup>
           {isDirty && (
-            <Button variant="secondary" size="sm" leftIcon={<ResetIcon />} onClick={discardDraft}>
+            <Button variant="ghost" size="sm" leftIcon={<ResetIcon />} onClick={discardDraft}>
               Descartar
             </Button>
           )}
           <Button size="sm" disabled={!isDirty || isOverLimit} isLoading={isPending} loadingLabel="Salvando…" onClick={handleSave}>
-            Salvar versão {versionLabel(sitePage.version + 1)}
+            Salvar {versionLabel(sitePage.version + 1)}
           </Button>
-        </ToolbarActions>
-      </Toolbar>
-      <Meter>
-        <MeterText $isOver={isOverLimit}>
-          <strong>
-            {formatBytes(draftSize)} de {formatBytes(pageHtmlMaxBytes)}
-          </strong>
-          <span>
-            {isOverLimit
-              ? `Passou ${formatBytes(-remaining)} do limite. Reduza o HTML para salvar.`
-              : `Faltam ${formatBytes(remaining)} para o limite.`}
-          </span>
-        </MeterText>
-        <MeterBar
-          $isOver={isOverLimit}
-          role="progressbar"
-          aria-valuenow={usedPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Tamanho do HTML usado"
-        >
-          <span style={{ width: `${usedPercent}%` }} />
-        </MeterBar>
-      </Meter>
-      {!isWide && <SegmentedControl label="Mostrar" options={paneOptions} value={pane} onValueChange={setPane} isFullWidth />}
-      <Workspace>
-        {showCode && <CodeEditor value={draft.html} label="HTML da página" onChange={setDraftHtml} onSave={handleSave} />}
-        {showPreview && (
-          <PreviewPanel>
-            <PreviewTitle>Prévia</PreviewTitle>
-            <Frame
-              title={`Prévia de ${sitePage.title}`}
-              sandbox="allow-scripts allow-forms allow-popups allow-modals"
-              srcDoc={previewHtml}
-            />
-          </PreviewPanel>
+          <IconButton
+            label="Abrir a página publicada em nova aba"
+            icon={<ExternalLinkIcon />}
+            size="sm"
+            onClick={() => window.open(publicLinkUrl(sitePage.slug), "_blank", "noopener,noreferrer")}
+          />
+          <IconButton
+            label={isExpanded ? "Sair da tela cheia" : "Expandir para a tela cheia"}
+            icon={isExpanded ? <ExitFullScreenIcon /> : <EnterFullScreenIcon />}
+            size="sm"
+            onClick={() => setIsExpanded((current) => !current)}
+          />
+        </BarGroup>
+      </Bar>
+      <Panes $isSplit={activeView === "split"}>
+        {activeView !== "preview" && (
+          <Pane>
+            <CodeEditor value={draft.html} label="HTML da página" onChange={setDraftHtml} onSave={handleSave} />
+          </Pane>
         )}
-      </Workspace>
-    </Container>
+        {activeView !== "code" && (
+          <Pane $isPreview>
+            <Frame title={`Prévia de ${sitePage.title}`} sandbox="allow-scripts allow-forms allow-popups allow-modals" srcDoc={previewHtml} />
+          </Pane>
+        )}
+      </Panes>
+      <Footer>
+        <Meter>
+          <MeterText $isOver={isOverLimit}>
+            <strong>
+              {formatBytes(draftSize)} de {formatBytes(pageHtmlMaxBytes)}
+            </strong>
+            {isOverLimit ? ` · passou ${formatBytes(-remaining)} do limite` : ` · faltam ${formatBytes(remaining)}`}
+          </MeterText>
+          <MeterBar
+            $isOver={isOverLimit}
+            role="progressbar"
+            aria-valuenow={usedPercent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Tamanho do HTML usado"
+          >
+            <span style={{ width: `${usedPercent}%` }} />
+          </MeterBar>
+        </Meter>
+        <Hint>{isExpanded ? "Ctrl+S salva · Esc sai da tela cheia" : "Ctrl+S salva"}</Hint>
+      </Footer>
+    </Workbench>
   );
 };
 
