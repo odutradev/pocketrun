@@ -142,6 +142,10 @@ Reuse before creating. Add every new shared component here in the same work.
 | Empty list or section | `@components/emptyState` |
 | Loading placeholder | `@components/skeleton` |
 | Data table with selectable rows | `@components/dataTable` |
+| Clicks and visitors over time (Recharts area chart with change markers) | `@components/clicksChart` |
+| Clicks by weekday and hour | `@components/activityHeatmap` |
+| Device share donut | `@components/devicesChart` |
+| Ranking with horizontal share bars | `@components/shareList` |
 | Pagination with arrows and "Página X de Y" (`summary` on the left, or `isCentered`); page changes follow the transition rule in Data | `@components/pagination` |
 | List area that dims while loading, animates its height and fades new content in | `@components/listTransition` |
 | Dialog | `@components/dialog` |

@@ -81,7 +81,7 @@ Depende de 3.6 e 3.7.
 - **5.1** 🔄 Em andamento. Registrar visualização a cada acesso de página e de link. Links: feito; cada abertura grava data, origem, dispositivo, sistema, navegador e um visitante anônimo, fora robôs e prévias de link, e fica guardada por 12 meses. Páginas: pendente.
 - **5.2** ⬜ Script de ping de atividade injetado nas páginas publicadas, e rota pública que recebe os pings.
 - **5.3** 🔄 Em andamento. Rotas admin de métricas: visualizações por dia (14 dias), tempo médio e total, total de pings, por item e por aplicação. Links: feito por link (`GET /admin/links/{id}/analytics/details`, com períodos de 24h a tudo); tempo e pings são só de páginas, e "por aplicação" não se aplica a links, que são globais. Páginas: pendente.
-- **5.4** ⬜ Dashboard no painel com gráfico de área dos últimos 14 dias. Links: falta um painel geral com os acessos de todos os links juntos; a análise de cada link já existe (ver 5.5).
+- **5.4** 🔄 Em andamento. Dashboard no painel com gráfico de área dos últimos 14 dias. Links: feito em `/links/analytics`, com os acessos de todos os links juntos (períodos de 24h a tudo), os links mais acessados, origens, horários e dispositivos. Páginas: pendente.
 - **5.5** 🔄 Em andamento. Métricas por página e por link na tela de detalhes do item. Links: feito, na aba Análise do link (cliques, visitantes, comparação com o período anterior, gráfico, mapa de calor, origens, dispositivos, sistemas, navegadores e exportação em CSV). Páginas: pendente.
 
 ## 6. Backup e migração
