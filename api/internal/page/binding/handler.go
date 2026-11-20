@@ -9,11 +9,14 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/application"
+	"pocketrun-api/internal/page/page"
 	"pocketrun-api/internal/platform/httpx"
 )
 
 type PageChecker interface {
 	Exists(ctx context.Context, id bson.ObjectID) (bool, error)
+	GetByID(ctx context.Context, id bson.ObjectID) (*page.Page, error)
 }
 
 type Handler struct {
@@ -29,6 +32,7 @@ func NewHandler(service *Service, pages PageChecker, validate *validator.Validat
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
 	mux.Handle("GET /pages/{id}/kv/details", authenticate(http.HandlerFunc(h.details)))
+	mux.Handle("POST /pages/{id}/kv/enable", authenticate(http.HandlerFunc(h.enable)))
 	mux.Handle("PATCH /pages/{id}/kv/set", authenticate(http.HandlerFunc(h.set)))
 	mux.Handle("DELETE /pages/{id}/kv/remove", authenticate(http.HandlerFunc(h.remove)))
 	mux.Handle("GET /pages/{id}/kv/requests/list", authenticate(http.HandlerFunc(h.requests)))
@@ -44,6 +48,26 @@ func (h *Handler) details(w http.ResponseWriter, r *http.Request) {
 	details, err := h.service.Details(r.Context(), pageID)
 	if err != nil {
 		h.writeError(w, r, "get page binding", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, details)
+}
+
+func (h *Handler) enable(w http.ResponseWriter, r *http.Request) {
+	pageID, ok := h.pageID(w, r)
+	if !ok {
+		return
+	}
+
+	current, err := h.pages.GetByID(r.Context(), pageID)
+	if err != nil {
+		h.writeError(w, r, "enable page kv", err)
+		return
+	}
+
+	details, err := h.service.Enable(r.Context(), application.PageInput{PageID: pageID, Title: current.Title, Slug: current.Slug})
+	if err != nil {
+		h.writeError(w, r, "enable page kv", err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, details)

@@ -83,6 +83,7 @@ func (b *Binding) role(subject Subject) string {
 
 type ApplicationSummary struct {
 	ID        bson.ObjectID      `json:"id"`
+	PageID    *bson.ObjectID     `json:"pageId"`
 	Name      string             `json:"name"`
 	ProjectID string             `json:"projectId"`
 	Roles     []application.Role `json:"roles"`
@@ -94,13 +95,11 @@ type Details struct {
 }
 
 type SetInput struct {
-	ApplicationID string        `json:"applicationId" validate:"required,len=24,hexadecimal"`
-	PublicRole    string        `json:"publicRole" validate:"max=40"`
-	Roles         []RoleMapping `json:"roles" validate:"max=21,dive"`
+	PublicRole string        `json:"publicRole" validate:"max=40"`
+	Roles      []RoleMapping `json:"roles" validate:"max=21,dive"`
 }
 
 func (i *SetInput) Normalize() {
-	i.ApplicationID = strings.TrimSpace(i.ApplicationID)
 	i.PublicRole = strings.ToLower(strings.TrimSpace(i.PublicRole))
 	roles := make([]RoleMapping, 0, len(i.Roles))
 	for _, mapping := range i.Roles {

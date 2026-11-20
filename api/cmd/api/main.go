@@ -142,6 +142,7 @@ func run(logger *slog.Logger) error {
 		Repository:   bindingRepository,
 		Requests:     bindingRequestRepository,
 		Applications: applicationService,
+		Access:       accessService,
 		Documents:    documentService,
 		History:      pageHistoryService,
 		Actors:       userService,

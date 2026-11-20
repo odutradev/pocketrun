@@ -14,6 +14,7 @@ import (
 
 	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/kv"
+	"pocketrun-api/internal/page/access"
 	"pocketrun-api/internal/page/history"
 	"pocketrun-api/internal/platform/httpx"
 	"pocketrun-api/internal/user"
@@ -40,8 +41,13 @@ type RequestRepository interface {
 }
 
 type ApplicationFinder interface {
-	GetByID(ctx context.Context, managerID, id bson.ObjectID) (*application.Application, error)
 	Find(ctx context.Context, id bson.ObjectID) (*application.Application, error)
+	EnsureForPage(ctx context.Context, managerID bson.ObjectID, input application.PageInput) (*application.Application, bool, error)
+	DeleteForPage(ctx context.Context, pageID bson.ObjectID) error
+}
+
+type AccessReader interface {
+	Get(ctx context.Context, pageID bson.ObjectID) (*access.Access, error)
 }
 
 type DocumentStore interface {
@@ -67,6 +73,7 @@ type Dependencies struct {
 	Repository   Repository
 	Requests     RequestRepository
 	Applications ApplicationFinder
+	Access       AccessReader
 	Documents    DocumentStore
 	History      EventRecorder
 	Actors       ActorResolver
@@ -77,6 +84,7 @@ type Service struct {
 	repository   Repository
 	requests     RequestRepository
 	applications ApplicationFinder
+	access       AccessReader
 	documents    DocumentStore
 	history      EventRecorder
 	actors       ActorResolver
@@ -88,6 +96,7 @@ func NewService(dependencies Dependencies) *Service {
 		repository:   dependencies.Repository,
 		requests:     dependencies.Requests,
 		applications: dependencies.Applications,
+		access:       dependencies.Access,
 		documents:    dependencies.Documents,
 		history:      dependencies.History,
 		actors:       dependencies.Actors,
@@ -114,47 +123,64 @@ func (s *Service) Details(ctx context.Context, pageID bson.ObjectID) (Details, e
 	return Details{Binding: current, Application: summarize(app)}, nil
 }
 
-func (s *Service) Set(ctx context.Context, pageID bson.ObjectID, input SetInput) (Details, error) {
+func (s *Service) Enable(ctx context.Context, input application.PageInput) (Details, error) {
+	_, err := s.repository.Find(ctx, input.PageID)
+	if err == nil {
+		return s.Details(ctx, input.PageID)
+	}
+	if !errors.Is(err, ErrNotLinked) {
+		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
+	}
+
 	managerID, err := user.ManagerIDFromContext(ctx)
 	if err != nil {
-		return Details{}, fmt.Errorf("link page %s: %w", pageID.Hex(), err)
+		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
 	}
-	applicationID, err := application.ParseID(input.ApplicationID)
+	app, _, err := s.applications.EnsureForPage(ctx, managerID, input)
 	if err != nil {
-		return Details{}, err
+		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
 	}
-	app, err := s.applications.GetByID(ctx, managerID, applicationID)
+	pageAccess, err := s.access.Get(ctx, input.PageID)
 	if err != nil {
-		return Details{}, fmt.Errorf("link page %s: %w", pageID.Hex(), err)
+		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
+	}
+
+	next := &Binding{
+		PageID:        input.PageID,
+		ApplicationID: app.ID,
+		PublicRole:    availableRole(app, application.PageReadRole),
+		Roles:         defaultMappings(app, pageAccess),
+		UpdatedAt:     time.Now(),
+	}
+	if err := s.repository.Save(ctx, next); err != nil {
+		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
+	}
+	s.record(ctx, input.PageID, history.EventKVLinked, bindingChanges(nil, next, "", app.Name))
+	return Details{Binding: next, Application: summarize(app)}, nil
+}
+
+func (s *Service) Set(ctx context.Context, pageID bson.ObjectID, input SetInput) (Details, error) {
+	previous, err := s.repository.Find(ctx, pageID)
+	if err != nil {
+		return Details{}, fmt.Errorf("set page kv roles %s: %w", pageID.Hex(), err)
+	}
+	app, err := s.applications.Find(ctx, previous.ApplicationID)
+	if errors.Is(err, application.ErrApplicationNotFound) {
+		return Details{}, ErrApplicationGone
+	}
+	if err != nil {
+		return Details{}, fmt.Errorf("set page kv roles %s: %w", pageID.Hex(), err)
 	}
 	if err := checkMappings(app, input); err != nil {
 		return Details{}, err
 	}
 
-	previous, err := s.repository.Find(ctx, pageID)
-	if err != nil && !errors.Is(err, ErrNotLinked) {
-		return Details{}, fmt.Errorf("link page %s: %w", pageID.Hex(), err)
-	}
-
-	next := &Binding{PageID: pageID, ApplicationID: app.ID, PublicRole: input.PublicRole, Roles: input.Roles, UpdatedAt: time.Now()}
-	if previous != nil {
-		next.Revision = previous.Revision + 1
-	}
+	next := &Binding{PageID: pageID, ApplicationID: app.ID, PublicRole: input.PublicRole, Roles: input.Roles, Revision: previous.Revision + 1, UpdatedAt: time.Now()}
 	if err := s.repository.Save(ctx, next); err != nil {
-		return Details{}, fmt.Errorf("link page %s: %w", pageID.Hex(), err)
+		return Details{}, fmt.Errorf("set page kv roles %s: %w", pageID.Hex(), err)
 	}
-
-	previousName := ""
-	if previous != nil {
-		previousName = s.applicationName(ctx, previous.ApplicationID)
-	}
-	changes := bindingChanges(previous, next, previousName, app.Name)
-	eventType := history.EventKVLinked
-	if previous != nil {
-		eventType = history.EventKVChanged
-	}
-	if len(changes) > 0 {
-		s.record(ctx, pageID, eventType, changes)
+	if changes := bindingChanges(previous, next, app.Name, app.Name); len(changes) > 0 {
+		s.record(ctx, pageID, history.EventKVChanged, changes)
 	}
 	return Details{Binding: next, Application: summarize(app)}, nil
 }
@@ -177,6 +203,9 @@ func (s *Service) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
 	}
 	if err := s.requests.DeleteAll(ctx, pageID); err != nil {
 		return fmt.Errorf("delete page kv requests %s: %w", pageID.Hex(), err)
+	}
+	if err := s.applications.DeleteForPage(ctx, pageID); err != nil {
+		return fmt.Errorf("delete page kv application %s: %w", pageID.Hex(), err)
 	}
 	return nil
 }
@@ -353,6 +382,24 @@ func checkMappings(app *application.Application, input SetInput) error {
 	return nil
 }
 
+func availableRole(app *application.Application, name string) string {
+	if !app.HasRole(name) {
+		return ""
+	}
+	return name
+}
+
+func defaultMappings(app *application.Application, pageAccess *access.Access) []RoleMapping {
+	role := availableRole(app, application.PageWriteRole)
+	mappings := []RoleMapping{{PageRole: "", KVRole: role}}
+	for _, key := range pageAccess.Keys {
+		if key.Role != "" {
+			mappings = append(mappings, RoleMapping{PageRole: key.Role, KVRole: role})
+		}
+	}
+	return mappings
+}
+
 func bindingChanges(previous, next *Binding, previousName, applicationName string) []history.Change {
 	if previous == nil {
 		return []history.Change{
@@ -410,7 +457,7 @@ func describeRole(app *application.Application, roleName string) *Runtime {
 }
 
 func summarize(app *application.Application) *ApplicationSummary {
-	return &ApplicationSummary{ID: app.ID, Name: app.Name, ProjectID: app.ProjectID, Roles: app.Roles}
+	return &ApplicationSummary{ID: app.ID, PageID: app.PageID, Name: app.Name, ProjectID: app.ProjectID, Roles: app.Roles}
 }
 
 func ErrorStatus(err error) (int, string) {
