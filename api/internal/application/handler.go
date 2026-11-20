@@ -279,6 +279,8 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_rule")
 	case errors.Is(err, ErrTooManyRoles):
 		httpx.WriteError(w, http.StatusConflict, "too_many_roles")
+	case errors.Is(err, ErrOwnedByPage):
+		httpx.WriteError(w, http.StatusConflict, "application_owned_by_page")
 	case errors.Is(err, ErrRoleInUse):
 		httpx.WriteError(w, http.StatusConflict, "role_in_use")
 	default:

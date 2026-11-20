@@ -23,6 +23,7 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{Keys: bson.D{{Key: "managerId", Value: 1}}},
 		{Keys: bson.D{{Key: "projectId", Value: 1}}, Options: options.Index().SetUnique(true)},
+		{Keys: bson.D{{Key: "pageId", Value: 1}}, Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.M{"pageId": bson.M{"$exists": true}})},
 		{Keys: bson.D{{Key: "tokens.tokenHash", Value: 1}}},
 	})
 	if err != nil {
@@ -79,6 +80,22 @@ func (r *MongoRepository) FindByTokenHash(ctx context.Context, hash string) (*Ap
 
 func (r *MongoRepository) FindByObjectID(ctx context.Context, id bson.ObjectID) (*Application, error) {
 	return r.findOne(ctx, bson.M{"_id": id})
+}
+
+func (r *MongoRepository) FindByPageID(ctx context.Context, pageID bson.ObjectID) (*Application, error) {
+	return r.findOne(ctx, bson.M{"pageId": pageID})
+}
+
+func (r *MongoRepository) DeleteByPageID(ctx context.Context, pageID bson.ObjectID) (*Application, error) {
+	var application Application
+	err := r.collection.FindOneAndDelete(ctx, bson.M{"pageId": pageID}).Decode(&application)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, ErrApplicationNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("delete page application: %w", err)
+	}
+	return &application, nil
 }
 
 func (r *MongoRepository) SetRoles(ctx context.Context, managerID, id bson.ObjectID, roles []Role) error {

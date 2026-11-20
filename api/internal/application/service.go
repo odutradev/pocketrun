@@ -18,6 +18,8 @@ type Repository interface {
 	Update(ctx context.Context, managerID, id bson.ObjectID, input UpdateInput) error
 	Delete(ctx context.Context, managerID, id bson.ObjectID) error
 	FindByObjectID(ctx context.Context, id bson.ObjectID) (*Application, error)
+	FindByPageID(ctx context.Context, pageID bson.ObjectID) (*Application, error)
+	DeleteByPageID(ctx context.Context, pageID bson.ObjectID) (*Application, error)
 	AddToken(ctx context.Context, managerID, id bson.ObjectID, token Token) error
 	RemoveToken(ctx context.Context, managerID, id bson.ObjectID, tokenID string) error
 	SetTokenRole(ctx context.Context, managerID, id bson.ObjectID, tokenID, role string) error
@@ -104,6 +106,13 @@ func (s *Service) Update(ctx context.Context, managerID, id bson.ObjectID, input
 }
 
 func (s *Service) Delete(ctx context.Context, managerID, id bson.ObjectID) error {
+	current, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return fmt.Errorf("delete application %s: %w", id.Hex(), err)
+	}
+	if current.PageID != nil {
+		return ErrOwnedByPage
+	}
 	if err := s.repository.Delete(ctx, managerID, id); err != nil {
 		return fmt.Errorf("delete application %s: %w", id.Hex(), err)
 	}

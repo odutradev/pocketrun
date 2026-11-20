@@ -23,20 +23,22 @@ var (
 	ErrExpiredAccessToken   = errors.New("access token expired")
 	ErrOriginNotAllowed     = errors.New("origin not allowed")
 	ErrInvalidApplicationID = errors.New("invalid application id")
+	ErrOwnedByPage          = errors.New("application belongs to a page")
 )
 
 type Application struct {
-	ID                      bson.ObjectID `json:"id" bson:"_id"`
-	ManagerID               bson.ObjectID `json:"managerId" bson:"managerId"`
-	Name                    string        `json:"name" bson:"name"`
-	ProjectID               string        `json:"projectId" bson:"projectId"`
-	Description             string        `json:"description" bson:"description"`
-	AllowedOrigins          []string      `json:"allowedOrigins" bson:"allowedOrigins"`
-	AllowNonBrowserRequests bool          `json:"allowNonBrowserRequests" bson:"allowNonBrowserRequests"`
-	Tokens                  []Token       `json:"tokens,omitempty" bson:"tokens"`
-	Roles                   []Role        `json:"roles" bson:"roles"`
-	CreatedAt               time.Time     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt               time.Time     `json:"updatedAt" bson:"updatedAt"`
+	ID                      bson.ObjectID  `json:"id" bson:"_id"`
+	ManagerID               bson.ObjectID  `json:"managerId" bson:"managerId"`
+	PageID                  *bson.ObjectID `json:"pageId" bson:"pageId,omitempty"`
+	Name                    string         `json:"name" bson:"name"`
+	ProjectID               string         `json:"projectId" bson:"projectId"`
+	Description             string         `json:"description" bson:"description"`
+	AllowedOrigins          []string       `json:"allowedOrigins" bson:"allowedOrigins"`
+	AllowNonBrowserRequests bool           `json:"allowNonBrowserRequests" bson:"allowNonBrowserRequests"`
+	Tokens                  []Token        `json:"tokens,omitempty" bson:"tokens"`
+	Roles                   []Role         `json:"roles" bson:"roles"`
+	CreatedAt               time.Time      `json:"createdAt" bson:"createdAt"`
+	UpdatedAt               time.Time      `json:"updatedAt" bson:"updatedAt"`
 }
 
 type Token struct {
