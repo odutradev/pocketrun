@@ -172,3 +172,11 @@ export const Hint = styled.span`
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
+
+export const PreviewAs = styled.div`
+  width: 160px;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    width: 190px;
+  }
+`;

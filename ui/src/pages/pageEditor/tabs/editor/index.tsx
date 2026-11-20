@@ -12,14 +12,15 @@ import {
 import { useTheme } from "styled-components";
 import { useEffect, useRef, useState } from "react";
 
-import { Actions, Bar, BarGroup, Divider, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, Status, Workbench } from "./styles";
-import { formatBytes, injectPageRuntime, publicLinkUrl, versionLabel } from "@utils/functions";
+import { Actions, Bar, BarGroup, Divider, Footer, FooterGroup, Frame, Hint, MessageField, Meter, MeterBar, MeterText, Pane, Panes, PreviewAs, Status, Workbench } from "./styles";
+import { createLocalLogger, formatBytes, injectPageRuntime, parseKvBridgeRequest, publicLinkUrl, toKvPreviewCall, versionLabel } from "@utils/functions";
 import { pageHtmlMaxBytes, pagePreviewDelay, pageVersionMessageMaxLength } from "@assets/config";
 import SegmentedControl from "@components/segmentedControl";
 import CodeEditor from "../../subcomponents/codeEditor";
 import useMediaQuery from "@hooks/useMediaQuery";
 import IconButton from "@components/iconButton";
-import { updatePage } from "@actions/sitePages";
+import { runPageKvPreview, updatePage } from "@actions/sitePages";
+import Select from "@components/select";
 import usePageEditorPage from "../../hook";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
@@ -30,6 +31,8 @@ import type { PageDraft, PagePayload, SitePage } from "@utils/types/sitePage";
 import type { CodeEditorHandle } from "../../subcomponents/codeEditor/types";
 import type { SegmentedOption } from "@components/segmentedControl/types";
 import type { EditorView } from "./types";
+
+const logger = createLocalLogger("pagePreviewKv");
 
 const viewOptions: SegmentedOption<EditorView>[] = [
   { value: "code", label: "Código", icon: <CodeIcon /> },
@@ -54,7 +57,9 @@ const EditorTab = () => {
   const { breakpoints } = useTheme();
   const isWide = useMediaQuery(`(min-width: ${breakpoints.lg})`);
   const isCompact = !useMediaQuery(`(min-width: ${breakpoints.md})`);
-  const { sitePage, draft, isDirty, draftSize, setDraftHtml, setDraftMessage, discardDraft, handlePageSaved } = usePageEditorPage();
+  const { sitePage, draft, isDirty, draftSize, kv, previewAs, previewOptions, previewExtra, setDraftHtml, setDraftMessage, discardDraft, handlePageSaved, handlePreviewAsChange } =
+    usePageEditorPage();
+  const frameRef = useRef<HTMLIFrameElement>(null);
   const [view, setView] = useState<EditorView>("split");
   const [isExpanded, setIsExpanded] = useState(false);
   const [issueCount, setIssueCount] = useState(0);
@@ -78,6 +83,32 @@ const EditorTab = () => {
     const timeout = window.setTimeout(() => setPreviewHtml(draft.html), pagePreviewDelay);
     return () => window.clearTimeout(timeout);
   }, [draft.html]);
+
+  useEffect(() => {
+    if (!sitePage) return;
+    const pageId = sitePage.id;
+    const reply = (target: MessageEventSource, id: number, status: number, data: unknown) =>
+      (target as Window).postMessage({ type: "pocketrun:kv:response", id, status, data }, "*");
+    const handleMessage = (event: MessageEvent) => {
+      const frameWindow = frameRef.current?.contentWindow;
+      if (!frameWindow || event.source !== frameWindow) return;
+      const request = parseKvBridgeRequest(event.data);
+      if (!request) return;
+      const call = toKvPreviewCall(request, previewAs);
+      if (!call) {
+        reply(frameWindow, request.id, 404, { error: "route_not_found" });
+        return;
+      }
+      runPageKvPreview(pageId, call)
+        .then((result) => reply(frameWindow, request.id, result.status, result.data))
+        .catch((error: unknown) => {
+          logger.error(error);
+          reply(frameWindow, request.id, 0, { error: "network_error" });
+        });
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [sitePage, previewAs]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -115,6 +146,11 @@ const EditorTab = () => {
       <Bar>
         <BarGroup>
           <SegmentedControl label="Visualização" options={visibleOptions} value={activeView} onValueChange={setView} isIconOnly={isCompact} size="sm" />
+          {kv?.binding && activeView !== "code" && (
+            <PreviewAs>
+              <Select label="Ver a prévia como" isLabelHidden size="sm" options={previewOptions} value={previewAs} onValueChange={handlePreviewAsChange} />
+            </PreviewAs>
+          )}
           <Status>
             <Badge isMono>v{versionLabel(sitePage.version)}</Badge>
             {isDirty && <Badge tone="warning">Não salvo</Badge>}
@@ -175,13 +211,15 @@ const EditorTab = () => {
         )}
         {activeView !== "code" && (
           <Pane $isPreview>
-            <Frame title={`Prévia de ${sitePage.title}`} sandbox="allow-scripts allow-forms allow-popups allow-modals" srcDoc={injectPageRuntime(previewHtml, {
-                slug: sitePage.slug,
-                title: sitePage.title,
-                version: sitePage.version,
-                updatedAt: sitePage.updatedAt,
-                isPreview: true
-              })}
+            <Frame
+              ref={frameRef}
+              title={`Prévia de ${sitePage.title}`}
+              sandbox="allow-scripts allow-forms allow-popups allow-modals"
+              srcDoc={injectPageRuntime(
+                previewHtml,
+                { slug: sitePage.slug, title: sitePage.title, version: sitePage.version, updatedAt: sitePage.updatedAt, isPreview: true },
+                previewExtra
+              )}
             />
           </Pane>
         )}

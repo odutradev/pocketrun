@@ -1,10 +1,10 @@
 import { adminRoleName, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
-import { apiUrl, expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
+import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { isApiError } from "@utils/api";
 
+import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
-import type { HtmlIssue, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 
@@ -47,12 +47,65 @@ export const formatSessionHours = (hours: number): string => {
 
 const runtimeInsertPatterns = [/<head(\s[^>]*)?>/i, /<html(\s[^>]*)?>/i, /<!doctype[^>]*>/i];
 
-const pageRuntimeScript = (info: string) =>
-  `(function(info){if("pocketrun" in window)return;var page=Object.freeze(info);Object.defineProperty(window,"pocketrun",{value:Object.freeze({apiVersion:${pageRuntimeApiVersion},page:page}),enumerable:false});var date=new Date(page.updatedAt).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});console.log("%cPocketRun%c "+page.slug+" · v"+page.version+(page.isPreview?" · prévia do editor":" · atualizada em "+date),"background:#ffc93c;color:#111;font-weight:700;padding:1px 6px;border-radius:4px","color:inherit")})(${info});`;
+const pageKvClientScript = `function createKV(cfg){var reserved={page:1,limit:1,pagination:1,sortBy:1,sortOrder:1,createdAfter:1,createdBefore:1};var rules=(cfg.rules||[]).map(function(rule){return Object.freeze({collection:rule.collection,operations:Object.freeze(rule.operations.slice())})});var pending={};var sequence=0;function ruleFor(name){var wildcard=null;for(var i=0;i<rules.length;i++){if(rules[i].collection===name)return rules[i];if(rules[i].collection==="*")wildcard=rules[i]}return wildcard}function can(name,operation){var rule=ruleFor(name);return Boolean(rule)&&rule.operations.indexOf(operation)>=0}function encode(query){var parts=[];if(query)Object.keys(query).forEach(function(key){var value=query[key];if(value===undefined)return;var text=reserved[key]||typeof value!=="string"?String(value):'"'+value+'"';parts.push(encodeURIComponent(key)+"="+encodeURIComponent(text))});return parts.length?"?"+parts.join("&"):""}function fail(status,body){var error=new Error(body&&body.error||"request_failed");error.name="PocketrunKVError";error.status=status;error.code=body&&body.error||"request_failed";error.fields=body&&body.fields||null;return error}function send(method,path,body){return new Promise(function(resolve,reject){sequence+=1;var id=sequence;pending[id]={resolve:resolve,reject:reject};window.parent.postMessage({type:"pocketrun:kv:request",id:id,method:method,path:path,body:body===undefined?undefined:JSON.parse(JSON.stringify(body))},cfg.parentOrigin)})}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var message=event.data;if(!message||message.type!=="pocketrun:kv:response"||!pending[message.id])return;var entry=pending[message.id];delete pending[message.id];if(message.status>=200&&message.status<300)entry.resolve(message.data);else entry.reject(fail(message.status,message.data))});function options(extra,data){var body={data:data};if(extra&&extra.expiresInDays!==undefined)body.expiresInDays=extra.expiresInDays;if(extra&&extra.expiresAt!==undefined)body.expiresAt=extra.expiresAt;return body}function collection(name){var path=encodeURIComponent(name);return Object.freeze({name:name,list:function(query){return send("GET",path+"/get-all"+encode(query))},get:function(id){return send("GET",path+"/get/"+encodeURIComponent(id))},count:function(filters){return send("GET",path+"/count"+encode(filters))},eval:function(operation,field,filters){return send("POST",path+"/eval",{operation:operation,field:field||"",filters:filters||{}})},create:function(data,extra){return send("POST",path+"/create",options(extra,data))},update:function(id,data,extra){return send("PATCH",path+"/update/"+encodeURIComponent(id),options(extra,data))},replace:function(id,data,extra){return send("PUT",path+"/replace/"+encodeURIComponent(id),options(extra,data))},remove:function(id){return send("DELETE",path+"/delete/"+encodeURIComponent(id))},can:function(operation){return can(name,operation)}})}return Object.freeze({role:cfg.role,isOwnDocumentsOnly:Boolean(cfg.isOwnDocumentsOnly),rules:Object.freeze(rules),collection:collection,can:can})}`;
 
-export const injectPageRuntime = (html: string, page: PageRuntimeInfo): string => {
-  const info = JSON.stringify(page).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
-  const tag = `<script>${pageRuntimeScript(info)}</script>`;
+const pageRuntimeScript = (info: string, extra: string) =>
+  `(function(info,extra){if("pocketrun" in window)return;var page=Object.freeze(info);${pageKvClientScript};var runtime={apiVersion:${pageRuntimeApiVersion},page:page,access:Object.freeze({isProtected:extra.access.isProtected,role:extra.access.role})};if(extra.kv)runtime.kv=createKV(Object.assign({parentOrigin:extra.parentOrigin},extra.kv));Object.defineProperty(window,"pocketrun",{value:Object.freeze(runtime),enumerable:false});var date=new Date(page.updatedAt).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"});console.log("%cPocketRun%c "+page.slug+" · v"+page.version+(page.isPreview?" · prévia do editor":" · atualizada em "+date),"background:#ffc93c;color:#111;font-weight:700;padding:1px 6px;border-radius:4px","color:inherit")})(${info},${extra});`;
+
+export const previewSubjectOptions = (access: PageAccess | null): { value: string; label: string }[] => [
+  { value: "public", label: "Sem PIN" },
+  ...(access?.keys ?? []).map((key) => (key.role ? { value: `role:${key.role}`, label: `Cargo ${key.role}` } : { value: "pin", label: "PIN geral" }))
+];
+
+const previewPageRole = (previewAs: string): string | null => {
+  if (previewAs === "pin") return "";
+  return previewAs.startsWith("role:") ? previewAs.slice("role:".length) : null;
+};
+
+export const describeKvRole = (details: PageKvDetails, roleName: string): PageKvRuntime => {
+  if (!roleName || !details.application) return { role: "", isOwnDocumentsOnly: false, rules: [] };
+  if (roleName === adminRoleName) return { role: roleName, isOwnDocumentsOnly: false, rules: [{ collection: "*", operations: ["read", "create", "update", "delete"] }] };
+  const role = details.application.roles.find((item) => item.name === roleName);
+  if (!role) return { role: "", isOwnDocumentsOnly: false, rules: [] };
+  return { role: role.name, isOwnDocumentsOnly: role.isOwnDocumentsOnly, rules: role.rules.map((rule) => ({ collection: rule.collection, operations: rule.operations })) };
+};
+
+export const kvRoleFor = (details: PageKvDetails, pageRole: string | null): string => {
+  if (!details.binding) return "";
+  if (pageRole === null) return details.binding.publicRole;
+  return details.binding.roles.find((mapping) => mapping.pageRole === pageRole)?.kvRole ?? "";
+};
+
+export const previewExtra = (details: PageKvDetails | null, previewAs: string): PageRuntimeExtra => {
+  const pageRole = previewPageRole(previewAs);
+  const access = { isProtected: pageRole !== null, role: pageRole };
+  if (!details?.binding) return { access, kv: null, parentOrigin: window.location.origin };
+  return { access, kv: describeKvRole(details, kvRoleFor(details, pageRole)), parentOrigin: window.location.origin };
+};
+
+const kvPreviewPathPattern = /^[A-Za-z0-9_-]{1,64}\/(get-all|count|eval|create|(get|update|replace|delete)\/[0-9a-f]{24})$/;
+
+const kvPreviewMethods = ["GET", "POST", "PATCH", "PUT", "DELETE"];
+
+export const parseKvBridgeRequest = (data: unknown): PageKvBridgeRequest | null => {
+  if (typeof data !== "object" || data === null) return null;
+  const message = data as Partial<PageKvBridgeRequest>;
+  if (message.type !== "pocketrun:kv:request" || typeof message.id !== "number") return null;
+  if (typeof message.method !== "string" || typeof message.path !== "string") return null;
+  return { type: message.type, id: message.id, method: message.method, path: message.path, body: message.body };
+};
+
+export const toKvPreviewCall = (request: PageKvBridgeRequest, previewAs: string): PageKvPreviewCall | null => {
+  const [path = "", query = ""] = request.path.split("?", 2);
+  if (!kvPreviewPathPattern.test(path) || !kvPreviewMethods.includes(request.method) || query.includes("#")) return null;
+  return { as: previewAs, method: request.method, path, query, body: request.body };
+};
+
+const toInlineJson = (value: unknown): string =>
+  JSON.stringify(value).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+
+export const injectPageRuntime = (html: string, page: PageRuntimeInfo, extra: PageRuntimeExtra): string => {
+  const tag = `<script>${pageRuntimeScript(toInlineJson(page), toInlineJson(extra))}</script>`;
   const match = runtimeInsertPatterns.map((pattern) => pattern.exec(html)).find((result) => result !== null);
   if (!match) return `${tag}\n${html}`;
   const end = match.index + match[0].length;
@@ -164,7 +217,7 @@ export const measureBytes = (value: string): number => new TextEncoder().encode(
 export const formatBytes = (bytes: number): string =>
   bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
 
-export const fillPageTemplate = (html: string): string => html.replaceAll("\r\n", "\n").replaceAll("__POCKETRUN_API_URL__", apiUrl);
+export const fillPageTemplate = (html: string): string => html.replaceAll("\r\n", "\n");
 
 export const versionLabel = (number: number): string => `1.${Math.max(number, 1) - 1}`;
 

@@ -1,21 +1,21 @@
 import { Suspense, lazy, useEffect } from "react";
 
 import { currentTimestamp, formatRelativeTime, versionLabel } from "@utils/functions";
-import ContentNavbar from "@components/contentNavbar";
-import EmptyState from "@components/emptyState";
-import LinkButton from "@components/linkButton";
 import { Container, DraftActions, TabArea } from "./styles";
-import PageForm from "./subcomponents/pageForm";
+import ContentNavbar from "@components/contentNavbar";
 import usePageDraftsStore from "@stores/pageDrafts";
 import { pageDraftSaveDelay } from "@assets/config";
+import EmptyState from "@components/emptyState";
+import LinkButton from "@components/linkButton";
+import PageForm from "./subcomponents/pageForm";
 import { pageEditorTabs } from "@assets/data";
 import TabPanel from "@components/tabPanel";
 import HistoryTab from "./tabs/history";
 import Loader from "@components/loader";
 import Button from "@components/button";
-import Alert from "@components/alert";
 import TabNav from "@components/tabNav";
 import usePageEditorPage from "./hook";
+import Alert from "@components/alert";
 
 import type { ContentNavbarCrumb } from "@components/contentNavbar/types";
 import type { PageEditorTab } from "@utils/types/sitePage";
@@ -32,6 +32,8 @@ const AnalyticsTab = lazy(() => import("./tabs/analytics"));
 const QrCodeTab = lazy(() => import("./tabs/qrCode"));
 
 const AccessTab = lazy(() => import("./tabs/access"));
+
+const DataTab = lazy(() => import("./tabs/data"));
 
 const PageEditorPage = () => {
   const {
@@ -104,6 +106,11 @@ const PageEditorPage = () => {
     access: (
       <Suspense fallback={<Loader label="Carregando o acesso" isCentered />}>
         <AccessTab />
+      </Suspense>
+    ),
+    data: (
+      <Suspense fallback={<Loader label="Carregando os dados" isCentered />}>
+        <DataTab />
       </Suspense>
     ),
     qrcode: (

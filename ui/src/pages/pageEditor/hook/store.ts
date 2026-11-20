@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { create } from "zustand";
 
-import { getPage, getPageAccess, getPageAnalytics, getPageHistory, getPageVersion, listPageGroups, listPageVersions } from "@actions/sitePages";
+import { getPage, getPageAccess, getPageAnalytics, getPageHistory, getPageKv, getPageVersion, listPageGroups, listPageKvRequests, listPageVersions } from "@actions/sitePages";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import usePageDraftsStore from "@stores/pageDrafts";
 import { historyPageSize } from "@assets/config";
@@ -40,6 +40,11 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
   isAnalyticsLoading: false,
   access: null,
   hasLoadedAccess: false,
+  kv: null,
+  hasLoadedKv: false,
+  kvRequests: null,
+  isKvRequestsLoading: false,
+  previewAs: "",
   load: async (pageId) => {
     const requestKey = pageId ?? "new";
     set({
@@ -57,6 +62,10 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       analytics: null,
       access: null,
       hasLoadedAccess: false,
+      kv: null,
+      hasLoadedKv: false,
+      kvRequests: null,
+      previewAs: "",
       draft: { html: "", restoredFrom: null, message: "" },
       versions: [],
       versionHtml: {},
@@ -65,12 +74,26 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       recoverableDraft: null
     });
     try {
-      const [groups, sitePage] = await Promise.all([listPageGroups(), pageId ? getPage(pageId) : Promise.resolve(null)]);
+      const [groups, sitePage, kv, access] = await Promise.all([
+        listPageGroups(),
+        pageId ? getPage(pageId) : Promise.resolve(null),
+        pageId ? getPageKv(pageId) : Promise.resolve(null),
+        pageId ? getPageAccess(pageId) : Promise.resolve(null)
+      ]);
       if (get().requestKey !== requestKey) return;
       const stored = sitePage ? usePageDraftsStore.getState().drafts[sitePage.id] : undefined;
       const recoverableDraft = stored && stored.html !== (sitePage?.html ?? "") ? stored : null;
       if (sitePage && stored && !recoverableDraft) usePageDraftsStore.getState().clearDraft(sitePage.id);
-      set({ groups, sitePage, draft: toDraft(sitePage), recoverableDraft });
+      set({
+        groups,
+        sitePage,
+        draft: toDraft(sitePage),
+        recoverableDraft,
+        kv,
+        hasLoadedKv: Boolean(kv),
+        access,
+        hasLoadedAccess: Boolean(access)
+      });
     } catch (error) {
       if (get().requestKey !== requestKey) return;
       logger.error(error);
@@ -149,6 +172,23 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
     }
   },
   setAccess: (access) => set({ access, hasLoadedAccess: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
+  setKv: (kv) => set({ kv, hasLoadedKv: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
+  loadKvRequests: async () => {
+    const { sitePage, requestKey } = get();
+    if (!sitePage) return;
+    set({ isKvRequestsLoading: true });
+    try {
+      const kvRequests = await listPageKvRequests(sitePage.id);
+      if (get().requestKey !== requestKey) return;
+      set({ kvRequests });
+    } catch (error) {
+      logger.error(error);
+      toast.error(getErrorMessage(error, "Não foi possível carregar os pedidos ao KV"));
+    } finally {
+      if (get().requestKey === requestKey) set({ isKvRequestsLoading: false });
+    }
+  },
+  setPreviewAs: (previewAs) => set({ previewAs }),
   setRange: (range) => set({ range }),
   setHistoryFilter: (historyFilter) => set({ historyFilter }),
   setHistoryActor: (historyActor) => set({ historyActor }),

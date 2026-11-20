@@ -25,6 +25,8 @@ const isEmptyValue = (value: LinkChangeValue) => value === null || value === "";
 
 const formatValue = (change: PageChange, value: LinkChangeValue, groupNames: Record<string, string>) => {
   if (change.field === "role") return value ? String(value) : "PIN geral";
+  if (change.field === "kvPublicRole") return value ? String(value) : "Sem acesso";
+  if (change.field === "kvRoles") return value ? String(value) : "Nenhum cargo";
   if (isEmptyValue(value)) return change.field === "groupId" ? "Sem grupo" : "—";
   if (change.field === "mode") return linkModeOptions.find((option) => option.value === value)?.label ?? String(value);
   if (change.field === "groupId") return groupNames[String(value)] ?? "Grupo excluído";
@@ -63,7 +65,7 @@ const EventItem = ({ event, groupNames, now }: EventItemProps) => {
           <ChangeList>
             {changes.map((change) => {
               const isRole = change.field === "role";
-              const hasLabelForEmpty = change.field === "groupId" || isRole;
+              const hasLabelForEmpty = change.field === "groupId" || change.field === "kvPublicRole" || change.field === "kvRoles" || isRole;
               const wasEmpty = !isCreation && !hasLabelForEmpty && isEmptyValue(change.from);
               const isCleared = isRole ? change.to === null : !hasLabelForEmpty && isEmptyValue(change.to);
               const hasOldValue = !isCreation && !wasEmpty && !(isRole && change.from === null);

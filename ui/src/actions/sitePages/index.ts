@@ -11,6 +11,11 @@ import type {
   PageAccessRevealed,
   PageGroup,
   PageHistoryPage,
+  PageKvDetails,
+  PageKvPayload,
+  PageKvPreviewCall,
+  PageKvPreviewResult,
+  PageKvRequestSummary,
   PageListParams,
   PagePayload,
   PageSummary,
@@ -100,6 +105,39 @@ export const listPageVersions = async (pageId: string, signal?: AbortSignal) => 
 export const getPageVersion = async (pageId: string, number: number, signal?: AbortSignal) => {
   const response = await api.get<PageVersion>(`/pages/${pageId}/versions/${number}/details`, { signal });
   return response.data;
+};
+
+export const getPageKv = async (pageId: string, signal?: AbortSignal) => {
+  const response = await api.get<PageKvDetails>(`/pages/${pageId}/kv/details`, { signal });
+  return response.data;
+};
+
+export const setPageKv = async (pageId: string, data: PageKvPayload) => {
+  const response = await api.patch<PageKvDetails>(`/pages/${pageId}/kv/set`, data);
+  return response.data;
+};
+
+export const removePageKv = async (pageId: string) => {
+  const response = await api.delete<MessageResponse>(`/pages/${pageId}/kv/remove`);
+  return response.data;
+};
+
+export const listPageKvRequests = async (pageId: string, signal?: AbortSignal) => {
+  const response = await api.get<PageKvRequestSummary>(`/pages/${pageId}/kv/requests/list`, { signal });
+  return response.data;
+};
+
+export const runPageKvPreview = async (pageId: string, call: PageKvPreviewCall): Promise<PageKvPreviewResult> => {
+  const params = new URLSearchParams(call.query);
+  params.set("as", call.as);
+  const response = await api.request<unknown>({
+    url: `/pages/${pageId}/kv/preview/${call.path}`,
+    method: call.method,
+    params,
+    data: call.body,
+    validateStatus: () => true
+  });
+  return { status: response.status, data: response.data };
 };
 
 export const getPageAccess = async (pageId: string, signal?: AbortSignal) => {

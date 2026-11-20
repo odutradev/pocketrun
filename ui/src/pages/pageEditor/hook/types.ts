@@ -7,6 +7,9 @@ import type {
   PageEditorTab,
   PageEvent,
   PageGroup,
+  PageKvDetails,
+  PageKvRequestSummary,
+  PageRuntimeExtra,
   PageTemplate,
   PageVersion,
   SitePage,
@@ -41,9 +44,17 @@ export interface PageEditorStore {
   isAnalyticsLoading: boolean;
   access: PageAccess | null;
   hasLoadedAccess: boolean;
+  kv: PageKvDetails | null;
+  hasLoadedKv: boolean;
+  kvRequests: PageKvRequestSummary | null;
+  isKvRequestsLoading: boolean;
+  previewAs: string;
   load: (pageId?: string) => Promise<void>;
   loadAccess: () => Promise<void>;
   setAccess: (access: PageAccess) => void;
+  setKv: (kv: PageKvDetails) => void;
+  loadKvRequests: () => Promise<void>;
+  setPreviewAs: (previewAs: string) => void;
   addGroup: (group: PageGroup) => void;
   setSavedPage: (sitePage: SitePage) => void;
   loadHistory: (page?: number) => Promise<void>;
@@ -105,9 +116,18 @@ export interface UsePageEditorPageReturn {
   isAnalyticsLoading: boolean;
   access: PageAccess | null;
   hasLoadedAccess: boolean;
+  kv: PageKvDetails | null;
+  kvRequests: PageKvRequestSummary | null;
+  isKvRequestsLoading: boolean;
+  previewAs: string;
+  previewOptions: SelectOption[];
+  previewExtra: PageRuntimeExtra;
   load: (pageId?: string) => Promise<void>;
   loadAccess: () => Promise<void>;
   handleAccessChange: (access: PageAccess) => void;
+  handleKvChange: (kv: PageKvDetails) => void;
+  loadKvRequests: () => Promise<void>;
+  handlePreviewAsChange: (previewAs: string) => void;
   loadHistory: (page?: number) => Promise<void>;
   loadAnalytics: () => Promise<void>;
   handleGroupCreated: (group: PageGroup) => void;

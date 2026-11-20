@@ -619,6 +619,7 @@ export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
   { value: "settings", label: "Configuração" },
   { value: "versions", label: "Versões" },
   { value: "access", label: "Acesso" },
+  { value: "data", label: "Dados" },
   { value: "qrcode", label: "QR code" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
@@ -720,7 +721,10 @@ export const pageEventLabels: Record<PageEventType, string> = {
   access_sessions_revoked: "encerrou os acessos abertos com PIN",
   access_session_changed: "mudou a duração do acesso por PIN",
   access_locked: "bloqueou o PIN da página por excesso de tentativas erradas",
-  unlocked: "abriu a página com PIN"
+  unlocked: "abriu a página com PIN",
+  kv_linked: "ligou a página a uma aplicação do KV",
+  kv_changed: "mudou os cargos do KV da página",
+  kv_unlinked: "desligou a página do KV"
 };
 
 export const pageChangeLabels: Record<PageChangeField, string> = {
@@ -733,7 +737,10 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   endsAt: "Fim",
   maxClicks: "Limite de acessos",
   role: "Cargo",
-  sessionHours: "Duração do acesso"
+  sessionHours: "Duração do acesso",
+  kvApplication: "Aplicação do KV",
+  kvPublicRole: "Cargo de quem abre sem PIN",
+  kvRoles: "Cargos por PIN"
 };
 
 export const htmlVoidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
@@ -836,9 +843,9 @@ export const kvCrudPageHtml = `<!doctype html>
     <footer id="footer"></footer>
   </main>
   <script>
-    const API_URL = "__POCKETRUN_API_URL__";
-    const TOKEN = "COLE_O_TOKEN_AQUI";
     const COLLECTION = "tarefas";
+    const kv = window.pocketrun && window.pocketrun.kv;
+    const tasks = kv ? kv.collection(COLLECTION) : null;
 
     const elements = {
       setup: document.getElementById("setup"),
@@ -853,16 +860,19 @@ export const kvCrudPageHtml = `<!doctype html>
     };
 
     const state = { tasks: [], editingId: null };
-    const isPreview = location.origin === "null" || Boolean(window.pocketrun && window.pocketrun.page.isPreview);
+    const can = (operation) => Boolean(tasks && tasks.can(operation));
 
     const messages = {
-      missing_access_token: "Falta o token de acesso.",
-      invalid_access_token: "Token inválido ou revogado.",
-      expired_access_token: "O token expirou. Gere outro na aba Tokens da aplicação.",
-      origin_not_allowed: isPreview ? "A prévia do editor roda isolada e só chama a API se a aplicação aceitar qualquer origem." : "Esta origem não está liberada na aplicação. Adicione " + location.origin + " na Configuração.",
+      kv_not_linked: "A página não está ligada a uma aplicação do KV.",
+      kv_application_missing: "A aplicação do KV ligada a esta página foi excluída.",
+      kv_access_denied: "Seu acesso a esta página não tem permissão para os dados.",
+      forbidden_operation: "Seu cargo não pode fazer isso nesta coleção.",
+      page_locked: "Seu acesso à página expirou. Recarregue e digite o PIN de novo.",
+      too_many_requests: "Muitos pedidos seguidos. Espere um minuto e tente de novo.",
+      collection_full: "A coleção chegou ao limite de documentos do seu cargo.",
       document_not_found: "Essa tarefa não existe mais.",
       validation_failed: "Os dados enviados não passaram na validação.",
-      network: "Não foi possível falar com a API."
+      network_error: "Não foi possível falar com o PocketRun."
     };
 
     const showStatus = (text, isError) => {
@@ -870,28 +880,16 @@ export const kvCrudPageHtml = `<!doctype html>
       elements.status.classList.toggle("error", Boolean(isError));
     };
 
-    const showError = (error) => showStatus(messages[error.message] || "Não deu certo (" + error.message + ").", true);
-
-    const request = async (method, path, body) => {
-      const headers = { Authorization: "Bearer " + TOKEN };
-      if (body) headers["Content-Type"] = "application/json";
-      const response = await fetch(API_URL + "/kv/" + COLLECTION + path, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-      }).catch(() => {
-        throw new Error("network");
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "http_" + response.status);
-      return payload;
+    const showError = (error) => {
+      const code = error.code || "network_error";
+      showStatus(messages[code] || "Não deu certo (" + code + ").", true);
     };
 
     const api = {
-      list: () => request("GET", "/get-all"),
-      create: (data) => request("POST", "/create", { data }),
-      update: (id, data) => request("PATCH", "/update/" + id, { data }),
-      remove: (id) => request("DELETE", "/delete/" + id)
+      list: () => tasks.list({ sortBy: "createdAt", sortOrder: "desc" }),
+      create: (data) => tasks.create(data),
+      update: (id, data) => tasks.update(id, data),
+      remove: (id) => tasks.remove(id)
     };
 
     const createButton = (label, className, onClick) => {
@@ -908,7 +906,7 @@ export const kvCrudPageHtml = `<!doctype html>
         const title = document.createElement("span");
         title.className = "title";
         title.textContent = task.data.title;
-        title.addEventListener("dblclick", () => startEditing(task.id));
+        if (can("update")) title.addEventListener("dblclick", () => startEditing(task.id));
         return title;
       }
       const input = document.createElement("input");
@@ -932,13 +930,11 @@ export const kvCrudPageHtml = `<!doctype html>
       checkbox.type = "checkbox";
       checkbox.checked = Boolean(task.data.done);
       checkbox.setAttribute("aria-label", "Concluir " + task.data.title);
+      checkbox.disabled = !can("update");
       checkbox.addEventListener("change", () => toggleTask(task));
-      item.append(
-        checkbox,
-        renderTitle(task),
-        createButton("Editar", "ghost", () => startEditing(task.id)),
-        createButton("Apagar", "ghost danger", () => removeTask(task))
-      );
+      item.append(checkbox, renderTitle(task));
+      if (can("update")) item.append(createButton("Editar", "ghost", () => startEditing(task.id)));
+      if (can("delete")) item.append(createButton("Apagar", "ghost danger", () => removeTask(task)));
       return item;
     };
 
@@ -993,7 +989,7 @@ export const kvCrudPageHtml = `<!doctype html>
     const toggleTask = async (task) => {
       const data = Object.assign({}, task.data, { done: !task.data.done });
       try {
-        await api.update(task.id, data);
+        await api.update(task.id, { done: data.done });
         replaceTask(task.id, data);
       } catch (error) {
         showError(error);
@@ -1018,7 +1014,7 @@ export const kvCrudPageHtml = `<!doctype html>
       if (!title || title === task.data.title) return render();
       const data = Object.assign({}, task.data, { title });
       try {
-        await api.update(task.id, data);
+        await api.update(task.id, { title });
         replaceTask(task.id, data);
         showStatus("Tarefa atualizada.");
       } catch (error) {
@@ -1039,13 +1035,17 @@ export const kvCrudPageHtml = `<!doctype html>
       }
     };
 
-    const showSetup = () => {
-      elements.setup.hidden = false;
-      elements.setup.textContent = "Falta configurar: no código desta página, troque COLE_O_TOKEN_AQUI por um token de uma aplicação do KV. " + (isPreview ? "Na prévia do editor, a API só responde se a aplicação aceitar qualquer origem; publicada, a página precisa da origem dela liberada na aplicação." : "Depois, libere a origem " + location.origin + " na Configuração da aplicação.");
-      elements.count.textContent = "Sem token";
+    const disableForm = () => {
       elements.form.querySelectorAll("input, button").forEach((element) => {
         element.disabled = true;
       });
+    };
+
+    const showSetup = (text) => {
+      elements.setup.hidden = false;
+      elements.setup.textContent = text;
+      elements.count.textContent = "Sem acesso aos dados";
+      disableForm();
       elements.reload.disabled = true;
     };
 
@@ -1057,8 +1057,12 @@ export const kvCrudPageHtml = `<!doctype html>
     elements.form.addEventListener("submit", addTask);
     elements.reload.addEventListener("click", loadTasks);
 
-    if (TOKEN === "COLE_O_TOKEN_AQUI") showSetup();
-    else loadTasks();
+    if (!tasks) showSetup("Falta configurar: no editor desta página, abra a aba Dados e ligue uma aplicação do KV. Nenhum token vai para este HTML.");
+    else if (!can("read")) showSetup("O seu acesso a esta página não tem cargo com leitura na coleção " + COLLECTION + ". Ajuste o cargo na aba Dados do editor.");
+    else {
+      if (!can("create")) disableForm();
+      loadTasks();
+    }
   </script>
 </body>
 </html>
@@ -1069,7 +1073,7 @@ export const pageTemplateOptions: { value: PageTemplate; label: string; descript
   {
     value: "kvCrud",
     label: "CRUD com KV",
-    description: "Uma lista de tarefas que cria, lista, edita, conclui e apaga documentos na coleção tarefas do KV. Depois de criar, troque COLE_O_TOKEN_AQUI no código por um token de uma aplicação e libere a origem dos links nela.",
+    description: "Uma lista de tarefas que cria, lista, edita, conclui e apaga documentos na coleção tarefas do KV, com pocketrun.kv. Depois de criar, ligue uma aplicação na aba Dados: nenhum token vai para o HTML.",
     html: kvCrudPageHtml
   }
 ];

@@ -1,8 +1,8 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { measureBytes, previewExtra, previewSubjectOptions } from "@utils/functions";
 import { pageEditorTabs, pageTemplateOptions } from "@assets/data";
 import { historyPageSize } from "@assets/config";
-import { measureBytes } from "@utils/functions";
 import usePageEditorStore from "./store";
 
 import type { HistoryFilter, SitePage, PageEditorTab, PageEvent } from "@utils/types/sitePage";
@@ -46,6 +46,11 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
   ];
 
   const requestedGroupId = pageId ? "" : (searchParams.get("group") ?? "");
+
+  const previewOptions = previewSubjectOptions(store.access);
+  const protectedOption = store.access?.isEnabled ? previewOptions[1]?.value : undefined;
+  const preferredPreview = store.previewAs === "" ? (protectedOption ?? "public") : store.previewAs;
+  const previewAs = previewOptions.some((option) => option.value === preferredPreview) ? preferredPreview : "public";
 
   const handleVersionRestore = async (number: number) => {
     const isRestored = await store.restoreVersion(number);
@@ -99,6 +104,15 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
     analytics: store.analytics,
     isAnalyticsLoading: store.isAnalyticsLoading,
     access: store.access,
+    kv: store.kv,
+    kvRequests: store.kvRequests,
+    isKvRequestsLoading: store.isKvRequestsLoading,
+    previewAs,
+    previewOptions,
+    previewExtra: previewExtra(store.kv, previewAs),
+    handleKvChange: store.setKv,
+    loadKvRequests: store.loadKvRequests,
+    handlePreviewAsChange: store.setPreviewAs,
     hasLoadedAccess: store.hasLoadedAccess,
     load: store.load,
     loadAccess: store.loadAccess,
