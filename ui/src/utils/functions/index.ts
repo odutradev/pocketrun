@@ -1,12 +1,12 @@
+import { adminRoleName, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
 import { apiUrl, expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
-import { errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags } from "@assets/data";
 import { isApiError } from "@utils/api";
 
-import type { Application, ApplicationFilter, ApplicationSort } from "@utils/types/application";
-import type { ExpiryInfo } from "@utils/types/expiry";
-import type { LogLevel } from "@utils/types/logger";
+import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
 import type { HtmlIssue, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
+import type { ExpiryInfo } from "@utils/types/expiry";
+import type { LogLevel } from "@utils/types/logger";
 
 export const createLocalLogger = (scope: string) => {
   const write = (level: LogLevel) => (...args: unknown[]) => {
@@ -309,6 +309,31 @@ export const describeOrigins = (origins: string[]): string =>
   allowsAnyOrigin(origins) ? "Qualquer origem" : pluralize(origins.length, "origem", "origens");
 
 export const countTokens = (application: Application): number => application.tokens?.length ?? 0;
+
+export const tokenRoleName = (token: ApiToken): string => token.role || adminRoleName;
+
+export const countRoleTokens = (application: Application, role: string): number =>
+  (application.tokens ?? []).filter((token) => tokenRoleName(token) === role).length;
+
+export const describeRuleOperations = (rule: KvRoleRule): string =>
+  kvOperationOptions
+    .filter((option) => rule.operations.includes(option.value))
+    .map((option) => option.label.toLowerCase())
+    .join(", ");
+
+export const describeRoleRule = (rule: KvRoleRule): string =>
+  [
+    rule.collection === "*" ? "Todas as coleções" : rule.collection,
+    describeRuleOperations(rule),
+    rule.maxDocuments > 0 ? `até ${rule.maxDocuments.toLocaleString("pt-BR")} documentos` : ""
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+export const applicationRoleOptions = (application: Application | null): { value: string; label: string }[] => [
+  { value: adminRoleName, label: "admin · acesso total" },
+  ...(application?.roles ?? []).map((role) => ({ value: role.name, label: role.description ? `${role.name} · ${role.description}` : role.name }))
+];
 
 export const lastTokenUse = (application: Application): string | null =>
   (application.tokens ?? [])

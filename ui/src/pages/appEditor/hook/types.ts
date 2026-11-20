@@ -1,4 +1,4 @@
-import type { AppEditorTab, Application } from "@utils/types/application";
+import type { AppEditorTab, Application, KvRole } from "@utils/types/application";
 
 export interface UseAppEditorPageReturn {
   applicationId: string;
@@ -10,8 +10,12 @@ export interface UseAppEditorPageReturn {
   refreshKey: number;
   tab: AppEditorTab;
   isTokenModalOpen: boolean;
+  isRoleModalOpen: boolean;
+  editingRole: KvRole | null;
   load: (applicationId: string | undefined, signal?: AbortSignal) => Promise<void>;
   reset: () => void;
+  handleOpenRoleModal: (role: KvRole | null) => void;
+  handleCloseRoleModal: () => void;
   handleRefresh: () => Promise<void>;
   handleTabChange: (tab: AppEditorTab) => void;
   handleCreated: (application: Application) => void;
@@ -27,8 +31,12 @@ export interface AppEditorStore {
   hasFailed: boolean;
   refreshKey: number;
   isTokenModalOpen: boolean;
+  isRoleModalOpen: boolean;
+  editingRole: KvRole | null;
   load: (applicationId: string | undefined, signal?: AbortSignal) => Promise<void>;
   refresh: () => Promise<void>;
   setTokenModalOpen: (isOpen: boolean) => void;
+  openRoleModal: (role: KvRole | null) => void;
+  closeRoleModal: () => void;
   reset: () => void;
 }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 
 import CreateTokenModal from "./subcomponents/createTokenModal";
 import ContentNavbar from "@components/contentNavbar";
+import RoleModal from "./subcomponents/roleModal";
 import EmptyState from "@components/emptyState";
 import LinkButton from "@components/linkButton";
 import AppForm from "./subcomponents/appForm";
@@ -14,6 +15,7 @@ import Loader from "@components/loader";
 import TabNav from "@components/tabNav";
 import useAppEditorPage from "./hook";
 import TokensTab from "./tabs/tokens";
+import RolesTab from "./tabs/roles";
 
 import type { ContentNavbarCrumb } from "@components/contentNavbar/types";
 import type { AppEditorTab } from "@utils/types/application";
@@ -41,12 +43,12 @@ const AppEditorPage = () => {
   const tabContent: Record<AppEditorTab, ReactNode> = {
     explorer: <ExplorerTab />,
     settings: form,
+    roles: <RolesTab />,
     tokens: <TokensTab />,
     snippets: <SnippetsTab />
   };
-  const tabs: TabNavItem<AppEditorTab>[] = appEditorTabs.map((item) =>
-    item.value === "tokens" ? { ...item, count: application?.tokens?.length ?? 0 } : item
-  );
+  const tabCounts: Partial<Record<AppEditorTab, number>> = { tokens: application?.tokens?.length ?? 0, roles: (application?.roles?.length ?? 0) + 1 };
+  const tabs: TabNavItem<AppEditorTab>[] = appEditorTabs.map((item) => (item.value in tabCounts ? { ...item, count: tabCounts[item.value] } : item));
 
   const renderContent = () => {
     if (isLoading) return <Loader label="Carregando a aplicação" isCentered />;
@@ -81,6 +83,7 @@ const AppEditorPage = () => {
       />
       {renderContent()}
       {isEditing && <CreateTokenModal />}
+      {isEditing && <RoleModal />}
     </Container>
   );
 };

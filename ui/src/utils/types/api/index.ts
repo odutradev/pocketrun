@@ -47,7 +47,13 @@ export type ApiErrorCode =
   | "pin_in_use"
   | "pin_unavailable"
   | "role_taken"
-  | "access_conflict";
+  | "access_conflict"
+  | "role_not_found"
+  | "role_reserved"
+  | "invalid_role_name"
+  | "invalid_rule"
+  | "too_many_roles"
+  | "role_in_use";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

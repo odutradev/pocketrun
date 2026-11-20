@@ -58,3 +58,9 @@ export const TokenMeta = styled.span`
 export const Strong = styled.strong`
   color: ${({ theme }) => theme.brand.steel};
 `;
+
+export const TokenRole = styled.div`
+  width: 100%;
+  max-width: 220px;
+  margin-top: ${({ theme }) => theme.spacing(1)};
+`;

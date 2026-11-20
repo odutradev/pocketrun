@@ -14,7 +14,9 @@ const initialState = {
   isRefreshing: false,
   hasFailed: false,
   refreshKey: 0,
-  isTokenModalOpen: false
+  isTokenModalOpen: false,
+  isRoleModalOpen: false,
+  editingRole: null
 };
 
 const useAppEditorStore = create<AppEditorStore>()((set, get) => ({
@@ -47,6 +49,8 @@ const useAppEditorStore = create<AppEditorStore>()((set, get) => ({
     }
   },
   setTokenModalOpen: (isTokenModalOpen) => set({ isTokenModalOpen }),
+  openRoleModal: (editingRole) => set({ isRoleModalOpen: true, editingRole }),
+  closeRoleModal: () => set({ isRoleModalOpen: false, editingRole: null }),
   reset: () => set(initialState)
 }));
 

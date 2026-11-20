@@ -3,9 +3,9 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
-import type { AppEditorTab, ApplicationFilter, ApplicationSort } from "@utils/types/application";
+import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
+import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
 import type { KvDocError, KvDocMethod, KvDocRoute, KvDocSection } from "@utils/types/kvDocs";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -61,8 +61,14 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   access_key_not_found: "PIN não encontrado.",
   pin_in_use: "Outro cargo desta página já usa esse PIN.",
   pin_unavailable: "Esse PIN foi criado antes de poder ser visto de novo. Troque o PIN para vê-lo.",
-  role_taken: "Já existe um cargo com esse nome nesta página.",
-  access_conflict: "O acesso da página mudou enquanto você editava. Recarregue e tente de novo."
+  role_taken: "Já existe um cargo com esse nome.",
+  access_conflict: "O acesso da página mudou enquanto você editava. Recarregue e tente de novo.",
+  role_not_found: "Cargo não encontrado. Ele pode ter sido apagado.",
+  role_reserved: "admin é o cargo de acesso total e já existe.",
+  invalid_role_name: "Use só letras minúsculas, números e hífen no nome do cargo.",
+  invalid_rule: "Confira as regras: cada coleção aparece uma vez, com um nome válido ou *.",
+  too_many_roles: "A aplicação chegou ao limite de 20 cargos.",
+  role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
@@ -621,8 +627,18 @@ export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
 export const appEditorTabs: { value: AppEditorTab; label: string }[] = [
   { value: "explorer", label: "Explorador" },
   { value: "settings", label: "Configuração" },
+  { value: "roles", label: "Cargos" },
   { value: "tokens", label: "Tokens" },
   { value: "snippets", label: "Snippets" }
+];
+
+export const adminRoleName = "admin";
+
+export const kvOperationOptions: { value: KvOperation; label: string }[] = [
+  { value: "read", label: "Ler" },
+  { value: "create", label: "Criar" },
+  { value: "update", label: "Editar" },
+  { value: "delete", label: "Apagar" }
 ];
 
 export const kvDocSections: KvDocSection[] = [

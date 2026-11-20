@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-import { defaultTokenValidity, tokenValidityOptions } from "@assets/data";
+import { adminRoleName, defaultTokenValidity, tokenValidityOptions } from "@assets/data";
 import { createTokenSchema } from "@utils/validations/application";
+import { applicationRoleOptions } from "@utils/functions";
 import SecretReveal from "@components/secretReveal";
 import { createToken } from "@actions/apps";
 import useAppEditorPage from "../../hook";
@@ -15,12 +16,12 @@ import useForm from "@hooks/useForm";
 
 import type { CreateTokenValues } from "@utils/types/application";
 
-const initialValues = { name: "", validityDays: defaultTokenValidity };
+const initialValues = { name: "", validityDays: defaultTokenValidity, role: adminRoleName };
 
 const validityOptions = tokenValidityOptions.map((option) => ({ value: String(option.value), label: option.label }));
 
 const CreateTokenModal = () => {
-  const { applicationId, isTokenModalOpen, handleCloseTokenModal, handleRefresh } = useAppEditorPage();
+  const { applicationId, application, isTokenModalOpen, handleCloseTokenModal, handleRefresh } = useAppEditorPage();
   const [rawToken, setRawToken] = useState<string | null>(null);
 
   const { execute } = useAction({
@@ -81,6 +82,14 @@ const CreateTokenModal = () => {
           value={String(values.validityDays)}
           onValueChange={(value) => setFieldValue("validityDays", Number(value))}
           error={errors.validityDays}
+        />
+        <Select
+          label="Cargo"
+          options={applicationRoleOptions(application)}
+          value={values.role}
+          onValueChange={(value) => setFieldValue("role", value)}
+          hint="O que este token pode fazer em cada coleção. Crie cargos na aba Cargos."
+          error={errors.role}
         />
         <Actions>
           <Button variant="secondary" onClick={handleDone}>

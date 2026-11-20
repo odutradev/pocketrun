@@ -1,10 +1,11 @@
-import type { applicationFormSchema, createTokenSchema } from "@utils/validations/application";
+import type { applicationFormSchema, createTokenSchema, roleFormSchema } from "@utils/validations/application";
 import type { z } from "zod";
 
 export interface ApiToken {
   id: string;
   name: string;
   tokenPrefix: string;
+  role: string;
   expiresAt: string | null;
   createdAt: string;
   lastUsedAt: string | null;
@@ -19,6 +20,7 @@ export interface Application {
   allowedOrigins: string[];
   allowNonBrowserRequests: boolean;
   tokens?: ApiToken[];
+  roles: KvRole[];
   createdAt: string;
   updatedAt: string;
 }
@@ -46,7 +48,34 @@ export interface CreatedApplication {
 export interface CreateTokenPayload {
   name: string;
   validityDays: number;
+  role: string;
 }
+
+export type KvOperation = "read" | "create" | "update" | "delete";
+
+export interface KvRoleRule {
+  collection: string;
+  operations: KvOperation[];
+  maxDocuments: number;
+}
+
+export interface KvRole {
+  name: string;
+  description: string;
+  rules: KvRoleRule[];
+  isOwnDocumentsOnly: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RolePayload {
+  name: string;
+  description: string;
+  rules: KvRoleRule[];
+  isOwnDocumentsOnly: boolean;
+}
+
+export type RoleUpdatePayload = Omit<RolePayload, "name">;
 
 export interface CreatedToken {
   token: ApiToken;
@@ -57,7 +86,8 @@ export type ApplicationSort = "recent" | "name" | "tokens";
 
 export type ApplicationFilter = "all" | "open" | "restricted" | "noTokens";
 
-export type AppEditorTab = "explorer" | "settings" | "tokens" | "snippets";
+export type AppEditorTab = "explorer" | "settings" | "roles" | "tokens" | "snippets";
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 export type CreateTokenValues = z.infer<typeof createTokenSchema>;
+export type RoleFormValues = z.infer<typeof roleFormSchema>;
