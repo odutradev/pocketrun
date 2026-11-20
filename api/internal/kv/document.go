@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/application"
 )
 
 const (
@@ -41,6 +43,16 @@ type Scope struct {
 	Role               string
 	IsOwnDocumentsOnly bool
 	MaxDocuments       int
+}
+
+func NewScope(app *application.Application, permission application.Permission) Scope {
+	return Scope{
+		ApplicationID:      app.ID,
+		ProjectID:          app.ProjectID,
+		Role:               permission.Role,
+		IsOwnDocumentsOnly: permission.IsOwnDocumentsOnly,
+		MaxDocuments:       permission.MaxDocuments,
+	}
 }
 
 func (s Scope) filter(collectionName string) bson.M {

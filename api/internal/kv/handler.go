@@ -54,7 +54,7 @@ func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handl
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationCreate)
 	if !ok {
 		return
 	}
@@ -74,7 +74,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationRead)
 	if !ok {
 		return
 	}
@@ -99,7 +99,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) count(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationRead)
 	if !ok {
 		return
 	}
@@ -119,7 +119,7 @@ func (h *Handler) count(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) eval(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationRead)
 	if !ok {
 		return
 	}
@@ -145,7 +145,7 @@ func (h *Handler) eval(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
-	scope, id, ok := h.documentTarget(w, r)
+	scope, id, ok := h.documentTarget(w, r, application.OperationRead)
 	if !ok {
 		return
 	}
@@ -167,7 +167,7 @@ func (h *Handler) replace(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) change(w http.ResponseWriter, r *http.Request, operation string, apply func(context.Context, Scope, string, bson.ObjectID, UpdateInput) (*Document, error)) {
-	scope, id, ok := h.documentTarget(w, r)
+	scope, id, ok := h.documentTarget(w, r, application.OperationUpdate)
 	if !ok {
 		return
 	}
@@ -187,7 +187,7 @@ func (h *Handler) change(w http.ResponseWriter, r *http.Request, operation strin
 }
 
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
-	scope, id, ok := h.documentTarget(w, r)
+	scope, id, ok := h.documentTarget(w, r, application.OperationDelete)
 	if !ok {
 		return
 	}
@@ -200,7 +200,7 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteCollection(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationManage)
 	if !ok {
 		return
 	}
@@ -214,7 +214,7 @@ func (h *Handler) deleteCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationRead)
 	if !ok {
 		return
 	}
@@ -246,7 +246,7 @@ func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) exportProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationManage)
 	if !ok {
 		return
 	}
@@ -277,7 +277,7 @@ func (h *Handler) exportProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) importCollection(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationCreate)
 	if !ok {
 		return
 	}
@@ -297,7 +297,7 @@ func (h *Handler) importCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) importProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationManage)
 	if !ok {
 		return
 	}
@@ -317,7 +317,7 @@ func (h *Handler) importProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r)
+	scope, ok := h.scope(w, r, application.OperationManage)
 	if !ok {
 		return
 	}
@@ -368,17 +368,24 @@ func (h *Handler) exploreCollection(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, documentsPage)
 }
 
-func (h *Handler) scope(w http.ResponseWriter, r *http.Request) (Scope, bool) {
-	app, ok := application.FromContext(r.Context())
+func (h *Handler) scope(w http.ResponseWriter, r *http.Request, operation application.Operation) (Scope, bool) {
+	ctx := r.Context()
+	app, ok := application.FromContext(ctx)
 	if !ok {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
 		return Scope{}, false
 	}
-	return Scope{ApplicationID: app.ID, ProjectID: app.ProjectID}, true
+
+	permission, err := app.Authorize(application.RoleFromContext(ctx), r.PathValue("collection"), operation)
+	if err != nil {
+		h.writeError(w, r, "authorize kv operation", err)
+		return Scope{}, false
+	}
+	return NewScope(app, permission), true
 }
 
-func (h *Handler) documentTarget(w http.ResponseWriter, r *http.Request) (Scope, bson.ObjectID, bool) {
-	scope, ok := h.scope(w, r)
+func (h *Handler) documentTarget(w http.ResponseWriter, r *http.Request, operation application.Operation) (Scope, bson.ObjectID, bool) {
+	scope, ok := h.scope(w, r, operation)
 	if !ok {
 		return Scope{}, bson.ObjectID{}, false
 	}
@@ -451,6 +458,8 @@ func ErrorStatus(err error) (int, string, bool) {
 	switch {
 	case errors.Is(err, application.ErrInvalidAccessToken):
 		return http.StatusUnauthorized, "invalid_access_token", true
+	case errors.Is(err, application.ErrOperationForbidden):
+		return http.StatusForbidden, "forbidden_operation", true
 	case errors.Is(err, ErrInvalidDocumentID):
 		return http.StatusBadRequest, "invalid_document_id", true
 	case errors.Is(err, ErrDocumentNotFound):

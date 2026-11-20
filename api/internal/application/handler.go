@@ -31,6 +31,10 @@ func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handl
 	mux.Handle("DELETE /apps/{id}/delete", authenticate(http.HandlerFunc(h.delete)))
 	mux.Handle("POST /apps/{id}/tokens/create", authenticate(http.HandlerFunc(h.createToken)))
 	mux.Handle("DELETE /apps/{id}/tokens/{tokenId}/delete", authenticate(http.HandlerFunc(h.revokeToken)))
+	mux.Handle("PATCH /apps/{id}/tokens/{tokenId}/role/set", authenticate(http.HandlerFunc(h.setTokenRole)))
+	mux.Handle("POST /apps/{id}/roles/create", authenticate(http.HandlerFunc(h.createRole)))
+	mux.Handle("PATCH /apps/{id}/roles/{role}/update", authenticate(http.HandlerFunc(h.updateRole)))
+	mux.Handle("DELETE /apps/{id}/roles/{role}/delete", authenticate(http.HandlerFunc(h.deleteRole)))
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -159,6 +163,82 @@ func (h *Handler) revokeToken(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteMessage(w, http.StatusOK, "Token revoked successfully")
 }
 
+func (h *Handler) setTokenRole(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "set token role", err)
+		return
+	}
+
+	var input TokenRoleInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	if err := h.service.SetTokenRole(r.Context(), managerID, id, r.PathValue("tokenId"), input.Role); err != nil {
+		h.writeError(w, r, "set token role", err)
+		return
+	}
+	httpx.WriteMessage(w, http.StatusOK, "Token role updated successfully")
+}
+
+func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "create role", err)
+		return
+	}
+
+	var input RoleInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	role, err := h.service.CreateRole(r.Context(), managerID, id, input)
+	if err != nil {
+		h.writeError(w, r, "create role", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusCreated, role)
+}
+
+func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "update role", err)
+		return
+	}
+
+	var input RoleUpdateInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	role, err := h.service.UpdateRole(r.Context(), managerID, id, r.PathValue("role"), input)
+	if err != nil {
+		h.writeError(w, r, "update role", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, role)
+}
+
+func (h *Handler) deleteRole(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "delete role", err)
+		return
+	}
+
+	if err := h.service.DeleteRole(r.Context(), managerID, id, r.PathValue("role")); err != nil {
+		h.writeError(w, r, "delete role", err)
+		return
+	}
+	httpx.WriteMessage(w, http.StatusOK, "Role deleted successfully")
+}
+
 func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
 	application, ok := FromContext(r.Context())
 	if !ok {
@@ -171,6 +251,7 @@ func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
 		Message:   "Access token and origin are valid",
 		ProjectID: application.ProjectID,
 		AppName:   application.Name,
+		Role:      RoleFromContext(r.Context()),
 	})
 }
 
@@ -186,6 +267,20 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusNotFound, "token_not_found")
 	case errors.Is(err, ErrProjectIDTaken):
 		httpx.WriteError(w, http.StatusConflict, "project_id_taken")
+	case errors.Is(err, ErrRoleNotFound):
+		httpx.WriteError(w, http.StatusNotFound, "role_not_found")
+	case errors.Is(err, ErrRoleTaken):
+		httpx.WriteError(w, http.StatusConflict, "role_taken")
+	case errors.Is(err, ErrRoleReserved):
+		httpx.WriteError(w, http.StatusBadRequest, "role_reserved")
+	case errors.Is(err, ErrInvalidRoleName):
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_role_name")
+	case errors.Is(err, ErrInvalidRule):
+		httpx.WriteError(w, http.StatusBadRequest, "invalid_rule")
+	case errors.Is(err, ErrTooManyRoles):
+		httpx.WriteError(w, http.StatusConflict, "too_many_roles")
+	case errors.Is(err, ErrRoleInUse):
+		httpx.WriteError(w, http.StatusConflict, "role_in_use")
 	default:
 		h.logger.ErrorContext(r.Context(), operation, "error", err)
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")

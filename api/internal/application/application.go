@@ -34,6 +34,7 @@ type Application struct {
 	AllowedOrigins          []string      `json:"allowedOrigins" bson:"allowedOrigins"`
 	AllowNonBrowserRequests bool          `json:"allowNonBrowserRequests" bson:"allowNonBrowserRequests"`
 	Tokens                  []Token       `json:"tokens,omitempty" bson:"tokens"`
+	Roles                   []Role        `json:"roles" bson:"roles"`
 	CreatedAt               time.Time     `json:"createdAt" bson:"createdAt"`
 	UpdatedAt               time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
@@ -43,6 +44,7 @@ type Token struct {
 	Name       string     `json:"name" bson:"name"`
 	Hash       string     `json:"-" bson:"tokenHash"`
 	Prefix     string     `json:"tokenPrefix" bson:"tokenPrefix"`
+	Role       string     `json:"role" bson:"role,omitempty"`
 	ExpiresAt  *time.Time `json:"expiresAt" bson:"expiresAt,omitempty"`
 	CreatedAt  time.Time  `json:"createdAt" bson:"createdAt"`
 	LastUsedAt *time.Time `json:"lastUsedAt" bson:"lastUsedAt,omitempty"`
@@ -81,10 +83,12 @@ func (i *UpdateInput) Normalize() {
 type CreateTokenInput struct {
 	Name         string `json:"name" validate:"max=100"`
 	ValidityDays int    `json:"validityDays" validate:"min=0,max=3650"`
+	Role         string `json:"role" validate:"max=40"`
 }
 
 func (i *CreateTokenInput) Normalize() {
 	i.Name = strings.TrimSpace(i.Name)
+	i.Role = strings.ToLower(strings.TrimSpace(i.Role))
 }
 
 type Created struct {
@@ -102,4 +106,5 @@ type AccessValidation struct {
 	Message   string `json:"message"`
 	ProjectID string `json:"projectId"`
 	AppName   string `json:"appName"`
+	Role      string `json:"role"`
 }

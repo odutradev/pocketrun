@@ -18,7 +18,7 @@ func Authenticate(service *Service, logger *slog.Logger) func(http.Handler) http
 			ctx := r.Context()
 			origin := r.Header.Get("Origin")
 
-			application, hash, err := service.Authenticate(ctx, extractAccessToken(r), origin)
+			application, token, err := service.Authenticate(ctx, extractAccessToken(r), origin)
 			if err != nil {
 				writeAuthenticationError(ctx, w, logger, err)
 				return
@@ -33,9 +33,9 @@ func Authenticate(service *Service, logger *slog.Logger) func(http.Handler) http
 			w.Header().Set("Access-Control-Allow-Headers", httpx.AllowedHeaders)
 			w.Header().Set("projectID", application.ProjectID)
 
-			go touchToken(context.WithoutCancel(ctx), service, logger, application, hash)
+			go touchToken(context.WithoutCancel(ctx), service, logger, application, token.Hash)
 
-			next.ServeHTTP(w, r.WithContext(WithApplication(ctx, application)))
+			next.ServeHTTP(w, r.WithContext(WithApplication(ctx, application, token.RoleName())))
 		})
 	}
 }
@@ -57,6 +57,8 @@ func writeAuthenticationError(ctx context.Context, w http.ResponseWriter, logger
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
 	case errors.Is(err, ErrExpiredAccessToken):
 		httpx.WriteError(w, http.StatusUnauthorized, "expired_access_token")
+	case errors.Is(err, ErrRoleNotFound):
+		httpx.WriteError(w, http.StatusForbidden, "role_not_found")
 	case errors.Is(err, ErrOriginNotAllowed):
 		httpx.WriteError(w, http.StatusForbidden, "origin_not_allowed")
 	default:

@@ -17,8 +17,11 @@ type Repository interface {
 	FindByTokenHash(ctx context.Context, hash string) (*Application, error)
 	Update(ctx context.Context, managerID, id bson.ObjectID, input UpdateInput) error
 	Delete(ctx context.Context, managerID, id bson.ObjectID) error
+	FindByObjectID(ctx context.Context, id bson.ObjectID) (*Application, error)
 	AddToken(ctx context.Context, managerID, id bson.ObjectID, token Token) error
 	RemoveToken(ctx context.Context, managerID, id bson.ObjectID, tokenID string) error
+	SetTokenRole(ctx context.Context, managerID, id bson.ObjectID, tokenID, role string) error
+	SetRoles(ctx context.Context, managerID, id bson.ObjectID, roles []Role) error
 	TouchToken(ctx context.Context, id bson.ObjectID, hash string) error
 }
 
@@ -74,6 +77,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Cre
 		AllowedOrigins:          allowedOrigins,
 		AllowNonBrowserRequests: allowNonBrowserRequests,
 		Tokens:                  []Token{token},
+		Roles:                   []Role{},
 		CreatedAt:               now,
 		UpdatedAt:               now,
 	}
@@ -116,9 +120,24 @@ func (s *Service) CreateToken(ctx context.Context, managerID, id bson.ObjectID, 
 		name = NewTokenName
 	}
 
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return nil, fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	role := input.Role
+	if role == "" {
+		role = AdminRole
+	}
+	if !application.HasRole(role) {
+		return nil, ErrRoleNotFound
+	}
+
 	rawToken, token, err := generateToken(name, input.ValidityDays, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
+	}
+	if role != AdminRole {
+		token.Role = role
 	}
 
 	if err := s.repository.AddToken(ctx, managerID, id, token); err != nil {
@@ -134,33 +153,146 @@ func (s *Service) RevokeToken(ctx context.Context, managerID, id bson.ObjectID, 
 	return nil
 }
 
-func (s *Service) Authenticate(ctx context.Context, rawToken, origin string) (*Application, string, error) {
+func (s *Service) Authenticate(ctx context.Context, rawToken, origin string) (*Application, Token, error) {
 	if rawToken == "" {
-		return nil, "", ErrMissingAccessToken
+		return nil, Token{}, ErrMissingAccessToken
 	}
 
 	hash := hashToken(rawToken)
 	application, err := s.repository.FindByTokenHash(ctx, hash)
 	if errors.Is(err, ErrApplicationNotFound) {
-		return nil, "", ErrInvalidAccessToken
+		return nil, Token{}, ErrInvalidAccessToken
 	}
 	if err != nil {
-		return nil, "", fmt.Errorf("find application by token: %w", err)
+		return nil, Token{}, fmt.Errorf("find application by token: %w", err)
 	}
 
 	token, found := findToken(application.Tokens, hash)
 	if !found {
-		return nil, "", ErrInvalidAccessToken
+		return nil, Token{}, ErrInvalidAccessToken
 	}
 
 	if token.IsExpired(time.Now()) {
-		return nil, "", ErrExpiredAccessToken
+		return nil, Token{}, ErrExpiredAccessToken
+	}
+
+	if !application.HasRole(token.RoleName()) {
+		return nil, Token{}, ErrRoleNotFound
 	}
 
 	if !isOriginAllowed(application.AllowedOrigins, origin, application.AllowNonBrowserRequests) {
-		return nil, "", ErrOriginNotAllowed
+		return nil, Token{}, ErrOriginNotAllowed
 	}
-	return application, hash, nil
+	return application, token, nil
+}
+
+func (s *Service) Find(ctx context.Context, id bson.ObjectID) (*Application, error) {
+	application, err := s.repository.FindByObjectID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	return application, nil
+}
+
+func (s *Service) CreateRole(ctx context.Context, managerID, id bson.ObjectID, input RoleInput) (*Role, error) {
+	if err := checkRoleName(input.Name); err != nil {
+		return nil, err
+	}
+	if err := checkRules(input.Rules); err != nil {
+		return nil, err
+	}
+
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return nil, fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	if _, found := application.Role(input.Name); found {
+		return nil, ErrRoleTaken
+	}
+	if len(application.Roles) >= MaxRoles {
+		return nil, ErrTooManyRoles
+	}
+
+	now := time.Now()
+	role := Role{
+		Name:               input.Name,
+		Description:        input.Description,
+		Rules:              input.Rules,
+		IsOwnDocumentsOnly: input.IsOwnDocumentsOnly,
+		CreatedAt:          now,
+		UpdatedAt:          now,
+	}
+	if err := s.repository.SetRoles(ctx, managerID, id, append(application.Roles, role)); err != nil {
+		return nil, fmt.Errorf("create role %s: %w", input.Name, err)
+	}
+	return &role, nil
+}
+
+func (s *Service) UpdateRole(ctx context.Context, managerID, id bson.ObjectID, name string, input RoleUpdateInput) (*Role, error) {
+	if err := checkRules(input.Rules); err != nil {
+		return nil, err
+	}
+
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return nil, fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	role, found := application.Role(name)
+	if !found {
+		return nil, ErrRoleNotFound
+	}
+
+	role.Description = input.Description
+	role.Rules = input.Rules
+	role.IsOwnDocumentsOnly = input.IsOwnDocumentsOnly
+	role.UpdatedAt = time.Now()
+	if err := s.repository.SetRoles(ctx, managerID, id, application.Roles); err != nil {
+		return nil, fmt.Errorf("update role %s: %w", name, err)
+	}
+	return role, nil
+}
+
+func (s *Service) DeleteRole(ctx context.Context, managerID, id bson.ObjectID, name string) error {
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	if _, found := application.Role(name); !found {
+		return ErrRoleNotFound
+	}
+	for _, token := range application.Tokens {
+		if token.Role == name {
+			return ErrRoleInUse
+		}
+	}
+
+	roles := make([]Role, 0, len(application.Roles))
+	for _, role := range application.Roles {
+		if role.Name != name {
+			roles = append(roles, role)
+		}
+	}
+	if err := s.repository.SetRoles(ctx, managerID, id, roles); err != nil {
+		return fmt.Errorf("delete role %s: %w", name, err)
+	}
+	return nil
+}
+
+func (s *Service) SetTokenRole(ctx context.Context, managerID, id bson.ObjectID, tokenID, role string) error {
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return fmt.Errorf("find application %s: %w", id.Hex(), err)
+	}
+	if !application.HasRole(role) {
+		return ErrRoleNotFound
+	}
+	if role == AdminRole {
+		role = ""
+	}
+	if err := s.repository.SetTokenRole(ctx, managerID, id, tokenID, role); err != nil {
+		return fmt.Errorf("set role of token %s: %w", tokenID, err)
+	}
+	return nil
 }
 
 func (s *Service) TouchToken(ctx context.Context, id bson.ObjectID, hash string) error {

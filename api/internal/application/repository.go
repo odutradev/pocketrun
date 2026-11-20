@@ -72,6 +72,38 @@ func (r *MongoRepository) FindByTokenHash(ctx context.Context, hash string) (*Ap
 	return r.findOne(ctx, bson.M{"tokens.tokenHash": hash})
 }
 
+func (r *MongoRepository) FindByObjectID(ctx context.Context, id bson.ObjectID) (*Application, error) {
+	return r.findOne(ctx, bson.M{"_id": id})
+}
+
+func (r *MongoRepository) SetRoles(ctx context.Context, managerID, id bson.ObjectID, roles []Role) error {
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id, "managerId": managerID}, bson.M{
+		"$set": bson.M{"roles": roles, "updatedAt": time.Now()},
+	})
+	if err != nil {
+		return fmt.Errorf("set roles: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return ErrApplicationNotFound
+	}
+	return nil
+}
+
+func (r *MongoRepository) SetTokenRole(ctx context.Context, managerID, id bson.ObjectID, tokenID, role string) error {
+	update := bson.M{"$set": bson.M{"tokens.$.role": role}}
+	if role == "" {
+		update = bson.M{"$unset": bson.M{"tokens.$.role": ""}}
+	}
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id, "managerId": managerID, "tokens.id": tokenID}, update)
+	if err != nil {
+		return fmt.Errorf("set token role: %w", err)
+	}
+	if result.MatchedCount == 0 {
+		return ErrTokenNotFound
+	}
+	return nil
+}
+
 func (r *MongoRepository) Update(ctx context.Context, managerID, id bson.ObjectID, input UpdateInput) error {
 	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": id, "managerId": managerID}, bson.M{
 		"$set": bson.M{
@@ -153,6 +185,9 @@ func (r *MongoRepository) findOne(ctx context.Context, filter bson.M) (*Applicat
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find application: %w", err)
+	}
+	if application.Roles == nil {
+		application.Roles = []Role{}
 	}
 	return &application, nil
 }
