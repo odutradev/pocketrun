@@ -112,6 +112,11 @@ export const getPageKv = async (pageId: string, signal?: AbortSignal) => {
   return response.data;
 };
 
+export const enablePageKv = async (pageId: string) => {
+  const response = await api.post<PageKvDetails>(`/pages/${pageId}/kv/enable`);
+  return response.data;
+};
+
 export const setPageKv = async (pageId: string, data: PageKvPayload) => {
   const response = await api.patch<PageKvDetails>(`/pages/${pageId}/kv/set`, data);
   return response.data;

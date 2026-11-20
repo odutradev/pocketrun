@@ -14,6 +14,7 @@ export interface ApiToken {
 export interface Application {
   id: string;
   managerId: string;
+  pageId: string | null;
   name: string;
   projectId: string;
   description: string;

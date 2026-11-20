@@ -17,9 +17,13 @@ const AppCards = ({ applications, isCopied, onCopy, onEdit, onRemove, isCompact 
         <CardItem key={application.id} $isCompact={isCompact}>
           <Header>
             <Title title={application.name}>{application.name}</Title>
-            <Badge tone={isOpen ? "warning" : "neutral"} hasDot={isOpen}>
-              {describeOrigins(application.allowedOrigins)}
-            </Badge>
+            {application.pageId ? (
+              <Badge tone="accent">Da página</Badge>
+            ) : (
+              <Badge tone={isOpen ? "warning" : "neutral"} hasDot={isOpen}>
+                {describeOrigins(application.allowedOrigins)}
+              </Badge>
+            )}
           </Header>
           <Body>
             <ProjectId>{application.projectId}</ProjectId>
@@ -41,13 +45,15 @@ const AppCards = ({ applications, isCopied, onCopy, onEdit, onRemove, isCompact 
                 onClick={() => onCopy(application)}
               />
               <IconButton label={`Abrir ${application.name}`} icon={<Pencil1Icon />} size="sm" onClick={() => onEdit(application)} />
-              <IconButton
-                label={`Excluir ${application.name}`}
-                icon={<TrashIcon />}
-                size="sm"
-                variant="danger"
-                onClick={() => onRemove(application)}
-              />
+              {!application.pageId && (
+                <IconButton
+                  label={`Excluir ${application.name}`}
+                  icon={<TrashIcon />}
+                  size="sm"
+                  variant="danger"
+                  onClick={() => onRemove(application)}
+                />
+              )}
             </Actions>
           </Footer>
         </CardItem>

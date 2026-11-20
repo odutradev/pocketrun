@@ -68,7 +68,10 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_role_name: "Use só letras minúsculas, números e hífen no nome do cargo.",
   invalid_rule: "Confira as regras: cada coleção aparece uma vez, com um nome válido ou *.",
   too_many_roles: "A aplicação chegou ao limite de 20 cargos.",
-  role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar."
+  role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar.",
+  application_owned_by_page: "Esta aplicação é de uma página. Ela é apagada junto com a página, ou desligada na aba Dados.",
+  kv_not_linked: "A página ainda não tem dados ativados.",
+  kv_application_missing: "A aplicação de dados desta página foi excluída."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {

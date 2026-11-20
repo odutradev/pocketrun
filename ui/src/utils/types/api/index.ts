@@ -53,7 +53,10 @@ export type ApiErrorCode =
   | "invalid_role_name"
   | "invalid_rule"
   | "too_many_roles"
-  | "role_in_use";
+  | "role_in_use"
+  | "application_owned_by_page"
+  | "kv_not_linked"
+  | "kv_application_missing";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

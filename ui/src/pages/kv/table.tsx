@@ -28,6 +28,7 @@ export const getAppColumns = ({ isCopied, onCopy, onEdit, onRemove }: AppColumns
     header: "Origens",
     render: (application) => {
       const isOpen = allowsAnyOrigin(application.allowedOrigins);
+      if (application.pageId) return <Badge tone="accent">Da página</Badge>;
       return (
         <Badge tone={isOpen ? "warning" : "neutral"} hasDot={isOpen}>
           {describeOrigins(application.allowedOrigins)}
@@ -60,13 +61,15 @@ export const getAppColumns = ({ isCopied, onCopy, onEdit, onRemove }: AppColumns
           onClick={() => onCopy(application)}
         />
         <IconButton label={`Abrir ${application.name}`} icon={<Pencil1Icon />} size="sm" onClick={() => onEdit(application)} />
-        <IconButton
-          label={`Excluir ${application.name}`}
-          icon={<TrashIcon />}
-          size="sm"
-          variant="danger"
-          onClick={() => onRemove(application)}
-        />
+        {!application.pageId && (
+          <IconButton
+            label={`Excluir ${application.name}`}
+            icon={<TrashIcon />}
+            size="sm"
+            variant="danger"
+            onClick={() => onRemove(application)}
+          />
+        )}
       </RowActions>
     )
   }

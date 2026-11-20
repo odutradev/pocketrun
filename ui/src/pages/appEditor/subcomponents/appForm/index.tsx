@@ -101,6 +101,11 @@ const AppForm = ({ application }: AppFormProps) => {
 
   return (
     <Form onSubmit={handleSubmit} noValidate>
+      {application?.pageId && (
+        <Alert tone="neutral" title="Aplicação de uma página">
+          Foi criada pela aba Dados de uma página e guarda os dados dela. Os cargos daqui valem para a página. Ela é apagada junto com a página.
+        </Alert>
+      )}
       <Section>
         <Legend>Aplicação</Legend>
         <Pair>
@@ -200,7 +205,7 @@ const AppForm = ({ application }: AppFormProps) => {
         />
       </Section>
       <Actions>
-        {application && (
+        {application && !application.pageId && (
           <Button type="button" variant="danger" leftIcon={<TrashIcon />} onClick={() => setIsRemoving(true)}>
             Excluir aplicação
           </Button>

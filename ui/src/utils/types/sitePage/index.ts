@@ -216,6 +216,7 @@ export interface PageKvBinding {
 
 export interface PageKvApplication {
   id: string;
+  pageId: string | null;
   name: string;
   projectId: string;
   roles: KvRole[];
@@ -227,7 +228,6 @@ export interface PageKvDetails {
 }
 
 export interface PageKvPayload {
-  applicationId: string;
   publicRole: string;
   roles: PageKvRoleMapping[];
 }
