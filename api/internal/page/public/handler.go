@@ -10,11 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/page/access"
+	"pocketrun-api/internal/page/binding"
 	"pocketrun-api/internal/page/page"
 	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/platform/ratelimit"
 	"pocketrun-api/internal/platform/traffic"
 )
 
@@ -35,15 +38,42 @@ type AccessGuard interface {
 	Unlock(ctx context.Context, pageID bson.ObjectID, pin, client string) (access.Grant, error)
 }
 
-type Handler struct {
-	pages     PageOpener
-	guard     AccessGuard
-	pagesHost string
-	logger    *slog.Logger
+type DataBridge interface {
+	Describe(ctx context.Context, pageID bson.ObjectID, subject binding.Subject) (*binding.Runtime, error)
+	Run(ctx context.Context, pageID bson.ObjectID, subject binding.Subject, request binding.Request) (binding.Result, error)
 }
 
-func NewHandler(pages PageOpener, guard AccessGuard, pagesURL string, logger *slog.Logger) *Handler {
-	return &Handler{pages: pages, guard: guard, pagesHost: urlHost(pagesURL), logger: logger}
+type Dependencies struct {
+	Pages    PageOpener
+	Guard    AccessGuard
+	Data     DataBridge
+	PagesURL string
+	Validate *validator.Validate
+	Logger   *slog.Logger
+}
+
+type Handler struct {
+	pages          PageOpener
+	guard          AccessGuard
+	data           DataBridge
+	pagesHost      string
+	validate       *validator.Validate
+	visitorLimiter *ratelimit.Limiter
+	pageLimiter    *ratelimit.Limiter
+	logger         *slog.Logger
+}
+
+func NewHandler(dependencies Dependencies) *Handler {
+	return &Handler{
+		pages:          dependencies.Pages,
+		guard:          dependencies.Guard,
+		data:           dependencies.Data,
+		pagesHost:      urlHost(dependencies.PagesURL),
+		validate:       dependencies.Validate,
+		visitorLimiter: ratelimit.New(dataLimitWindow, visitorDataLimit),
+		pageLimiter:    ratelimit.New(dataLimitWindow, pageDataLimit),
+		logger:         dependencies.Logger,
+	}
 }
 
 func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID) {
@@ -73,7 +103,7 @@ func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.Obje
 		return
 	}
 
-	body, err := render(*opened)
+	body, err := render(*opened, h.runtimeExtra(ctx, id, decision))
 	if err != nil {
 		h.writeInternalError(w, r, "render page", err)
 		return

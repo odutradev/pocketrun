@@ -28,6 +28,8 @@ type LinkOpener interface {
 type PageServer interface {
 	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
 	UnlockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
+	ServeData(w http.ResponseWriter, r *http.Request, id bson.ObjectID, rest string)
+	WriteDataError(w http.ResponseWriter, status int, code string)
 }
 
 type Handler struct {
@@ -45,6 +47,25 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{slug}/{$}", h.open)
 	mux.HandleFunc("POST /{slug}", h.unlock)
 	mux.HandleFunc("POST /{slug}/{$}", h.unlock)
+	mux.HandleFunc("/{slug}/_/kv/{rest...}", h.data)
+}
+
+func (h *Handler) data(w http.ResponseWriter, r *http.Request) {
+	entry, err := h.links.Resolve(r.Context(), r.PathValue("slug"))
+	if errors.Is(err, link.ErrLinkNotFound) {
+		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
+		return
+	}
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "resolve slug", "error", err)
+		h.pages.WriteDataError(w, http.StatusInternalServerError, "internal_error")
+		return
+	}
+	if entry.Kind != slug.KindPage {
+		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
+		return
+	}
+	h.pages.ServeData(w, r, entry.TargetID, r.PathValue("rest"))
 }
 
 func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {

@@ -104,6 +104,7 @@ func (a *Access) checkPIN(hash string, ownerID *bson.ObjectID) error {
 type Decision struct {
 	IsProtected bool
 	IsAllowed   bool
+	Role        string
 }
 
 type Grant struct {

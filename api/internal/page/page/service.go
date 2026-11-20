@@ -52,6 +52,10 @@ type AccessCleaner interface {
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
+type BindingCleaner interface {
+	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
+}
+
 type SlugRegistry interface {
 	Check(ctx context.Context, value string, ownerID *bson.ObjectID) (slug.Availability, error)
 	Reserve(ctx context.Context, value string, kind slug.Kind, targetID bson.ObjectID) error
@@ -73,6 +77,7 @@ type Dependencies struct {
 	History    EventRecorder
 	Opens      OpenTracker
 	Access     AccessCleaner
+	Bindings   BindingCleaner
 	Slugs      SlugRegistry
 	Groups     GroupChecker
 	Actors     ActorResolver
@@ -85,6 +90,7 @@ type Service struct {
 	history    EventRecorder
 	opens      OpenTracker
 	access     AccessCleaner
+	bindings   BindingCleaner
 	slugs      SlugRegistry
 	groups     GroupChecker
 	actors     ActorResolver
@@ -98,6 +104,7 @@ func NewService(dependencies Dependencies) *Service {
 		history:    dependencies.History,
 		opens:      dependencies.Opens,
 		access:     dependencies.Access,
+		bindings:   dependencies.Bindings,
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
@@ -364,6 +371,9 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 	}
 	if err := s.access.DeleteAll(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete page access", "pageId", page.ID.Hex(), "error", err)
+	}
+	if err := s.bindings.DeleteAll(ctx, page.ID); err != nil {
+		s.logger.WarnContext(ctx, "delete page kv binding", "pageId", page.ID.Hex(), "error", err)
 	}
 	return nil
 }

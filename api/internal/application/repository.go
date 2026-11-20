@@ -42,6 +42,11 @@ func (r *MongoRepository) FindByManagerID(ctx context.Context, managerID bson.Ob
 	if err := cursor.All(ctx, &applications); err != nil {
 		return nil, fmt.Errorf("decode applications: %w", err)
 	}
+	for index := range applications {
+		if applications[index].Roles == nil {
+			applications[index].Roles = []Role{}
+		}
+	}
 	return applications, nil
 }
 

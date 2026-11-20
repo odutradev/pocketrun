@@ -21,6 +21,7 @@ import (
 	linkpublic "pocketrun-api/internal/link/public"
 	"pocketrun-api/internal/page/access"
 	pageanalytics "pocketrun-api/internal/page/analytics"
+	"pocketrun-api/internal/page/binding"
 	pagehistory "pocketrun-api/internal/page/history"
 	"pocketrun-api/internal/page/page"
 	pagepublic "pocketrun-api/internal/page/public"
@@ -88,10 +89,13 @@ func run(logger *slog.Logger) error {
 	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))
 	accessRepository := access.NewMongoRepository(mongo.Collection("pageAccess"))
 	accessAttemptRepository := access.NewMongoAttemptRepository(mongo.Collection("pageAccessAttempts"))
+	bindingRepository := binding.NewMongoRepository(mongo.Collection("pageBindings"))
+	bindingRequestRepository := binding.NewMongoRequestRepository(mongo.Collection("pageKvRequests"))
 	ensureIndexes(startupContext, logger,
 		userRepository, loginAttemptRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
 		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
+		bindingRepository, bindingRequestRepository,
 	)
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
@@ -134,12 +138,22 @@ func run(logger *slog.Logger) error {
 		Secret:     accessSecret,
 		Logger:     logger,
 	})
+	bindingService := binding.NewService(binding.Dependencies{
+		Repository:   bindingRepository,
+		Requests:     bindingRequestRepository,
+		Applications: applicationService,
+		Documents:    documentService,
+		History:      pageHistoryService,
+		Actors:       userService,
+		Logger:       logger,
+	})
 	pageService := page.NewService(page.Dependencies{
 		Repository: pageRepository,
 		Versions:   versionService,
 		History:    pageHistoryService,
 		Opens:      pageAnalyticsService,
 		Access:     accessService,
+		Bindings:   bindingService,
 		Slugs:      slugService,
 		Groups:     groupService,
 		Actors:     userService,
@@ -164,7 +178,15 @@ func run(logger *slog.Logger) error {
 	pageHistoryHandler := pagehistory.NewHandler(pageHistoryService, pageService, validate, logger)
 	pageAnalyticsHandler := pageanalytics.NewHandler(pageAnalyticsService, pageService, validate, logger)
 	accessHandler := access.NewHandler(accessService, pageService, validate, logger)
-	pagePublicHandler := pagepublic.NewHandler(pageService, accessService, cfg.LinksURL, logger)
+	bindingHandler := binding.NewHandler(bindingService, pageService, validate, logger)
+	pagePublicHandler := pagepublic.NewHandler(pagepublic.Dependencies{
+		Pages:    pageService,
+		Guard:    accessService,
+		Data:     bindingService,
+		PagesURL: cfg.LinksURL,
+		Validate: validate,
+		Logger:   logger,
+	})
 	linkPublicHandler := linkpublic.NewHandler(linkService, pagePublicHandler, logger)
 
 	adminMux := http.NewServeMux()
@@ -184,6 +206,7 @@ func run(logger *slog.Logger) error {
 	pageHistoryHandler.Register(adminMux, authenticateManager)
 	pageAnalyticsHandler.Register(adminMux, authenticateManager)
 	accessHandler.Register(adminMux, authenticateManager)
+	bindingHandler.Register(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)

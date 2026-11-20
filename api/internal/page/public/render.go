@@ -7,8 +7,8 @@ import (
 	"pocketrun-api/internal/page/page"
 )
 
-func render(target page.Page) (string, error) {
-	tag, err := runtimeTag(target)
+func render(target page.Page, extra runtimeExtra) (string, error) {
+	tag, err := runtimeTag(target, extra)
 	if err != nil {
 		return "", err
 	}

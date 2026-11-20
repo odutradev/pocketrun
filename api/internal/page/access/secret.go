@@ -109,37 +109,40 @@ func (s secrets) issueToken(pageID bson.ObjectID, key Key, revision int, issuedA
 	return strings.Join(append(payload, signature), ".")
 }
 
-func (s secrets) verifyToken(access *Access, token string, now time.Time) bool {
+func (s secrets) verifyToken(access *Access, token string, now time.Time) (*Key, bool) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 5 {
-		return false
+		return nil, false
 	}
 
 	keyID, err := bson.ObjectIDFromHex(parts[0])
 	if err != nil {
-		return false
+		return nil, false
 	}
 	key, err := access.key(keyID)
 	if err != nil {
-		return false
+		return nil, false
 	}
 	if parts[1] != strconv.Itoa(access.Revision) {
-		return false
+		return nil, false
 	}
 	issuedAt, err := strconv.ParseInt(parts[2], 10, 64)
 	if err != nil || time.Unix(issuedAt, 0).After(now.Add(clockSkew)) {
-		return false
+		return nil, false
 	}
 	expiresAt, err := strconv.ParseInt(parts[3], 10, 64)
 	if err != nil || now.Unix() >= expiresAt {
-		return false
+		return nil, false
 	}
 	if !now.Before(time.Unix(issuedAt, 0).Add(access.sessionDuration())) {
-		return false
+		return nil, false
 	}
 
 	expected := sign(s.session, access.PageID.Hex(), key.Secret, parts[0], parts[1], parts[2], parts[3])
-	return hmac.Equal([]byte(expected), []byte(parts[4]))
+	if !hmac.Equal([]byte(expected), []byte(parts[4])) {
+		return nil, false
+	}
+	return key, true
 }
 
 func newKeySecret() (string, error) {

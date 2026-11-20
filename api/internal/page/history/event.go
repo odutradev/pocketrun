@@ -30,6 +30,9 @@ const (
 	EventAccessSessionChanged EventType = "access_session_changed"
 	EventAccessLocked         EventType = "access_locked"
 	EventUnlocked             EventType = "unlocked"
+	EventKVLinked             EventType = "kv_linked"
+	EventKVChanged            EventType = "kv_changed"
+	EventKVUnlinked           EventType = "kv_unlinked"
 )
 
 type Change struct {

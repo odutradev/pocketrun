@@ -334,7 +334,14 @@ func (s *Service) Allow(ctx context.Context, pageID bson.ObjectID, token string)
 	if !access.IsEnabled {
 		return Decision{IsAllowed: true}, nil
 	}
-	return Decision{IsProtected: true, IsAllowed: token != "" && s.secrets.verifyToken(access, token, time.Now())}, nil
+	if token == "" {
+		return Decision{IsProtected: true}, nil
+	}
+	key, isValid := s.secrets.verifyToken(access, token, time.Now())
+	if !isValid {
+		return Decision{IsProtected: true}, nil
+	}
+	return Decision{IsProtected: true, IsAllowed: true, Role: key.Role}, nil
 }
 
 func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client string) (Grant, error) {
