@@ -97,3 +97,14 @@ Depende de 3.6 e 3.7.
 ## 8. Qualidade
 
 - **8.1** ⬜ Testes automatizados de isolamento: garantir que o token de uma aplicação nunca lê nem escreve dados, páginas ou links de outra.
+
+## 9. Dados nas páginas e cargos do KV
+
+Pedido pelo dono em 20/11/2026: trazer tudo o que o KV v1 tinha, cargos no KV e o KV ligado às páginas com `window.pocketrun`, sem token no HTML.
+
+- **9.1** ✅ Feito. Recursos do KV v1: `count`, `eval` (`sum`, `avg`, `min`, `max`, `count`, `distinct`), `export` e `import` de collection e de projeto (JSON e CSV), ordenação (`sortBy`, `sortOrder`), recorte por `createdAfter` e `createdBefore` e busca parcial (`__contains`). Corrigidos os problemas do v1: `update` junta os campos (e `replace` troca tudo), `eval` usa o `data` nos filtros e no campo, a importação respeita a validade, a busca parcial escapa o texto e tem limite, valores entre aspas ficam texto, índices compostos por collection e criação, e `project` é reservado como nome de collection.
+- **9.2** ✅ Feito. Cargos nas aplicações do KV: regras por collection (ou `*`) com ler, criar, editar e apagar, limite de documentos, "só os próprios documentos" e `admin` fixo; cargo em cada token (os antigos viram `admin`) e conferência em toda rota pública.
+- **9.3** ✅ Feito. Aba **Cargos** no editor da aplicação, cargo ao gerar token e troca de cargo na aba Tokens.
+- **9.4** ✅ Feito. Vínculo de uma aplicação do KV com a página (aba **Dados**): cargo de quem abre sem PIN e um por PIN, histórico, registro dos pedidos por 30 dias e limpeza junto com a página.
+- **9.5** ✅ Feito. Ponte `/{slug}/_/kv/...` no domínio das páginas e `pocketrun.kv` no runtime, com o cargo vindo do cookie do PIN, mesma origem obrigatória, limite por visitante e por página, prévia do editor por `postMessage` com **Ver como**, e o modelo CRUD com KV sem token.
+- **9.6** ⬜ Isolar cada página num subdomínio próprio (`{slug}.dominio`), para o HTML de uma página não conseguir chamar a ponte nem ler o HTML de outra. Precisa de DNS e certificado coringa no deploy.
