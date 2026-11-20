@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -143,7 +144,11 @@ func (s *Service) Set(ctx context.Context, pageID bson.ObjectID, input SetInput)
 		return Details{}, fmt.Errorf("link page %s: %w", pageID.Hex(), err)
 	}
 
-	changes := bindingChanges(previous, next, app.Name)
+	previousName := ""
+	if previous != nil {
+		previousName = s.applicationName(ctx, previous.ApplicationID)
+	}
+	changes := bindingChanges(previous, next, previousName, app.Name)
 	eventType := history.EventKVLinked
 	if previous != nil {
 		eventType = history.EventKVChanged
@@ -348,7 +353,7 @@ func checkMappings(app *application.Application, input SetInput) error {
 	return nil
 }
 
-func bindingChanges(previous, next *Binding, applicationName string) []history.Change {
+func bindingChanges(previous, next *Binding, previousName, applicationName string) []history.Change {
 	if previous == nil {
 		return []history.Change{
 			{Field: applicationField, From: nil, To: applicationName},
@@ -359,18 +364,18 @@ func bindingChanges(previous, next *Binding, applicationName string) []history.C
 
 	changes := []history.Change{}
 	if previous.ApplicationID != next.ApplicationID {
-		changes = append(changes, history.Change{Field: applicationField, From: previous.ApplicationID.Hex(), To: applicationName})
+		changes = append(changes, history.Change{Field: applicationField, From: previousName, To: applicationName})
 	}
 	if previous.PublicRole != next.PublicRole {
 		changes = append(changes, history.Change{Field: publicRoleField, From: previous.PublicRole, To: next.PublicRole})
 	}
-	if before, after := describeMappings(previous.Roles), describeMappings(next.Roles); !slices.Equal(before, after) {
+	if before, after := describeMappings(previous.Roles), describeMappings(next.Roles); before != after {
 		changes = append(changes, history.Change{Field: roleMappingsField, From: before, To: after})
 	}
 	return changes
 }
 
-func describeMappings(mappings []RoleMapping) []string {
+func describeMappings(mappings []RoleMapping) string {
 	described := []string{}
 	for _, mapping := range mappings {
 		if mapping.KVRole == "" {
@@ -383,7 +388,7 @@ func describeMappings(mappings []RoleMapping) []string {
 		described = append(described, pageRole+" → "+mapping.KVRole)
 	}
 	slices.Sort(described)
-	return described
+	return strings.Join(described, ", ")
 }
 
 func describeRole(app *application.Application, roleName string) *Runtime {
