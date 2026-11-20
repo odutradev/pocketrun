@@ -1,4 +1,4 @@
-import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
+import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, HomeIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
@@ -15,6 +15,10 @@ import Badge from "@components/badge";
 import type { SidebarGroup, SidebarItem } from "./types";
 
 const groups: SidebarGroup[] = [
+  {
+    label: "Início",
+    items: [{ label: "Geral", to: "/", icon: <HomeIcon />, matches: ["/"], requiredPermissions: ["manage_apps"] }]
+  },
   {
     label: "Serviços",
     items: [

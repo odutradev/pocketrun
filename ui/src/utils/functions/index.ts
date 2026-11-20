@@ -6,6 +6,7 @@ import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvP
 import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
 import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
+import type { AttentionItem, KvSummary } from "@utils/types/overview";
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 
@@ -492,3 +493,37 @@ export const toCodeLines = (code: string, language: CodeLanguage): CodeLine[] =>
     tokens: pattern ? tokenizeLine(line, pattern) : [{ kind: "plain", text: line }]
   }));
 };
+
+export const summarizeKv = (applications: Application[]): KvSummary => {
+  const tokens = applications.flatMap((application) => application.tokens ?? []);
+  const states = tokens.map((token) => getExpiryInfo(token.expiresAt).state);
+  return {
+    applications: applications.length,
+    pageApplications: applications.filter((application) => application.pageId).length,
+    tokens: tokens.length,
+    activeTokens: states.filter((state) => state !== "expired").length,
+    expiringTokens: states.filter((state) => state === "soon").length,
+    expiredTokens: states.filter((state) => state === "expired").length,
+    openApplications: applications.filter((application) => !application.pageId && allowsAnyOrigin(application.allowedOrigins)).length,
+    roles: applications.reduce((total, application) => total + application.roles.length, 0)
+  };
+};
+
+export const listAttentionItems = (applications: Application[]): AttentionItem[] =>
+  applications.flatMap((application): AttentionItem[] => {
+    const tokens = application.tokens ?? [];
+    const expired = tokens.filter((token) => getExpiryInfo(token.expiresAt).state === "expired").length;
+    const expiring = tokens.filter((token) => getExpiryInfo(token.expiresAt).state === "soon").length;
+    const to = `/kv/${application.id}/edit`;
+    return [
+      ...(expired > 0
+        ? [{ key: `${application.id}-expired`, tone: "error" as const, tool: "data" as const, title: application.name, description: `${pluralize(expired, "token vencido", "tokens vencidos")}. Gere outro na aba Tokens.`, to }]
+        : []),
+      ...(expiring > 0
+        ? [{ key: `${application.id}-soon`, tone: "warning" as const, tool: "data" as const, title: application.name, description: `${pluralize(expiring, "token vence", "tokens vencem")} em até ${expiryWarningDays} dias.`, to }]
+        : []),
+      ...(!application.pageId && allowsAnyOrigin(application.allowedOrigins)
+        ? [{ key: `${application.id}-open`, tone: "neutral" as const, tool: "data" as const, title: application.name, description: "Aceita chamadas de qualquer site. Limite as origens na Configuração.", to }]
+        : [])
+    ];
+  });
