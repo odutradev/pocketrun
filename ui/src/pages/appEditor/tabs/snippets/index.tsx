@@ -67,7 +67,8 @@ const SnippetsTab = () => {
         <PanelTitle id="snippets-title">Exemplos</PanelTitle>
         <Hint>
           Troque <Mono>&lt;SEU_TOKEN&gt;</Mono> por um token de acesso desta aplicação e <Mono>pedidos</Mono> pelo nome da sua coleção. A
-          coleção é criada no primeiro documento gravado. Filtros, paginação, validade e erros estão na documentação do KV.
+          coleção é criada no primeiro documento gravado. O token só faz o que o cargo dele permite. Filtros, cálculos, importação, validade e
+          erros estão na documentação do KV.
         </Hint>
         <List>
           {snippets.map((snippet) => (

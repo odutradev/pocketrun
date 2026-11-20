@@ -7,8 +7,8 @@ import { routeColumns } from "../../table";
 const RoutesSection = () => (
   <DocSection id="routes" number="03" title="Rotas">
     <Paragraph>
-      Troque <Code>{"{colecao}"}</Code> pelo nome da coleção e <Code>{"{id}"}</Code> pelo id do documento. Os nomes de coleção são livres,
-      mas evite <Code>project</Code>: <Code>/kv/project/delete-all</Code> apaga os documentos de todas as coleções, não só os dessa.
+      Troque <Code>{"{colecao}"}</Code> pelo nome da coleção e <Code>{"{id}"}</Code> pelo id do documento. O nome <Code>project</Code> é
+      reservado para as rotas que valem para a aplicação inteira. Cada rota também passa pelo cargo do token (veja Cargos).
     </Paragraph>
     <DataTable caption="Rotas da API pública do KV" columns={routeColumns} rows={kvDocRoutes} getRowKey={(route) => `${route.method} ${route.path}`} minWidth="720px" />
   </DocSection>

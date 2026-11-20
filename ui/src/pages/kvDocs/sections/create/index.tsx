@@ -9,8 +9,10 @@ const CreateSection = () => {
   return (
     <DocSection id="create" number="04" title="Gravar">
       <Paragraph>
-        Mande o objeto em <Code>data</Code>. O <Code>expiresInDays</Code> é opcional (de 0 a 3650; 0 ou ausente é sem validade). A resposta,
-        com status 201, é o documento criado, já com o <Code>id</Code>. O corpo aceita até 1 MB.
+        Mande o objeto em <Code>data</Code>. A validade é opcional: <Code>expiresInDays</Code> (de 0 a 3650; 0 ou ausente é sem validade)
+        ou <Code>expiresAt</Code> com a data exata. A resposta, com status 201, é o documento criado, já com o <Code>id</Code>. O corpo aceita
+        até 1 MB. O nome da coleção usa letras, números, <Code>_</Code> e <Code>-</Code>, até 64 caracteres, e não pode ser{" "}
+        <Code>project</Code>.
       </Paragraph>
       <CodeGrid>
         <CodeBlock

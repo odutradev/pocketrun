@@ -13,37 +13,36 @@ const DocumentsSection = () => {
           <Code>GET /kv/{"{colecao}"}/get/{"{id}"}</Code> devolve o documento, ou 404 com <Code>document_not_found</Code>.
         </li>
         <li>
-          <Code>PATCH /kv/{"{colecao}"}/update/{"{id}"}</Code> troca o <Code>data</Code> inteiro: campos que você não mandar somem. Para mudar
-          um campo só, leia o documento, junte a mudança e mande tudo. A validade não muda.
+          <Code>PATCH /kv/{"{colecao}"}/update/{"{id}"}</Code> junta os campos enviados ao <Code>data</Code>: só eles mudam, o resto fica.
+          Mandar um campo com <Code>null</Code> grava nulo.
+        </li>
+        <li>
+          <Code>PUT /kv/{"{colecao}"}/replace/{"{id}"}</Code> troca o <Code>data</Code> inteiro: campos que você não mandar somem.
         </li>
         <li>
           <Code>DELETE /kv/{"{colecao}"}/delete/{"{id}"}</Code> apaga um documento. <Code>delete-all</Code> na coleção ou em{" "}
           <Code>project</Code> apaga em massa e responde com <Code>deletedCount</Code>. Nada disso tem volta.
         </li>
       </Bullets>
-      <Paragraph>Atualizar e apagar um documento respondem com uma mensagem curta, não com o documento.</Paragraph>
+      <Paragraph>Atualizar e trocar respondem com o documento já atualizado. Apagar responde com uma mensagem curta.</Paragraph>
       <CodeGrid>
         <CodeBlock
           title="Mudar um campo"
           isCopyable
-          code={`const headers = {
-  "Authorization": "Bearer <SEU_TOKEN>",
-  "Content-Type": "application/json"
-};
-const base = "${apiUrl}/kv/pedidos";
-
-const atual = await fetch(\`\${base}/get/\${id}\`, { headers }).then((r) => r.json());
-
-await fetch(\`\${base}/update/\${id}\`, {
+          code={`const response = await fetch(\`${apiUrl}/kv/pedidos/update/\${id}\`, {
   method: "PATCH",
-  headers,
-  body: JSON.stringify({ data: { ...atual.data, status: "entregue" } })
-});`}
+  headers: {
+    "Authorization": "Bearer <SEU_TOKEN>",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ data: { status: "entregue" } })
+});
+const pedido = await response.json();`}
         />
         <CodeBlock
           title="Respostas"
           language="json"
-          code={`{ "message": "Document updated successfully" }
+          code={`{ "id": "6afe…18f4", "data": { "cliente": "Maria", "status": "entregue" } }
 
 { "message": "Document deleted successfully" }
 

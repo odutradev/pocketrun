@@ -1,4 +1,4 @@
-export type KvDocMethod = "GET" | "POST" | "PATCH" | "DELETE";
+export type KvDocMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 export interface KvDocSection {
   id: string;

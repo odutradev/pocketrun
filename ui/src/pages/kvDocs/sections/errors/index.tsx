@@ -6,7 +6,7 @@ import { kvDocErrors } from "@assets/data";
 import { errorColumns } from "../../table";
 
 const ErrorsSection = () => (
-  <DocSection id="errors" number="08" title="Erros">
+  <DocSection id="errors" number="12" title="Erros">
     <Paragraph>
       Os erros respondem com o status HTTP e um JSON com o código em <Code>error</Code>. Use o código, não o texto, para decidir o que mostrar
       a quem usa o seu app.

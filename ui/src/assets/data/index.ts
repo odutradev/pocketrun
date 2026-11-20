@@ -649,7 +649,11 @@ export const kvDocSections: KvDocSection[] = [
   { id: "create", label: "Gravar" },
   { id: "list", label: "Listar e filtrar" },
   { id: "documents", label: "Ler, atualizar e apagar" },
+  { id: "aggregate", label: "Contar e calcular" },
+  { id: "transfer", label: "Importar e exportar" },
   { id: "expiry", label: "Validade" },
+  { id: "roles", label: "Cargos" },
+  { id: "pages", label: "Páginas com KV" },
   { id: "errors", label: "Erros" },
   { id: "security", label: "Segurança" },
   { id: "example", label: "Página de exemplo" }
@@ -659,18 +663,26 @@ export const kvDocRoutes: KvDocRoute[] = [
   { method: "GET", path: "/ping", description: "Confere se a API está no ar. Não pede token.", response: "200" },
   { method: "GET", path: "/validate/control-access", description: "Confere o token e a origem, e diz de qual aplicação é o token.", response: "200" },
   { method: "POST", path: "/kv/{colecao}/create", description: "Grava um documento novo. A coleção nasce no primeiro documento.", response: "201" },
-  { method: "GET", path: "/kv/{colecao}/get-all", description: "Lista os documentos, do mais novo ao mais antigo, com filtros e paginação opcionais.", response: "200" },
+  { method: "GET", path: "/kv/{colecao}/get-all", description: "Lista os documentos com filtros, ordenação e paginação opcionais.", response: "200" },
+  { method: "GET", path: "/kv/{colecao}/count", description: "Conta os documentos que passam nos filtros.", response: "200" },
+  { method: "POST", path: "/kv/{colecao}/eval", description: "Soma, média, mínimo, máximo, contagem ou valores distintos de um campo.", response: "200" },
   { method: "GET", path: "/kv/{colecao}/get/{id}", description: "Lê um documento pelo id.", response: "200" },
-  { method: "PATCH", path: "/kv/{colecao}/update/{id}", description: "Troca o data inteiro do documento.", response: "200" },
+  { method: "PATCH", path: "/kv/{colecao}/update/{id}", description: "Junta os campos enviados ao data e devolve o documento.", response: "200" },
+  { method: "PUT", path: "/kv/{colecao}/replace/{id}", description: "Troca o data inteiro e devolve o documento.", response: "200" },
   { method: "DELETE", path: "/kv/{colecao}/delete/{id}", description: "Apaga um documento.", response: "200" },
-  { method: "DELETE", path: "/kv/{colecao}/delete-all", description: "Apaga todos os documentos da coleção.", response: "200" },
-  { method: "DELETE", path: "/kv/project/delete-all", description: "Apaga todos os documentos de todas as coleções da aplicação.", response: "200" }
+  { method: "DELETE", path: "/kv/{colecao}/delete-all", description: "Apaga todos os documentos da coleção. Só cargo admin.", response: "200" },
+  { method: "GET", path: "/kv/{colecao}/export", description: "Baixa a coleção em JSON ou CSV.", response: "200" },
+  { method: "POST", path: "/kv/{colecao}/import", description: "Grava até 5.000 documentos de uma vez.", response: "201" },
+  { method: "GET", path: "/kv/project/export", description: "Baixa todas as coleções em JSON ou CSV. Só cargo admin.", response: "200" },
+  { method: "POST", path: "/kv/project/import", description: "Importa várias coleções de uma vez. Só cargo admin.", response: "201" },
+  { method: "DELETE", path: "/kv/project/delete-all", description: "Apaga todos os documentos de todas as coleções. Só cargo admin.", response: "200" }
 ];
 
 export const kvDocMethodTones: Record<KvDocMethod, BadgeTone> = {
   GET: "accent",
   POST: "success",
   PATCH: "warning",
+  PUT: "warning",
   DELETE: "error"
 };
 
@@ -678,11 +690,27 @@ export const kvDocErrors: KvDocError[] = [
   { status: 400, code: "invalid_body", description: "O corpo não é um JSON válido ou passou de 1 MB." },
   { status: 400, code: "validation_failed", description: "Faltou o data ou o expiresInDays saiu de 0 a 3650. O campo fields diz qual." },
   { status: 400, code: "invalid_document_id", description: "O id na rota não tem o formato de um id de documento." },
+  { status: 400, code: "invalid_collection", description: "Nome de coleção vazio, longo demais ou com caracteres fora de letras, números, _ e -." },
+  { status: 400, code: "reserved_collection", description: "project é reservado para as rotas do projeto e não pode ser coleção." },
+  { status: 400, code: "invalid_filter", description: "Filtro com campo inválido, operador desconhecido ou data fora do formato." },
+  { status: 400, code: "invalid_sort", description: "O sortBy ou o sortOrder não são válidos." },
+  { status: 400, code: "invalid_field", description: "O campo do eval ou uma chave do update não são válidos." },
+  { status: 400, code: "invalid_format", description: "O format da exportação não é json nem csv." },
+  { status: 400, code: "invalid_import", description: "Um item exportado tem createdAt, expiresAt ou expiresInDays em formato errado." },
   { status: 401, code: "missing_access_token", description: "Nenhum token nos headers." },
   { status: 401, code: "invalid_access_token", description: "O token não existe ou foi revogado." },
   { status: 401, code: "expired_access_token", description: "O token passou da validade." },
+  { status: 403, code: "forbidden_operation", description: "O cargo do token, ou da página, não pode fazer essa operação nessa coleção." },
+  { status: 403, code: "role_not_found", description: "O token aponta para um cargo que não existe mais." },
   { status: 403, code: "origin_not_allowed", description: "A origem da chamada não está na lista da aplicação, ou a chamada veio sem Origin e a aplicação recusa chamadas fora do navegador." },
-  { status: 404, code: "document_not_found", description: "Não há documento com esse id nessa coleção da aplicação." },
+  { status: 404, code: "document_not_found", description: "Não há documento com esse id nessa coleção, ou ele não é do cargo quando o cargo vê só os próprios." },
+  { status: 409, code: "collection_full", description: "A coleção chegou ao limite de documentos da regra do cargo." },
+  { status: 413, code: "too_many_items", description: "A importação passou de 5.000 itens." },
+  { status: 401, code: "page_locked", description: "Página com PIN: o acesso de quem abriu expirou ou foi encerrado." },
+  { status: 403, code: "kv_access_denied", description: "Página: o jeito como a pessoa abriu não tem cargo do KV." },
+  { status: 403, code: "invalid_client", description: "Página: a chamada não veio do endereço da própria página." },
+  { status: 404, code: "kv_not_linked", description: "Página: nenhuma aplicação do KV está ligada a ela." },
+  { status: 429, code: "too_many_requests", description: "Página: passou de 120 pedidos por minuto por visitante ou 1.200 pela página." },
   { status: 500, code: "internal_error", description: "Erro no servidor. Tente de novo; se repetir, veja os logs da API." }
 ];
 
