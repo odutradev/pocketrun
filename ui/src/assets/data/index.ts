@@ -1221,3 +1221,7 @@ export const deviceLabels: Record<string, string> = {
 };
 
 export const weekdayShortLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+export const codeKeywords = ["const", "let", "var", "await", "async", "return", "if", "else", "new", "try", "catch", "finally", "throw", "function", "import", "from", "export", "default", "of", "in", "for", "while", "typeof", "curl"];
+
+export const codeLiterals = ["true", "false", "null", "undefined"];

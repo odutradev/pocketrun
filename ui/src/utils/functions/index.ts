@@ -1,10 +1,11 @@
-import { adminRoleName, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
+import { adminRoleName, codeKeywords, codeLiterals, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
 import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
 import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
+import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
 
@@ -446,3 +447,48 @@ export const getTabIds = (prefix: string, value: string) => ({
   tabId: `${prefix}-tab-${value}`,
   panelId: `${prefix}-panel-${value}`
 });
+
+const javascriptPattern =
+  /(?<comment>\/\/[^\n]*)|(?<key>"(?:\\.|[^"\\])*"(?=\s*:)|[A-Za-z_$][\w$]*(?=\s*:(?!:)))|(?<string>"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|(?<number>\b\d+(?:\.\d+)?\b)|(?<function>[A-Za-z_$][\w$]*(?=\())|(?<word>[A-Za-z_$][\w$]*)|(?<punctuation>[{}()[\],.;:=<>+\-*/!?&|]+)/g;
+
+const jsonPattern =
+  /(?<key>"(?:\\.|[^"\\])*"(?=\s*:))|(?<string>"(?:\\.|[^"\\])*")|(?<literal>\btrue\b|\bfalse\b|\bnull\b)|(?<number>-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|(?<punctuation>[{}[\],:]+)/g;
+
+const wordKind = (text: string): CodeTokenKind => {
+  if (codeKeywords.includes(text)) return "keyword";
+  if (codeLiterals.includes(text)) return "literal";
+  return "plain";
+};
+
+const matchKind = (groups: Record<string, string | undefined>): CodeTokenKind => {
+  const [name] = Object.entries(groups).find(([, value]) => value !== undefined) ?? ["plain"];
+  if (name === "word") return wordKind(groups.word ?? "");
+  return name as CodeTokenKind;
+};
+
+const tokenizeLine = (line: string, pattern: RegExp): CodeToken[] => {
+  const matches = [...line.matchAll(pattern)];
+  const tokens = matches.flatMap((match, index): CodeToken[] => {
+    const start = match.index ?? 0;
+    const previousEnd = index === 0 ? 0 : (matches[index - 1].index ?? 0) + matches[index - 1][0].length;
+    const gap: CodeToken[] = start > previousEnd ? [{ kind: "plain", text: line.slice(previousEnd, start) }] : [];
+    return [...gap, { kind: matchKind(match.groups ?? {}), text: match[0] }];
+  });
+  const last = matches.at(-1);
+  const end = last ? (last.index ?? 0) + last[0].length : 0;
+  return end < line.length ? [...tokens, { kind: "plain", text: line.slice(end) }] : tokens;
+};
+
+const patternFor = (language: CodeLanguage): RegExp | null => {
+  if (language === "json") return jsonPattern;
+  if (language === "javascript") return javascriptPattern;
+  return null;
+};
+
+export const toCodeLines = (code: string, language: CodeLanguage): CodeLine[] => {
+  const pattern = patternFor(language);
+  return code.split("\n").map((line) => ({
+    indent: line.length - line.trimStart().length,
+    tokens: pattern ? tokenizeLine(line, pattern) : [{ kind: "plain", text: line }]
+  }));
+};

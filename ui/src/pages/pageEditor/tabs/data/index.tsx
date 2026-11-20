@@ -79,7 +79,7 @@ const DataTab = () => {
             A página ligada recebe <Mono>pocketrun.kv</Mono> pronto. Sem token, sem URL da API: a página fala com o próprio endereço dela, e o servidor
             decide o que cada cargo pode fazer.
           </Hint>
-          <CodeBlock title="JavaScript da página" language="text" code={usageExample} isCopyable />
+          <CodeBlock title="JavaScript da página" code={usageExample} isCopyable />
         </Panel>
         <Panel>
           <PanelTitle>Por que é seguro</PanelTitle>

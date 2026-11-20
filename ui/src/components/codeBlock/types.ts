@@ -1,11 +1,4 @@
-export type CodeLanguage = "json" | "text";
-
-export type CodeTokenKind = "key" | "string" | "literal" | "plain";
-
-export interface CodeToken {
-  kind: CodeTokenKind;
-  text: string;
-}
+import type { CodeLanguage } from "@utils/types/code";
 
 export interface CodeBlockProps {
   code: string;

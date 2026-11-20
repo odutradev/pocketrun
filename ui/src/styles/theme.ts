@@ -30,6 +30,21 @@ const groupColors: Record<GroupColor, GroupColorTokens> = {
   pink: { base: "#D6409F", text: "#FF8DCC", soft: "rgba(214, 64, 159, 0.18)" }
 };
 
+const codeColors = {
+  key: groupColors.blue.text,
+  string: "#71D083",
+  number: groupColors.orange.text,
+  literal: groupColors.orange.text,
+  keyword: groupColors.purple.text,
+  function: groupColors.yellow.text,
+  comment: "#7B7B7B",
+  punctuation: "#8D8D8D",
+  plain: "#E2E2E2",
+  background: "#0E0E0E",
+  scrollbar: "#3A3A3A",
+  scrollbarHover: "#5A5A5A"
+};
+
 const baseTheme = {
   spacing: (factor: number) => `${factor * 4}px`,
   radii: {
@@ -129,6 +144,7 @@ const baseTheme = {
         tablet: "#D6409F"
       } as Record<string, string>
     },
+    code: codeColors,
     overlay: "rgba(0, 0, 0, 0.66)",
     overlayShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
     fonts: {

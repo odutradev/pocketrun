@@ -1,26 +1,16 @@
 import { CheckIcon, CopyIcon } from "@radix-ui/react-icons";
 
-import { Container, Header, Pre, Title, Token } from "./styles";
+import { Container, Header, Line, Pre, Title, Token } from "./styles";
 import useClipboard from "@hooks/useClipboard";
+import { toCodeLines } from "@utils/functions";
 import Button from "@components/button";
 
-import type { CodeBlockProps, CodeToken } from "./types";
+import type { CodeBlockProps } from "./types";
 
-const jsonTokenPattern = /("(?:\\.|[^"\\])*"(?:\s*:)?|\btrue\b|\bfalse\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/;
-
-const toJsonTokens = (code: string): CodeToken[] =>
-  code
-    .split(new RegExp(jsonTokenPattern, "g"))
-    .map((text, index): CodeToken => {
-      if (index % 2 === 0) return { kind: "plain", text };
-      if (!text.startsWith('"')) return { kind: "literal", text };
-      return { kind: text.trimEnd().endsWith(":") ? "key" : "string", text };
-    })
-    .filter((token) => token.text.length > 0);
-
-const CodeBlock = ({ code, language = "text", title, isCopyable = false, maxHeight }: CodeBlockProps) => {
+const CodeBlock = ({ code, language = "javascript", title, isCopyable = false, maxHeight }: CodeBlockProps) => {
   const { copy, isCopied } = useClipboard();
   const hasHeader = Boolean(title) || isCopyable;
+  const lines = toCodeLines(code, language);
 
   return (
     <Container>
@@ -41,13 +31,15 @@ const CodeBlock = ({ code, language = "text", title, isCopyable = false, maxHeig
         </Header>
       )}
       <Pre $maxHeight={maxHeight} tabIndex={0}>
-        {language === "json"
-          ? toJsonTokens(code).map((token, index) => (
-              <Token key={`${index}-${token.text}`} $kind={token.kind}>
+        {lines.map((line, lineIndex) => (
+          <Line key={lineIndex} $indent={line.indent}>
+            {line.tokens.map((token, tokenIndex) => (
+              <Token key={tokenIndex} $kind={token.kind}>
                 {token.text}
               </Token>
-            ))
-          : code}
+            ))}
+          </Line>
+        ))}
       </Pre>
     </Container>
   );
