@@ -6,9 +6,18 @@ import Alert from "@components/alert";
 const PagesSection = () => (
   <DocSection id="pages" number="11" title="Páginas com KV">
     <Paragraph>
-      Uma página do serviço de Páginas pode usar o KV sem token. Na aba <strong>Dados</strong> do editor, ligue uma aplicação e escolha um
-      cargo para quem abre a página sem PIN e um para cada PIN da aba Acesso. A página recebe <Code>pocketrun.kv</Code> pronto.
+      Uma página do serviço de Páginas pode usar o KV sem token. Na aba <strong>Dados</strong> do editor, clique em{" "}
+      <strong>Ativar dados</strong>: a página ganha uma aplicação do KV só dela, com os cargos <Code>leitura</Code>, <Code>escrita</Code> e{" "}
+      <Code>gestao</Code> para todas as coleções. Quem abre sem PIN fica com leitura e os PINs com escrita, e dá para trocar cada um. A página
+      recebe <Code>pocketrun.kv</Code> pronto.
     </Paragraph>
+    <Bullets>
+      <li>
+        A aplicação da página aparece na lista do KV com a marca <strong>Da página</strong>. Lá você vê os documentos e edita as regras dos
+        cargos. Ela não tem token nem origens até você criar.
+      </li>
+      <li>Desativar os dados mantém os documentos e os cargos, que voltam ao ativar de novo. Excluir a página apaga a aplicação junto.</li>
+    </Bullets>
     <Bullets>
       <li>
         As chamadas vão para o próprio endereço da página, em <Code>/{"{slug}"}/_/kv/…</Code>. O servidor descobre o cargo pelo PIN usado, num
