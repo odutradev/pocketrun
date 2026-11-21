@@ -87,8 +87,8 @@ Depende de 3.6 e 3.7.
 
 ## 6. Backup e migração
 
-- **6.1** ⬜ Exportar páginas, links e métricas de uma aplicação em JSON. Depende das seções 3 e 5. Links são globais, então a exportação deles seria da instância, não de uma aplicação; hoje só existe o CSV da análise de cada link.
-- **6.2** ⬜ Restaurar uma aplicação a partir do JSON exportado. Depende de 6.1.
+- **6.1** ✅ Feito. Exportar páginas, links e métricas em JSON. Decisão: como links e páginas são globais, o backup é da instância inteira, não de uma aplicação, e só o superadmin faz. `GET /admin/backup/export` gera um `.jsonl.gz` (cabeçalho, um documento por linha em Extended JSON canônico e uma linha final com as contagens), com análise e histórico opcionais (`scope=full|content`). As tentativas de login e de PIN ficam de fora. Tela **Backup** no painel.
+- **6.2** ✅ Feito. Restaurar a partir do arquivo exportado (`POST /admin/backup/restore`). Decisões: troca só as coleções que estão no arquivo; grava primeiro em coleções temporárias e só troca tudo no fim, então um arquivo inválido, cortado ou sem superadmin não muda nada; uma restauração por vez; o painel mostra a prévia do cabeçalho e pede que se digite `restaurar`.
 - **6.3** ⬜ Importar os dados do Shareds para Páginas & Links. Depende de 1.3 e da seção 3.
 
 ## 7. Dados (ex-PocketDB)
