@@ -1,4 +1,4 @@
-import { Cross2Icon, FileTextIcon, HamburgerMenuIcon, HomeIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
+import { ArchiveIcon, Cross2Icon, FileTextIcon, HamburgerMenuIcon, HomeIcon, Link2Icon, PersonIcon, StackIcon } from "@radix-ui/react-icons";
 import { useLocation } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useState } from "react";
@@ -36,7 +36,8 @@ const groups: SidebarGroup[] = [
   {
     label: "Painel",
     items: [
-      { label: "Usuários", to: "/users", icon: <PersonIcon />, matches: ["/users"], requiredPermissions: ["manage_users"] }
+      { label: "Usuários", to: "/users", icon: <PersonIcon />, matches: ["/users"], requiredPermissions: ["manage_users"] },
+      { label: "Backup", to: "/backup", icon: <ArchiveIcon />, matches: ["/backup"], requiredPermissions: ["manage_backups"] }
     ]
   }
 ];
