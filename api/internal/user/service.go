@@ -296,6 +296,13 @@ func (s *Service) ChangePassword(ctx context.Context, id bson.ObjectID, input Pa
 	return s.IssueSession(updated)
 }
 
+func (s *Service) EnsureSuperadmin(ctx context.Context, actorID bson.ObjectID) error {
+	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) (*User, error) {
 	actor, err := s.GetUserByID(ctx, actorID)
 	if err != nil {

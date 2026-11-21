@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"pocketrun-api/internal/application"
+	"pocketrun-api/internal/backup"
 	"pocketrun-api/internal/config"
 	"pocketrun-api/internal/group"
 	"pocketrun-api/internal/health"
@@ -172,6 +173,8 @@ func run(logger *slog.Logger) error {
 		logger.WarnContext(ctx, "report setup status", "error", err)
 	}
 
+	backupService := backup.NewService(backup.NewMongoRepository(mongo), userService, logger)
+
 	healthHandler := health.NewHandler()
 	userHandler := user.NewHandler(userService, validate, logger)
 	setupHandler := setup.NewHandler(setupService, validate, logger)
@@ -189,6 +192,7 @@ func run(logger *slog.Logger) error {
 	overviewService := overview.NewService(overview.Dependencies{Pages: pageAnalyticsService, Links: linkAnalyticsService, KV: usageService, PageKV: bindingService})
 	overviewHandler := overview.NewHandler(overviewService, validate, logger)
 	bindingHandler := binding.NewHandler(bindingService, pageService, validate, logger)
+	backupHandler := backup.NewHandler(backupService, validate, logger)
 	pagePublicHandler := pagepublic.NewHandler(pagepublic.Dependencies{
 		Pages:    pageService,
 		Guard:    accessService,
@@ -218,6 +222,7 @@ func run(logger *slog.Logger) error {
 	overviewHandler.Register(adminMux, authenticateManager)
 	accessHandler.Register(adminMux, authenticateManager)
 	bindingHandler.Register(adminMux, authenticateManager)
+	backupHandler.Register(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
 	authenticateApplication := application.Authenticate(applicationService, logger)
