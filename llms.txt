@@ -115,6 +115,7 @@ Notas importantes:
 - [GET /auth/me/details](api/internal/user/handler.go): Dados do gestor logado.
 - [POST /auth/sessions/revoke](api/internal/user/handler.go): Encerra todas as sessões do gestor.
 - [GET /users/list](api/internal/user/handler.go): Lista os usuários (só superadmin).
+- [GET /backup/summary/details](api/internal/backup/handler.go): Quantos documentos cada coleção do backup tem agora (só superadmin).
 - [GET /backup/export](api/internal/backup/handler.go): Baixa o backup da instância em JSON por linhas com gzip (`scope=full` ou `content`).
 - [POST /backup/restore](api/internal/backup/handler.go): Restaura as collections presentes no arquivo de backup (só superadmin).
 
@@ -125,6 +126,7 @@ Notas importantes:
 - [Instância HTTP](ui/src/utils/api.ts): Axios com `baseURL`, cookie e tratamento de erros.
 - [Mensagens de erro](ui/src/assets/data/index.ts): Textos em pt-BR para cada código de erro da API e dados estáticos.
 - [Componentes](ui/src/components): Componentes reutilizáveis, um por pasta.
+- [Backup no painel](ui/src/pages/backup): Página `/backup` (só superadmin) que exporta a instância e restaura a partir do arquivo, com prévia do cabeçalho.
 - [Documentação do KV no painel](ui/src/pages/kvDocs): Página `/kv/docs` que explica a API pública para quem integra.
 
 ## Optional
