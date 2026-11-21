@@ -115,6 +115,27 @@ func (r *MongoRequestRepository) Count(ctx context.Context, pageID bson.ObjectID
 	return count, nil
 }
 
+func (r *MongoRequestRepository) Moments(ctx context.Context, from, to time.Time) ([]time.Time, error) {
+	cursor, err := r.collection.Find(ctx,
+		bson.M{"at": bson.M{"$gte": from, "$lt": to}},
+		options.Find().SetProjection(bson.M{"at": 1}).SetSort(bson.D{{Key: "at", Value: 1}}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("find page kv request moments: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	entries := []LoggedRequest{}
+	if err := cursor.All(ctx, &entries); err != nil {
+		return nil, fmt.Errorf("decode page kv request moments: %w", err)
+	}
+	moments := make([]time.Time, 0, len(entries))
+	for _, entry := range entries {
+		moments = append(moments, entry.At)
+	}
+	return moments, nil
+}
+
 func (r *MongoRequestRepository) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
 	if _, err := r.collection.DeleteMany(ctx, bson.M{"pageId": pageID}); err != nil {
 		return fmt.Errorf("delete page kv requests: %w", err)

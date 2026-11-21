@@ -150,7 +150,6 @@ func run(logger *slog.Logger) error {
 		Applications: applicationService,
 		Access:       accessService,
 		Documents:    documentService,
-		Usage:        usageService,
 		History:      pageHistoryService,
 		Actors:       userService,
 		Logger:       logger,
@@ -187,7 +186,7 @@ func run(logger *slog.Logger) error {
 	pageHistoryHandler := pagehistory.NewHandler(pageHistoryService, pageService, validate, logger)
 	pageAnalyticsHandler := pageanalytics.NewHandler(pageAnalyticsService, pageService, validate, logger)
 	accessHandler := access.NewHandler(accessService, pageService, validate, logger)
-	overviewService := overview.NewService(overview.Dependencies{Pages: pageAnalyticsService, Links: linkAnalyticsService, KV: usageService})
+	overviewService := overview.NewService(overview.Dependencies{Pages: pageAnalyticsService, Links: linkAnalyticsService, KV: usageService, PageKV: bindingService})
 	overviewHandler := overview.NewHandler(overviewService, validate, logger)
 	bindingHandler := binding.NewHandler(bindingService, pageService, validate, logger)
 	pagePublicHandler := pagepublic.NewHandler(pagepublic.Dependencies{

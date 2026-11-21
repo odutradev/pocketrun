@@ -38,6 +38,7 @@ type RequestRepository interface {
 	Recent(ctx context.Context, pageID bson.ObjectID, limit int) ([]LoggedRequest, error)
 	Count(ctx context.Context, pageID bson.ObjectID, since time.Time, isDenied bool) (int64, error)
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
+	Moments(ctx context.Context, from, to time.Time) ([]time.Time, error)
 }
 
 type ApplicationFinder interface {
@@ -61,10 +62,6 @@ type DocumentStore interface {
 	Delete(ctx context.Context, scope kv.Scope, collectionName string, id bson.ObjectID) error
 }
 
-type UsageRecorder interface {
-	Record(ctx context.Context, applicationID, managerID bson.ObjectID)
-}
-
 type EventRecorder interface {
 	Record(ctx context.Context, event *history.Event)
 }
@@ -79,7 +76,6 @@ type Dependencies struct {
 	Applications ApplicationFinder
 	Access       AccessReader
 	Documents    DocumentStore
-	Usage        UsageRecorder
 	History      EventRecorder
 	Actors       ActorResolver
 	Logger       *slog.Logger
@@ -91,7 +87,6 @@ type Service struct {
 	applications ApplicationFinder
 	access       AccessReader
 	documents    DocumentStore
-	usage        UsageRecorder
 	history      EventRecorder
 	actors       ActorResolver
 	logger       *slog.Logger
@@ -104,7 +99,6 @@ func NewService(dependencies Dependencies) *Service {
 		applications: dependencies.Applications,
 		access:       dependencies.Access,
 		documents:    dependencies.Documents,
-		usage:        dependencies.Usage,
 		history:      dependencies.History,
 		actors:       dependencies.Actors,
 		logger:       dependencies.Logger,
@@ -234,6 +228,14 @@ func (s *Service) Requests(ctx context.Context, pageID bson.ObjectID) (RequestSu
 	return RequestSummary{Requests: recent, Total: total, Denied: denied}, nil
 }
 
+func (s *Service) Moments(ctx context.Context, from, to time.Time) ([]time.Time, error) {
+	moments, err := s.requests.Moments(ctx, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("list page kv request moments: %w", err)
+	}
+	return moments, nil
+}
+
 func (s *Service) Describe(ctx context.Context, pageID bson.ObjectID, subject Subject) (*Runtime, error) {
 	current, err := s.repository.Find(ctx, pageID)
 	if errors.Is(err, ErrNotLinked) {
@@ -290,7 +292,6 @@ func (s *Service) run(ctx context.Context, pageID bson.ObjectID, subject Subject
 	}
 	scope := kv.NewScope(app, permission)
 	scope.Role = roleName
-	s.usage.Record(ctx, app.ID, app.ManagerID)
 
 	result, err := s.execute(ctx, scope, request)
 	return result, roleName, err
