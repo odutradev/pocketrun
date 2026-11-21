@@ -127,8 +127,9 @@ Notas importantes:
 - [Mensagens de erro](ui/src/assets/data/index.ts): Textos em pt-BR para cada código de erro da API e dados estáticos.
 - [Componentes](ui/src/components): Componentes reutilizáveis, um por pasta.
 - [Backup no painel](ui/src/pages/backup): Página `/backup` (só superadmin) que exporta a instância e restaura a partir do arquivo, com prévia do cabeçalho.
-- [Documentação](ui/src/pages/docs): Página `/docs` do menu com o guia de todo o PocketRun (painel, KV, páginas, links, análise, usuários, backup) e este llms.txt.
-- [Seções da documentação](ui/src/assets/data/docs/index.ts): Lista e grupos das seções da página `/docs` e a cópia do llms.txt que ela mostra.
+- [Documentação](ui/src/pages/docs): Página `/docs` do menu com o guia de todo o PocketRun (painel, KV, páginas, links, análise, usuários, backup) e o link deste llms.txt.
+- [Seções da documentação](ui/src/assets/data/docs/index.ts): Lista e grupos das seções da página `/docs`.
+- [llms.txt público](ui/public/llms.txt): Cópia deste arquivo servida pelo painel em `/llms.txt`, atualizada por `npm run sync:llms`.
 
 ## Optional
 
