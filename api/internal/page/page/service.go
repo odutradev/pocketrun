@@ -32,6 +32,12 @@ type Repository interface {
 	Delete(ctx context.Context, id bson.ObjectID) error
 	UnsetGroup(ctx context.Context, groupID bson.ObjectID) error
 	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Page, error)
+	CountVisitor(ctx context.Context, id bson.ObjectID) (*Page, error)
+}
+
+type UniqueTracker interface {
+	Register(ctx context.Context, targetID bson.ObjectID, visit traffic.Visit) (bool, error)
+	Forget(ctx context.Context, targetID bson.ObjectID) error
 }
 
 type VersionKeeper interface {
@@ -76,6 +82,7 @@ type Dependencies struct {
 	Versions   VersionKeeper
 	History    EventRecorder
 	Opens      OpenTracker
+	Uniques    UniqueTracker
 	Access     AccessCleaner
 	Bindings   BindingCleaner
 	Slugs      SlugRegistry
@@ -89,6 +96,7 @@ type Service struct {
 	versions   VersionKeeper
 	history    EventRecorder
 	opens      OpenTracker
+	uniques    UniqueTracker
 	access     AccessCleaner
 	bindings   BindingCleaner
 	slugs      SlugRegistry
@@ -103,6 +111,7 @@ func NewService(dependencies Dependencies) *Service {
 		versions:   dependencies.Versions,
 		history:    dependencies.History,
 		opens:      dependencies.Opens,
+		uniques:    dependencies.Uniques,
 		access:     dependencies.Access,
 		bindings:   dependencies.Bindings,
 		slugs:      dependencies.Slugs,
@@ -237,6 +246,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 		StartsAt:  input.StartsAt,
 		EndsAt:    input.EndsAt,
 		MaxClicks: input.MaxClicks,
+		CountBy:   input.CountBy,
 		CreatedBy: managerID,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -288,6 +298,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*P
 	page.StartsAt = input.StartsAt
 	page.EndsAt = input.EndsAt
 	page.MaxClicks = input.MaxClicks
+	page.CountBy = input.CountBy
 	page.UpdatedAt = time.Now()
 	if isNewVersion {
 		page.HTML = *input.HTML
@@ -331,7 +342,7 @@ func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool
 	if isActive {
 		page.Mode = activation.ModeActive
 	}
-	page.StartsAt, page.EndsAt, page.MaxClicks = nil, nil, nil
+	page.StartsAt, page.EndsAt, page.MaxClicks, page.CountBy = nil, nil, nil, ""
 	page.UpdatedAt = time.Now()
 
 	changes := diff(previous, *page)
@@ -363,6 +374,9 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 	}
 
 	s.history.Record(ctx, history.NewEvent(page.ID, history.EventDeleted, s.actor(ctx), nil, time.Now()))
+	if err := s.uniques.Forget(ctx, page.ID); err != nil {
+		s.logger.WarnContext(ctx, "forget page unique visitors", "pageId", page.ID.Hex(), "error", err)
+	}
 	if err := s.opens.DeleteAll(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete page opens", "pageId", page.ID.Hex(), "error", err)
 	}
@@ -405,7 +419,12 @@ func (s *Service) Open(ctx context.Context, id bson.ObjectID, visit traffic.Visi
 		return nil, fmt.Errorf("open page %s: %w", id.Hex(), err)
 	}
 
-	go s.recordOpen(context.WithoutCancel(ctx), *page, visit, now, isCounted)
+	isExhausted, err := s.countOpen(ctx, page, visit, isCounted)
+	if err != nil {
+		s.logger.WarnContext(ctx, "count page unique visitor", "pageId", page.ID.Hex(), "error", err)
+	}
+
+	go s.recordOpen(context.WithoutCancel(ctx), *page, visit, now, isExhausted)
 	return page, nil
 }
 
@@ -448,7 +467,28 @@ func (s *Service) reserveSlug(ctx context.Context, value string, targetID bson.O
 	return value, nil
 }
 
-func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit, at time.Time, isCounted bool) {
+func (s *Service) countOpen(ctx context.Context, page *Page, visit traffic.Visit, isCounted bool) (bool, error) {
+	rule := page.Rule()
+	if !isCounted {
+		return false, nil
+	}
+	if !rule.CountsVisitors() {
+		return rule.ExhaustedBy(page.Clicks + 1), nil
+	}
+
+	isNew, err := s.uniques.Register(ctx, page.ID, visit)
+	if err != nil || !isNew {
+		return false, err
+	}
+	counted, err := s.repository.CountVisitor(ctx, page.ID)
+	if err != nil {
+		return false, fmt.Errorf("count page visitor %s: %w", page.ID.Hex(), err)
+	}
+	page.Visitors = counted.Visitors
+	return rule.ExhaustedBy(counted.Visitors), nil
+}
+
+func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit, at time.Time, isExhausted bool) {
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
@@ -456,7 +496,7 @@ func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit
 		s.logger.WarnContext(ctx, "record page open", "pageId", page.ID.Hex(), "error", err)
 	}
 
-	if isCounted && page.Rule().ExhaustedBy(page.Clicks+1) {
+	if isExhausted {
 		s.history.Record(ctx, history.NewEvent(page.ID, history.EventExhausted, user.SystemActor(), nil, at))
 	}
 }

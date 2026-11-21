@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/link/history"
+	"pocketrun-api/internal/platform/activation"
 )
 
 func diff(previous, next Link) []history.Change {
@@ -24,6 +25,7 @@ func diff(previous, next Link) []history.Change {
 	add("startsAt", timeOrNil(previous.StartsAt), timeOrNil(next.StartsAt))
 	add("endsAt", timeOrNil(previous.EndsAt), timeOrNil(next.EndsAt))
 	add("maxClicks", intOrNil(previous.MaxClicks), intOrNil(next.MaxClicks))
+	add("countBy", countByOrNil(previous.CountBy), countByOrNil(next.CountBy))
 	return changes
 }
 
@@ -50,4 +52,11 @@ func intOrNil(value *int64) any {
 		return nil
 	}
 	return *value
+}
+
+func countByOrNil(value activation.CountBy) any {
+	if value == "" {
+		return nil
+	}
+	return string(value)
 }

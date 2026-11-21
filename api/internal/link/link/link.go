@@ -49,39 +49,42 @@ func (e *KindError) Error() string {
 }
 
 type Link struct {
-	ID        bson.ObjectID  `json:"id" bson:"_id"`
-	Title     string         `json:"title" bson:"title"`
-	Slug      string         `json:"slug" bson:"slug"`
-	URL       string         `json:"url" bson:"url"`
-	GroupID   *bson.ObjectID `json:"groupId" bson:"groupId,omitempty"`
-	Mode      Mode           `json:"mode" bson:"mode"`
-	StartsAt  *time.Time     `json:"startsAt" bson:"startsAt,omitempty"`
-	EndsAt    *time.Time     `json:"endsAt" bson:"endsAt,omitempty"`
-	MaxClicks *int64         `json:"maxClicks" bson:"maxClicks,omitempty"`
-	Clicks    int64          `json:"clicks" bson:"clicks"`
-	State     State          `json:"state" bson:"-"`
-	CreatedBy bson.ObjectID  `json:"createdBy" bson:"createdBy"`
-	CreatedAt time.Time      `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt" bson:"updatedAt"`
+	ID        bson.ObjectID      `json:"id" bson:"_id"`
+	Title     string             `json:"title" bson:"title"`
+	Slug      string             `json:"slug" bson:"slug"`
+	URL       string             `json:"url" bson:"url"`
+	GroupID   *bson.ObjectID     `json:"groupId" bson:"groupId,omitempty"`
+	Mode      Mode               `json:"mode" bson:"mode"`
+	StartsAt  *time.Time         `json:"startsAt" bson:"startsAt,omitempty"`
+	EndsAt    *time.Time         `json:"endsAt" bson:"endsAt,omitempty"`
+	MaxClicks *int64             `json:"maxClicks" bson:"maxClicks,omitempty"`
+	CountBy   activation.CountBy `json:"countBy" bson:"countBy,omitempty"`
+	Visitors  int64              `json:"uniqueVisitors" bson:"uniqueVisitors"`
+	Clicks    int64              `json:"clicks" bson:"clicks"`
+	State     State              `json:"state" bson:"-"`
+	CreatedBy bson.ObjectID      `json:"createdBy" bson:"createdBy"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
 }
 
 func (l Link) Rule() activation.Rule {
-	return activation.Rule{Mode: l.Mode, StartsAt: l.StartsAt, EndsAt: l.EndsAt, MaxClicks: l.MaxClicks}
+	return activation.Rule{Mode: l.Mode, StartsAt: l.StartsAt, EndsAt: l.EndsAt, MaxClicks: l.MaxClicks, CountBy: l.CountBy}
 }
 
 func (l Link) StateAt(now time.Time) State {
-	return l.Rule().StateAt(l.Clicks, now)
+	return l.Rule().StateAt(activation.Counts{Clicks: l.Clicks, Visitors: l.Visitors}, now)
 }
 
 type Input struct {
-	Title     string     `json:"title" validate:"required,max=20"`
-	Slug      string     `json:"slug" validate:"max=64"`
-	URL       string     `json:"url" validate:"required,http_url,max=2048"`
-	GroupID   string     `json:"groupId" validate:"omitempty,mongodb"`
-	Mode      Mode       `json:"mode" validate:"required,oneof=active inactive period clicks"`
-	StartsAt  *time.Time `json:"startsAt"`
-	EndsAt    *time.Time `json:"endsAt"`
-	MaxClicks *int64     `json:"maxClicks" validate:"omitempty,min=1"`
+	Title     string             `json:"title" validate:"required,max=20"`
+	Slug      string             `json:"slug" validate:"max=64"`
+	URL       string             `json:"url" validate:"required,http_url,max=2048"`
+	GroupID   string             `json:"groupId" validate:"omitempty,mongodb"`
+	Mode      Mode               `json:"mode" validate:"required,oneof=active inactive period clicks"`
+	StartsAt  *time.Time         `json:"startsAt"`
+	EndsAt    *time.Time         `json:"endsAt"`
+	MaxClicks *int64             `json:"maxClicks" validate:"omitempty,min=1"`
+	CountBy   activation.CountBy `json:"countBy" validate:"omitempty,oneof=clicks visitors"`
 }
 
 func (i *Input) Normalize() {
@@ -92,11 +95,11 @@ func (i *Input) Normalize() {
 
 	rule := i.Rule()
 	rule.Normalize()
-	i.StartsAt, i.EndsAt, i.MaxClicks = rule.StartsAt, rule.EndsAt, rule.MaxClicks
+	i.StartsAt, i.EndsAt, i.MaxClicks, i.CountBy = rule.StartsAt, rule.EndsAt, rule.MaxClicks, rule.CountBy
 }
 
 func (i Input) Rule() activation.Rule {
-	return activation.Rule{Mode: i.Mode, StartsAt: i.StartsAt, EndsAt: i.EndsAt, MaxClicks: i.MaxClicks}
+	return activation.Rule{Mode: i.Mode, StartsAt: i.StartsAt, EndsAt: i.EndsAt, MaxClicks: i.MaxClicks, CountBy: i.CountBy}
 }
 
 func (i Input) CheckDestination(hosts []string) error {

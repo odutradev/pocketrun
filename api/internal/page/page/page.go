@@ -25,43 +25,46 @@ var (
 )
 
 type Page struct {
-	ID        bson.ObjectID    `json:"id" bson:"_id"`
-	Title     string           `json:"title" bson:"title"`
-	Slug      string           `json:"slug" bson:"slug"`
-	HTML      string           `json:"html,omitempty" bson:"html,omitempty"`
-	Size      int64            `json:"size" bson:"size"`
-	Version   int              `json:"version" bson:"version"`
-	GroupID   *bson.ObjectID   `json:"groupId" bson:"groupId,omitempty"`
-	Mode      activation.Mode  `json:"mode" bson:"mode"`
-	StartsAt  *time.Time       `json:"startsAt" bson:"startsAt,omitempty"`
-	EndsAt    *time.Time       `json:"endsAt" bson:"endsAt,omitempty"`
-	MaxClicks *int64           `json:"maxClicks" bson:"maxClicks,omitempty"`
-	Clicks    int64            `json:"clicks" bson:"clicks"`
-	State     activation.State `json:"state" bson:"-"`
-	CreatedBy bson.ObjectID    `json:"createdBy" bson:"createdBy"`
-	CreatedAt time.Time        `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time        `json:"updatedAt" bson:"updatedAt"`
+	ID        bson.ObjectID      `json:"id" bson:"_id"`
+	Title     string             `json:"title" bson:"title"`
+	Slug      string             `json:"slug" bson:"slug"`
+	HTML      string             `json:"html,omitempty" bson:"html,omitempty"`
+	Size      int64              `json:"size" bson:"size"`
+	Version   int                `json:"version" bson:"version"`
+	GroupID   *bson.ObjectID     `json:"groupId" bson:"groupId,omitempty"`
+	Mode      activation.Mode    `json:"mode" bson:"mode"`
+	StartsAt  *time.Time         `json:"startsAt" bson:"startsAt,omitempty"`
+	EndsAt    *time.Time         `json:"endsAt" bson:"endsAt,omitempty"`
+	MaxClicks *int64             `json:"maxClicks" bson:"maxClicks,omitempty"`
+	CountBy   activation.CountBy `json:"countBy" bson:"countBy,omitempty"`
+	Visitors  int64              `json:"uniqueVisitors" bson:"uniqueVisitors"`
+	Clicks    int64              `json:"clicks" bson:"clicks"`
+	State     activation.State   `json:"state" bson:"-"`
+	CreatedBy bson.ObjectID      `json:"createdBy" bson:"createdBy"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
 }
 
 func (p Page) Rule() activation.Rule {
-	return activation.Rule{Mode: p.Mode, StartsAt: p.StartsAt, EndsAt: p.EndsAt, MaxClicks: p.MaxClicks}
+	return activation.Rule{Mode: p.Mode, StartsAt: p.StartsAt, EndsAt: p.EndsAt, MaxClicks: p.MaxClicks, CountBy: p.CountBy}
 }
 
 func (p Page) StateAt(now time.Time) activation.State {
-	return p.Rule().StateAt(p.Clicks, now)
+	return p.Rule().StateAt(activation.Counts{Clicks: p.Clicks, Visitors: p.Visitors}, now)
 }
 
 type Input struct {
-	Title        string          `json:"title" validate:"required,max=20"`
-	Slug         string          `json:"slug" validate:"max=64"`
-	HTML         *string         `json:"html"`
-	GroupID      string          `json:"groupId" validate:"omitempty,mongodb"`
-	Mode         activation.Mode `json:"mode" validate:"required,oneof=active inactive period clicks"`
-	StartsAt     *time.Time      `json:"startsAt"`
-	EndsAt       *time.Time      `json:"endsAt"`
-	MaxClicks    *int64          `json:"maxClicks" validate:"omitempty,min=1"`
-	RestoredFrom *int            `json:"restoredFrom" validate:"omitempty,min=1"`
-	Message      string          `json:"message" validate:"max=80"`
+	Title        string             `json:"title" validate:"required,max=20"`
+	Slug         string             `json:"slug" validate:"max=64"`
+	HTML         *string            `json:"html"`
+	GroupID      string             `json:"groupId" validate:"omitempty,mongodb"`
+	Mode         activation.Mode    `json:"mode" validate:"required,oneof=active inactive period clicks"`
+	StartsAt     *time.Time         `json:"startsAt"`
+	EndsAt       *time.Time         `json:"endsAt"`
+	MaxClicks    *int64             `json:"maxClicks" validate:"omitempty,min=1"`
+	CountBy      activation.CountBy `json:"countBy" validate:"omitempty,oneof=clicks visitors"`
+	RestoredFrom *int               `json:"restoredFrom" validate:"omitempty,min=1"`
+	Message      string             `json:"message" validate:"max=80"`
 }
 
 func (i *Input) Normalize() {
@@ -72,11 +75,11 @@ func (i *Input) Normalize() {
 
 	rule := i.Rule()
 	rule.Normalize()
-	i.StartsAt, i.EndsAt, i.MaxClicks = rule.StartsAt, rule.EndsAt, rule.MaxClicks
+	i.StartsAt, i.EndsAt, i.MaxClicks, i.CountBy = rule.StartsAt, rule.EndsAt, rule.MaxClicks, rule.CountBy
 }
 
 func (i Input) Rule() activation.Rule {
-	return activation.Rule{Mode: i.Mode, StartsAt: i.StartsAt, EndsAt: i.EndsAt, MaxClicks: i.MaxClicks}
+	return activation.Rule{Mode: i.Mode, StartsAt: i.StartsAt, EndsAt: i.EndsAt, MaxClicks: i.MaxClicks, CountBy: i.CountBy}
 }
 
 func (i Input) CheckHTML() error {

@@ -226,3 +226,17 @@ func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, no
 	}
 	return &link, nil
 }
+
+func (r *MongoRepository) CountVisitor(ctx context.Context, id bson.ObjectID) (*Link, error) {
+	var link Link
+	err := r.collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, bson.M{"$inc": bson.M{"uniqueVisitors": 1}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&link)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, ErrLinkNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("count link visitor: %w", err)
+	}
+	return &link, nil
+}

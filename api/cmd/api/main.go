@@ -29,6 +29,7 @@ import (
 	"pocketrun-api/internal/page/version"
 	"pocketrun-api/internal/platform/database"
 	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/platform/traffic"
 	"pocketrun-api/internal/setup"
 	"pocketrun-api/internal/slug"
 	"pocketrun-api/internal/user"
@@ -79,6 +80,7 @@ func run(logger *slog.Logger) error {
 	loginAttemptRepository := user.NewMongoAttemptRepository(mongo.Collection("loginAttempts"))
 	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
+	uniqueRegistry := traffic.NewUniqueRegistry(mongo.Collection("uniqueVisitors"), cfg.JWTSecret)
 	usageRepository := kv.NewMongoUsageRepository(mongo.Collection("kvUsage"))
 	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
@@ -94,7 +96,7 @@ func run(logger *slog.Logger) error {
 	bindingRepository := binding.NewMongoRepository(mongo.Collection("pageBindings"))
 	bindingRequestRepository := binding.NewMongoRequestRepository(mongo.Collection("pageKvRequests"))
 	ensureIndexes(startupContext, logger,
-		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, slugRepository, groupRepository,
+		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, uniqueRegistry, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
 		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
 		bindingRepository, bindingRequestRepository,
@@ -120,6 +122,7 @@ func run(logger *slog.Logger) error {
 		Repository: linkRepository,
 		History:    linkHistoryService,
 		Opens:      linkAnalyticsService,
+		Uniques:    uniqueRegistry,
 		Slugs:      slugService,
 		Groups:     groupService,
 		Actors:     userService,
@@ -157,6 +160,7 @@ func run(logger *slog.Logger) error {
 		Versions:   versionService,
 		History:    pageHistoryService,
 		Opens:      pageAnalyticsService,
+		Uniques:    uniqueRegistry,
 		Access:     accessService,
 		Bindings:   bindingService,
 		Slugs:      slugService,

@@ -16,6 +16,18 @@ const (
 	ModeClicks   Mode = "clicks"
 )
 
+type CountBy string
+
+const (
+	CountClicks   CountBy = "clicks"
+	CountVisitors CountBy = "visitors"
+)
+
+type Counts struct {
+	Clicks   int64
+	Visitors int64
+}
+
 type State string
 
 const (
@@ -35,6 +47,7 @@ type Rule struct {
 	StartsAt  *time.Time
 	EndsAt    *time.Time
 	MaxClicks *int64
+	CountBy   CountBy
 }
 
 func (r *Rule) Normalize() {
@@ -44,7 +57,23 @@ func (r *Rule) Normalize() {
 	}
 	if r.Mode != ModeClicks {
 		r.MaxClicks = nil
+		r.CountBy = ""
+		return
 	}
+	if r.CountBy != CountVisitors {
+		r.CountBy = CountClicks
+	}
+}
+
+func (r Rule) CountsVisitors() bool {
+	return r.Mode == ModeClicks && r.CountBy == CountVisitors
+}
+
+func (r Rule) counted(counts Counts) int64 {
+	if r.CountBy == CountVisitors {
+		return counts.Visitors
+	}
+	return counts.Clicks
 }
 
 func (r Rule) Check() error {
@@ -64,7 +93,7 @@ func (r Rule) Check() error {
 	return nil
 }
 
-func (r Rule) StateAt(clicks int64, now time.Time) State {
+func (r Rule) StateAt(counts Counts, now time.Time) State {
 	switch r.Mode {
 	case ModeInactive:
 		return StateInactive
@@ -77,7 +106,7 @@ func (r Rule) StateAt(clicks int64, now time.Time) State {
 		}
 		return StateActive
 	case ModeClicks:
-		if r.MaxClicks != nil && clicks >= *r.MaxClicks {
+		if r.MaxClicks != nil && r.counted(counts) >= *r.MaxClicks {
 			return StateExhausted
 		}
 		return StateActive
@@ -86,8 +115,16 @@ func (r Rule) StateAt(clicks int64, now time.Time) State {
 	}
 }
 
-func (r Rule) ExhaustedBy(clicks int64) bool {
-	return r.Mode == ModeClicks && r.MaxClicks != nil && clicks == *r.MaxClicks
+func (r Rule) ExhaustedBy(count int64) bool {
+	return r.Mode == ModeClicks && r.MaxClicks != nil && count == *r.MaxClicks
+}
+
+func countedField() bson.M {
+	return bson.M{"$cond": bson.A{
+		bson.M{"$eq": bson.A{"$countBy", CountVisitors}},
+		bson.M{"$ifNull": bson.A{"$uniqueVisitors", 0}},
+		"$clicks",
+	}}
 }
 
 func (r Rule) ExpiredBefore(now time.Time) bool {
@@ -107,7 +144,7 @@ func AvailableConditions(now time.Time) bson.A {
 		},
 		bson.M{
 			"mode":  ModeClicks,
-			"$expr": bson.M{"$lt": bson.A{"$clicks", "$maxClicks"}},
+			"$expr": bson.M{"$lt": bson.A{countedField(), "$maxClicks"}},
 		},
 	}
 }
@@ -121,7 +158,7 @@ func StateFilter(state State, now time.Time) bson.M {
 	case StateExpired:
 		return bson.M{"mode": ModePeriod, "endsAt": bson.M{"$lte": now}}
 	case StateExhausted:
-		return bson.M{"mode": ModeClicks, "$expr": bson.M{"$gte": bson.A{"$clicks", "$maxClicks"}}}
+		return bson.M{"mode": ModeClicks, "$expr": bson.M{"$gte": bson.A{countedField(), "$maxClicks"}}}
 	default:
 		return bson.M{"$or": AvailableConditions(now)}
 	}

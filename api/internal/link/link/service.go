@@ -30,6 +30,12 @@ type Repository interface {
 	Delete(ctx context.Context, id bson.ObjectID) error
 	UnsetGroup(ctx context.Context, groupID bson.ObjectID) error
 	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error)
+	CountVisitor(ctx context.Context, id bson.ObjectID) (*Link, error)
+}
+
+type UniqueTracker interface {
+	Register(ctx context.Context, targetID bson.ObjectID, visit traffic.Visit) (bool, error)
+	Forget(ctx context.Context, targetID bson.ObjectID) error
 }
 
 type EventRecorder interface {
@@ -61,6 +67,7 @@ type Dependencies struct {
 	Repository Repository
 	History    EventRecorder
 	Opens      OpenTracker
+	Uniques    UniqueTracker
 	Slugs      SlugRegistry
 	Groups     GroupChecker
 	Actors     ActorResolver
@@ -71,6 +78,7 @@ type Service struct {
 	repository Repository
 	history    EventRecorder
 	opens      OpenTracker
+	uniques    UniqueTracker
 	slugs      SlugRegistry
 	groups     GroupChecker
 	actors     ActorResolver
@@ -82,6 +90,7 @@ func NewService(dependencies Dependencies) *Service {
 		repository: dependencies.Repository,
 		history:    dependencies.History,
 		opens:      dependencies.Opens,
+		uniques:    dependencies.Uniques,
 		slugs:      dependencies.Slugs,
 		groups:     dependencies.Groups,
 		actors:     dependencies.Actors,
@@ -185,6 +194,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 		StartsAt:  input.StartsAt,
 		EndsAt:    input.EndsAt,
 		MaxClicks: input.MaxClicks,
+		CountBy:   input.CountBy,
 		CreatedBy: managerID,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -235,6 +245,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*L
 	link.StartsAt = input.StartsAt
 	link.EndsAt = input.EndsAt
 	link.MaxClicks = input.MaxClicks
+	link.CountBy = input.CountBy
 	link.UpdatedAt = time.Now()
 
 	if err := s.repository.Replace(ctx, link); err != nil {
@@ -272,6 +283,9 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 	}
 
 	s.history.Record(ctx, history.NewEvent(link.ID, history.EventDeleted, s.actor(ctx), nil, time.Now()))
+	if err := s.uniques.Forget(ctx, link.ID); err != nil {
+		s.logger.WarnContext(ctx, "forget link unique visitors", "linkId", link.ID.Hex(), "error", err)
+	}
 	if err := s.opens.DeleteAll(ctx, link.ID); err != nil {
 		s.logger.WarnContext(ctx, "delete link opens", "linkId", link.ID.Hex(), "error", err)
 	}
@@ -330,7 +344,12 @@ func (s *Service) Open(ctx context.Context, value string, visit traffic.Visit) (
 		return nil, fmt.Errorf("open link %s: %w", value, err)
 	}
 
-	go s.recordOpen(context.WithoutCancel(ctx), *link, visit, now, isCounted)
+	isExhausted, err := s.countOpen(ctx, link, visit, isCounted)
+	if err != nil {
+		s.logger.WarnContext(ctx, "count link unique visitor", "linkId", link.ID.Hex(), "error", err)
+	}
+
+	go s.recordOpen(context.WithoutCancel(ctx), *link, visit, now, isExhausted)
 	return link, nil
 }
 
@@ -369,7 +388,28 @@ func (s *Service) reserveSlug(ctx context.Context, value string, targetID bson.O
 	return value, nil
 }
 
-func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit, at time.Time, isCounted bool) {
+func (s *Service) countOpen(ctx context.Context, link *Link, visit traffic.Visit, isCounted bool) (bool, error) {
+	rule := link.Rule()
+	if !isCounted {
+		return false, nil
+	}
+	if !rule.CountsVisitors() {
+		return rule.ExhaustedBy(link.Clicks + 1), nil
+	}
+
+	isNew, err := s.uniques.Register(ctx, link.ID, visit)
+	if err != nil || !isNew {
+		return false, err
+	}
+	counted, err := s.repository.CountVisitor(ctx, link.ID)
+	if err != nil {
+		return false, fmt.Errorf("count link visitor %s: %w", link.ID.Hex(), err)
+	}
+	link.Visitors = counted.Visitors
+	return rule.ExhaustedBy(counted.Visitors), nil
+}
+
+func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit, at time.Time, isExhausted bool) {
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
@@ -377,7 +417,7 @@ func (s *Service) recordOpen(ctx context.Context, link Link, visit traffic.Visit
 		s.logger.WarnContext(ctx, "record link open", "linkId", link.ID.Hex(), "error", err)
 	}
 
-	if isCounted && link.Rule().ExhaustedBy(link.Clicks+1) {
+	if isExhausted {
 		s.history.Record(ctx, history.NewEvent(link.ID, history.EventExhausted, user.SystemActor(), nil, at))
 	}
 }

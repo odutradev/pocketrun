@@ -224,3 +224,17 @@ func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, no
 	}
 	return &page, nil
 }
+
+func (r *MongoRepository) CountVisitor(ctx context.Context, id bson.ObjectID) (*Page, error) {
+	var page Page
+	err := r.collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, bson.M{"$inc": bson.M{"uniqueVisitors": 1}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&page)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return nil, ErrPageNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("count page visitor: %w", err)
+	}
+	return &page, nil
+}
