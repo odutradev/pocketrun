@@ -1,14 +1,14 @@
 import { CheckIcon, CopyIcon, PauseIcon, Pencil1Icon, PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Clicks, ClicksLimit, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
-import { describeLinkRule, formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
+import { countedOpens, describeLinkRule, formatBytes, publicLinkUrl, versionLabel } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
 
 import type { DataTableColumn } from "@components/dataTable/types";
-import type { PageColumnsOptions } from "./types";
 import type { SitePage } from "@utils/types/sitePage";
+import type { PageColumnsOptions } from "./types";
 
 export const getPageColumns = ({ isCopied, onCopy, onEdit, onRemove, onToggle }: PageColumnsOptions): DataTableColumn<SitePage>[] => [
   {
@@ -55,7 +55,7 @@ export const getPageColumns = ({ isCopied, onCopy, onEdit, onRemove, onToggle }:
     align: "right",
     render: (sitePage) => (
       <Clicks>
-        {sitePage.clicks.toLocaleString("pt-BR")}
+        {(sitePage.mode === "clicks" && sitePage.maxClicks !== null ? countedOpens(sitePage) : sitePage.clicks).toLocaleString("pt-BR")}
         {sitePage.mode === "clicks" && sitePage.maxClicks !== null && (
           <ClicksLimit> / {sitePage.maxClicks.toLocaleString("pt-BR")}</ClicksLimit>
         )}

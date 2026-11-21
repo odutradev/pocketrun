@@ -39,6 +39,8 @@ export interface Link {
   startsAt: string | null;
   endsAt: string | null;
   maxClicks: number | null;
+  countBy: LinkCountBy | "";
+  uniqueVisitors: number;
   clicks: number;
   state: LinkState;
   createdBy: string;
@@ -109,7 +111,12 @@ export interface LinkPayload {
   startsAt: string | null;
   endsAt: string | null;
   maxClicks: number | null;
+  countBy: LinkCountBy | "";
 }
+
+export type LinkCountBy = "clicks" | "visitors";
+
+export type CountedItem = Pick<Link, "countBy" | "clicks" | "uniqueVisitors">;
 
 export type LinkFormValues = z.infer<typeof linkFormSchema>;
 export type LinkGroupValues = z.infer<typeof linkGroupSchema>;
@@ -126,7 +133,7 @@ export type QrMargin = "0" | "2" | "4";
 
 export type LinkEventType = "created" | "updated" | "deleted" | "expired" | "exhausted" | "group_detached";
 
-export type LinkChangeField = "title" | "slug" | "url" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks";
+export type LinkChangeField = "title" | "slug" | "url" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "countBy";
 
 export type LinkChangeValue = string | number | null;
 

@@ -1,3 +1,4 @@
+import type { LinkCountBy } from "@utils/types/link";
 import type {
   HistoryFilter,
   LinkAnalytics,
@@ -49,6 +50,8 @@ export interface SitePage {
   startsAt: string | null;
   endsAt: string | null;
   maxClicks: number | null;
+  countBy: LinkCountBy | "";
+  uniqueVisitors: number;
   clicks: number;
   state: LinkState;
   createdBy: string;
@@ -90,6 +93,7 @@ export interface PagePayload {
   startsAt: string | null;
   endsAt: string | null;
   maxClicks: number | null;
+  countBy: LinkCountBy | "";
   restoredFrom?: number | null;
   message?: string;
 }
@@ -102,7 +106,7 @@ export type PageTemplate = "blank" | "kvCrud";
 
 export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "data" | "qrcode" | "analytics" | "history";
 
-export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "role" | "sessionHours" | "kvApplication" | "kvPublicRole" | "kvRoles";
+export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "countBy" | "role" | "sessionHours" | "kvApplication" | "kvPublicRole" | "kvRoles";
 
 export type PageEventType =
   | LinkEventType

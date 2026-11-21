@@ -16,7 +16,7 @@ import {
   ValueTag
 } from "./styles";
 import { formatRelativeTime, formatShortDateTime, formatTime, getInitials } from "@utils/functions";
-import { linkChangeLabels, linkEventLabels, linkModeOptions } from "@assets/data";
+import { countByOptions, linkChangeLabels, linkEventLabels, linkModeOptions } from "@assets/data";
 
 import type { LinkChange, LinkChangeValue, LinkEvent } from "@utils/types/link";
 import type { EventItemProps } from "./types";
@@ -29,6 +29,7 @@ const formatValue = (change: LinkChange, value: LinkChangeValue, groupNames: Rec
   if (change.field === "groupId") return groupNames[String(value)] ?? "Grupo excluído";
   if (change.field === "startsAt" || change.field === "endsAt") return formatShortDateTime(String(value));
   if (change.field === "maxClicks") return Number(value).toLocaleString("pt-BR");
+  if (change.field === "countBy") return countByOptions.find((option) => option.value === value)?.label ?? String(value);
   return String(value);
 };
 

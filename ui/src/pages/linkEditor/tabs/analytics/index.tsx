@@ -1,7 +1,7 @@
 import { DownloadIcon } from "@radix-ui/react-icons";
 import { useEffect } from "react";
 
-import { currentTimestamp, downloadCsv, formatPercentChange, formatRelativeTime, formatShortDateTime, pluralize } from "@utils/functions";
+import { countedOpens, describeCountUnit, currentTimestamp, downloadCsv, formatPercentChange, formatRelativeTime, formatShortDateTime, pluralize } from "@utils/functions";
 import { BotNote, Container, Panel, PanelTitle, Progress, ProgressBar, ProgressText, Row, Stats, Toolbar, Trio } from "./styles";
 import SegmentedControl from "@components/segmentedControl";
 import ActivityHeatmap from "@components/activityHeatmap";
@@ -24,8 +24,9 @@ const daysIn = (analytics: LinkAnalytics) =>
 
 const describeLimit = (link: Link, analytics: LinkAnalytics, now: number) => {
   if (link.mode === "clicks" && link.maxClicks !== null) {
-    const used = Math.min(100, Math.round((link.clicks / link.maxClicks) * 100));
-    const remaining = Math.max(0, link.maxClicks - link.clicks);
+    const counted = countedOpens(link);
+    const used = Math.min(100, Math.round((counted / link.maxClicks) * 100));
+    const remaining = Math.max(0, link.maxClicks - counted);
     const perDay = analytics.totals.clicks / daysIn(analytics);
     const estimate =
       remaining === 0
@@ -34,7 +35,7 @@ const describeLimit = (link: Link, analytics: LinkAnalytics, now: number) => {
           ? `No ritmo atual, o limite acaba ${formatRelativeTime(new Date(now + (remaining / perDay) * dayMs).toISOString(), now)}.`
           : "Sem cliques recentes para estimar quando o limite acaba.";
     return {
-      label: `${link.clicks.toLocaleString("pt-BR")} de ${link.maxClicks.toLocaleString("pt-BR")} acessos usados`,
+      label: `${counted.toLocaleString("pt-BR")} de ${link.maxClicks.toLocaleString("pt-BR")} ${describeCountUnit(link.countBy, link.maxClicks)} usados`,
       percent: used,
       detail: estimate
     };

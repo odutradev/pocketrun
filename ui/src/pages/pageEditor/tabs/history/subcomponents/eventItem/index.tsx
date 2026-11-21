@@ -16,7 +16,7 @@ import {
   ValueTag
 } from "./styles";
 import { formatRelativeTime, formatSessionHours, formatShortDateTime, formatTime, getInitials } from "@utils/functions";
-import { pageChangeLabels, pageEventLabels, linkModeOptions } from "@assets/data";
+import { countByOptions, pageChangeLabels, pageEventLabels, linkModeOptions } from "@assets/data";
 
 import type { PageChange, LinkChangeValue, PageEvent } from "@utils/types/sitePage";
 import type { EventItemProps } from "./types";
@@ -32,6 +32,7 @@ const formatValue = (change: PageChange, value: LinkChangeValue, groupNames: Rec
   if (change.field === "groupId") return groupNames[String(value)] ?? "Grupo excluído";
   if (change.field === "startsAt" || change.field === "endsAt") return formatShortDateTime(String(value));
   if (change.field === "maxClicks") return Number(value).toLocaleString("pt-BR");
+  if (change.field === "countBy") return countByOptions.find((option) => option.value === value)?.label ?? String(value);
   if (change.field === "sessionHours") return formatSessionHours(Number(value));
   return String(value);
 };

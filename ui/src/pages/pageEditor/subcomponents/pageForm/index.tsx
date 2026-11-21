@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { fillPageTemplate, fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functions";
 import { ActionGroup, Actions, Form, Legend, ModeHint, Pair, Section, TitleCount } from "./styles";
 import { clickLimitRange, defaultPeriodHours, pageTitleMaxLength } from "@assets/config";
-import { linkModeOptions, pageTemplateOptions } from "@assets/data";
+import { countByOptions, linkModeOptions, pageTemplateOptions } from "@assets/data";
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import RemovePageDialog from "./subcomponents/removePageDialog";
 import { pageFormSchema } from "@utils/validations/sitePage";
@@ -38,7 +38,8 @@ const toPayload = (values: PageFormValues): PagePayload => ({
   mode: values.mode,
   startsAt: values.mode === "period" && values.startsAt ? fromDateTimeInput(values.startsAt) : null,
   endsAt: values.mode === "period" && values.endsAt ? fromDateTimeInput(values.endsAt) : null,
-  maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
+  maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null,
+  countBy: values.mode === "clicks" ? values.countBy : ""
 });
 
 const PageForm = ({ sitePage, groups, defaultGroupId, defaultTemplate, cancelTo, onGroupCreated, onSaved }: PageFormProps) => {
@@ -69,7 +70,8 @@ const PageForm = ({ sitePage, groups, defaultGroupId, defaultTemplate, cancelTo,
       mode: sitePage?.mode ?? "active",
       startsAt: sitePage?.startsAt ? toDateTimeInput(sitePage.startsAt) : "",
       endsAt: sitePage?.endsAt ? toDateTimeInput(sitePage.endsAt) : "",
-      maxClicks: String(sitePage?.maxClicks ?? clickLimitRange.initial)
+      maxClicks: String(sitePage?.maxClicks ?? clickLimitRange.initial),
+      countBy: sitePage?.countBy || "clicks"
     },
     onSubmit: (formValues: PageFormValues) => execute(toPayload(formValues))
   });
@@ -153,15 +155,26 @@ const PageForm = ({ sitePage, groups, defaultGroupId, defaultTemplate, cancelTo,
           />
         )}
         {values.mode === "clicks" && (
-          <RangeField
-            label="Limite de acessos"
-            min={clickLimitRange.min}
-            max={clickLimitRange.max}
-            unit="acessos"
-            value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
-            onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
-            error={errors.maxClicks}
-          />
+          <>
+            <SegmentedControl
+              label="Como contar os acessos"
+              options={countByOptions}
+              value={values.countBy}
+              onValueChange={(countBy) => setFieldValue("countBy", countBy)}
+              size="sm"
+              isFullWidth
+            />
+            <ModeHint>{countByOptions.find((option) => option.value === values.countBy)?.hint}</ModeHint>
+            <RangeField
+              label={values.countBy === "visitors" ? "Limite de visitantes únicos" : "Limite de acessos"}
+              min={clickLimitRange.min}
+              max={clickLimitRange.max}
+              unit={values.countBy === "visitors" ? "visitantes" : "acessos"}
+              value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
+              onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
+              error={errors.maxClicks}
+            />
+          </>
         )}
       </Section>
       <Actions>

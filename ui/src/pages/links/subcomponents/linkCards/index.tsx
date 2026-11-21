@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Actions, Body, CardItem, Clicks, ClicksLabel, Footer, Grid, Header, Host, Rule, Slug, Title, Usage } from "./styles";
-import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
+import { countedOpens, describeCountUnit, describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
@@ -37,10 +37,10 @@ const LinkCards = ({ links, isCopied, onCopy, onEdit, onRemove, isCompact = fals
           <Footer $isCompact={isCompact}>
             <Usage $isCompact={isCompact}>
               <Clicks $isCompact={isCompact}>
-                {link.clicks.toLocaleString("pt-BR")}
+                {(hasLimit ? countedOpens(link) : link.clicks).toLocaleString("pt-BR")}
                 {hasLimit && <ClicksLabel> / {link.maxClicks?.toLocaleString("pt-BR")}</ClicksLabel>}
               </Clicks>
-              <Rule>{rule ?? (link.clicks === 1 ? "acesso" : "acessos")}</Rule>
+              <Rule>{rule ?? (hasLimit ? describeCountUnit(link.countBy, countedOpens(link)) : link.clicks === 1 ? "acesso" : "acessos")}</Rule>
             </Usage>
             <Actions>
               <IconButton

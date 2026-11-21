@@ -7,6 +7,7 @@ import { fromDateTimeInput, hoursFromNow, toDateTimeInput } from "@utils/functio
 import CreateGroupDialog from "./subcomponents/createGroupDialog";
 import DestinationField from "./subcomponents/destinationField";
 import RemoveLinkDialog from "./subcomponents/removeLinkDialog";
+import { countByOptions, linkModeOptions } from "@assets/data";
 import SegmentedControl from "@components/segmentedControl";
 import { linkFormSchema } from "@utils/validations/link";
 import { createLink, updateLink } from "@actions/links";
@@ -14,7 +15,6 @@ import PeriodPicker from "./subcomponents/periodPicker";
 import SlugField from "./subcomponents/slugField";
 import LinkButton from "@components/linkButton";
 import RangeField from "@components/rangeField";
-import { linkModeOptions } from "@assets/data";
 import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Select from "@components/select";
@@ -40,7 +40,8 @@ const toPayload = (values: LinkFormValues): LinkPayload => ({
   mode: values.mode,
   startsAt: values.mode === "period" && values.startsAt ? fromDateTimeInput(values.startsAt) : null,
   endsAt: values.mode === "period" && values.endsAt ? fromDateTimeInput(values.endsAt) : null,
-  maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null
+  maxClicks: values.mode === "clicks" ? Number.parseInt(values.maxClicks, 10) : null,
+  countBy: values.mode === "clicks" ? values.countBy : ""
 });
 
 const LinkForm = ({ link, groups, defaultGroupId, cancelTo, onGroupCreated, onSaved }: LinkFormProps) => {
@@ -69,7 +70,8 @@ const LinkForm = ({ link, groups, defaultGroupId, cancelTo, onGroupCreated, onSa
       mode: link?.mode ?? "active",
       startsAt: link?.startsAt ? toDateTimeInput(link.startsAt) : "",
       endsAt: link?.endsAt ? toDateTimeInput(link.endsAt) : "",
-      maxClicks: String(link?.maxClicks ?? clickLimitRange.initial)
+      maxClicks: String(link?.maxClicks ?? clickLimitRange.initial),
+      countBy: link?.countBy || "clicks"
     },
     onSubmit: (formValues: LinkFormValues) => execute(toPayload(formValues))
   });
@@ -147,15 +149,26 @@ const LinkForm = ({ link, groups, defaultGroupId, cancelTo, onGroupCreated, onSa
           />
         )}
         {values.mode === "clicks" && (
-          <RangeField
-            label="Limite de acessos"
-            min={clickLimitRange.min}
-            max={clickLimitRange.max}
-            unit="acessos"
-            value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
-            onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
-            error={errors.maxClicks}
-          />
+          <>
+            <SegmentedControl
+              label="Como contar os acessos"
+              options={countByOptions}
+              value={values.countBy}
+              onValueChange={(countBy) => setFieldValue("countBy", countBy)}
+              size="sm"
+              isFullWidth
+            />
+            <ModeHint>{countByOptions.find((option) => option.value === values.countBy)?.hint}</ModeHint>
+            <RangeField
+              label={values.countBy === "visitors" ? "Limite de visitantes únicos" : "Limite de acessos"}
+              min={clickLimitRange.min}
+              max={clickLimitRange.max}
+              unit={values.countBy === "visitors" ? "visitantes" : "acessos"}
+              value={values.maxClicks === "" ? Number.NaN : Number(values.maxClicks)}
+              onValueChange={(maxClicks) => setFieldValue("maxClicks", Number.isNaN(maxClicks) ? "" : String(maxClicks))}
+              error={errors.maxClicks}
+            />
+          </>
         )}
       </Section>
       <Actions>

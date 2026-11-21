@@ -1,10 +1,10 @@
-import { adminRoleName, codeKeywords, codeLiterals, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
+import { adminRoleName, codeKeywords, codeLiterals, countByOptions, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
 import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
+import type { CountedItem, Link, LinkCountBy, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
 import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
-import type { Link, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
 import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
 import type { AttentionItem, KvSummary } from "@utils/types/overview";
 import type { ExpiryInfo } from "@utils/types/expiry";
@@ -527,3 +527,10 @@ export const listAttentionItems = (applications: Application[]): AttentionItem[]
         : [])
     ];
   });
+
+export const countedOpens = (item: CountedItem): number => (item.countBy === "visitors" ? item.uniqueVisitors : item.clicks);
+
+export const describeCountUnit = (countBy: LinkCountBy | "", count: number): string => {
+  const option = countByOptions.find((item) => item.value === (countBy || "clicks")) ?? countByOptions[0];
+  return count === 1 ? option.singular : option.unit;
+};

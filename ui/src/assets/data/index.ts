@@ -3,7 +3,7 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption } from "@utils/types/link";
+import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
 import type { KvDocError, KvDocMethod, KvDocRoute, KvDocSection } from "@utils/types/kvDocs";
@@ -575,6 +575,17 @@ export const brandMotionDemos: MotionDemo[] = [
   }
 ];
 
+export const countByOptions: { value: LinkCountBy; label: string; unit: string; singular: string; hint: string }[] = [
+  { value: "clicks", label: "Por clique", unit: "acessos", singular: "acesso", hint: "Cada abertura conta, mesmo que seja a mesma pessoa voltando." },
+  {
+    value: "visitors",
+    label: "Por visitante único",
+    unit: "visitantes",
+    singular: "visitante",
+    hint: "Cada pessoa conta uma vez só, pelo endereço de rede e pelo navegador. Quem voltar não gasta o limite."
+  }
+];
+
 export const linkModeOptions: { value: LinkMode; label: string }[] = [
   { value: "active", label: "Ativo" },
   { value: "inactive", label: "Desativado" },
@@ -767,6 +778,7 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   startsAt: "Início",
   endsAt: "Fim",
   maxClicks: "Limite de acessos",
+  countBy: "Contagem",
   role: "Cargo",
   sessionHours: "Duração do acesso",
   kvApplication: "Aplicação do KV",
@@ -1205,7 +1217,8 @@ export const linkChangeLabels: Record<LinkChangeField, string> = {
   mode: "Ativação",
   startsAt: "Início",
   endsAt: "Fim",
-  maxClicks: "Limite de acessos"
+  maxClicks: "Limite de acessos",
+  countBy: "Contagem"
 };
 
 export const historyFilterOptions: { value: HistoryFilter; label: string }[] = [

@@ -1,7 +1,7 @@
 import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Clicks, ClicksLimit, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
-import { describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
+import { countedOpens, describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
 import IconButton from "@components/iconButton";
 import { linkStateLabels } from "@assets/data";
 import Badge from "@components/badge";
@@ -53,7 +53,7 @@ export const getLinkColumns = ({ isCopied, onCopy, onEdit, onRemove }: LinkColum
     align: "right",
     render: (link) => (
       <Clicks>
-        {link.clicks.toLocaleString("pt-BR")}
+        {(link.mode === "clicks" && link.maxClicks !== null ? countedOpens(link) : link.clicks).toLocaleString("pt-BR")}
         {link.mode === "clicks" && link.maxClicks !== null && (
           <ClicksLimit> / {link.maxClicks.toLocaleString("pt-BR")}</ClicksLimit>
         )}

@@ -48,6 +48,7 @@ const toPayload = (sitePage: SitePage, draft: PageDraft): PagePayload => ({
   startsAt: sitePage.startsAt,
   endsAt: sitePage.endsAt,
   maxClicks: sitePage.maxClicks,
+  countBy: sitePage.countBy,
   html: draft.html,
   restoredFrom: draft.restoredFrom,
   message: draft.message.trim()

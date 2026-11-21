@@ -34,7 +34,8 @@ export const linkFormSchema = z
     mode: z.enum(["active", "inactive", "period", "clicks"]),
     startsAt: z.string(),
     endsAt: z.string(),
-    maxClicks: z.string()
+    maxClicks: z.string(),
+    countBy: z.enum(["clicks", "visitors"])
   })
   .superRefine((values, context) => {
     if (values.mode === "period") {
