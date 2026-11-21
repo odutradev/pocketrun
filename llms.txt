@@ -127,7 +127,8 @@ Notas importantes:
 - [Mensagens de erro](ui/src/assets/data/index.ts): Textos em pt-BR para cada código de erro da API e dados estáticos.
 - [Componentes](ui/src/components): Componentes reutilizáveis, um por pasta.
 - [Backup no painel](ui/src/pages/backup): Página `/backup` (só superadmin) que exporta a instância e restaura a partir do arquivo, com prévia do cabeçalho.
-- [Documentação do KV no painel](ui/src/pages/kvDocs): Página `/kv/docs` que explica a API pública para quem integra.
+- [Documentação](ui/src/pages/docs): Página `/docs` do menu com o guia de todo o PocketRun (painel, KV, páginas, links, análise, usuários, backup) e este llms.txt.
+- [Seções da documentação](ui/src/assets/data/docs/index.ts): Lista e grupos das seções da página `/docs` e a cópia do llms.txt que ela mostra.
 
 ## Optional
 
