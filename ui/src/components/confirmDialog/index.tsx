@@ -15,7 +15,8 @@ const ConfirmDialog = ({
   description,
   confirmLabel,
   isPending = false,
-  confirmationText
+  confirmationText,
+  confirmationLabel = "Confirme digitando o Project ID"
 }: ConfirmDialogProps) => {
   const [typedText, setTypedText] = useState("");
   const isConfirmed = !confirmationText || typedText.trim() === confirmationText;
@@ -45,7 +46,7 @@ const ConfirmDialog = ({
     >
       {confirmationText && (
         <Input
-          label="Confirme digitando o Project ID"
+          label={confirmationLabel}
           hint={
             <>
               Digite <Code>{confirmationText}</Code> para liberar o botão.

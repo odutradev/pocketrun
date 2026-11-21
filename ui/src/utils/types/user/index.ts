@@ -3,7 +3,7 @@ import type { z } from "zod";
 
 export type UserRole = "superadmin" | "admin";
 
-export type Permission = "manage_apps" | "manage_users";
+export type Permission = "manage_apps" | "manage_users" | "manage_backups";
 
 export interface User {
   id: string;

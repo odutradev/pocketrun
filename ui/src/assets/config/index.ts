@@ -88,3 +88,7 @@ export const clickLimitRange = { min: 1, max: 150, initial: 100 } as const;
 export const defaultPeriodHours = 168;
 
 export const customPeriodHours = 24;
+
+export const backupFormat = { name: "pocketrun-backup", version: 1, headerMaxLength: 64 * 1024 } as const;
+
+export const backupConfirmationText = "restaurar";

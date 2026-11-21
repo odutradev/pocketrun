@@ -9,4 +9,5 @@ export interface ConfirmDialogProps {
   confirmLabel: string;
   isPending?: boolean;
   confirmationText?: string;
+  confirmationLabel?: string;
 }

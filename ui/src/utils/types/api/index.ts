@@ -56,7 +56,13 @@ export type ApiErrorCode =
   | "role_in_use"
   | "application_owned_by_page"
   | "kv_not_linked"
-  | "kv_application_missing";
+  | "kv_application_missing"
+  | "invalid_backup"
+  | "backup_truncated"
+  | "backup_missing_superadmin"
+  | "backup_unsupported_version"
+  | "backup_too_large"
+  | "restore_running";
 
 export interface ApiErrorBody {
   error: ApiErrorCode;

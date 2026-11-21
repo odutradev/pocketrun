@@ -1,11 +1,12 @@
-import { adminRoleName, codeKeywords, codeLiterals, countByOptions, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
-import { expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
+import { adminRoleName, backupCollectionLabels, codeKeywords, codeLiterals, countByOptions, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
+import { backupFormat, expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
 import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { CountedItem, Link, LinkCountBy, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
 import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
 import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
+import type { BackupCountRow, BackupHeader } from "@utils/types/backup";
 import type { AttentionItem, KvSummary } from "@utils/types/overview";
 import type { ExpiryInfo } from "@utils/types/expiry";
 import type { LogLevel } from "@utils/types/logger";
@@ -216,8 +217,13 @@ export const currentTimestamp = (): number => Date.now();
 
 export const measureBytes = (value: string): number => new TextEncoder().encode(value).length;
 
-export const formatBytes = (bytes: number): string =>
-  bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KB`;
+const byteUnits = ["KB", "MB", "GB"];
+
+export const formatBytes = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), byteUnits.length);
+  return `${(bytes / 1024 ** exponent).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} ${byteUnits[exponent - 1]}`;
+};
 
 export const fillPageTemplate = (html: string): string => html.replaceAll("\r\n", "\n");
 
@@ -534,3 +540,56 @@ export const describeCountUnit = (countBy: LinkCountBy | "", count: number): str
   const option = countByOptions.find((item) => item.value === (countBy || "clicks")) ?? countByOptions[0];
   return count === 1 ? option.singular : option.unit;
 };
+
+const pad = (value: number): string => String(value).padStart(2, "0");
+
+export const buildBackupFileName = (date: Date): string =>
+  `pocketrun-backup-${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}-${pad(date.getHours())}${pad(date.getMinutes())}.jsonl.gz`;
+
+const readFirstLine = async (reader: ReadableStreamDefaultReader<string>, collected: string): Promise<string> => {
+  const { done, value } = await reader.read();
+  const text = collected + (value ?? "");
+  const breakIndex = text.indexOf("\n");
+  if (breakIndex >= 0 || done || text.length > backupFormat.headerMaxLength) {
+    await reader.cancel();
+    return breakIndex >= 0 ? text.slice(0, breakIndex) : text;
+  }
+  return readFirstLine(reader, text);
+};
+
+const isBackupHeader = (value: unknown): value is BackupHeader => {
+  if (typeof value !== "object" || value === null) return false;
+  const header = value as Partial<BackupHeader>;
+  return (
+    header.format === backupFormat.name &&
+    typeof header.version === "number" &&
+    typeof header.createdAt === "string" &&
+    Array.isArray(header.collections) &&
+    typeof header.documents === "object" &&
+    header.documents !== null
+  );
+};
+
+const parseJson = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+export const readBackupHeader = async (file: File): Promise<BackupHeader | null> => {
+  const magic = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+  const isGzip = magic[0] === 0x1f && magic[1] === 0x8b;
+  const bytes = isGzip ? file.stream().pipeThrough(new DecompressionStream("gzip")) : file.stream();
+  try {
+    const line = await readFirstLine(bytes.pipeThrough(new TextDecoderStream()).getReader(), "");
+    const header = parseJson(line);
+    return isBackupHeader(header) ? header : null;
+  } catch {
+    return null;
+  }
+};
+
+export const toBackupRows = (names: string[], documents: Record<string, number>): BackupCountRow[] =>
+  names.map((name) => ({ name, label: backupCollectionLabels[name] ?? name, documents: documents[name] ?? 0 }));

@@ -7,6 +7,7 @@ import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, 
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
 import type { KvDocError, KvDocMethod, KvDocRoute, KvDocSection } from "@utils/types/kvDocs";
+import type { BackupGroup, BackupScope } from "@utils/types/backup";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -71,11 +72,17 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar.",
   application_owned_by_page: "Esta aplicação é de uma página. Ela é apagada junto com a página, ou desligada na aba Dados.",
   kv_not_linked: "A página ainda não tem dados ativados.",
-  kv_application_missing: "A aplicação de dados desta página foi excluída."
+  kv_application_missing: "A aplicação de dados desta página foi excluída.",
+  invalid_backup: "Esse arquivo não é um backup válido do PocketRun.",
+  backup_truncated: "O backup está incompleto. Baixe de novo e tente outra vez.",
+  backup_missing_superadmin: "O backup não tem nenhum superadmin. Restaurar deixaria o painel sem acesso.",
+  backup_unsupported_version: "Esse backup foi feito por uma versão do PocketRun que esta não lê.",
+  backup_too_large: "O backup passa do limite de 2 GB.",
+  restore_running: "Já existe uma restauração em andamento. Espere ela terminar."
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
-  superadmin: ["manage_apps", "manage_users"],
+  superadmin: ["manage_apps", "manage_users", "manage_backups"],
   admin: ["manage_apps"]
 };
 
@@ -1238,3 +1245,33 @@ export const weekdayShortLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "S�
 export const codeKeywords = ["const", "let", "var", "await", "async", "return", "if", "else", "new", "try", "catch", "finally", "throw", "function", "import", "from", "export", "default", "of", "in", "for", "while", "typeof", "curl"];
 
 export const codeLiterals = ["true", "false", "null", "undefined"];
+
+export const backupCollectionLabels: Record<string, string> = {
+  users: "Usuários",
+  applications: "Aplicações do KV",
+  kvDocuments: "Documentos do KV",
+  groups: "Grupos",
+  slugs: "Endereços",
+  links: "Links",
+  pages: "Páginas",
+  pageVersions: "Versões das páginas",
+  pageAccess: "PINs e cargos das páginas",
+  pageBindings: "Dados das páginas",
+  linkEvents: "Histórico dos links",
+  pageEvents: "Histórico das páginas",
+  linkOpens: "Cliques nos links",
+  pageOpens: "Acessos às páginas",
+  kvUsage: "Uso do KV",
+  pageKvRequests: "Pedidos das páginas ao KV",
+  uniqueVisitors: "Visitantes únicos"
+};
+
+export const backupGroupLabels: Record<BackupGroup, string> = {
+  content: "Conteúdo",
+  history: "Análise e histórico"
+};
+
+export const backupScopeLabels: Record<BackupScope, string> = {
+  full: "Completo, com análise e histórico",
+  content: "Só o conteúdo"
+};
