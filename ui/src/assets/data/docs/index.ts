@@ -1,10 +1,6 @@
-import llmsText from "./llms.txt?raw";
-
 import type { DocGroup, DocSectionEntry } from "@utils/types/docs";
 
-export const docsLlmsText = llmsText;
-
-export const docsLlmsFileName = "llms.txt";
+export const docsLlmsPath = "/llms.txt";
 
 export const docGroups: DocGroup[] = [
   { id: "general", label: "Geral", context: "general" },

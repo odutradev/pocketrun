@@ -1,5 +1,4 @@
-import { docGroups, docSections, docsLlmsFileName, docsLlmsText } from "@assets/data/docs";
-import { downloadBlob } from "@utils/functions/brandAssets";
+import { docGroups, docSections, docsLlmsPath } from "@assets/data/docs";
 import { apiUrl, linksUrl } from "@assets/config";
 import useMediaQuery from "@hooks/useMediaQuery";
 
@@ -18,10 +17,9 @@ const useDocsPage = (): UseDocsPageReturn => {
     sections,
     apiUrl,
     linksUrl,
-    llmsText: docsLlmsText,
+    llmsUrl: `${window.location.origin}${docsLlmsPath}`,
     handleJump: (sectionId) =>
-      document.getElementById(sectionId)?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" }),
-    handleDownloadLlms: () => downloadBlob(new Blob([docsLlmsText], { type: "text/plain;charset=utf-8" }), docsLlmsFileName)
+      document.getElementById(sectionId)?.scrollIntoView({ block: "start", behavior: shouldReduceMotion ? "auto" : "smooth" })
   };
 };
 

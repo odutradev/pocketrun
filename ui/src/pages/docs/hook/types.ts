@@ -5,7 +5,6 @@ export interface UseDocsPageReturn {
   sections: NumberedDocSection[];
   apiUrl: string;
   linksUrl: string;
-  llmsText: string;
+  llmsUrl: string;
   handleJump: (sectionId: string) => void;
-  handleDownloadLlms: () => void;
 }
