@@ -1,0 +1,140 @@
+# PocketRun
+
+> PocketRun é uma plataforma self-hosted que junta, numa instância só, um banco de dados chave-valor por aplicação (KV, antigo PocketDB) e páginas HTML e links curtos (Páginas & Links, antigo Shareds). É uma API em Go (net/http + MongoDB) em `api/` e um painel React + Vite em `ui/`, com deploy por Docker Compose no Dokploy. A API pública fica na raiz (`/kv/*`, `/{slug}`) e as rotas do painel ficam sob `/admin`.
+
+Notas importantes:
+
+- Autenticação pública: o token da aplicação vai no header `controlAccess`, `X-Pocket-Token` ou `Authorization: Bearer <token>`. O token é guardado em hash e aparece uma vez só.
+- Autenticação do painel: cookie de sessão `HttpOnly; Secure; SameSite=Strict` de 7 dias, e toda chamada `/admin` leva o header `X-Pocketrun-Client: panel` contra CSRF.
+- Rotas dizem a ação na URL: `POST /links/create`, `PATCH /pages/{id}/update`, `DELETE /apps/{id}/delete`, `GET /links/{id}/details`.
+- Erros respondem `{ "error": "codigo_em_snake_case", "fields": {...} }`. Listas paginadas do KV respondem `{ data, total, page, limit, totalPages }`.
+- Toda rota do KV passa pelo cargo do token (ler, criar, editar, apagar por collection ou `*`). `admin` tem acesso total. Erro de cargo responde `403 forbidden_operation`.
+- Páginas e links são globais da instância e dividem o mesmo espaço de slugs (`dominio.com/{slug}`, só minúsculas, números e hífen).
+- Páginas usam `window.pocketrun.kv` para ler e gravar dados sem token: as chamadas vão para `/{slug}/_/kv/...` e o cargo vem do cookie do PIN.
+- Gestores têm o papel `admin` ou `superadmin`. Só o superadmin gerencia usuários e faz backup.
+- Regras de código: zero comentários, tipos só em `types.ts`, imports em 3 blocos do maior para o menor, commits em Conventional Commits sem escopo e sem coautoria.
+- Itens do roadmap só são executados quando o dono pede pelo número.
+
+## Guias do projeto
+
+- [Guia do monorepo](.claude/CLAUDE.md): Estrutura, scripts, variáveis de ambiente, Docker, compose, nginx, commits e publicação.
+- [Guia da API](api/CLAUDE.md): Arquitetura por domínio em Go, nomes, erros, validação, logs e rotas.
+- [Guia do painel](ui/CLAUDE.md): Estrutura por tipo, componentes, stores, actions, listas paginadas e princípios do frontend.
+- [Visão do produto](.claude/PRODUCT.md): O que é o PocketRun, conceitos, módulos, regras de cada recurso e decisões em aberto.
+- [Roadmap](.docs/ROADMAP.md): Itens numerados do que falta construir, com status.
+- [Guia de estilo](.docs/style-guide.html): Cores, tipografia e componentes visuais do painel.
+
+## Montagem da API
+
+- [cmd/api/main.go](api/cmd/api/main.go): Lê a configuração, monta as dependências, cria os índices e registra as rotas.
+- [Configuração](api/internal/config/config.go): Variáveis de ambiente (`PORT`, `MONGODB_URI`, `MONGODB_NAME`, `JWT_SECRET`, `LINKS_URL`, `PAGE_ACCESS_SECRET`, CORS).
+- [Plataforma](api/internal/platform): Código compartilhado: banco, HTTP, ativação por período e acessos, análise de tráfego e limite de pedidos.
+
+## KV: API pública
+
+- [GET /ping](api/internal/health/handler.go): Confere se a API está no ar.
+- [GET /validate/control-access](api/internal/application/handler.go): Valida o token e diz o cargo dele.
+- [POST /kv/{collection}/create](api/internal/kv/handler.go): Cria um documento, com validade opcional (`expiresInDays` ou `expiresAt`).
+- [GET /kv/{collection}/get-all](api/internal/kv/handler.go): Lista documentos com paginação, ordenação, recorte por data e filtros sobre `data`.
+- [GET /kv/{collection}/count](api/internal/kv/handler.go): Conta os documentos com os mesmos filtros da listagem.
+- [POST /kv/{collection}/eval](api/internal/kv/handler.go): Calcula `sum`, `avg`, `min`, `max`, `count` ou `distinct` de um campo.
+- [GET /kv/{collection}/get/{id}](api/internal/kv/handler.go): Busca um documento pelo ID.
+- [PATCH /kv/{collection}/update/{id}](api/internal/kv/handler.go): Junta os campos enviados ao `data` do documento.
+- [PUT /kv/{collection}/replace/{id}](api/internal/kv/handler.go): Troca o `data` inteiro do documento.
+- [DELETE /kv/{collection}/delete/{id}](api/internal/kv/handler.go): Apaga um documento.
+- [DELETE /kv/{collection}/delete-all](api/internal/kv/handler.go): Limpa a collection (só `admin`).
+- [GET /kv/{collection}/export](api/internal/kv/handler.go): Exporta a collection em JSON ou CSV.
+- [POST /kv/{collection}/import](api/internal/kv/handler.go): Importa até 5.000 itens na collection.
+- [GET /kv/project/export](api/internal/kv/handler.go): Exporta todas as collections da aplicação.
+- [POST /kv/project/import](api/internal/kv/handler.go): Importa várias collections de uma vez.
+- [DELETE /kv/project/delete-all](api/internal/kv/handler.go): Apaga todos os dados da aplicação (só `admin`).
+- [Filtros e operadores](api/internal/kv/query.go): `__gt`, `__gte`, `__lt`, `__lte`, `__ne`, `__contains`, `__exists`, `sortBy`, `sortOrder`, `createdAfter` e `createdBefore`.
+
+## Aplicações, tokens e cargos
+
+- [GET /apps/list](api/internal/application/handler.go): Lista as aplicações do KV do gestor.
+- [POST /apps/create](api/internal/application/handler.go): Cria uma aplicação com nome, descrição e origens.
+- [GET /apps/{id}/details](api/internal/application/handler.go): Detalhes da aplicação, tokens e cargos.
+- [PATCH /apps/{id}/update](api/internal/application/handler.go): Edita nome, descrição e origens permitidas.
+- [DELETE /apps/{id}/delete](api/internal/application/handler.go): Exclui a aplicação e os dados (bloqueado para a aplicação de uma página).
+- [POST /apps/{id}/tokens/create](api/internal/application/handler.go): Gera um token com nome, validade e cargo.
+- [PATCH /apps/{id}/tokens/{tokenId}/role/set](api/internal/application/handler.go): Troca o cargo de um token.
+- [DELETE /apps/{id}/tokens/{tokenId}/delete](api/internal/application/handler.go): Revoga um token.
+- [POST /apps/{id}/roles/create](api/internal/application/handler.go): Cria um cargo com regras por collection.
+- [PATCH /apps/{id}/roles/{role}/update](api/internal/application/handler.go): Edita as regras de um cargo.
+- [DELETE /apps/{id}/roles/{role}/delete](api/internal/application/handler.go): Apaga um cargo que nenhum token usa.
+- [GET /apps/{id}/explorer/collections/list](api/internal/kv/handler.go): Lista as collections no Explorador do painel.
+- [GET /apps/{id}/explorer/collections/{collection}/documents/list](api/internal/kv/handler.go): Lista documentos no Explorador do painel.
+
+## Páginas
+
+- [GET /pages/list](api/internal/page/page/handler.go): Lista as páginas com busca, filtro, ordenação e paginação.
+- [POST /pages/create](api/internal/page/page/handler.go): Cria uma página com HTML (até 512 KB), slug e ativação.
+- [GET /pages/{id}/details](api/internal/page/page/handler.go): Detalhes da página.
+- [PATCH /pages/{id}/update](api/internal/page/page/handler.go): Edita a página; mudar o HTML gera uma versão nova.
+- [PATCH /pages/{id}/status/set](api/internal/page/page/handler.go): Ativa ou desativa a página.
+- [DELETE /pages/{id}/delete](api/internal/page/page/handler.go): Exclui a página, as versões, as aberturas e a aplicação de dados.
+- [GET /pages/slug-availability/check](api/internal/page/page/handler.go): Confere se um slug está livre.
+- [GET /pages/{id}/versions/list](api/internal/page/version/handler.go): Lista as últimas 50 versões do HTML.
+- [GET /pages/{id}/history/list](api/internal/page/history/handler.go): Histórico de alterações da página.
+- [GET /pages/{id}/access/details](api/internal/page/access/handler.go): PIN geral, cargos com PIN e duração do acesso.
+- [POST /pages/{id}/access/keys/create](api/internal/page/access/handler.go): Cria um PIN de cargo.
+- [POST /pages/{id}/kv/enable](api/internal/page/binding/handler.go): Ativa os dados da página, criando a aplicação do KV dela.
+- [PATCH /pages/{id}/kv/set](api/internal/page/binding/handler.go): Troca o cargo de cada acesso nos dados da página.
+- [GET /pages/{id}/kv/requests/list](api/internal/page/binding/handler.go): Pedidos feitos pela página ao KV nos últimos 30 dias.
+- [Runtime window.pocketrun](api/internal/page/public/runtime.go): Script injetado na entrega com `page`, `access` e `kv`.
+
+## Links e grupos
+
+- [GET /links/list](api/internal/link/link/handler.go): Lista os links com busca, filtro, ordenação e paginação.
+- [POST /links/create](api/internal/link/link/handler.go): Cria um link curto com slug, destino e ativação.
+- [GET /links/{id}/details](api/internal/link/link/handler.go): Detalhes do link.
+- [PATCH /links/{id}/update](api/internal/link/link/handler.go): Edita o link.
+- [DELETE /links/{id}/delete](api/internal/link/link/handler.go): Exclui o link e as aberturas.
+- [GET /links/{id}/history/list](api/internal/link/history/handler.go): Histórico de alterações do link.
+- [Grupos](api/internal/group/handler.go): `GET`, `POST`, `PATCH` e `DELETE` em `/links/groups/*` e `/pages/groups/*`, com nome, cor e ícone.
+
+## Rotas públicas de páginas e links
+
+- [GET /{slug}](api/internal/link/public/handler.go): Entrega o HTML da página ou responde `302` para o destino do link.
+- [POST /{slug}](api/internal/link/public/handler.go): Confere o PIN de uma página protegida e grava o cookie de acesso.
+- [/{slug}/_/kv/...](api/internal/link/public/handler.go): Ponte do `pocketrun.kv`, com mesma origem, header `X-Pocketrun-Page` e cargo do cookie.
+
+## Análise e visão geral
+
+- [GET /overview/usage/details](api/internal/overview/handler.go): Uso dos três serviços no período (`range`, `tz`) para a página Geral.
+- [GET /pages/{id}/analytics/details](api/internal/page/analytics/handler.go): Análise de uma página.
+- [GET /pages/analytics/details](api/internal/page/analytics/handler.go): Análise de todas as páginas.
+- [GET /links/{id}/analytics/details](api/internal/link/analytics/handler.go): Análise de um link.
+- [GET /links/analytics/details](api/internal/link/analytics/handler.go): Análise de todos os links.
+
+## Usuários, sessão e backup
+
+- [POST /setup/admin/create](api/internal/setup/handler.go): Cria o primeiro superadmin no setup inicial.
+- [POST /auth/login](api/internal/user/handler.go): Login do gestor, com limite de tentativas por e-mail e por IP.
+- [GET /auth/me/details](api/internal/user/handler.go): Dados do gestor logado.
+- [POST /auth/sessions/revoke](api/internal/user/handler.go): Encerra todas as sessões do gestor.
+- [GET /users/list](api/internal/user/handler.go): Lista os usuários (só superadmin).
+- [GET /backup/export](api/internal/backup/handler.go): Baixa o backup da instância em JSON por linhas com gzip (`scope=full` ou `content`).
+- [POST /backup/restore](api/internal/backup/handler.go): Restaura as collections presentes no arquivo de backup (só superadmin).
+
+## Painel
+
+- [Rotas](ui/src/routes/index.tsx): Todas as páginas do painel, carregadas sob demanda.
+- [Actions](ui/src/actions): Chamadas à API agrupadas por domínio, o único lugar que usa o Axios.
+- [Instância HTTP](ui/src/utils/api.ts): Axios com `baseURL`, cookie e tratamento de erros.
+- [Mensagens de erro](ui/src/assets/data/index.ts): Textos em pt-BR para cada código de erro da API e dados estáticos.
+- [Componentes](ui/src/components): Componentes reutilizáveis, um por pasta.
+- [Documentação do KV no painel](ui/src/pages/kvDocs): Página `/kv/docs` que explica a API pública para quem integra.
+
+## Optional
+
+- [Docker Compose](docker-compose.yml): Serviços `api` e `ui` na rede `app-network`, sem portas publicadas.
+- [Dockerfile da API](api/Dockerfile): Build estático em Go e imagem distroless.
+- [Dockerfile do painel](ui/Dockerfile): Build do Vite e nginx servindo o `dist`.
+- [nginx do painel](ui/nginx.conf): SPA fallback, gzip, cache e headers de segurança.
+
+## Outros Recursos
+
+- [llms.txt da AbacatePay](https://abacatepay.com/llms.txt): Referência do formato usado neste arquivo.
+- [Padrão llms.txt](https://llmstxt.org): Especificação do formato.
