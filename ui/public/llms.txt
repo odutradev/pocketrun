@@ -1,144 +1,201 @@
 # PocketRun
 
-> PocketRun é uma plataforma self-hosted que junta, numa instância só, um banco de dados chave-valor por aplicação (KV, antigo PocketDB) e páginas HTML e links curtos (Páginas & Links, antigo Shareds). É uma API em Go (net/http + MongoDB) em `api/` e um painel React + Vite em `ui/`, com deploy por Docker Compose no Dokploy. A API pública fica na raiz (`/kv/*`, `/{slug}`) e as rotas do painel ficam sob `/admin`.
+> PocketRun é uma plataforma self-hosted com três serviços: **KV** (banco de documentos JSON por aplicação, acessado por uma API HTTP com token), **Páginas** (HTML publicado em `{dominio}/{slug}`, que lê e grava no KV pelo objeto `window.pocketrun.kv`, sem token) e **Links** (links curtos em `{dominio}/{slug}` que redirecionam com `302`). Este arquivo explica como usar cada serviço: o que mandar, o que volta e os erros. Os links abaixo levam às seções da documentação do painel.
 
 Notas importantes:
 
-- Autenticação pública: o token da aplicação vai no header `controlAccess`, `X-Pocket-Token` ou `Authorization: Bearer <token>`. O token é guardado em hash e aparece uma vez só.
-- Autenticação do painel: cookie de sessão `HttpOnly; Secure; SameSite=Strict` de 7 dias, e toda chamada `/admin` leva o header `X-Pocketrun-Client: panel` contra CSRF.
-- Rotas dizem a ação na URL: `POST /links/create`, `PATCH /pages/{id}/update`, `DELETE /apps/{id}/delete`, `GET /links/{id}/details`.
-- Erros respondem `{ "error": "codigo_em_snake_case", "fields": {...} }`. Listas paginadas do KV respondem `{ data, total, page, limit, totalPages }`.
-- Toda rota do KV passa pelo cargo do token (ler, criar, editar, apagar por collection ou `*`). `admin` tem acesso total. Erro de cargo responde `403 forbidden_operation`.
-- Páginas e links são globais da instância e dividem o mesmo espaço de slugs (`dominio.com/{slug}`, só minúsculas, números e hífen).
-- Páginas usam `window.pocketrun.kv` para ler e gravar dados sem token: as chamadas vão para `/{slug}/_/kv/...` e o cargo vem do cookie do PIN.
-- Gestores têm o papel `admin` ou `superadmin`. Só o superadmin gerencia usuários e faz backup.
-- Regras de código: zero comentários, tipos só em `types.ts`, imports em 3 blocos do maior para o menor, commits em Conventional Commits sem escopo e sem coautoria.
-- Itens do roadmap só são executados quando o dono pede pelo número.
+- A URL da API (`{api}`) e o domínio das páginas e links (`{dominio}`) são da instância de quem usa. Peça esses valores, o token e os nomes das coleções antes de escrever código.
+- KV por HTTP: todo pedido leva o token da aplicação em `Authorization: Bearer pk_live_...` (também aceitos: `X-Pocket-Token` e `controlAccess`). Corpo sempre JSON com `Content-Type: application/json`, até 1 MB.
+- Dentro de uma página do PocketRun, nunca use token nem URL da API: use `pocketrun.kv.collection("nome")`. O cargo vem do PIN de quem abriu.
+- Todo documento tem a forma `{ id, appId, projectId, collectionName, data, createdAt, updatedAt, expiresAt? }`. Os seus campos ficam sempre dentro de `data`.
+- Erros respondem `{ "error": "codigo", "fields": { ... } }` com status HTTP. Na página, viram um `Error` com `code`, `status` e `fields`.
+- O cargo de cada token ou PIN decide, por coleção, as operações `read`, `create`, `update` e `delete`. Fora do cargo: `403 forbidden_operation`.
+- Nome de coleção: letras, números, `_` e `-`, até 64 caracteres. `project` é reservado. A coleção nasce no primeiro documento gravado.
+- Datas em ISO 8601 (`2026-11-20T15:00:00Z` ou `2026-11-20`). Ids são strings de 24 caracteres hexadecimais.
 
-## Guias do projeto
+## Documentação
 
-- [Guia do monorepo](.claude/CLAUDE.md): Estrutura, scripts, variáveis de ambiente, Docker, compose, nginx, commits e publicação.
-- [Guia da API](api/CLAUDE.md): Arquitetura por domínio em Go, nomes, erros, validação, logs e rotas.
-- [Guia do painel](ui/CLAUDE.md): Estrutura por tipo, componentes, stores, actions, listas paginadas e princípios do frontend.
-- [Visão do produto](.claude/PRODUCT.md): O que é o PocketRun, conceitos, módulos, regras de cada recurso e decisões em aberto.
-- [Roadmap](.docs/ROADMAP.md): Itens numerados do que falta construir, com status.
-- [Guia de estilo](.docs/style-guide.html): Cores, tipografia e componentes visuais do painel.
+- [Visão geral](/docs#overview): Os três serviços e como eles se ligam.
+- [Autenticação do KV](/docs#auth): Token, origens permitidas e chamadas fora do navegador.
+- [Rotas do KV](/docs#routes): Tabela com todas as rotas públicas.
+- [Listar e filtrar](/docs#list): Paginação, filtros, operadores e ordenação.
+- [Cargos](/docs#roles): Regras por coleção, limite de documentos e só os próprios documentos.
+- [Erros do KV](/docs#errors): Todos os códigos de erro e quando acontecem.
+- [Páginas](/docs#pages): HTML, slug, `window.pocketrun` e versões.
+- [Dados com pocketrun.kv](/docs#page-data): KV dentro da página, sem token.
+- [Acesso com PIN](/docs#access): Proteção da página e cargos por PIN.
+- [Links](/docs#links): Redirecionamento, parâmetros e QR code.
+- [Ativação e limites](/docs#activation): Período, limite de acessos e contagem por clique ou visitante.
 
-## Montagem da API
+## KV: autenticação
 
-- [cmd/api/main.go](api/cmd/api/main.go): Lê a configuração, monta as dependências, cria os índices e registra as rotas.
-- [Configuração](api/internal/config/config.go): Variáveis de ambiente (`PORT`, `MONGODB_URI`, `MONGODB_NAME`, `JWT_SECRET`, `LINKS_URL`, `PAGE_ACCESS_SECRET`, CORS).
-- [Plataforma](api/internal/platform): Código compartilhado: banco, HTTP, ativação por período e acessos, análise de tráfego e limite de pedidos.
+`GET {api}/validate/control-access` confere o token e a origem.
 
-## KV: API pública
+```http
+GET /validate/control-access
+Authorization: Bearer pk_live_xxx
+```
 
-- [GET /ping](api/internal/health/handler.go): Confere se a API está no ar.
-- [GET /validate/control-access](api/internal/application/handler.go): Valida o token e diz o cargo dele.
-- [POST /kv/{collection}/create](api/internal/kv/handler.go): Cria um documento, com validade opcional (`expiresInDays` ou `expiresAt`).
-- [GET /kv/{collection}/get-all](api/internal/kv/handler.go): Lista documentos com paginação, ordenação, recorte por data e filtros sobre `data`.
-- [GET /kv/{collection}/count](api/internal/kv/handler.go): Conta os documentos com os mesmos filtros da listagem.
-- [POST /kv/{collection}/eval](api/internal/kv/handler.go): Calcula `sum`, `avg`, `min`, `max`, `count` ou `distinct` de um campo.
-- [GET /kv/{collection}/get/{id}](api/internal/kv/handler.go): Busca um documento pelo ID.
-- [PATCH /kv/{collection}/update/{id}](api/internal/kv/handler.go): Junta os campos enviados ao `data` do documento.
-- [PUT /kv/{collection}/replace/{id}](api/internal/kv/handler.go): Troca o `data` inteiro do documento.
-- [DELETE /kv/{collection}/delete/{id}](api/internal/kv/handler.go): Apaga um documento.
-- [DELETE /kv/{collection}/delete-all](api/internal/kv/handler.go): Limpa a collection (só `admin`).
-- [GET /kv/{collection}/export](api/internal/kv/handler.go): Exporta a collection em JSON ou CSV.
-- [POST /kv/{collection}/import](api/internal/kv/handler.go): Importa até 5.000 itens na collection.
-- [GET /kv/project/export](api/internal/kv/handler.go): Exporta todas as collections da aplicação.
-- [POST /kv/project/import](api/internal/kv/handler.go): Importa várias collections de uma vez.
-- [DELETE /kv/project/delete-all](api/internal/kv/handler.go): Apaga todos os dados da aplicação (só `admin`).
-- [Filtros e operadores](api/internal/kv/query.go): `__gt`, `__gte`, `__lt`, `__lte`, `__ne`, `__contains`, `__exists`, `sortBy`, `sortOrder`, `createdAfter` e `createdBefore`.
+```json
+{ "status": "valid", "message": "Access token and origin are valid", "projectId": "loja", "appName": "Loja", "role": "caixa" }
+```
 
-## Aplicações, tokens e cargos
+- Chamadas de navegador só passam se o site estiver nas origens permitidas da aplicação. Chamadas sem `Origin` (scripts, servidores) só passam se a aplicação aceitar chamadas fora do navegador. Senão: `403 origin_not_allowed`.
+- Toda resposta autenticada traz o header `projectID`.
+- Erros: `401 missing_access_token`, `401 invalid_access_token` (não existe ou foi revogado), `401 expired_access_token`, `403 role_not_found`.
+- `GET {api}/ping` confere se a API está no ar, sem token.
 
-- [GET /apps/list](api/internal/application/handler.go): Lista as aplicações do KV do gestor.
-- [POST /apps/create](api/internal/application/handler.go): Cria uma aplicação com nome, descrição e origens.
-- [GET /apps/{id}/details](api/internal/application/handler.go): Detalhes da aplicação, tokens e cargos.
-- [PATCH /apps/{id}/update](api/internal/application/handler.go): Edita nome, descrição e origens permitidas.
-- [DELETE /apps/{id}/delete](api/internal/application/handler.go): Exclui a aplicação e os dados (bloqueado para a aplicação de uma página).
-- [POST /apps/{id}/tokens/create](api/internal/application/handler.go): Gera um token com nome, validade e cargo.
-- [PATCH /apps/{id}/tokens/{tokenId}/role/set](api/internal/application/handler.go): Troca o cargo de um token.
-- [DELETE /apps/{id}/tokens/{tokenId}/delete](api/internal/application/handler.go): Revoga um token.
-- [POST /apps/{id}/roles/create](api/internal/application/handler.go): Cria um cargo com regras por collection.
-- [PATCH /apps/{id}/roles/{role}/update](api/internal/application/handler.go): Edita as regras de um cargo.
-- [DELETE /apps/{id}/roles/{role}/delete](api/internal/application/handler.go): Apaga um cargo que nenhum token usa.
-- [GET /apps/{id}/explorer/collections/list](api/internal/kv/handler.go): Lista as collections no Explorador do painel.
-- [GET /apps/{id}/explorer/collections/{collection}/documents/list](api/internal/kv/handler.go): Lista documentos no Explorador do painel.
+## KV: gravar
+
+`POST {api}/kv/{colecao}/create` responde `201` com o documento criado.
+
+```json
+{ "data": { "cliente": "Maria", "valor": 150, "status": "pago" }, "expiresInDays": 30 }
+```
+
+```json
+{
+  "id": "6afe329a1fde5580a00218f4",
+  "appId": "6afe329a1fde5580a00218f1",
+  "projectId": "loja",
+  "collectionName": "pedidos",
+  "data": { "cliente": "Maria", "valor": 150, "status": "pago" },
+  "expiresAt": "2026-12-20T20:19:43Z",
+  "createdAt": "2026-11-20T20:19:43Z",
+  "updatedAt": "2026-11-20T20:19:43Z"
+}
+```
+
+- `data` é obrigatório e é um objeto livre, sem esquema.
+- Validade opcional: `expiresInDays` (0 a 3650, 0 é sem validade) ou `expiresAt` (data ISO). O documento some sozinho depois, com até cerca de 1 minuto de atraso.
+- Erros: `400 validation_failed` (com `fields`), `400 invalid_body`, `400 invalid_collection`, `400 reserved_collection`, `409 collection_full` (limite do cargo).
+
+## KV: listar e filtrar
+
+`GET {api}/kv/{colecao}/get-all` lista do mais novo ao mais antigo.
+
+- Sem paginação, responde um array de documentos. Com `page`, `limit` ou `pagination=true`, responde `{ "data": [...], "total": 42, "page": 1, "limit": 20, "totalPages": 3 }`. `limit` vai de 1 a 500 (padrão 50).
+- Qualquer outro parâmetro filtra por igualdade sobre `data`: `?status=pago`. Campos aninhados usam ponto: `?cliente.cidade=Recife`.
+- Tipos dos valores: `true`/`false` viram booleano, números viram número, `null` vira nulo e o resto é texto. Entre aspas é sempre texto: `?codigo="010"` busca o texto, `?codigo=010` busca o número 10.
+- Operadores no fim do campo: `__gt`, `__gte`, `__lt`, `__lte`, `__ne`, `__contains` (trecho de texto sem diferenciar maiúsculas, até 100 caracteres) e `__exists=true`. Exemplo: `?valor__gte=100&valor__lt=500`.
+- Recorte pela criação: `createdAfter` e `createdBefore` (ISO).
+- Ordem: `sortBy` (`createdAt`, `updatedAt`, `expiresAt` ou um campo de `data`) e `sortOrder` (`asc` ou `desc`, padrão `desc`).
+- Vários filtros valem juntos (E). Erros: `400 invalid_filter`, `400 invalid_sort`.
+
+## KV: ler, atualizar e apagar
+
+- `GET {api}/kv/{colecao}/get/{id}`: responde o documento, ou `404 document_not_found`. Id mal formado: `400 invalid_document_id`.
+- `PATCH {api}/kv/{colecao}/update/{id}` com `{ "data": { "status": "entregue" } }`: junta os campos enviados ao `data` (o resto fica) e responde o documento atualizado. Um campo com `null` grava nulo.
+- `PUT {api}/kv/{colecao}/replace/{id}` com `{ "data": { ... } }`: troca o `data` inteiro e responde o documento.
+- `update` e `replace` aceitam `expiresInDays` ou `expiresAt`. `expiresInDays: 0` tira a validade, e sem nenhum dos dois a validade atual fica.
+- `DELETE {api}/kv/{colecao}/delete/{id}`: responde `{ "message": "Document deleted successfully" }`.
+- `DELETE {api}/kv/{colecao}/delete-all`: só o cargo `admin`, e responde `{ "message": "Collection cleared successfully", "deletedCount": 12 }`. Não tem volta.
+
+## KV: contar e calcular
+
+- `GET {api}/kv/{colecao}/count` com os mesmos filtros do `get-all` responde `{ "count": 12 }`.
+- `POST {api}/kv/{colecao}/eval` aceita filtros na URL e no corpo:
+
+```json
+{ "operation": "sum", "field": "valor", "filters": { "status": "pago" } }
+```
+
+```json
+{ "operation": "sum", "field": "valor", "result": 4180.5 }
+```
+
+- `operation`: `sum`, `avg`, `min`, `max`, `count` ou `distinct`. Sem documentos, `sum` e `count` dão 0, e `avg`, `min` e `max` dão `null`.
+- `distinct` responde `"result": [{ "value": "pago", "count": 31 }, ...]`, até 1.000 valores, do mais frequente ao menos.
+- Campo inválido: `400 invalid_field`.
+
+## KV: importar e exportar
+
+- `GET {api}/kv/{colecao}/export` baixa um array JSON de documentos. Com `?format=csv`, cada campo de `data` vira uma coluna. Outro formato: `400 invalid_format`.
+- `POST {api}/kv/{colecao}/import` com `{ "data": [ ... ] }`, até 5.000 itens e 8 MB, responde `201 { "imported": true, "count": 42 }`. Cada item pode ser um objeto puro ou um documento exportado (mantém `data`, `createdAt` e a validade). Cada item vira um documento novo, com id novo. Erros: `413 too_many_items`, `400 invalid_import`.
+- `GET {api}/kv/project/export` e `POST {api}/kv/project/import` (`{ "data": { "pedidos": [...], "clientes": [...] } }`) fazem o mesmo com todas as coleções e respondem `{ "imported": true, "totalCount": 57, "collections": { "pedidos": 42, "clientes": 15 } }`. Só o cargo `admin`.
+- `DELETE {api}/kv/project/delete-all` apaga todas as coleções. Só o cargo `admin`.
+
+## KV: cargos
+
+- Um cargo tem regras por coleção (ou `*` para as coleções sem regra própria; a regra com o nome sempre vence), cada uma com as operações `read`, `create`, `update` e `delete`.
+- `read` cobre `get-all`, `get`, `count`, `eval` e `export`. `create` cobre `create` e `import`. `update` cobre `update` e `replace`. `delete` cobre `delete`.
+- `maxDocuments` numa regra limita quantos documentos a coleção pode ter: passar disso dá `409 collection_full`.
+- `isOwnDocumentsOnly: true` faz o cargo ver, editar e apagar só o que ele mesmo criou. Cada documento guarda quem o criou em `createdByRole`. Documento de outro cargo responde `404 document_not_found`.
+- `admin` tem acesso total e é o único que limpa coleções e usa as rotas de projeto.
+
+```json
+{
+  "name": "caixa",
+  "rules": [
+    { "collection": "produtos", "operations": ["read"] },
+    { "collection": "vendas", "operations": ["read", "create"], "maxDocuments": 10000 }
+  ],
+  "isOwnDocumentsOnly": false
+}
+```
 
 ## Páginas
 
-- [GET /pages/list](api/internal/page/page/handler.go): Lista as páginas com busca, filtro, ordenação e paginação.
-- [POST /pages/create](api/internal/page/page/handler.go): Cria uma página com HTML (até 512 KB), slug e ativação.
-- [GET /pages/{id}/details](api/internal/page/page/handler.go): Detalhes da página.
-- [PATCH /pages/{id}/update](api/internal/page/page/handler.go): Edita a página; mudar o HTML gera uma versão nova.
-- [PATCH /pages/{id}/status/set](api/internal/page/page/handler.go): Ativa ou desativa a página.
-- [DELETE /pages/{id}/delete](api/internal/page/page/handler.go): Exclui a página, as versões, as aberturas e a aplicação de dados.
-- [GET /pages/slug-availability/check](api/internal/page/page/handler.go): Confere se um slug está livre.
-- [GET /pages/{id}/versions/list](api/internal/page/version/handler.go): Lista as últimas 50 versões do HTML.
-- [GET /pages/{id}/history/list](api/internal/page/history/handler.go): Histórico de alterações da página.
-- [GET /pages/{id}/access/details](api/internal/page/access/handler.go): PIN geral, cargos com PIN e duração do acesso.
-- [POST /pages/{id}/access/keys/create](api/internal/page/access/handler.go): Cria um PIN de cargo.
-- [POST /pages/{id}/kv/enable](api/internal/page/binding/handler.go): Ativa os dados da página, criando a aplicação do KV dela.
-- [PATCH /pages/{id}/kv/set](api/internal/page/binding/handler.go): Troca o cargo de cada acesso nos dados da página.
-- [GET /pages/{id}/kv/requests/list](api/internal/page/binding/handler.go): Pedidos feitos pela página ao KV nos últimos 30 dias.
-- [Runtime window.pocketrun](api/internal/page/public/runtime.go): Script injetado na entrega com `page`, `access` e `kv`.
+- Uma página é um único HTML (o CSS e o JS vão dentro dele), de até 512 KB, servido em `{dominio}/{slug}` sem cache. Um trecho solto de HTML ganha `<!doctype>`, `charset`, `viewport` e `<title>`.
+- O slug é único na instância e dividido com os links: só letras minúsculas, números e hífen.
+- Toda página recebe, no início do `<head>`, um objeto congelado `window.pocketrun`:
 
-## Links e grupos
+```json
+{
+  "apiVersion": 1,
+  "page": { "slug": "pedidos", "title": "Pedidos", "version": "1.3", "updatedAt": "2026-11-20T15:00:00Z", "isPreview": false },
+  "access": { "isProtected": true, "role": "gerente" },
+  "kv": { "role": "escrita", "isOwnDocumentsOnly": false, "rules": [{ "collection": "*", "operations": ["read", "create", "update"] }] }
+}
+```
 
-- [GET /links/list](api/internal/link/link/handler.go): Lista os links com busca, filtro, ordenação e paginação.
-- [POST /links/create](api/internal/link/link/handler.go): Cria um link curto com slug, destino e ativação.
-- [GET /links/{id}/details](api/internal/link/link/handler.go): Detalhes do link.
-- [PATCH /links/{id}/update](api/internal/link/link/handler.go): Edita o link.
-- [DELETE /links/{id}/delete](api/internal/link/link/handler.go): Exclui o link e as aberturas.
-- [GET /links/{id}/history/list](api/internal/link/history/handler.go): Histórico de alterações do link.
-- [Grupos](api/internal/group/handler.go): `GET`, `POST`, `PATCH` e `DELETE` em `/links/groups/*` e `/pages/groups/*`, com nome, cor e ícone.
+- `access.role` é o cargo do PIN usado (`""` no PIN geral e `null` sem proteção). `pocketrun.kv` só existe quando a página tem dados ativados na aba Dados.
+- Com PIN, o visitante vê uma tela de PIN antes do HTML. O acesso fica num cookie da página, que o JavaScript não lê, pelo tempo configurado (1 hora a 30 dias).
 
-## Rotas públicas de páginas e links
+## Páginas: dados com pocketrun.kv
 
-- [GET /{slug}](api/internal/link/public/handler.go): Entrega o HTML da página ou responde `302` para o destino do link.
-- [POST /{slug}](api/internal/link/public/handler.go): Confere o PIN de uma página protegida e grava o cookie de acesso.
-- [/{slug}/_/kv/...](api/internal/link/public/handler.go): Ponte do `pocketrun.kv`, com mesma origem, header `X-Pocketrun-Page` e cargo do cookie.
+Na página, use o KV sem token e sem URL:
 
-## Análise e visão geral
+```js
+const pedidos = pocketrun.kv.collection("pedidos");
 
-- [GET /overview/usage/details](api/internal/overview/handler.go): Uso dos três serviços no período (`range`, `tz`) para a página Geral.
-- [GET /pages/{id}/analytics/details](api/internal/page/analytics/handler.go): Análise de uma página.
-- [GET /pages/analytics/details](api/internal/page/analytics/handler.go): Análise de todas as páginas.
-- [GET /links/{id}/analytics/details](api/internal/link/analytics/handler.go): Análise de um link.
-- [GET /links/analytics/details](api/internal/link/analytics/handler.go): Análise de todos os links.
+const todos = await pedidos.list();
+const pagina = await pedidos.list({ status: "pago", sortBy: "valor", sortOrder: "asc", page: 1, limit: 20 });
+const um = await pedidos.get(id);
+const total = await pedidos.count({ status: "pago" });
+const soma = await pedidos.eval("sum", "valor", { status: "pago" });
+const novo = await pedidos.create({ cliente: "Maria", valor: 150 }, { expiresInDays: 30 });
+await pedidos.update(novo.id, { status: "entregue" });
+await pedidos.replace(novo.id, { cliente: "Maria", valor: 180 });
+await pedidos.remove(novo.id);
 
-## Usuários, sessão e backup
+if (pocketrun.kv.can("pedidos", "delete")) mostrarBotaoApagar();
+```
 
-- [POST /setup/admin/create](api/internal/setup/handler.go): Cria o primeiro superadmin no setup inicial.
-- [POST /auth/login](api/internal/user/handler.go): Login do gestor, com limite de tentativas por e-mail e por IP.
-- [GET /auth/me/details](api/internal/user/handler.go): Dados do gestor logado.
-- [POST /auth/sessions/revoke](api/internal/user/handler.go): Encerra todas as sessões do gestor.
-- [GET /users/list](api/internal/user/handler.go): Lista os usuários (só superadmin).
-- [GET /backup/summary/details](api/internal/backup/handler.go): Quantos documentos cada coleção do backup tem agora (só superadmin).
-- [GET /backup/export](api/internal/backup/handler.go): Baixa o backup da instância em JSON por linhas com gzip (`scope=full` ou `content`).
-- [POST /backup/restore](api/internal/backup/handler.go): Restaura as collections presentes no arquivo de backup (só superadmin).
+- Cada método devolve uma Promise com a mesma resposta da API HTTP: `list` dá um array, ou `{ data, total, page, limit, totalPages }` com paginação. `get`, `create`, `update` e `replace` dão o documento, `count` dá `{ count }` e `eval` dá `{ operation, field, result }`.
+- `list` e `count` recebem os filtros como objeto, com os mesmos operadores (`{ valor__gte: 100 }`). Textos vão sempre como texto: `{ codigo: "010" }` procura o texto "010".
+- `pocketrun.kv.collection(nome).can(operacao)` e `pocketrun.kv.can(colecao, operacao)` dizem o que o cargo permite, para esconder botões. Quem decide é sempre o servidor.
+- Erros viram `Error` com `name: "PocketrunKVError"`, `code`, `status` e `fields`. Os mais comuns: `401 page_locked` (o PIN expirou: recarregue a página), `403 forbidden_operation`, `403 kv_access_denied` (quem abriu não tem cargo nos dados), `404 kv_not_linked` (dados desativados), `429 too_many_requests` (mais de 120 pedidos por minuto por visitante ou 1.200 pela página).
+- Pela página só há operações de documento: limpar coleção, importar e exportar ficam de fora. Corpo de até 256 KB.
+- Por baixo, as chamadas vão para `{dominio}/{slug}/_/kv/{colecao}/...` com o header `X-Pocketrun-Page: 1` e só da mesma origem. Não chame esse endereço de outro site.
+- Na prévia do editor, as chamadas passam pelo painel com o cargo escolhido em "Ver como".
 
-## Painel
+## Links
 
-- [Rotas](ui/src/routes/index.tsx): Todas as páginas do painel, carregadas sob demanda.
-- [Actions](ui/src/actions): Chamadas à API agrupadas por domínio, o único lugar que usa o Axios.
-- [Instância HTTP](ui/src/utils/api.ts): Axios com `baseURL`, cookie e tratamento de erros.
-- [Mensagens de erro](ui/src/assets/data/index.ts): Textos em pt-BR para cada código de erro da API e dados estáticos.
-- [Componentes](ui/src/components): Componentes reutilizáveis, um por pasta.
-- [Backup no painel](ui/src/pages/backup): Página `/backup` (só superadmin) que exporta a instância e restaura a partir do arquivo, com prévia do cabeçalho.
-- [Documentação](ui/src/pages/docs): Página `/docs` do menu com o guia de todo o PocketRun (painel, KV, páginas, links, análise, usuários, backup) e o link deste llms.txt.
-- [Seções da documentação](ui/src/assets/data/docs/index.ts): Lista e grupos das seções da página `/docs`.
-- [llms.txt público](ui/public/llms.txt): Cópia deste arquivo servida pelo painel em `/llms.txt`, atualizada por `npm run sync:llms`.
+- `GET {dominio}/{slug}` responde `302` com `Location` igual ao destino. Robôs, prévias de link e `HEAD` também são redirecionados.
+- Os parâmetros da URL vão junto para o destino: `{dominio}/promo?utm_source=insta`. Um parâmetro com o mesmo nome de um do destino troca o valor dele.
+- O slug aceita maiúsculas e barra no final: `/Promo/` abre `promo`.
+- Link fora da regra de ativação responde `404` com a tela "Link indisponível".
+
+## Ativação de páginas e links
+
+- `active`: no ar. `inactive`: fora do ar. `period`: no ar até a data de fim (o início é opcional). `clicks`: no ar até o limite de acessos.
+- No modo `clicks`, a contagem é por clique (cada abertura conta) ou por visitante único (cada pessoa conta uma vez).
+- Robôs, prévias de link e `HEAD` nunca gastam o limite. Fora da regra, o endereço responde `404` e o slug continua reservado.
 
 ## Optional
 
-- [Docker Compose](docker-compose.yml): Serviços `api` e `ui` na rede `app-network`, sem portas publicadas.
-- [Dockerfile da API](api/Dockerfile): Build estático em Go e imagem distroless.
-- [Dockerfile do painel](ui/Dockerfile): Build do Vite e nginx servindo o `dist`.
-- [nginx do painel](ui/nginx.conf): SPA fallback, gzip, cache e headers de segurança.
-
-## Outros Recursos
-
-- [llms.txt da AbacatePay](https://abacatepay.com/llms.txt): Referência do formato usado neste arquivo.
-- [Padrão llms.txt](https://llmstxt.org): Especificação do formato.
+- [Validade dos documentos](/docs#expiry): Como `expiresInDays` e `expiresAt` funcionam na gravação, na edição e na importação.
+- [Segurança](/docs#security): Cuidados com o token no navegador e cargos mínimos.
+- [Página de exemplo](/docs#example): O modelo CRUD com KV, com uma lista de tarefas pronta.
+- [Análise de acessos](/docs#analytics): O que é medido nas aberturas de páginas e links.
