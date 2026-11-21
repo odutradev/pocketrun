@@ -1,26 +1,32 @@
+import { DownloadIcon } from "@radix-ui/react-icons";
 import { useEffect } from "react";
 
+import { Container, Content, Row, Stats, Toolbar } from "./styles";
+import SegmentedControl from "@components/segmentedControl";
 import AttentionList from "./subcomponents/attentionList";
-import { Container, Content, Row, Stats } from "./styles";
 import ServiceCards from "./subcomponents/serviceCards";
 import TrafficPanel from "./subcomponents/trafficPanel";
 import ContentNavbar from "@components/contentNavbar";
+import { analyticsRangeOptions } from "@assets/data";
+import UsageChart from "./subcomponents/usageChart";
 import { pluralize } from "@utils/functions";
 import StatCard from "@components/statCard";
 import OverviewSkeleton from "./skeleton";
+import Button from "@components/button";
 import useOverviewPage from "./hook";
 
 const OverviewPage = () => {
-  const { overview, kv, isLoading, load } = useOverviewPage();
+  const { range, rangeLabel, overview, kv, isLoading, load, handleRangeChange, handleExport } = useOverviewPage();
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [range, load]);
 
   const renderContent = () => {
     if (!overview || !kv) return <OverviewSkeleton />;
 
     const visits = overview.pagesTraffic.totals.clicks + overview.linksTraffic.totals.clicks;
+    const periodText = rangeLabel.toLowerCase();
 
     return (
       <Content aria-busy={isLoading}>
@@ -40,8 +46,9 @@ const OverviewPage = () => {
             value={(overview.pageSummary.total + overview.linkSummary.total).toLocaleString("pt-BR")}
             hint={`${pluralize(overview.pageSummary.total, "página", "páginas")} e ${pluralize(overview.linkSummary.total, "link", "links")}`}
           />
-          <StatCard label="Acessos em 7 dias" value={visits.toLocaleString("pt-BR")} hint="Páginas e links, sem robôs" />
+          <StatCard label="Acessos no período" value={visits.toLocaleString("pt-BR")} hint="Páginas e links, sem robôs" />
         </Stats>
+        <UsageChart />
         <ServiceCards />
         <Row>
           <TrafficPanel
@@ -49,14 +56,16 @@ const OverviewPage = () => {
             traffic={overview.pagesTraffic}
             ranked={overview.pagesTraffic.topPages}
             basePath="/pages"
-            emptyText="Nenhuma página acessada nos últimos 7 dias."
+            rangeLabel={rangeLabel}
+            emptyText={`Nenhuma página acessada: ${periodText}.`}
           />
           <TrafficPanel
             title="Links"
             traffic={overview.linksTraffic}
             ranked={overview.linksTraffic.topLinks}
             basePath="/links"
-            emptyText="Nenhum link clicado nos últimos 7 dias."
+            rangeLabel={rangeLabel}
+            emptyText={`Nenhum link clicado: ${periodText}.`}
           />
         </Row>
         <AttentionList />
@@ -68,10 +77,16 @@ const OverviewPage = () => {
     <Container>
       <ContentNavbar
         title="Geral"
-        info="Um resumo de todo o ambiente: as aplicações do KV, as páginas, os links, os acessos dos últimos 7 dias e o que precisa de atenção."
+        info="Um resumo de todo o ambiente: as aplicações do KV, as páginas, os links, o uso de cada serviço no período escolhido e o que precisa de atenção."
         onReload={load}
         isReloading={isLoading}
       />
+      <Toolbar>
+        <SegmentedControl label="Período da visão geral" options={analyticsRangeOptions} value={range} onValueChange={handleRangeChange} isFullWidth />
+        <Button variant="secondary" size="sm" leftIcon={<DownloadIcon />} disabled={!overview || overview.usage.series.length === 0} onClick={handleExport}>
+          Exportar CSV
+        </Button>
+      </Toolbar>
       {renderContent()}
     </Container>
   );

@@ -6,4 +6,5 @@ export interface TrafficPanelProps {
   ranked: RankedLink[];
   basePath: string;
   emptyText: string;
+  rangeLabel: string;
 }

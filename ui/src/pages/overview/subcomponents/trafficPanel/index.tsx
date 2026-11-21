@@ -8,7 +8,7 @@ import type { TrafficPanelProps } from "./types";
 
 const topCount = 5;
 
-const TrafficPanel = ({ title, traffic, ranked, basePath, emptyText }: TrafficPanelProps) => {
+const TrafficPanel = ({ title, traffic, ranked, basePath, emptyText, rangeLabel }: TrafficPanelProps) => {
   const { totals } = traffic;
   const top = ranked.slice(0, topCount);
 
@@ -16,7 +16,7 @@ const TrafficPanel = ({ title, traffic, ranked, basePath, emptyText }: TrafficPa
     <Panel aria-label={title}>
       <PanelHeader>
         <PanelTitle>{title}</PanelTitle>
-        <PanelHint>Últimos 7 dias</PanelHint>
+        <PanelHint>{rangeLabel}</PanelHint>
       </PanelHeader>
       <Totals>
         <Total>

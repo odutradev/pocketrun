@@ -45,7 +45,7 @@ const ServiceCards = () => {
       facts: [
         { label: "links", value: formatNumber(overview.linkSummary.total) },
         { label: "grupos", value: formatNumber(overview.linkSummary.groups.length) },
-        { label: "cliques (7d)", value: formatNumber(overview.linksTraffic.totals.clicks) }
+        { label: "cliques no período", value: formatNumber(overview.linksTraffic.totals.clicks) }
       ]
     }
   ];

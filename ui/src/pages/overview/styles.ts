@@ -66,3 +66,18 @@ export const PanelHint = styled.span`
   font-size: 12px;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
+
+export const Toolbar = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.spacing(3)};
+  align-items: center;
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    grid-template-columns: minmax(0, 480px) auto;
+    justify-content: space-between;
+  }
+
+  > button {
+    justify-self: start;
+  }
+`;

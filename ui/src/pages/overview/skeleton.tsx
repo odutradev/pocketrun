@@ -9,6 +9,7 @@ const OverviewSkeleton = () => (
       <Skeleton height="112px" radius="panel" />
       <Skeleton height="112px" radius="panel" />
     </Stats>
+    <Skeleton height="380px" radius="panel" />
     <Skeleton height="180px" radius="panel" />
     <Row>
       <Skeleton height="320px" radius="panel" />
