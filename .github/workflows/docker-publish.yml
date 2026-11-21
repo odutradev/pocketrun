@@ -57,6 +57,8 @@ jobs:
         with:
           context: ./ui
           file: ./ui/Dockerfile
+          build-contexts: |
+            project=.
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/pocketrun-ui:latest
