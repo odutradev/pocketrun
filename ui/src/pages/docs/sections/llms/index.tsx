@@ -12,9 +12,9 @@ const LlmsSection = () => {
   return (
     <DocSection id="llms">
       <Paragraph>
-        O <Code>llms.txt</Code> é o resumo do projeto inteiro para assistentes de IA, no formato do llmstxt.org: cada rota, guia e arquivo
-        importante numa linha, com o caminho de onde ele fica no repositório. Antes de pedir algo novo, mande este link para a IA, para ela
-        achar a rota, o arquivo ou a regra envolvida.
+        O <Code>llms.txt</Code> explica para assistentes de IA como usar o KV, as páginas e os links: cada rota com o que mandar, o que volta e
+        os erros, o <Code>pocketrun.kv</Code> das páginas, o acesso com PIN e a ativação. Quando for criar um cliente do KV ou uma página,
+        mande este link para a IA junto com o pedido.
       </Paragraph>
       <CopyField value={llmsUrl} label="Link do llms.txt" />
       <Actions>
