@@ -8,13 +8,13 @@ import linkEditorMetadata from "@pages/linkEditor/metadata";
 import appEditorMetadata from "@pages/appEditor/metadata";
 import overviewMetadata from "@pages/overview/metadata";
 import profileMetadata from "@pages/profile/metadata";
-import kvDocsMetadata from "@pages/kvDocs/metadata";
 import backupMetadata from "@pages/backup/metadata";
 import brandMetadata from "@pages/brand/metadata";
 import linksMetadata from "@pages/links/metadata";
 import pagesMetadata from "@pages/pages/metadata";
 import setupMetadata from "@pages/setup/metadata";
 import usersMetadata from "@pages/users/metadata";
+import docsMetadata from "@pages/docs/metadata";
 import authMetadata from "@pages/auth/metadata";
 import RouteGuard from "@components/routeGuard";
 import AppLayout from "@components/appLayout";
@@ -32,7 +32,7 @@ const ProfilePage = lazy(() => import("@pages/profile"));
 const OverviewPage = lazy(() => import("@pages/overview"));
 const KvPage = lazy(() => import("@pages/kv"));
 const AppEditorPage = lazy(() => import("@pages/appEditor"));
-const KvDocsPage = lazy(() => import("@pages/kvDocs"));
+const DocsPage = lazy(() => import("@pages/docs"));
 const PagesPage = lazy(() => import("@pages/pages"));
 const LinksPage = lazy(() => import("@pages/links"));
 const LinkEditorPage = lazy(() => import("@pages/linkEditor"));
@@ -59,7 +59,7 @@ const router = createBrowserRouter([
       pageRoute("/auth", AuthPage, authMetadata),
       pageRoute("/setup", SetupPage, setupMetadata),
       pageRoute("/kv", KvPage, kvMetadata),
-      pageRoute("/kv/docs", KvDocsPage, kvDocsMetadata),
+      { path: "/kv/docs", element: <Navigate to="/docs" replace /> },
       pageRoute("/kv/new", AppEditorPage, appEditorMetadata),
       pageRoute("/kv/:applicationId/edit", AppEditorPage, appEditorMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
@@ -76,6 +76,7 @@ const router = createBrowserRouter([
       pageRoute("/links/:linkId/edit", LinkEditorPage, linkEditorMetadata),
       pageRoute("/users", UsersPage, usersMetadata),
       pageRoute("/backup", BackupPage, backupMetadata),
+      pageRoute("/docs", DocsPage, docsMetadata),
       pageRoute("/profile", ProfilePage, profileMetadata),
       { path: "*", element: <Navigate to="/" replace /> }
     ]

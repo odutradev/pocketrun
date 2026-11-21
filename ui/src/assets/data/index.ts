@@ -6,7 +6,7 @@ import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, B
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
-import type { KvDocError, KvDocMethod, KvDocRoute, KvDocSection } from "@utils/types/kvDocs";
+import type { KvDocError, KvDocMethod, KvDocRoute } from "@utils/types/kvDocs";
 import type { BackupGroup, BackupScope } from "@utils/types/backup";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -661,23 +661,6 @@ export const kvOperationOptions: { value: KvOperation; label: string }[] = [
   { value: "create", label: "Criar" },
   { value: "update", label: "Editar" },
   { value: "delete", label: "Apagar" }
-];
-
-export const kvDocSections: KvDocSection[] = [
-  { id: "overview", label: "Visão geral" },
-  { id: "auth", label: "Autenticação" },
-  { id: "routes", label: "Rotas" },
-  { id: "create", label: "Gravar" },
-  { id: "list", label: "Listar e filtrar" },
-  { id: "documents", label: "Ler, atualizar e apagar" },
-  { id: "aggregate", label: "Contar e calcular" },
-  { id: "transfer", label: "Importar e exportar" },
-  { id: "expiry", label: "Validade" },
-  { id: "roles", label: "Cargos" },
-  { id: "pages", label: "Páginas com KV" },
-  { id: "errors", label: "Erros" },
-  { id: "security", label: "Segurança" },
-  { id: "example", label: "Página de exemplo" }
 ];
 
 export const kvDocRoutes: KvDocRoute[] = [
