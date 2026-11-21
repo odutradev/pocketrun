@@ -31,6 +31,7 @@ Itens de conversa, não de código: discutir com o dono e registrar a decisão e
 - **2.2** ⬜ Substituir o `ui/README.md`, que ainda é o template do Vite, por um README do painel.
 - **2.3** ⬜ Escrever o guia de migração PocketDB → PocketRun (troca de URL e de token, o que muda e o que é compatível).
 - **2.4** ⬜ Adotar o fluxo SDD: pasta `.claude/specs/<feature>/` com `requirements.md`, `design.md` e `tasks.md`, e a regra no `CLAUDE.md` de aprovar a spec antes do código.
+- **2.5** ⬜ Gerar um SDK em TypeScript da API pública a partir da referência OpenAPI. Depende de 2.1.
 
 ## 3. Páginas & Links: API
 
@@ -97,6 +98,9 @@ Depende de 3.6 e 3.7.
 ## 8. Qualidade
 
 - **8.1** ⬜ Testes automatizados de isolamento: garantir que o token de uma aplicação nunca lê nem escreve dados, páginas ou links de outra.
+- **8.2** ⬜ Workflow de CI que roda `go vet`, `go test`, lint e build do painel a cada push, antes do `docker-publish.yml` publicar a imagem. Hoje o CI só publica, sem validar.
+- **8.3** ⬜ Testes das regras de negócio da API: cargos do KV (operações, limite de documentos, "só os próprios"), ativação por período e por acessos, contagem por clique e por visitante único, limites da ponte `pocketrun.kv` e do login. Hoje a API tem um teste só (`api/internal/user/password_test.go`).
+- **8.4** ⬜ Testes do painel: funções de `utils/functions` e os fluxos principais (login, criar aplicação, editor de página). Hoje o painel não tem nenhum teste.
 
 ## 9. Dados nas páginas e cargos do KV
 
@@ -108,3 +112,30 @@ Pedido pelo dono em 20/11/2026: trazer tudo o que o KV v1 tinha, cargos no KV e 
 - **9.4** ✅ Feito. Vínculo de uma aplicação do KV com a página (aba **Dados**): cargo de quem abre sem PIN e um por PIN, histórico, registro dos pedidos por 30 dias e limpeza junto com a página.
 - **9.5** ✅ Feito. Ponte `/{slug}/_/kv/...` no domínio das páginas e `pocketrun.kv` no runtime, com o cargo vindo do cookie do PIN, mesma origem obrigatória, limite por visitante e por página, prévia do editor por `postMessage` com **Ver como**, e o modelo CRUD com KV sem token.
 - **9.6** ⬜ Isolar cada página num subdomínio próprio (`{slug}.dominio`), para o HTML de uma página não conseguir chamar a ponte nem ler o HTML de outra. Precisa de DNS e certificado coringa no deploy.
+
+## 10. Escala
+
+Da análise do projeto feita em 20/11/2026: pontos que funcionam hoje, mas pesam com o crescimento do tráfego.
+
+- **10.1** ⬜ Agregar no MongoDB o uso da página Geral. Hoje `Moments` traz para a memória o horário de cada acesso de páginas, de links e de pedidos da ponte, e o Go conta um por um; no período "Tudo", com 12 meses de acessos, fica lento e gasta RAM. Trocar por `$group` por hora ou dia (ou por contadores por hora, como o `kvUsage`).
+- **10.2** ⬜ Juntar as contagens do `kvUsage` em memória e gravar em lote a cada poucos segundos, em vez de uma goroutine e uma escrita por pedido em `UsageService.Record`.
+- **10.3** ⬜ Guardar os contadores de limite (login, ponte `pocketrun.kv`) num lugar compartilhado (MongoDB ou Redis). Hoje ficam na memória do processo, e com mais de uma réplica da API cada uma conta sozinha.
+
+## 11. Novos recursos
+
+Da análise do projeto feita em 20/11/2026.
+
+- **11.1** ⬜ Webhooks por aplicação do KV: avisar uma URL quando um documento for criado, editado ou apagado, com assinatura HMAC, novas tentativas e registro das entregas.
+- **11.2** ⬜ Notificações dos pontos de atenção: avisar no painel (e por e-mail, se configurado) quando um token vence em breve, um link ou página expira ou atinge o limite de acessos. Hoje eles só aparecem na Geral.
+- **11.3** ⬜ QR code e parâmetros UTM nos links: gerar e baixar o QR code do link curto e montar a URL de destino com `utm_*` no formulário.
+- **11.4** ⬜ Templates de página prontos (formulário de contato, lista de espera, enquete) que já usam o `pocketrun.kv` e criam a aplicação da página com os cargos certos.
+- **11.5** ⬜ Log de auditoria da instância: uma tela com quem mudou o quê em usuários, aplicações, tokens, cargos, páginas e links, com filtro por gestor e por período. Hoje só existe o histórico de cada item.
+
+## Ordem sugerida
+
+Da análise de 20/11/2026. É só sugestão: cada item continua dependendo do pedido do dono pelo número.
+
+1. Segurança e confiabilidade: 8.1, 8.2, 9.6, 3.8, 6.1 e 6.2, 8.3.
+2. Escala: 10.1, 10.2, 10.3.
+3. Produto: 5.2, 1.4 e 7.1, 11.1, 11.2, 11.3, 11.4, 4.4, 11.5.
+4. Documentação: 2.1, 2.5, 2.2, 2.3, 8.4.
