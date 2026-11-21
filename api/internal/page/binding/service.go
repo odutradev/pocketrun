@@ -61,6 +61,10 @@ type DocumentStore interface {
 	Delete(ctx context.Context, scope kv.Scope, collectionName string, id bson.ObjectID) error
 }
 
+type UsageRecorder interface {
+	Record(ctx context.Context, applicationID, managerID bson.ObjectID)
+}
+
 type EventRecorder interface {
 	Record(ctx context.Context, event *history.Event)
 }
@@ -75,6 +79,7 @@ type Dependencies struct {
 	Applications ApplicationFinder
 	Access       AccessReader
 	Documents    DocumentStore
+	Usage        UsageRecorder
 	History      EventRecorder
 	Actors       ActorResolver
 	Logger       *slog.Logger
@@ -86,6 +91,7 @@ type Service struct {
 	applications ApplicationFinder
 	access       AccessReader
 	documents    DocumentStore
+	usage        UsageRecorder
 	history      EventRecorder
 	actors       ActorResolver
 	logger       *slog.Logger
@@ -98,6 +104,7 @@ func NewService(dependencies Dependencies) *Service {
 		applications: dependencies.Applications,
 		access:       dependencies.Access,
 		documents:    dependencies.Documents,
+		usage:        dependencies.Usage,
 		history:      dependencies.History,
 		actors:       dependencies.Actors,
 		logger:       dependencies.Logger,
@@ -283,6 +290,7 @@ func (s *Service) run(ctx context.Context, pageID bson.ObjectID, subject Subject
 	}
 	scope := kv.NewScope(app, permission)
 	scope.Role = roleName
+	s.usage.Record(ctx, app.ID, app.ManagerID)
 
 	result, err := s.execute(ctx, scope, request)
 	return result, roleName, err

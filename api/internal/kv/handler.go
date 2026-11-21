@@ -20,32 +20,49 @@ type ApplicationFinder interface {
 	GetByID(ctx context.Context, managerID, id bson.ObjectID) (*application.Application, error)
 }
 
+type UsageRecorder interface {
+	Record(ctx context.Context, applicationID, managerID bson.ObjectID)
+}
+
 type Handler struct {
 	service      *Service
 	applications ApplicationFinder
+	usage        UsageRecorder
 	validate     *validator.Validate
 	logger       *slog.Logger
 }
 
-func NewHandler(service *Service, applications ApplicationFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, applications: applications, validate: validate, logger: logger}
+func NewHandler(service *Service, applications ApplicationFinder, usage UsageRecorder, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, applications: applications, usage: usage, validate: validate, logger: logger}
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
-	mux.Handle("GET /kv/project/export", authenticate(http.HandlerFunc(h.exportProject)))
-	mux.Handle("POST /kv/project/import", authenticate(http.HandlerFunc(h.importProject)))
-	mux.Handle("DELETE /kv/project/delete-all", authenticate(http.HandlerFunc(h.deleteProject)))
-	mux.Handle("POST /kv/{collection}/create", authenticate(http.HandlerFunc(h.create)))
-	mux.Handle("GET /kv/{collection}/get-all", authenticate(http.HandlerFunc(h.list)))
-	mux.Handle("GET /kv/{collection}/count", authenticate(http.HandlerFunc(h.count)))
-	mux.Handle("POST /kv/{collection}/eval", authenticate(http.HandlerFunc(h.eval)))
-	mux.Handle("GET /kv/{collection}/get/{id}", authenticate(http.HandlerFunc(h.get)))
-	mux.Handle("PATCH /kv/{collection}/update/{id}", authenticate(http.HandlerFunc(h.update)))
-	mux.Handle("PUT /kv/{collection}/replace/{id}", authenticate(http.HandlerFunc(h.replace)))
-	mux.Handle("DELETE /kv/{collection}/delete/{id}", authenticate(http.HandlerFunc(h.delete)))
-	mux.Handle("DELETE /kv/{collection}/delete-all", authenticate(http.HandlerFunc(h.deleteCollection)))
-	mux.Handle("GET /kv/{collection}/export", authenticate(http.HandlerFunc(h.export)))
-	mux.Handle("POST /kv/{collection}/import", authenticate(http.HandlerFunc(h.importCollection)))
+	route := func(pattern string, handle http.HandlerFunc) {
+		mux.Handle(pattern, authenticate(h.counted(handle)))
+	}
+	route("GET /kv/project/export", h.exportProject)
+	route("POST /kv/project/import", h.importProject)
+	route("DELETE /kv/project/delete-all", h.deleteProject)
+	route("POST /kv/{collection}/create", h.create)
+	route("GET /kv/{collection}/get-all", h.list)
+	route("GET /kv/{collection}/count", h.count)
+	route("POST /kv/{collection}/eval", h.eval)
+	route("GET /kv/{collection}/get/{id}", h.get)
+	route("PATCH /kv/{collection}/update/{id}", h.update)
+	route("PUT /kv/{collection}/replace/{id}", h.replace)
+	route("DELETE /kv/{collection}/delete/{id}", h.delete)
+	route("DELETE /kv/{collection}/delete-all", h.deleteCollection)
+	route("GET /kv/{collection}/export", h.export)
+	route("POST /kv/{collection}/import", h.importCollection)
+}
+
+func (h *Handler) counted(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app, ok := application.FromContext(r.Context()); ok {
+			h.usage.Record(r.Context(), app.ID, app.ManagerID)
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {

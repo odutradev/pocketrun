@@ -243,3 +243,16 @@ func Build(query AnalyticsQuery, from, to time.Time, hits []Hit) Analytics {
 	analytics.Browsers = browsers.shares("Outros")
 	return analytics
 }
+
+func Slots(from, to time.Time, location *time.Location) (Bucket, []time.Time) {
+	bucket := bucketFor(to.Sub(from))
+	slots := []time.Time{}
+	for at := truncate(from, bucket, location); at.Before(to); at = advance(at, bucket, location) {
+		slots = append(slots, at)
+	}
+	return bucket, slots
+}
+
+func SlotOf(at time.Time, bucket Bucket, location *time.Location) time.Time {
+	return truncate(at, bucket, location)
+}

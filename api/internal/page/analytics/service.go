@@ -136,3 +136,17 @@ func (s *Service) Overview(ctx context.Context, query traffic.AnalyticsQuery, ta
 	}
 	return overview, nil
 }
+
+func (s *Service) Moments(ctx context.Context, from, to time.Time) ([]time.Time, error) {
+	opens, err := s.repository.FindBetween(ctx, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("list open moments: %w", err)
+	}
+	moments := make([]time.Time, 0, len(opens))
+	for _, open := range opens {
+		if !open.IsBot {
+			moments = append(moments, open.At)
+		}
+	}
+	return moments, nil
+}

@@ -19,6 +19,7 @@ import (
 	linkhistory "pocketrun-api/internal/link/history"
 	"pocketrun-api/internal/link/link"
 	linkpublic "pocketrun-api/internal/link/public"
+	"pocketrun-api/internal/overview"
 	"pocketrun-api/internal/page/access"
 	pageanalytics "pocketrun-api/internal/page/analytics"
 	"pocketrun-api/internal/page/binding"
@@ -78,6 +79,7 @@ func run(logger *slog.Logger) error {
 	loginAttemptRepository := user.NewMongoAttemptRepository(mongo.Collection("loginAttempts"))
 	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
+	usageRepository := kv.NewMongoUsageRepository(mongo.Collection("kvUsage"))
 	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
@@ -92,7 +94,7 @@ func run(logger *slog.Logger) error {
 	bindingRepository := binding.NewMongoRepository(mongo.Collection("pageBindings"))
 	bindingRequestRepository := binding.NewMongoRequestRepository(mongo.Collection("pageKvRequests"))
 	ensureIndexes(startupContext, logger,
-		userRepository, loginAttemptRepository, applicationRepository, documentRepository, slugRepository, groupRepository,
+		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
 		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
 		bindingRepository, bindingRequestRepository,
@@ -100,6 +102,7 @@ func run(logger *slog.Logger) error {
 
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
+	usageService := kv.NewUsageService(usageRepository, logger)
 	applicationService := application.NewService(applicationRepository, documentService)
 	userService := user.NewService(user.Dependencies{
 		Repository:   userRepository,
@@ -144,6 +147,7 @@ func run(logger *slog.Logger) error {
 		Applications: applicationService,
 		Access:       accessService,
 		Documents:    documentService,
+		Usage:        usageService,
 		History:      pageHistoryService,
 		Actors:       userService,
 		Logger:       logger,
@@ -169,7 +173,7 @@ func run(logger *slog.Logger) error {
 	userHandler := user.NewHandler(userService, validate, logger)
 	setupHandler := setup.NewHandler(setupService, validate, logger)
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
-	documentHandler := kv.NewHandler(documentService, applicationService, validate, logger)
+	documentHandler := kv.NewHandler(documentService, applicationService, usageService, validate, logger)
 	groupHandler := group.NewHandler(groupService, validate, logger)
 	linkHandler := link.NewHandler(linkService, cfg.LinksURL, validate, logger)
 	linkHistoryHandler := linkhistory.NewHandler(linkHistoryService, linkService, validate, logger)
@@ -179,6 +183,8 @@ func run(logger *slog.Logger) error {
 	pageHistoryHandler := pagehistory.NewHandler(pageHistoryService, pageService, validate, logger)
 	pageAnalyticsHandler := pageanalytics.NewHandler(pageAnalyticsService, pageService, validate, logger)
 	accessHandler := access.NewHandler(accessService, pageService, validate, logger)
+	overviewService := overview.NewService(overview.Dependencies{Pages: pageAnalyticsService, Links: linkAnalyticsService, KV: usageService})
+	overviewHandler := overview.NewHandler(overviewService, validate, logger)
 	bindingHandler := binding.NewHandler(bindingService, pageService, validate, logger)
 	pagePublicHandler := pagepublic.NewHandler(pagepublic.Dependencies{
 		Pages:    pageService,
@@ -206,6 +212,7 @@ func run(logger *slog.Logger) error {
 	versionHandler.Register(adminMux, authenticateManager)
 	pageHistoryHandler.Register(adminMux, authenticateManager)
 	pageAnalyticsHandler.Register(adminMux, authenticateManager)
+	overviewHandler.Register(adminMux, authenticateManager)
 	accessHandler.Register(adminMux, authenticateManager)
 	bindingHandler.Register(adminMux, authenticateManager)
 
