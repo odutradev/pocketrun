@@ -10,24 +10,27 @@ import (
 	"syscall"
 	"time"
 
-	"pocketrun-api/internal/application"
-	"pocketrun-api/internal/backup"
 	"pocketrun-api/internal/config"
-	"pocketrun-api/internal/group"
-	"pocketrun-api/internal/health"
-	"pocketrun-api/internal/kv"
-	linkanalytics "pocketrun-api/internal/link/analytics"
-	linkhistory "pocketrun-api/internal/link/history"
-	"pocketrun-api/internal/link/link"
-	linkpublic "pocketrun-api/internal/link/public"
-	"pocketrun-api/internal/overview"
-	"pocketrun-api/internal/page/access"
-	pageanalytics "pocketrun-api/internal/page/analytics"
-	"pocketrun-api/internal/page/binding"
-	pagehistory "pocketrun-api/internal/page/history"
-	"pocketrun-api/internal/page/page"
-	pagepublic "pocketrun-api/internal/page/public"
-	"pocketrun-api/internal/page/version"
+	"pocketrun-api/internal/domains/backup"
+	"pocketrun-api/internal/domains/group"
+	"pocketrun-api/internal/domains/health"
+	"pocketrun-api/internal/domains/kv/application"
+	kvdocument "pocketrun-api/internal/domains/kv/document"
+	kvusage "pocketrun-api/internal/domains/kv/usage"
+	linkanalytics "pocketrun-api/internal/domains/link/analytics"
+	linkhistory "pocketrun-api/internal/domains/link/history"
+	"pocketrun-api/internal/domains/link/link"
+	linkpublic "pocketrun-api/internal/domains/link/public"
+	"pocketrun-api/internal/domains/overview"
+	"pocketrun-api/internal/domains/page/access"
+	pageanalytics "pocketrun-api/internal/domains/page/analytics"
+	"pocketrun-api/internal/domains/page/binding"
+	pagehistory "pocketrun-api/internal/domains/page/history"
+	"pocketrun-api/internal/domains/page/page"
+	pagepublic "pocketrun-api/internal/domains/page/public"
+	"pocketrun-api/internal/domains/page/version"
+	"pocketrun-api/internal/domains/user/setup"
+	"pocketrun-api/internal/domains/user/user"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	backuprepository "pocketrun-api/internal/repositories/backup"
 	eventrepository "pocketrun-api/internal/repositories/event"
@@ -50,8 +53,6 @@ import (
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
-	"pocketrun-api/internal/setup"
-	"pocketrun-api/internal/user"
 )
 
 const (
@@ -123,8 +124,8 @@ func run(logger *slog.Logger) error {
 
 	uniqueRegistry := traffic.NewUniqueRegistry(uniqueVisitorRepository, cfg.JWTSecret)
 	signer := user.NewTokenSigner(cfg.JWTSecret)
-	documentService := kv.NewService(documentRepository)
-	usageService := kv.NewUsageService(usageRepository, logger)
+	documentService := kvdocument.NewService(documentRepository)
+	usageService := kvusage.NewService(usageRepository, logger)
 	applicationService := application.NewService(applicationRepository, documentService)
 	userService := user.NewService(user.Dependencies{
 		Repository:   userRepository,
@@ -198,7 +199,7 @@ func run(logger *slog.Logger) error {
 	userHandler := user.NewHandler(userService, validate, logger)
 	setupHandler := setup.NewHandler(setupService, validate, logger)
 	applicationHandler := application.NewHandler(applicationService, validate, logger)
-	documentHandler := kv.NewHandler(documentService, applicationService, usageService, validate, logger)
+	documentHandler := kvdocument.NewHandler(documentService, applicationService, usageService, validate, logger)
 	groupHandler := group.NewHandler(groupService, validate, logger)
 	linkHandler := link.NewHandler(linkService, cfg.LinksURL, validate, logger)
 	linkHistoryHandler := linkhistory.NewHandler(linkHistoryService, linkService, validate, logger)

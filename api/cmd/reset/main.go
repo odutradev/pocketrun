@@ -9,15 +9,15 @@ import (
 	"os"
 	"time"
 
-	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/config"
-	"pocketrun-api/internal/kv"
+	"pocketrun-api/internal/domains/kv/application"
+	kvdocument "pocketrun-api/internal/domains/kv/document"
+	"pocketrun-api/internal/domains/user/user"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
-	"pocketrun-api/internal/user"
 )
 
 const (
@@ -82,7 +82,7 @@ func run(logger *slog.Logger, withAdmin bool) error {
 		return nil
 	}
 
-	applicationService := application.NewService(applicationRepository, kv.NewService(documentRepository))
+	applicationService := application.NewService(applicationRepository, kvdocument.NewService(documentRepository))
 	userService := user.NewService(user.Dependencies{
 		Repository:   userRepository,
 		Attempts:     loginattemptrepository.NewMongoRepository(mongo.Collection("loginAttempts")),
