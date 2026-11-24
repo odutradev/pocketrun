@@ -24,8 +24,13 @@ jobs:
             echo "has_version=false" >> $GITHUB_OUTPUT
           fi
 
-  build-and-push:
+  ci:
     needs: check-version
+    if: needs.check-version.outputs.has_version == 'true'
+    uses: ./.github/workflows/ci.yml
+
+  build-and-push:
+    needs: [check-version, ci]
     if: needs.check-version.outputs.has_version == 'true'
     runs-on: ubuntu-latest
 
