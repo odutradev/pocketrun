@@ -14,7 +14,7 @@ This guide defines this Go project's architecture, package, naming and code rule
 | Database | MongoDB |
 | Validation | go-playground/validator |
 | Logs | log/slog |
-| Tests | No tests |
+| Tests | `go test` in `api/tests` (standard library only) |
 
 ## 2. Architecture: domains, repositories and services (cmd + internal)
 
@@ -108,6 +108,10 @@ internal/domains/<domain>/
 │   │   └── ...  # one folder per collection
 │   ├── services/  # database, httpx, logger, ratelimit, activation, traffic, slug, history, analytics
 │   └── utils/  # pure helpers shared by every domain
+├── tests/
+│   ├── testenv/  # temporary MongoDB, test server and HTTP helpers
+│   ├── unit/  # pure rules, no database
+│   └── integration/  # the whole API over HTTP
 └── go.mod  # module pocketrun-api
 ```
 
@@ -347,7 +351,23 @@ for _, tt := range tests {
 
 ## 6. Tests
 
-This project does not require automated tests.
+Every test lives in `api/tests`, never inside `internal/` or `cmd/`. Tests are black-box: they use only exported identifiers, so a rule that only an unexported function holds is covered through the HTTP API.
+
+```text
+api/tests/
+├── testenv/  # Start(t), panel session, apps, tokens, roles, links, pages, page data
+├── unit/  # package unit: pure rules (activation, roles, tokens, scopes, traffic, rate limit)
+└── integration/  # package integration: the whole API through app.NewHandler
+```
+
+- **`unit/`:** one file per subject (`activation_test.go`), with no database and no network.
+- **`integration/`:** `testenv.Start(t)` builds the real handler with `app.NewHandler` on a new database `pocketrun_test_<random>` and drops it in `t.Cleanup`. The config is a literal, never `config.Load()`, so a local `.env` never leaks in.
+- **MongoDB:** `TEST_MONGODB_URI` (default `mongodb://localhost:27017`). Without a reachable server the integration tests are skipped. With `TEST_REQUIRE_MONGODB=true`, as in CI, they fail instead.
+- **Panel session:** the session cookie is `Secure` with the `__Host-` prefix, so `testenv` copies it by hand instead of using a cookie jar, and sends `X-Pocketrun-Client: panel`.
+- **Client IP:** tests set `X-Forwarded-For` to act as different visitors (rate limits, login limits, unique visitors).
+- **Style:** table tests named by behavior, `Test` + type + method (`TestActivationRuleCheck`), standard library only, no comments. Test secrets and passwords are generated in the test, never fixed.
+- **What must be covered:** isolation between applications (a token never reaches another app's data, the panel or another page's data), KV roles, activation, click and unique-visitor counting, page data limits and login limits. A change to one of these rules ships with its test in the same work.
+- Run with `npm run test` at the root or `go test ./...` in `api/`.
 
 ## 7. Commits and Git
 
@@ -548,3 +568,4 @@ func (r *MongoRepository) FindByID(ctx context.Context, id string) (*User, error
 - [ ] Principle "Recursos sempre fechados" applied.
 - [ ] Principle "Logs estruturados" applied.
 - [ ] Principle "Testes de tabela" applied.
+- [ ] Tests live in `api/tests` and `go test ./...` passes.

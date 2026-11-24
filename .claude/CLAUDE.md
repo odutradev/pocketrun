@@ -47,6 +47,8 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - **Runner:** Scripts com --prefix. O package.json da raiz chama cada app com npm --prefix e sobe tudo junto com concurrently.
 - `npm run dev` at the root starts everything. Use `dev:api` or `dev:web` to start a single app.
 - `npm run build` builds both apps. Run it before calling a task done.
+- `npm run test` runs the API tests (`go test ./...` in `api/`). The integration tests need a MongoDB at `TEST_MONGODB_URI` (default `mongodb://localhost:27017`) and are skipped without one.
+- CI: `.github/workflows/ci.yml` runs gofmt, `go vet`, `go test` (with a MongoDB service), the API build, the panel lint and the panel build on every push and pull request. `docker-publish.yml` calls it first, so a version whose checks fail is never published.
 
 ```json
 {
@@ -60,6 +62,8 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
     "build:api": "cd api && go build -o bin/api ./cmd/api",
     "build:web": "npm --prefix ui run build",
     "lint": "npm --prefix ui run lint",
+    "test": "npm run test:api",
+    "test:api": "cd api && go test ./...",
     "up": "docker compose up -d --build"
   },
   "devDependencies": {
