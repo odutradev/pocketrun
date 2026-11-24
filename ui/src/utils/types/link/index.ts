@@ -153,7 +153,7 @@ export interface LinkChange {
 
 export interface LinkEvent {
   id: string;
-  linkId: string;
+  targetId: string;
   type: LinkEventType;
   actor: LinkEventActor;
   changes: LinkChange[];

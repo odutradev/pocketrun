@@ -133,7 +133,7 @@ export interface PageChange {
 
 export interface PageEvent {
   id: string;
-  pageId: string;
+  targetId: string;
   type: PageEventType;
   actor: LinkEventActor;
   changes: PageChange[];
