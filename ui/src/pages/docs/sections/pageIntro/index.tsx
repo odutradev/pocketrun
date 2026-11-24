@@ -30,7 +30,7 @@ const PageIntroSection = () => {
   "apiVersion": 1,
   "page": { "slug": "promo", "title": "Promo", "version": "1.3", "isPreview": false },
   "access": { "isProtected": true, "role": "gerente" },
-  "kv": { "role": "escrita", "rules": [] }
+  "kv": { "role": "escrita", "isOwnDocumentsOnly": false, "rules": [] }
 }`}
       />
     </DocSection>

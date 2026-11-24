@@ -42,7 +42,8 @@ const AuthSection = () => {
   "status": "valid",
   "message": "Access token and origin are valid",
   "projectId": "financas-pessoais",
-  "appName": "Finanças pessoais"
+  "appName": "Finanças pessoais",
+  "role": "admin"
 }`}
         />
       </CodeGrid>

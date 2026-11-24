@@ -22,8 +22,8 @@ const KvIntroSection = () => {
           some do explorador quando fica vazia.
         </li>
         <li>
-          <strong>Documento</strong>: um objeto com <Code>id</Code>, <Code>data</Code>, <Code>createdAt</Code>, <Code>updatedAt</Code> e, se
-          tiver validade, <Code>expiresAt</Code>.
+          <strong>Documento</strong>: um objeto com <Code>id</Code>, <Code>data</Code>, <Code>createdAt</Code>, <Code>updatedAt</Code>, o cargo
+          que o criou em <Code>createdByRole</Code> e, se tiver validade, <Code>expiresAt</Code>.
         </li>
       </Bullets>
       <Fields>

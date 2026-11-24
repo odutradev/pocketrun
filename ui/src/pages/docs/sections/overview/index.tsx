@@ -25,8 +25,9 @@ const OverviewSection = () => {
         </li>
       </Bullets>
       <Paragraph>
-        Páginas e links dividem o mesmo endereço, <Code>{"/{slug}"}</Code>, e a mesma análise. A API pública do KV fica na raiz da API, e o
-        painel usa rotas próprias sob <Code>/admin</Code>, com o login do gestor.
+        Páginas e links dividem o mesmo endereço, <Code>{"/{slug}"}</Code>, e a mesma análise. Com um domínio de links configurado, eles só
+        abrem nesse domínio, e o mesmo slug no endereço da API responde 404. A API pública do KV fica na raiz da API, e o painel usa rotas
+        próprias sob <Code>/admin</Code>, com o login do gestor.
       </Paragraph>
       <Fields>
         <CopyField value={apiUrl} label="URL da API" />

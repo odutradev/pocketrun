@@ -691,7 +691,7 @@ export const kvDocMethodTones: Record<KvDocMethod, BadgeTone> = {
 };
 
 export const kvDocErrors: KvDocError[] = [
-  { status: 400, code: "invalid_body", description: "O corpo não é um JSON válido ou passou de 1 MB." },
+  { status: 400, code: "invalid_body", description: "O corpo não é um JSON válido ou passou de 1 MB (8 MB na importação, 256 KB pela página)." },
   { status: 400, code: "validation_failed", description: "Faltou o data ou o expiresInDays saiu de 0 a 3650. O campo fields diz qual." },
   { status: 400, code: "invalid_document_id", description: "O id na rota não tem o formato de um id de documento." },
   { status: 400, code: "invalid_collection", description: "Nome de coleção vazio, longo demais ou com caracteres fora de letras, números, _ e -." },
@@ -713,7 +713,10 @@ export const kvDocErrors: KvDocError[] = [
   { status: 401, code: "page_locked", description: "Página com PIN: o acesso de quem abriu expirou ou foi encerrado." },
   { status: 403, code: "kv_access_denied", description: "Página: o jeito como a pessoa abriu não tem cargo do KV." },
   { status: 403, code: "invalid_client", description: "Página: a chamada não veio do endereço da própria página." },
-  { status: 404, code: "kv_not_linked", description: "Página: nenhuma aplicação do KV está ligada a ela." },
+  { status: 404, code: "kv_not_linked", description: "Página: os dados da página estão desativados." },
+  { status: 404, code: "kv_application_missing", description: "Página: a aplicação ligada à página não existe mais. Desative e ative os dados de novo." },
+  { status: 404, code: "route_not_found", description: "Página: a operação não existe pela página, como limpar, importar ou exportar." },
+  { status: 404, code: "page_not_found", description: "Página: a página está fora do ar ou foi chamada fora do domínio de páginas e links." },
   { status: 429, code: "too_many_requests", description: "Página: passou de 120 pedidos por minuto por visitante ou 1.200 pela página." },
   { status: 500, code: "internal_error", description: "Erro no servidor. Tente de novo; se repetir, veja os logs da API." }
 ];
