@@ -15,18 +15,42 @@
 
 ---
 
+## O que é
+
+O PocketRun é um backend que você hospeda no seu próprio servidor e que atende a todos os seus projetos pequenos ao mesmo tempo. Em vez de criar uma API, um banco, um site e um encurtador para cada ideia, você sobe uma instância só e cria um projeto novo pelo painel em segundos.
+
+Cada instância oferece três serviços, geridos por um painel web com login:
+
+- **Guardar dados (KV):** cada projeto vira uma **aplicação** com os próprios documentos JSON e um token de acesso. O seu frontend, app mobile ou script lê e grava pela API HTTP, sem você escrever backend. Uma aplicação nunca vê os dados de outra.
+- **Publicar páginas:** você escreve um HTML (com CSS e JS) no editor do painel e ele fica no ar num endereço curto, como `link.pocketrun.com/promo`. A página pode pedir um PIN e guardar dados no KV pelo `pocketrun.kv`, sem expor token.
+- **Encurtar links:** `link.pocketrun.com/cv` redireciona para qualquer URL, com QR code e contagem de acessos.
+
+Páginas e links podem entrar no ar e sair sozinhos, por período ou depois de um número de acessos. Todos mostram quantas pessoas acessaram, de onde vieram e em qual aparelho.
+
+### Para quem é
+
+Para quem cria muitos projetos pequenos e não quer manter um backend para cada um: protótipos e MVPs, apps pessoais (finanças, hábitos, lista de compras), projetos de estudo focados no frontend ou no mobile, freelas pequenos, landing pages e links de divulgação. Funciona com qualquer cliente que fale HTTP: React, Vue, Flutter, apps mobile e scripts.
+
+### Exemplo
+
+Você está fazendo um app de lista de compras em React:
+
+1. No painel, cria a aplicação **Compras**. Ela já vem com um token de acesso.
+2. No app, grava um item com `POST /kv/itens/create` e lista com `GET /kv/itens/get-all`, mandando o token no header.
+3. Para divulgar, publica uma página `/compras` e um link `/baixar` para a loja de apps, e vê os acessos de cada um no painel.
+
 ## Módulos
 
 | | Módulo | O que faz |
 | :-: | :--- | :--- |
-| 🟦 | **KV** | Documentos JSON sem schema, separados por projeto e por collection. Tem tokens com cargos, filtros, agregações, validade e importação/exportação. |
-| 🟨 | **Páginas** | Micro-páginas em HTML/CSS/JS publicadas num slug. Têm versões, PIN opcional, dados próprios pelo `pocketrun.kv` e análise de acessos. |
+| 🟦 | **KV** | Documentos JSON sem schema, separados por aplicação e por collection. Tokens com cargos (o que cada um pode ler, criar, editar e apagar), filtros, agregações, validade dos documentos e importação/exportação. |
+| 🟨 | **Páginas** | Micro-páginas em HTML/CSS/JS publicadas num slug. Têm histórico de versões, PIN opcional, dados próprios pelo `pocketrun.kv`, ativação e análise de acessos. |
 | 🟩 | **Links** | Links curtos com grupos, QR code, ativação por período ou por cliques e análise de acessos. |
 
-O **painel** junta tudo isso: uso geral, usuários, backup da instância e documentação.
+O **painel** junta tudo isso: visão geral do uso, usuários (gestores e superadmins), backup da instância e a documentação de cada serviço.
 
 > [!TIP]
-> O [`llms.txt`](llms.txt) descreve cada rota, payload e erro dos serviços. Cole o link `{painel}/llms.txt` numa IA junto com o seu pedido.
+> O [`llms.txt`](llms.txt) descreve cada rota, payload e erro dos serviços. Cole o link `{painel}/llms.txt` numa IA junto com o seu pedido, e ela consegue montar o cliente ou a página para você.
 
 ## Rodando localmente
 
@@ -60,7 +84,7 @@ odutradev/pocketrun-ui:latest
 <details>
 <summary><b>docker-compose.yml com MongoDB local</b></summary>
 
-O banco roda no mesmo compose. Os dados ficam no volume `mongo-data` e não somem ao recriar o container. A API só sobe depois que o banco responde ao healthcheck.
+O banco roda no mesmo compose. Copie o [`.env.selfhost.example`](.env.selfhost.example) para `.env` ao lado do compose e preencha os segredos. Os dados ficam no volume `mongo-data` e não somem ao recriar o container. A API só sobe depois que o banco responde ao healthcheck.
 
 ```yaml
 services:
@@ -90,7 +114,7 @@ services:
       - LINKS_URL=${LINKS_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
-      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_URI=${MONGODB_URI}
       - MONGODB_NAME=${MONGODB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - PAGE_ACCESS_SECRET=${PAGE_ACCESS_SECRET}
@@ -199,7 +223,7 @@ Todas são obrigatórias. Na partida, a API confere cada uma e não inicia se al
 - `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Por isso `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
 - `ADMIN_CORS_ALLOWED_ORIGINS` é a origem exata do painel. Nunca use `*`, porque o painel entra com cookie.
 - `JWT_SECRET` e `PAGE_ACCESS_SECRET` precisam de 32 caracteres ou mais e não podem ser iguais. Gere cada uma com `openssl rand -hex 32`. Trocar o `PAGE_ACCESS_SECRET` invalida os PINs já criados.
-- `MONGODB_URI` começa com `mongodb://` ou `mongodb+srv://`. No compose com MongoDB local, ela já vem fixa como `mongodb://mongo:27017`.
+- `MONGODB_URI` começa com `mongodb://` ou `mongodb+srv://`. No compose com MongoDB local, use `mongodb://mongo:27017`.
 
 </details>
 
@@ -213,3 +237,9 @@ Todos os containers escutam na porta `80`.
 
 > [!IMPORTANT]
 > O backup do painel inclui os hashes das senhas e dos tokens. Guarde o arquivo fora do servidor. Para restaurar em outra instância, use os mesmos `JWT_SECRET` e `PAGE_ACCESS_SECRET`.
+
+## Mais
+
+- [CHANGELOG](CHANGELOG.md): o que muda em cada versão. Leia antes de atualizar uma instância.
+- [SECURITY](SECURITY.md): como reportar uma vulnerabilidade.
+- [LICENSE](LICENSE): ISC.
