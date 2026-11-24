@@ -3,10 +3,11 @@ package group
 import (
 	"context"
 	"fmt"
-	grouprepository "pocketrun-api/internal/repositories/group"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	grouprepository "pocketrun-api/internal/repositories/group"
 )
 
 type Repository interface {

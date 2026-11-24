@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/domains/backup/utils/collections"
 )
 
 type Repository interface {
@@ -65,14 +67,14 @@ func (s *Service) Summary(ctx context.Context, actorID bson.ObjectID) (Summary, 
 		return Summary{}, fmt.Errorf("backup summary: %w", err)
 	}
 
-	names := collectionsFor(ScopeFull)
+	names := collections.For(false)
 	summary := Summary{Collections: make([]CollectionSummary, 0, len(names))}
 	for _, name := range names {
 		total, err := s.repository.Count(ctx, name)
 		if err != nil {
 			return Summary{}, fmt.Errorf("backup summary: %w", err)
 		}
-		summary.Collections = append(summary.Collections, CollectionSummary{Name: name, Group: groupOf(name), Documents: total})
+		summary.Collections = append(summary.Collections, CollectionSummary{Name: name, Group: collections.GroupOf(name), Documents: total})
 	}
 	return summary, nil
 }
@@ -91,7 +93,7 @@ func (s *Service) Export(ctx context.Context, actorID bson.ObjectID, scope strin
 	if scope == "" {
 		scope = ScopeFull
 	}
-	names := collectionsFor(scope)
+	names := collections.For(scope == ScopeContent)
 	header := Header{Format: Format, Version: FormatVersion, Scope: scope, CreatedAt: time.Now().UTC(), Collections: names, Documents: map[string]int64{}}
 	for _, name := range names {
 		total, err := s.repository.Count(ctx, name)
@@ -283,7 +285,7 @@ func validateHeader(header Header) error {
 	}
 	seen := map[string]bool{}
 	for _, name := range header.Collections {
-		if !isKnownCollection(name) || seen[name] {
+		if !collections.IsKnown(name) || seen[name] {
 			return fmt.Errorf("collection %q: %w", name, ErrInvalidFile)
 		}
 		seen[name] = true

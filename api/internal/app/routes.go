@@ -33,7 +33,7 @@ import (
 const adminPrefix = "/admin"
 
 func newRouter(cfg config.Config, s services, validate *validator.Validate, logger *slog.Logger) http.Handler {
-	healthHandler := health.NewHandler()
+	healthHandler := health.NewHandler(health.NewService())
 	documentHandler := kvdocument.NewHandler(s.documents, s.applications, s.usage, validate, logger)
 	applicationHandler := application.NewHandler(s.applications, validate, logger)
 	groupHandler := group.NewHandler(s.groups, validate, logger)

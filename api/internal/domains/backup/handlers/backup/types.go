@@ -2,7 +2,6 @@ package backup
 
 import (
 	"errors"
-	"slices"
 	"time"
 
 	backuprepository "pocketrun-api/internal/repositories/backup"
@@ -29,29 +28,6 @@ var (
 	ErrMissingSuperadmin = errors.New("backup without superadmin")
 	ErrRestoreRunning    = errors.New("restore already running")
 )
-
-var contentCollections = []string{
-	"users",
-	"applications",
-	"kvDocuments",
-	"groups",
-	"slugs",
-	"links",
-	"pages",
-	"pageVersions",
-	"pageAccess",
-	"pageBindings",
-}
-
-var historyCollections = []string{
-	"linkEvents",
-	"pageEvents",
-	"linkOpens",
-	"pageOpens",
-	"kvUsage",
-	"pageKvRequests",
-	"uniqueVisitors",
-}
 
 type ExportQuery struct {
 	Scope string `query:"scope" validate:"omitempty,oneof=full content"`
@@ -87,22 +63,4 @@ type Result struct {
 	RestoredAt  time.Time        `json:"restoredAt"`
 	Documents   map[string]int64 `json:"documents"`
 	Collections []string         `json:"collections"`
-}
-
-func collectionsFor(scope string) []string {
-	if scope == ScopeContent {
-		return slices.Clone(contentCollections)
-	}
-	return slices.Concat(contentCollections, historyCollections)
-}
-
-func isKnownCollection(name string) bool {
-	return slices.Contains(contentCollections, name) || slices.Contains(historyCollections, name)
-}
-
-func groupOf(name string) string {
-	if slices.Contains(historyCollections, name) {
-		return "history"
-	}
-	return "content"
 }

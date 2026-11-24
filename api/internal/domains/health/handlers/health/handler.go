@@ -6,15 +6,12 @@ import (
 	"pocketrun-api/internal/services/httpx"
 )
 
-type PingResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
+type Handler struct {
+	service *Service
 }
 
-type Handler struct{}
-
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(service *Service) *Handler {
+	return &Handler{service: service}
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
@@ -22,5 +19,5 @@ func (h *Handler) Register(mux *http.ServeMux) {
 }
 
 func (h *Handler) ping(w http.ResponseWriter, r *http.Request) {
-	httpx.WriteJSON(w, http.StatusOK, PingResponse{Status: "success", Message: "pong"})
+	httpx.WriteJSON(w, http.StatusOK, h.service.Ping())
 }
