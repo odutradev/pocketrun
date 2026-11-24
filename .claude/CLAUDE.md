@@ -100,6 +100,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 ### docker-compose
 
 - One `docker-compose.yml` at the root, with one service per app plus the support services. It is the file Dokploy deploys (`-f docker-compose.yml`).
+- The repository compose runs its own `mongo:7` service with data in the `mongo-data` volume, and pins `MONGODB_URI=mongodb://mongo:27017` on the API, so the root `.env` value only applies to local development.
 
 - Every service uses `restart: unless-stopped` and the same `app-network` bridge network.
 - Inside the network, apps reach services by name (`redis://redis:6379`), never `localhost`.
@@ -192,6 +193,19 @@ README.md
 
 ```yaml
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - app-network
   api:
     build:
       context: ./api
@@ -201,13 +215,20 @@ services:
     expose:
       - "80"
     environment:
+      - HOST=0.0.0.0
       - PORT=80
       - APP_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy
     networks:
       - app-network
   ui:
     build:
       context: ./ui
+      additional_contexts:
+        project: .
     restart: unless-stopped
     environment:
       - API_URL=${API_URL}
@@ -219,6 +240,9 @@ services:
         condition: service_healthy
     networks:
       - app-network
+
+volumes:
+  mongo-data:
 
 networks:
   app-network:

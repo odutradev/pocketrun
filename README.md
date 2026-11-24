@@ -81,6 +81,8 @@ odutradev/pocketrun-api:latest
 odutradev/pocketrun-ui:latest
 ```
 
+O [`docker-compose.yml`](docker-compose.yml) da raiz, usado no Dokploy, compila as imagens a partir do código e sobe o MongoDB junto, como o exemplo com MongoDB local abaixo. Nele a API sempre usa `mongodb://mongo:27017`, e o `MONGODB_URI` do `.env` é ignorado.
+
 <details>
 <summary><b>docker-compose.yml com MongoDB local</b></summary>
 
