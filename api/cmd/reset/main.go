@@ -20,6 +20,7 @@ import (
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
+	"pocketrun-api/internal/services/logger"
 )
 
 const (
@@ -36,12 +37,12 @@ type indexer interface {
 }
 
 func main() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	log := logger.New(os.Stdout)
 	withAdmin := flag.Bool("admin", false, "create a superadmin after the reset")
 	flag.Parse()
 
-	if err := run(logger, *withAdmin); err != nil {
-		logger.Error("reset database", "error", err)
+	if err := run(log, *withAdmin); err != nil {
+		log.Error("reset database", "error", err)
 		os.Exit(1)
 	}
 }

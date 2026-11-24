@@ -2,21 +2,21 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"pocketrun-api/internal/app"
+	"pocketrun-api/internal/services/logger"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log := logger.New(os.Stdout)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := app.Run(ctx, logger); err != nil {
-		logger.Error("run api", "error", err)
+	if err := app.Run(ctx, log); err != nil {
+		log.Error("run api", "error", err)
 		stop()
 		os.Exit(1)
 	}

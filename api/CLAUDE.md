@@ -56,7 +56,7 @@ internal/domains/<domain>/
 - **Import aliases:** a repository package is imported with the `repository` suffix (`pagerepository`), a shared service with the `service` suffix when its name collides (`historyservice`, `analyticsservice`), and a handler package with the `handler` suffix inside `domain.go` when it has the domain's name (`pagehandler`).
 - **Interfaces:** the service declares the interface of the repository it consumes (accept interfaces, return structs). A domain never uses another domain's repository: it calls that domain's exported service.
 - **Shared repositories:** records with the same shape share one repository, configured per collection. `repositories/event` stores the history of links and pages and `repositories/open` stores their opens, both keyed by `targetId`.
-- **Services:** `internal/services` holds logic and infrastructure that several domains use: `database`, `httpx` (server, CORS, JSON, decoding, `Router`), `ratelimit`, `activation`, `traffic`, `slug`, `history` and `analytics`. Services never import `domains`.
+- **Services:** `internal/services` holds logic and infrastructure that several domains use: `database`, `httpx` (server, CORS, JSON, decoding, `Router`), `logger` (the colored `slog` handler of `cmd/`), `ratelimit`, `activation`, `traffic`, `slug`, `history` and `analytics`. Services never import `domains`.
 - **Utils (global):** `internal/utils` holds small pure helpers used across domains (`pointers.go`, `urls.go`, `request.go`). Domain-specific functions go to the domain's own `utils/`.
 - Dependencies between subjects point one way: the core subject (`page/handlers/page`, `link/handlers/link`) uses `version`, `history`, `analytics` and `access` through interfaces it declares, and those packages never import the core.
 - `public` holds what visitors reach without login (redirects, page HTML). Admin routes stay in the other subjects.
@@ -106,7 +106,7 @@ internal/domains/<domain>/
 │   │   ├── event/  # history of links and pages
 │   │   ├── open/  # opens of links and pages
 │   │   └── ...  # one folder per collection
-│   ├── services/  # database, httpx, ratelimit, activation, traffic, slug, history, analytics
+│   ├── services/  # database, httpx, logger, ratelimit, activation, traffic, slug, history, analytics
 │   └── utils/  # pure helpers shared by every domain
 └── go.mod  # module pocketrun-api
 ```
