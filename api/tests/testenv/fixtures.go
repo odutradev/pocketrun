@@ -1,7 +1,10 @@
 package testenv
 
 import (
+	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -119,4 +122,29 @@ func (e *Env) PageData(slug, method, path string, body any, ip string) Response 
 
 func Later(duration time.Duration) time.Time {
 	return time.Now().Add(duration).UTC()
+}
+
+func (e *Env) UnlockPage(slug, pin, ip string) Response {
+	e.t.Helper()
+
+	form := url.Values{"pin": {pin}}
+	request, err := http.NewRequestWithContext(e.t.Context(), http.MethodPost, e.URL+"/"+slug, strings.NewReader(form.Encode()))
+	if err != nil {
+		e.t.Fatalf("build unlock request: %v", err)
+	}
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set(UserAgentHeader, BrowserAgent)
+	request.Header.Set(ClientIPHeader, ip)
+
+	response, err := e.client.Do(request)
+	if err != nil {
+		e.t.Fatalf("unlock %s: %v", slug, err)
+	}
+	defer response.Body.Close()
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		e.t.Fatalf("read unlock response: %v", err)
+	}
+	return Response{Status: response.StatusCode, Header: response.Header, Body: content}
 }
