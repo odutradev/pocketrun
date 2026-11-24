@@ -4,6 +4,12 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+### Ação necessária
+
+- **O `docker-compose.yml` do repositório sobe o próprio MongoDB** (serviço `mongo`, dados no volume `mongo-data`) e fixa `MONGODB_URI=mongodb://mongo:27017` na API, que só inicia depois que o banco responde. Quem fazia deploy desse compose com um banco externo passa a usar o banco novo, vazio: restaure um backup do painel ou use o compose com MongoDB externo do README.
+
 ## 1.8.0 (2026-11-24)
 
 - As imagens no Docker Hub também ganham a tag com o número da versão, como `odutradev/pocketrun-api:1.8.0`, para fixar uma versão no deploy em vez de usar `latest`.

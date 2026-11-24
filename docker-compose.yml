@@ -1,4 +1,18 @@
 services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - app-network
+
   api:
     build:
       context: ./api
@@ -11,6 +25,10 @@ services:
       - HOST=0.0.0.0
       - PORT=80
       - APP_ENV=production
+      - MONGODB_URI=mongodb://mongo:27017
+    depends_on:
+      mongo:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -30,6 +48,9 @@ services:
         condition: service_healthy
     networks:
       - app-network
+
+volumes:
+  mongo-data:
 
 networks:
   app-network:
