@@ -5,10 +5,11 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	slugrepository "pocketrun-api/internal/repositories/slug"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	slugrepository "pocketrun-api/internal/repositories/slug"
 )
 
 const (

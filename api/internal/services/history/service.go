@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	eventrepository "pocketrun-api/internal/repositories/event"
 	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	eventrepository "pocketrun-api/internal/repositories/event"
 )
 
 type Repository interface {
