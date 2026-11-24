@@ -15,6 +15,8 @@ import (
 	"pocketrun-api/internal/domains/page/handlers/access"
 	"pocketrun-api/internal/domains/page/handlers/binding"
 	"pocketrun-api/internal/domains/page/handlers/page"
+	"pocketrun-api/internal/domains/page/utils/pagegate"
+	"pocketrun-api/internal/domains/page/utils/pinsecret"
 	pagerepository "pocketrun-api/internal/repositories/page"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/ratelimit"
@@ -98,22 +100,6 @@ func (h *Handler) writeDataFailure(w http.ResponseWriter, r *http.Request, err e
 	h.WriteDataError(w, status, code)
 }
 
-func (h *Handler) runtimeExtra(ctx context.Context, id bson.ObjectID, decision access.Decision) runtimeExtra {
-	extra := runtimeExtra{Access: runtimeAccess{IsProtected: decision.IsProtected}}
-	if decision.IsProtected {
-		role := decision.Role
-		extra.Access.Role = &role
-	}
-
-	described, err := h.data.Describe(ctx, id, binding.Subject{IsProtected: decision.IsProtected, PageRole: decision.Role})
-	if err != nil {
-		h.logger.WarnContext(ctx, "describe page kv", "pageId", id.Hex(), "error", err)
-		return extra
-	}
-	extra.KV = described
-	return extra
-}
-
 type PageOpener interface {
 	Visible(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
 	Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*pagerepository.Page, error)
@@ -130,6 +116,7 @@ type DataBridge interface {
 }
 
 type Handler struct {
+	service        *Service
 	pages          PageOpener
 	guard          AccessGuard
 	data           DataBridge
@@ -142,6 +129,7 @@ type Handler struct {
 
 func NewHandler(dependencies Dependencies) *Handler {
 	return &Handler{
+		service:        NewService(dependencies.Data, dependencies.Logger),
 		pages:          dependencies.Pages,
 		guard:          dependencies.Guard,
 		data:           dependencies.Data,
@@ -180,7 +168,7 @@ func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.Obje
 		return
 	}
 
-	body, err := render(*opened, h.runtimeExtra(ctx, id, decision))
+	body, err := h.service.Render(ctx, *opened, decision)
 	if err != nil {
 		h.writeInternalError(w, r, "render page", err)
 		return
@@ -191,7 +179,7 @@ func (h *Handler) ServePage(w http.ResponseWriter, r *http.Request, id bson.Obje
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 	if decision.IsProtected {
-		setPrivateHeaders(w)
+		pagegate.SetPrivateHeaders(w)
 	}
 	w.WriteHeader(http.StatusOK)
 	if r.Method == http.MethodHead {
@@ -221,7 +209,7 @@ func (h *Handler) UnlockPage(w http.ResponseWriter, r *http.Request, id bson.Obj
 
 	r.Body = http.MaxBytesReader(w, r.Body, access.MaxFormBytes)
 	if err := r.ParseForm(); err != nil {
-		h.serveGate(w, r, id, http.StatusBadRequest, gateInvalidPIN)
+		h.serveGate(w, r, id, http.StatusBadRequest, pagegate.MessageInvalidPIN)
 		return
 	}
 
@@ -229,13 +217,13 @@ func (h *Handler) UnlockPage(w http.ResponseWriter, r *http.Request, id bson.Obj
 	switch {
 	case errors.Is(err, access.ErrNotProtected):
 		h.redirectBack(w, r)
-	case errors.Is(err, access.ErrInvalidPIN):
-		h.serveGate(w, r, id, http.StatusBadRequest, gateInvalidPIN)
+	case errors.Is(err, pinsecret.ErrInvalidPIN):
+		h.serveGate(w, r, id, http.StatusBadRequest, pagegate.MessageInvalidPIN)
 	case errors.Is(err, access.ErrWrongPIN):
-		h.serveGate(w, r, id, http.StatusUnauthorized, gateWrongPIN)
+		h.serveGate(w, r, id, http.StatusUnauthorized, pagegate.MessageWrongPIN)
 	case errors.Is(err, access.ErrTooManyAttempts):
 		w.Header().Set("Retry-After", "900")
-		h.serveGate(w, r, id, http.StatusTooManyRequests, gateTooMany)
+		h.serveGate(w, r, id, http.StatusTooManyRequests, pagegate.MessageTooMany)
 	case err != nil:
 		h.writeInternalError(w, r, "unlock page", err)
 	default:
@@ -262,7 +250,7 @@ func (h *Handler) serveGate(w http.ResponseWriter, r *http.Request, id bson.Obje
 		h.writeInternalError(w, r, "show page gate", err)
 		return
 	}
-	if err := writeGate(w, r, status, problem); err != nil {
+	if err := pagegate.Write(w, r, status, problem); err != nil {
 		h.logger.WarnContext(r.Context(), "write page gate", "error", err)
 	}
 }
@@ -322,4 +310,27 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, r *http.Request) {
 	if err := httpx.WriteUnavailablePage(w, unavailableHeading, unavailableMessage); err != nil {
 		h.logger.WarnContext(r.Context(), "write page unavailable", "error", err)
 	}
+}
+
+func isSameOriginCall(r *http.Request) bool {
+	if r.Header.Get(dataHeader) != "1" {
+		return false
+	}
+	if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" {
+		return false
+	}
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true
+	}
+	host := utils.URLHost(origin)
+	if strings.EqualFold(host, r.Host) {
+		return true
+	}
+	for _, forwarded := range strings.Split(r.Header.Get("X-Forwarded-Host"), ",") {
+		if strings.EqualFold(host, strings.TrimSpace(forwarded)) {
+			return true
+		}
+	}
+	return false
 }

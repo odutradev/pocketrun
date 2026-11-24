@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/page/handlers/history"
+	"pocketrun-api/internal/domains/page/utils/pinsecret"
 	eventrepository "pocketrun-api/internal/repositories/event"
 	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
 	pageaccessattemptrepository "pocketrun-api/internal/repositories/pageaccessattempt"
@@ -56,7 +57,7 @@ type Service struct {
 	attempts   AttemptRepository
 	history    EventRecorder
 	actors     ActorResolver
-	secrets    secrets
+	secrets    pinsecret.Secrets
 	logger     *slog.Logger
 }
 
@@ -66,7 +67,7 @@ func NewService(dependencies Dependencies) *Service {
 		attempts:   dependencies.Attempts,
 		history:    dependencies.History,
 		actors:     dependencies.Actors,
-		secrets:    newSecrets(dependencies.Secret),
+		secrets:    pinsecret.New(dependencies.Secret),
 		logger:     dependencies.Logger,
 	}
 }
@@ -145,13 +146,13 @@ func (s *Service) CreateKey(ctx context.Context, pageID bson.ObjectID, input Key
 	if err != nil {
 		return Issued{}, fmt.Errorf("create page access key: %w", err)
 	}
-	secret, err := newKeySecret()
+	secret, err := pinsecret.NewKeySecret()
 	if err != nil {
 		return Issued{}, fmt.Errorf("create page access key: %w", err)
 	}
 
 	keyID := bson.NewObjectID()
-	sealed, err := s.secrets.encryptPIN(pageID, keyID, pin)
+	sealed, err := s.secrets.EncryptPIN(pageID, keyID, pin)
 	if err != nil {
 		return Issued{}, fmt.Errorf("create page access key: %w", err)
 	}
@@ -217,11 +218,11 @@ func (s *Service) ResetPIN(ctx context.Context, pageID, keyID bson.ObjectID, val
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
-	secret, err := newKeySecret()
+	secret, err := pinsecret.NewKeySecret()
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
-	sealed, err := s.secrets.encryptPIN(pageID, keyID, pin)
+	sealed, err := s.secrets.EncryptPIN(pageID, keyID, pin)
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
@@ -249,10 +250,10 @@ func (s *Service) RevealPIN(ctx context.Context, pageID, keyID bson.ObjectID) (R
 		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
 	}
 	if key.PINCipher == "" {
-		return Revealed{}, fmt.Errorf("reveal page access pin: %w", ErrPINUnavailable)
+		return Revealed{}, fmt.Errorf("reveal page access pin: %w", pinsecret.ErrPINUnavailable)
 	}
 
-	pin, err := s.secrets.decryptPIN(pageID, keyID, key.PINCipher)
+	pin, err := s.secrets.DecryptPIN(pageID, keyID, key.PINCipher)
 	if err != nil {
 		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
 	}
@@ -326,7 +327,7 @@ func (s *Service) Allow(ctx context.Context, pageID bson.ObjectID, token string)
 	if token == "" {
 		return Decision{IsProtected: true}, nil
 	}
-	key, isValid := s.secrets.verifyToken(access, token, time.Now())
+	key, isValid := s.secrets.VerifyToken(access, token, time.Now(), sessionDuration(access))
 	if !isValid {
 		return Decision{IsProtected: true}, nil
 	}
@@ -334,8 +335,8 @@ func (s *Service) Allow(ctx context.Context, pageID bson.ObjectID, token string)
 }
 
 func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client string) (Grant, error) {
-	if !pinPattern.MatchString(pin) {
-		return Grant{}, ErrInvalidPIN
+	if !pinsecret.IsWellFormed(pin) {
+		return Grant{}, pinsecret.ErrInvalidPIN
 	}
 
 	access, err := s.repository.Find(ctx, pageID)
@@ -350,12 +351,12 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 	}
 
 	now := time.Now()
-	clientHash := s.secrets.hashClient(pageID, client)
+	clientHash := s.secrets.HashClient(pageID, client)
 	if err := s.checkLimits(ctx, pageID, clientHash, now); err != nil {
 		return Grant{}, fmt.Errorf("unlock page %s: %w", pageID.Hex(), err)
 	}
 
-	hash := s.secrets.hashPIN(pageID, pin)
+	hash := s.secrets.HashPIN(pageID, pin)
 	var match *pageaccessrepository.Key
 	for index := range access.Keys {
 		if hmac.Equal([]byte(access.Keys[index].PINHash), []byte(hash)) && match == nil {
@@ -368,7 +369,7 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 	}
 
 	expiresAt := now.Add(sessionDuration(access))
-	grant := Grant{Token: s.secrets.issueToken(pageID, *match, access.Revision, now, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
+	grant := Grant{Token: s.secrets.IssueToken(pageID, *match, access.Revision, now, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
 	s.record(ctx, pageID, history.EventUnlocked, userrepository.Actor{Name: visitorActorName}, []eventrepository.Change{{Field: roleField, From: nil, To: match.Role}})
 	return grant, nil
 }
@@ -413,22 +414,22 @@ func (s *Service) registerFailure(ctx context.Context, pageID bson.ObjectID, cli
 
 func (s *Service) resolvePIN(access *pageaccessrepository.Access, value string, ownerID *bson.ObjectID) (string, string, error) {
 	if value != "" {
-		if err := checkPIN(value); err != nil {
+		if err := pinsecret.CheckPIN(value); err != nil {
 			return "", "", err
 		}
-		hash := s.secrets.hashPIN(access.PageID, value)
+		hash := s.secrets.HashPIN(access.PageID, value)
 		if err := ensurePINFree(access, hash, ownerID); err != nil {
 			return "", "", err
 		}
 		return value, hash, nil
 	}
 
-	for range maxGenerateTries {
-		pin, err := generatePIN()
+	for range pinsecret.MaxGenerateTries {
+		pin, err := pinsecret.GeneratePIN()
 		if err != nil {
 			return "", "", err
 		}
-		hash := s.secrets.hashPIN(access.PageID, pin)
+		hash := s.secrets.HashPIN(access.PageID, pin)
 		if ensurePINFree(access, hash, ownerID) == nil {
 			return pin, hash, nil
 		}
@@ -472,6 +473,51 @@ func checkRole(role string) error {
 	}
 	if err := slug.CheckFormat(role); err != nil {
 		return ErrInvalidRole
+	}
+	return nil
+}
+
+func newAccess(pageID bson.ObjectID) *pageaccessrepository.Access {
+	return &pageaccessrepository.Access{PageID: pageID, Keys: []pageaccessrepository.Key{}, SessionHours: DefaultSessionHours}
+}
+
+func applyAccessDefaults(a *pageaccessrepository.Access) {
+	if a.SessionHours <= 0 {
+		a.SessionHours = DefaultSessionHours
+	}
+	for index := range a.Keys {
+		a.Keys[index].IsRevealable = a.Keys[index].PINCipher != ""
+	}
+}
+
+func sessionDuration(a *pageaccessrepository.Access) time.Duration {
+	applyAccessDefaults(a)
+	return time.Duration(a.SessionHours) * time.Hour
+}
+
+func findKey(a *pageaccessrepository.Access, id bson.ObjectID) (*pageaccessrepository.Key, error) {
+	for index := range a.Keys {
+		if a.Keys[index].ID == id {
+			return &a.Keys[index], nil
+		}
+	}
+	return nil, ErrKeyNotFound
+}
+
+func ensureRoleFree(a *pageaccessrepository.Access, role string, ownerID *bson.ObjectID) error {
+	for _, key := range a.Keys {
+		if key.Role == role && (ownerID == nil || key.ID != *ownerID) {
+			return ErrRoleTaken
+		}
+	}
+	return nil
+}
+
+func ensurePINFree(a *pageaccessrepository.Access, hash string, ownerID *bson.ObjectID) error {
+	for _, key := range a.Keys {
+		if key.PINHash == hash && (ownerID == nil || key.ID != *ownerID) {
+			return ErrPINInUse
+		}
 	}
 	return nil
 }

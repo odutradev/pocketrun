@@ -502,3 +502,27 @@ func ErrorStatus(err error) (int, string) {
 	}
 	return http.StatusInternalServerError, "internal_error"
 }
+
+func operation(a pagekvrequestrepository.Action) applicationrepository.Operation {
+	switch a {
+	case pagekvrequestrepository.ActionCreate:
+		return applicationrepository.OperationCreate
+	case pagekvrequestrepository.ActionUpdate, pagekvrequestrepository.ActionReplace:
+		return applicationrepository.OperationUpdate
+	case pagekvrequestrepository.ActionDelete:
+		return applicationrepository.OperationDelete
+	}
+	return applicationrepository.OperationRead
+}
+
+func role(b *pagebindingrepository.Binding, subject Subject) string {
+	if !subject.IsProtected {
+		return b.PublicRole
+	}
+	for _, mapping := range b.Roles {
+		if mapping.PageRole == subject.PageRole {
+			return mapping.KVRole
+		}
+	}
+	return ""
+}

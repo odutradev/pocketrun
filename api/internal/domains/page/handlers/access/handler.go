@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/page/utils/pinsecret"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -235,9 +236,9 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 	switch {
 	case errors.Is(err, ErrInvalidKeyID):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_key_id")
-	case errors.Is(err, ErrInvalidPIN):
+	case errors.Is(err, pinsecret.ErrInvalidPIN):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_pin")
-	case errors.Is(err, ErrWeakPIN):
+	case errors.Is(err, pinsecret.ErrWeakPIN):
 		httpx.WriteError(w, http.StatusBadRequest, "weak_pin")
 	case errors.Is(err, ErrInvalidRole):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_role")
@@ -251,7 +252,7 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		httpx.WriteError(w, http.StatusNotFound, "access_key_not_found")
 	case errors.Is(err, ErrPINInUse):
 		httpx.WriteError(w, http.StatusConflict, "pin_in_use")
-	case errors.Is(err, ErrPINUnavailable):
+	case errors.Is(err, pinsecret.ErrPINUnavailable):
 		httpx.WriteError(w, http.StatusConflict, "pin_unavailable")
 	case errors.Is(err, ErrRoleTaken):
 		httpx.WriteError(w, http.StatusConflict, "role_taken")

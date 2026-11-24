@@ -1,14 +1,6 @@
 package history
 
-import (
-	"time"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
-
-	eventrepository "pocketrun-api/internal/repositories/event"
-	userrepository "pocketrun-api/internal/repositories/user"
-	historyservice "pocketrun-api/internal/services/history"
-)
+import eventrepository "pocketrun-api/internal/repositories/event"
 
 const (
 	EventAccessEnabled        eventrepository.Type = "access_enabled"
@@ -26,7 +18,3 @@ const (
 	EventKVChanged            eventrepository.Type = "kv_changed"
 	EventKVUnlinked           eventrepository.Type = "kv_unlinked"
 )
-
-func NewEvent(pageID bson.ObjectID, eventType eventrepository.Type, actor userrepository.Actor, changes []eventrepository.Change, at time.Time) *eventrepository.Event {
-	return historyservice.NewEvent(pageID, eventType, actor, changes, at)
-}

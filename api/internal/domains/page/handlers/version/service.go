@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/page/utils/versionlabel"
 	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
 type Repository interface {
@@ -64,4 +67,23 @@ func (s *Service) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
 		return fmt.Errorf("delete page versions %s: %w", pageID.Hex(), err)
 	}
 	return nil
+}
+
+func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor userrepository.Actor, at time.Time) *pageversionrepository.Version {
+	return &pageversionrepository.Version{
+		ID:           bson.NewObjectID(),
+		PageID:       pageID,
+		Number:       number,
+		HTML:         html,
+		Size:         int64(len(html)),
+		RestoredFrom: restoredFrom,
+		Message:      message,
+		Actor:        actor,
+		CreatedAt:    at,
+	}
+}
+
+func withLabel(v *pageversionrepository.Version) *pageversionrepository.Version {
+	v.Label = versionlabel.Label(v.Number)
+	return v
 }

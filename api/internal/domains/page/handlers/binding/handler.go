@@ -5,12 +5,16 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/kv/handlers/application"
+	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
+	"pocketrun-api/internal/domains/kv/utils/kvquery"
 	pagerepository "pocketrun-api/internal/repositories/page"
+	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -179,4 +183,71 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 		h.logger.ErrorContext(r.Context(), operation, "error", err)
 	}
 	httpx.WriteError(w, status, code)
+}
+
+func ParseRequest(w http.ResponseWriter, r *http.Request, validate *validator.Validate, rest string) (Request, error) {
+	parts := strings.Split(strings.Trim(rest, "/"), "/")
+	if len(parts) < 2 || len(parts) > 3 {
+		return Request{}, ErrUnknownRoute
+	}
+
+	matched, ok := matchRoute(r.Method, pagekvrequestrepository.Action(parts[1]), len(parts) == 3)
+	if !ok {
+		return Request{}, ErrUnknownRoute
+	}
+
+	request := Request{Action: matched.action, Collection: parts[0]}
+	if err := kvquery.CheckCollection(request.Collection); err != nil {
+		return Request{}, err
+	}
+	if matched.hasID {
+		id, err := bson.ObjectIDFromHex(parts[2])
+		if err != nil {
+			return Request{}, kvdocument.ErrInvalidDocumentID
+		}
+		request.DocumentID = id
+	}
+
+	if err := decodeAction(w, r, validate, &request); err != nil {
+		return Request{}, err
+	}
+	return request, nil
+}
+
+func matchRoute(method string, action pagekvrequestrepository.Action, hasID bool) (route, bool) {
+	for _, candidate := range routes {
+		if candidate.method == method && candidate.action == action && candidate.hasID == hasID {
+			return candidate, true
+		}
+	}
+	return route{}, false
+}
+
+func decodeAction(w http.ResponseWriter, r *http.Request, validate *validator.Validate, request *Request) error {
+	switch request.Action {
+	case pagekvrequestrepository.ActionList:
+		query, err := kvquery.ParseListQuery(r.URL.Query())
+		if err != nil {
+			return err
+		}
+		request.List = query
+	case pagekvrequestrepository.ActionCount:
+		filter, err := kvquery.ParseQueryFilter(r.URL.Query())
+		if err != nil {
+			return err
+		}
+		request.Filter = filter
+	case pagekvrequestrepository.ActionEval:
+		filter, err := kvquery.ParseQueryFilter(r.URL.Query())
+		if err != nil {
+			return err
+		}
+		request.Filter = filter
+		return httpx.DecodeLimited(w, r, validate, &request.Eval, MaxBodyBytes)
+	case pagekvrequestrepository.ActionCreate:
+		return httpx.DecodeLimited(w, r, validate, &request.Create, MaxBodyBytes)
+	case pagekvrequestrepository.ActionUpdate, pagekvrequestrepository.ActionReplace:
+		return httpx.DecodeLimited(w, r, validate, &request.Update, MaxBodyBytes)
+	}
+	return nil
 }

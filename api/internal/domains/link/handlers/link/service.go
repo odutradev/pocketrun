@@ -433,3 +433,14 @@ func (s *Service) actor(ctx context.Context) userrepository.Actor {
 	}
 	return actor
 }
+
+func newListPage(links []linkrepository.Link, total int64, query linkrepository.ListQuery) ListPage {
+	limit := int64(max(query.Limit, 1))
+	return ListPage{
+		Data:       links,
+		Total:      total,
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: (total + limit - 1) / limit,
+	}
+}

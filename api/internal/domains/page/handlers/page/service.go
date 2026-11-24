@@ -12,6 +12,7 @@ import (
 	"pocketrun-api/internal/domains/group/handlers/group"
 	"pocketrun-api/internal/domains/page/handlers/history"
 	"pocketrun-api/internal/domains/page/handlers/version"
+	"pocketrun-api/internal/domains/page/utils/pagechanges"
 	eventrepository "pocketrun-api/internal/repositories/event"
 	grouprepository "pocketrun-api/internal/repositories/group"
 	pagerepository "pocketrun-api/internal/repositories/page"
@@ -267,7 +268,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 
 	actor := s.actor(ctx)
 	s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, nil, actor, now))
-	s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventCreated, actor, snapshot(*page), now))
+	s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventCreated, actor, pagechanges.Snapshot(*page), now))
 	page.State = page.StateAt(now)
 	return page, nil
 }
@@ -328,7 +329,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*p
 		restored := restoredFrom(input.RestoredFrom, page.Version)
 		s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, restored, actor, page.UpdatedAt))
 	}
-	if changes := diff(previous, *page); len(changes) > 0 {
+	if changes := pagechanges.Diff(previous, *page); len(changes) > 0 {
 		s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventUpdated, actor, changes, page.UpdatedAt))
 	}
 	page.State = page.StateAt(page.UpdatedAt)
@@ -349,7 +350,7 @@ func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool
 	page.StartsAt, page.EndsAt, page.MaxClicks, page.CountBy = nil, nil, nil, ""
 	page.UpdatedAt = time.Now()
 
-	changes := diff(previous, *page)
+	changes := pagechanges.Diff(previous, *page)
 	if len(changes) == 0 {
 		page.State = page.StateAt(page.UpdatedAt)
 		return page, nil
@@ -518,4 +519,15 @@ func restoredFrom(value *int, current int) *int {
 		return nil
 	}
 	return value
+}
+
+func newListPage(pages []pagerepository.Page, total int64, query pagerepository.ListQuery) ListPage {
+	limit := int64(max(query.Limit, 1))
+	return ListPage{
+		Data:       pages,
+		Total:      total,
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: (total + limit - 1) / limit,
+	}
 }

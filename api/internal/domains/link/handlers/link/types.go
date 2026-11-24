@@ -137,17 +137,6 @@ type ListPage struct {
 	TotalPages int64                 `json:"totalPages"`
 }
 
-func newListPage(links []linkrepository.Link, total int64, query linkrepository.ListQuery) ListPage {
-	limit := int64(max(query.Limit, 1))
-	return ListPage{
-		Data:       links,
-		Total:      total,
-		Page:       query.Page,
-		Limit:      query.Limit,
-		TotalPages: (total + limit - 1) / limit,
-	}
-}
-
 type Summary struct {
 	Total     int64                        `json:"total"`
 	Ungrouped int64                        `json:"ungrouped"`
