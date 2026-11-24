@@ -153,6 +153,7 @@ Authorization: Bearer pk_live_xxx
 
 - `access.role` é o cargo do PIN usado (`""` no PIN geral e `null` sem proteção). `pocketrun.kv` só existe quando a página tem dados ativados na aba Dados.
 - Com PIN, o visitante vê uma tela de PIN antes do HTML. O acesso fica num cookie da página, que o JavaScript não lê, pelo tempo configurado (1 hora a 30 dias).
+- Para sair, `await pocketrun.access.logout()` apaga o acesso deste navegador e depois `location.reload()` mostra a tela de PIN de novo. Por baixo é `POST {dominio}/{slug}/_/access/logout` com o header `X-Pocketrun-Page: 1`, da mesma origem, que responde `{ "message": "Page access ended" }`. Erros viram `Error` com `name: "PocketrunAccessError"`, `code` e `status`: `403 invalid_client` (chamada de outro endereço) e `404 page_not_found`. Na prévia do editor, não faz nada.
 
 ## Páginas: dados com pocketrun.kv
 

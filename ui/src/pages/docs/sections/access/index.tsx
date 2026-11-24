@@ -17,6 +17,10 @@ const AccessSection = () => (
         O cargo usado chega à página em <Code>pocketrun.access.role</Code> e decide o que ela pode fazer com os dados.
       </li>
       <li>
+        Para um botão de sair, chame <Code>await pocketrun.access.logout()</Code> e recarregue a página: o acesso desse navegador acaba e a
+        tela de PIN volta. Na prévia do editor, a chamada não faz nada.
+      </li>
+      <li>
         Trocar o PIN de um cargo encerra os acessos dele. Desligar a proteção ou <strong>Encerrar todos os acessos</strong> encerra todos.
       </li>
       <li>Erros de PIN são limitados por visitante e por página. Cada abertura com PIN entra no histórico, com o cargo usado.</li>
