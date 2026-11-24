@@ -48,20 +48,20 @@ func (r *MongoRepository) Each(ctx context.Context, name string, visit func(docu
 }
 
 func (r *MongoRepository) ResetStaging(ctx context.Context, name string) error {
-	staging := r.source.Collection(stagingPrefix + name)
+	staging := r.source.Collection(StagingPrefix + name)
 	if err := staging.Drop(ctx); err != nil {
 		return fmt.Errorf("drop staging %s: %w", name, err)
 	}
-	if err := staging.Database().CreateCollection(ctx, stagingPrefix+name); err != nil {
+	if err := staging.Database().CreateCollection(ctx, StagingPrefix+name); err != nil {
 		return fmt.Errorf("create staging %s: %w", name, err)
 	}
 	return nil
 }
 
 func (r *MongoRepository) Stage(ctx context.Context, name string, documents []any) error {
-	_, err := r.source.Collection(stagingPrefix+name).InsertMany(ctx, documents)
+	_, err := r.source.Collection(StagingPrefix+name).InsertMany(ctx, documents)
 	if mongo.IsDuplicateKeyError(err) {
-		return fmt.Errorf("stage %s: %w", name, ErrInvalidFile)
+		return fmt.Errorf("stage %s: %w", name, ErrDuplicateDocument)
 	}
 	if err != nil {
 		return fmt.Errorf("stage %s: %w", name, err)
@@ -70,7 +70,7 @@ func (r *MongoRepository) Stage(ctx context.Context, name string, documents []an
 }
 
 func (r *MongoRepository) Promote(ctx context.Context, name string) error {
-	cursor, err := r.source.Collection(stagingPrefix+name).Aggregate(ctx, mongo.Pipeline{{{Key: "$out", Value: name}}})
+	cursor, err := r.source.Collection(StagingPrefix+name).Aggregate(ctx, mongo.Pipeline{{{Key: "$out", Value: name}}})
 	if err != nil {
 		return fmt.Errorf("promote %s: %w", name, err)
 	}
@@ -81,7 +81,7 @@ func (r *MongoRepository) Promote(ctx context.Context, name string) error {
 }
 
 func (r *MongoRepository) DropStaging(ctx context.Context, name string) error {
-	if err := r.source.Collection(stagingPrefix + name).Drop(ctx); err != nil {
+	if err := r.source.Collection(StagingPrefix + name).Drop(ctx); err != nil {
 		return fmt.Errorf("drop staging %s: %w", name, err)
 	}
 	return nil

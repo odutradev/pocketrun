@@ -29,6 +29,7 @@ import (
 	pagepublic "pocketrun-api/internal/page/public"
 	"pocketrun-api/internal/page/version"
 	applicationrepository "pocketrun-api/internal/repositories/application"
+	backuprepository "pocketrun-api/internal/repositories/backup"
 	grouprepository "pocketrun-api/internal/repositories/group"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
@@ -41,6 +42,7 @@ import (
 	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
 	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
 	slugrepository "pocketrun-api/internal/repositories/slug"
+	uniquevisitorrepository "pocketrun-api/internal/repositories/uniquevisitor"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
 	"pocketrun-api/internal/services/httpx"
@@ -95,7 +97,7 @@ func run(logger *slog.Logger) error {
 	loginAttemptRepository := loginattemptrepository.NewMongoRepository(mongo.Collection("loginAttempts"))
 	applicationRepository := applicationrepository.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kvdocumentrepository.NewMongoRepository(mongo.Collection("kvDocuments"))
-	uniqueRegistry := traffic.NewUniqueRegistry(mongo.Collection("uniqueVisitors"), cfg.JWTSecret)
+	uniqueVisitorRepository := uniquevisitorrepository.NewMongoRepository(mongo.Collection("uniqueVisitors"))
 	usageRepository := kvusagerepository.NewMongoRepository(mongo.Collection("kvUsage"))
 	slugRepository := slugrepository.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := grouprepository.NewMongoRepository(mongo.Collection("groups"))
@@ -111,12 +113,13 @@ func run(logger *slog.Logger) error {
 	bindingRepository := pagebindingrepository.NewMongoRepository(mongo.Collection("pageBindings"))
 	bindingRequestRepository := pagekvrequestrepository.NewMongoRepository(mongo.Collection("pageKvRequests"))
 	ensureIndexes(startupContext, logger,
-		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, uniqueRegistry, slugRepository, groupRepository,
+		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, uniqueVisitorRepository, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,
 		pageRepository, pageVersionRepository, pageEventRepository, pageOpenRepository, accessAttemptRepository,
 		bindingRepository, bindingRequestRepository,
 	)
 
+	uniqueRegistry := traffic.NewUniqueRegistry(uniqueVisitorRepository, cfg.JWTSecret)
 	signer := user.NewTokenSigner(cfg.JWTSecret)
 	documentService := kv.NewService(documentRepository)
 	usageService := kv.NewUsageService(usageRepository, logger)
@@ -187,7 +190,7 @@ func run(logger *slog.Logger) error {
 		logger.WarnContext(ctx, "report setup status", "error", err)
 	}
 
-	backupService := backup.NewService(backup.NewMongoRepository(mongo), userService, logger)
+	backupService := backup.NewService(backuprepository.NewMongoRepository(mongo), userService, logger)
 
 	healthHandler := health.NewHandler()
 	userHandler := user.NewHandler(userService, validate, logger)

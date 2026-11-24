@@ -107,7 +107,7 @@ func (h *Handler) writeServiceError(ctx context.Context, w http.ResponseWriter, 
 		httpx.WriteError(w, http.StatusBadRequest, "backup_truncated")
 	case errors.Is(err, ErrMissingSuperadmin):
 		httpx.WriteError(w, http.StatusBadRequest, "backup_missing_superadmin")
-	case errors.Is(err, ErrInvalidFile):
+	case errors.Is(err, ErrInvalidFile), errors.Is(err, errDuplicateDocument):
 		httpx.WriteError(w, http.StatusBadRequest, "invalid_backup")
 	default:
 		h.logger.ErrorContext(ctx, operation, "error", err)

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"slices"
 	"time"
+
+	backuprepository "pocketrun-api/internal/repositories/backup"
 )
 
 const (
@@ -11,7 +13,6 @@ const (
 	FormatVersion   = 1
 	MaxRestoreBytes = 2 << 30
 	TransferTimeout = 30 * time.Minute
-	stagingPrefix   = "restore."
 	insertBatchSize = 500
 )
 
@@ -22,6 +23,7 @@ const (
 
 var (
 	ErrInvalidFile       = errors.New("invalid backup file")
+	errDuplicateDocument = backuprepository.ErrDuplicateDocument
 	ErrUnsupportedFormat = errors.New("unsupported backup format")
 	ErrTruncatedFile     = errors.New("truncated backup file")
 	ErrMissingSuperadmin = errors.New("backup without superadmin")
