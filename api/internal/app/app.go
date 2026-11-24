@@ -31,25 +31,34 @@ func Run(ctx context.Context, logger *slog.Logger) error {
 	defer closeDatabase(logger, db)
 	logger.InfoContext(ctx, "database connected", "database", cfg.MongoName)
 
+	handler, err := NewHandler(startupContext, cfg, db, logger)
+	if err != nil {
+		return err
+	}
+
+	servers := []*http.Server{httpx.NewServer(cfg.Host, cfg.Port, handler)}
+	return httpx.Serve(ctx, logger, servers)
+}
+
+func NewHandler(ctx context.Context, cfg config.Config, db *database.Mongo, logger *slog.Logger) (http.Handler, error) {
 	validate := httpx.NewValidator()
 	if err := passwordhash.RegisterValidations(validate); err != nil {
-		return fmt.Errorf("register validations: %w", err)
+		return nil, fmt.Errorf("register validations: %w", err)
 	}
 
 	repos := newRepositories(db)
-	ensureIndexes(startupContext, logger, repos.indexers())
+	ensureIndexes(ctx, logger, repos.indexers())
 
 	accessKey, isDerived := cfg.PageAccessKey()
 	if isDerived {
 		logger.WarnContext(ctx, "PAGE_ACCESS_SECRET is empty, deriving the page pin key from JWT_SECRET")
 	}
 	s := newServices(cfg, repos, accessKey, logger)
-	if err := s.setup.ReportStatus(startupContext); err != nil {
+	if err := s.setup.ReportStatus(ctx); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)
 	}
 
-	servers := []*http.Server{httpx.NewServer(cfg.Host, cfg.Port, newRouter(cfg, s, validate, logger))}
-	return httpx.Serve(ctx, logger, servers)
+	return newRouter(cfg, s, validate, logger), nil
 }
 
 func closeDatabase(logger *slog.Logger, db *database.Mongo) {
