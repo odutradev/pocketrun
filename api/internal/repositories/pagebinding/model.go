@@ -1,13 +1,10 @@
 package pagebinding
 
 import (
-	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
-
-var ErrNotLinked = errors.New("page has no kv application")
 
 type RoleMapping struct {
 	PageRole string `json:"pageRole" bson:"pageRole" validate:"max=64"`

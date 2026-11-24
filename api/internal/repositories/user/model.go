@@ -1,15 +1,9 @@
 package user
 
 import (
-	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
-)
-
-var (
-	ErrNotFound   = errors.New("user not found")
-	ErrEmailTaken = errors.New("email already in use")
 )
 
 type User struct {
@@ -27,10 +21,4 @@ type Actor struct {
 	ID    *bson.ObjectID `json:"id" bson:"id,omitempty"`
 	Name  string         `json:"name" bson:"name"`
 	Email string         `json:"email" bson:"email"`
-}
-
-const systemActorName = "Sistema"
-
-func SystemActor() Actor {
-	return Actor{Name: systemActorName}
 }

@@ -1,15 +1,12 @@
 package pageversion
 
 import (
-	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	userrepository "pocketrun-api/internal/repositories/user"
 )
-
-var ErrNotFound = errors.New("page version not found")
 
 type Version struct {
 	ID           bson.ObjectID        `json:"id" bson:"_id"`

@@ -1,15 +1,9 @@
 package pageaccess
 
 import (
-	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
-)
-
-var (
-	ErrConflict = errors.New("page access changed meanwhile")
-	ErrNotFound = errors.New("page access not found")
 )
 
 type Key struct {

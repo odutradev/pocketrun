@@ -6,23 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const (
-	Retention = 30 * 24 * time.Hour
-)
-
-type Action string
-
-const (
-	ActionList    Action = "get-all"
-	ActionCount   Action = "count"
-	ActionEval    Action = "eval"
-	ActionGet     Action = "get"
-	ActionCreate  Action = "create"
-	ActionUpdate  Action = "update"
-	ActionReplace Action = "replace"
-	ActionDelete  Action = "delete"
-)
-
 type Request struct {
 	ID         bson.ObjectID `json:"id" bson:"_id"`
 	PageID     bson.ObjectID `json:"-" bson:"pageId"`

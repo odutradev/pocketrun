@@ -8,8 +8,6 @@ import (
 	userrepository "pocketrun-api/internal/repositories/user"
 )
 
-type Type string
-
 type Change struct {
 	Field string `json:"field" bson:"field"`
 	From  any    `json:"from" bson:"from"`
@@ -23,9 +21,4 @@ type Event struct {
 	Actor    userrepository.Actor `json:"actor" bson:"actor"`
 	Changes  []Change             `json:"changes" bson:"changes"`
 	At       time.Time            `json:"at" bson:"at"`
-}
-
-type Query struct {
-	Before *time.Time
-	Limit  int
 }
