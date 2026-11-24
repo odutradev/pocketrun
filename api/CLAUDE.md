@@ -43,7 +43,7 @@ internal/domains/<domain>/
 
 - `cmd/api/main.go` only creates the logger and the signal context and calls `app.Run`. No wiring and no business rules there.
 - `internal/app` builds everything: `repositories.go` creates every repository and runs `EnsureIndexes`, `services.go` creates the services and their dependencies, `routes.go` builds the `httpx.Router` and calls each domain's `Register`, and `app.go` loads the config, connects to the database and starts the server.
-- **`domain.go`:** the domain root package exposes `Register(router httpx.Router, services Services, ...)`. It creates the domain's handlers and registers their routes on `router.Admin`, `router.Public` (the API domain) and `router.Links` (the `LINKS_URL` domain, the same mux as `router.Public` when `LINKS_URL` is empty). Nothing else lives at the domain root.
+- **`domain.go`:** the domain root package exposes `Register(router httpx.Router, services Services, ...)`. It creates the domain's handlers and registers their routes on `router.Admin`, `router.Public` (the API domain) and `router.Links` (the `LINKS_URL` domain, which is required). Nothing else lives at the domain root.
 - **`handlers/<subject>/`:** one package per subject, always with exactly `handler.go`, `service.go` and `types.go`, even when one of them is small.
   - `handler.go`: the `Handler` struct, `NewHandler`, `Register` and the HTTP methods, plus HTTP-only helpers (request parsing, error mapping).
   - `service.go`: the `Service` struct, `NewService`, `Dependencies`, the interfaces the service consumes (repositories, other services) and the business-rule helpers.
@@ -74,7 +74,7 @@ internal/domains/<domain>/
 │       └── main.go  # local database reset
 ├── internal/
 │   ├── app/  # wiring: repositories, services, routes, server
-│   ├── config/
+│   ├── config/  # Load reads the env, Validate refuses missing or unsafe values
 │   ├── domains/
 │   │   ├── user/
 │   │   │   ├── domain.go

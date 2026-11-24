@@ -74,7 +74,9 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
   - Root `.env`: read by docker-compose (and by Dokploy, from its Environment tab).
   - `api/.env`: local development of the API. The API reads `api/.env` first, then the root `.env`; the first value found wins.
   - `ui/.env`: local development of the frontend. Vite reads only `ui/.env`. The panel container reads `API_URL` and `LINKS_URL` when it starts.
-- Never commit `.env`. Every new variable goes into the matching `.env.example` (root and app) with a safe example value.
+- Never commit `.env`. Every new variable goes into the matching `.env.example` (root and app) with a safe example value. Secrets stay empty in the examples, with how to generate them.
+- No variable has a default, in code or in compose (`${VAR}`, never `${VAR:-value}`). The API validates every variable in `config.Validate` on start and refuses to run, naming each invalid variable without printing its value. The panel container and the Vite dev server do the same for their URLs.
+- No fixed `dns:` in compose: it breaks internal DNS. Add it only in a deploy that needs it.
 - Variables read by the frontend use the `VITE_` prefix and are public: never put secrets in them.
 - `API_URL` (container) and `VITE_API_URL` (local development) point to the API's public URL in each environment.
 
@@ -202,8 +204,8 @@ services:
       context: ./ui
     restart: unless-stopped
     environment:
-      - API_URL=${API_URL:-http://localhost:5000}
-      - LINKS_URL=${LINKS_URL:-}
+      - API_URL=${API_URL}
+      - LINKS_URL=${LINKS_URL}
     expose:
       - "80"
     depends_on:

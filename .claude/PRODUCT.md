@@ -126,8 +126,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 
 - **Slug:** letras minúsculas, números e hífen, até 64 caracteres, único na instância e dividido entre links e páginas. Pode ser sorteado (8 caracteres) ou escolhido, e a disponibilidade é conferida enquanto o gestor digita. Nomes reservados: `admin`, `api`, `apps`, `auth`, `healthz`, `kv`, `links`, `pages`, `ping`, `setup`, `static` e `validate`.
 - **Domínios:** o painel, a API (`{api}`) e o domínio de links e páginas (`LINKS_URL`, `{dominio}`).
-- Com `LINKS_URL` definido, links e páginas só abrem nele, para o HTML do usuário nunca rodar no domínio da API. Em `{api}/{slug}`, a resposta é `404` com a tela "Link indisponível", e a raiz `/` dos dois domínios mostra a mesma tela. No domínio de links, os caminhos que não são de slug (`/kv`, `/admin`, `/ping`) seguem para a API, então o desenvolvimento local funciona com `LINKS_URL` igual à URL da API.
-- Sem `LINKS_URL`, tudo responde no mesmo domínio.
+- `LINKS_URL` é obrigatório, e links e páginas só abrem nele, para o HTML do usuário nunca rodar no domínio da API. Em `{api}/{slug}`, a resposta é `404` com a tela "Link indisponível", e a raiz `/` dos dois domínios mostra a mesma tela. No domínio de links, os caminhos que não são de slug (`/kv`, `/admin`, `/ping`) seguem para a API, então o desenvolvimento local funciona com `LINKS_URL` igual à URL da API.
 - O KV fica sempre em `{api}`, e o painel usa as rotas `/admin` da mesma API, com CORS próprio.
 
 ### 5.7 Ativação e contagem

@@ -38,6 +38,8 @@ npm install && npm --prefix ui install
 npm run dev
 ```
 
+Antes do `npm run dev`, preencha `JWT_SECRET` e `PAGE_ACCESS_SECRET` em `api/.env` com `openssl rand -hex 32` (uma chave diferente para cada). Nenhuma variável tem valor padrão: se faltar uma ou ela for inválida, a API e o painel não iniciam e dizem qual variável corrigir.
+
 O painel abre em `http://localhost:3000`, e o primeiro acesso cria o superadmin. A API fica em `http://localhost:5000`.
 
 | Script | O que faz |
@@ -89,7 +91,7 @@ services:
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
       - MONGODB_URI=mongodb://mongo:27017
-      - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
+      - MONGODB_NAME=${MONGODB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - PAGE_ACCESS_SECRET=${PAGE_ACCESS_SECRET}
     depends_on:
@@ -147,9 +149,6 @@ services:
       - MONGODB_NAME=${MONGODB_NAME}
       - JWT_SECRET=${JWT_SECRET}
       - PAGE_ACCESS_SECRET=${PAGE_ACCESS_SECRET}
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     networks:
       - app-network
 
@@ -171,7 +170,7 @@ networks:
     driver: bridge
 ```
 
-- O `dns` garante que o endereço `mongodb+srv://` do Atlas seja resolvido dentro do container.
+- Se o container não resolver o endereço `mongodb+srv://` do Atlas, adicione `dns:` com os servidores DNS que você usa no serviço `api`. Não fixe um DNS público quando o banco estiver num nome da sua rede interna.
 - Libere o IP do servidor na lista de acesso do banco externo.
 
 </details>
@@ -187,14 +186,18 @@ ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.com
 # Só no compose com MongoDB externo
 MONGODB_URI=mongodb+srv://usuario:senha@cluster0.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
-JWT_SECRET=gere_uma_chave_secreta_forte
-PAGE_ACCESS_SECRET=gere_outra_chave_longa_e_aleatoria
+JWT_SECRET=
+PAGE_ACCESS_SECRET=
 ```
 
+Todas são obrigatórias. Na partida, a API confere cada uma e não inicia se alguma estiver vazia ou inválida. O painel faz o mesmo com `API_URL` e `LINKS_URL`.
+
+
 - `API_URL` é o endereço da API que o painel chama. O container do painel lê `API_URL` e `LINKS_URL` ao iniciar, então a mesma imagem serve para qualquer domínio.
-- `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Com ele definido, `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
+- `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Por isso `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
 - `ADMIN_CORS_ALLOWED_ORIGINS` é a origem exata do painel. Nunca use `*`, porque o painel entra com cookie.
-- `PAGE_ACCESS_SECRET` deve ser diferente do `JWT_SECRET`. Trocar essa chave invalida os PINs já criados.
+- `JWT_SECRET` e `PAGE_ACCESS_SECRET` precisam de 32 caracteres ou mais, não podem repetir os exemplos públicos e não podem ser iguais. Gere cada uma com `openssl rand -hex 32`. Trocar o `PAGE_ACCESS_SECRET` invalida os PINs já criados.
+- `MONGODB_URI` começa com `mongodb://` ou `mongodb+srv://`. No compose com MongoDB local, ela já vem fixa como `mongodb://mongo:27017`.
 
 </details>
 
