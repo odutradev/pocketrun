@@ -8,28 +8,16 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
 	"pocketrun-api/internal/user"
 )
 
 const MaxKept = 50
 
 var (
-	ErrVersionNotFound = errors.New("page version not found")
+	ErrVersionNotFound = pageversionrepository.ErrNotFound
 	ErrInvalidVersion  = errors.New("invalid page version")
 )
-
-type Version struct {
-	ID           bson.ObjectID `json:"id" bson:"_id"`
-	PageID       bson.ObjectID `json:"pageId" bson:"pageId"`
-	Number       int           `json:"number" bson:"number"`
-	Label        string        `json:"label" bson:"-"`
-	HTML         string        `json:"html,omitempty" bson:"html,omitempty"`
-	Size         int64         `json:"size" bson:"size"`
-	RestoredFrom *int          `json:"restoredFrom" bson:"restoredFrom,omitempty"`
-	Message      string        `json:"message" bson:"message,omitempty"`
-	Actor        user.Actor    `json:"actor" bson:"actor"`
-	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
-}
 
 func Label(number int) string {
 	return fmt.Sprintf("1.%d", max(number, 1)-1)
@@ -57,7 +45,7 @@ func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *i
 	}
 }
 
-func (v *Version) withLabel() *Version {
+func withLabel(v *Version) *Version {
 	v.Label = Label(v.Number)
 	return v
 }

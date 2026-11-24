@@ -44,7 +44,7 @@ func (s *Service) List(ctx context.Context, pageID bson.ObjectID) ([]Version, er
 		return nil, fmt.Errorf("page versions %s: %w", pageID.Hex(), err)
 	}
 	for index := range versions {
-		versions[index].withLabel()
+		withLabel(&versions[index])
 	}
 	return versions, nil
 }
@@ -54,7 +54,7 @@ func (s *Service) Get(ctx context.Context, pageID bson.ObjectID, number int) (*V
 	if err != nil {
 		return nil, fmt.Errorf("page version %s %d: %w", pageID.Hex(), number, err)
 	}
-	return version.withLabel(), nil
+	return withLabel(version), nil
 }
 
 func (s *Service) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {

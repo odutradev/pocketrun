@@ -246,7 +246,7 @@ func (s *Service) Describe(ctx context.Context, pageID bson.ObjectID, subject Su
 	}
 
 	runtime := &Runtime{Rules: []RuntimeRule{}}
-	roleName := current.role(subject)
+	roleName := role(current, subject)
 	if roleName == "" {
 		return runtime, nil
 	}
@@ -273,7 +273,7 @@ func (s *Service) run(ctx context.Context, pageID bson.ObjectID, subject Subject
 		return Result{}, "", err
 	}
 
-	roleName := current.role(subject)
+	roleName := role(current, subject)
 	if roleName == "" {
 		return Result{}, "", ErrNoAccess
 	}
@@ -286,7 +286,7 @@ func (s *Service) run(ctx context.Context, pageID bson.ObjectID, subject Subject
 		return Result{}, roleName, err
 	}
 
-	permission, err := app.Authorize(roleName, request.Collection, request.Action.operation())
+	permission, err := app.Authorize(roleName, request.Collection, operation(request.Action))
 	if err != nil {
 		return Result{}, roleName, err
 	}

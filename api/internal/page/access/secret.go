@@ -119,7 +119,7 @@ func (s secrets) verifyToken(access *Access, token string, now time.Time) (*Key,
 	if err != nil {
 		return nil, false
 	}
-	key, err := access.key(keyID)
+	key, err := findKey(access, keyID)
 	if err != nil {
 		return nil, false
 	}
@@ -134,7 +134,7 @@ func (s secrets) verifyToken(access *Access, token string, now time.Time) (*Key,
 	if err != nil || now.Unix() >= expiresAt {
 		return nil, false
 	}
-	if !now.Before(time.Unix(issuedAt, 0).Add(access.sessionDuration())) {
+	if !now.Before(time.Unix(issuedAt, 0).Add(sessionDuration(access))) {
 		return nil, false
 	}
 

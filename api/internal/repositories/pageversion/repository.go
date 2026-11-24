@@ -1,4 +1,4 @@
-package version
+package pageversion
 
 import (
 	"context"
@@ -58,7 +58,7 @@ func (r *MongoRepository) FindOne(ctx context.Context, pageID bson.ObjectID, num
 	var version Version
 	err := r.collection.FindOne(ctx, bson.M{"pageId": pageID, "number": number}).Decode(&version)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrVersionNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find page version: %w", err)

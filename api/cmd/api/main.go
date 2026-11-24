@@ -35,6 +35,11 @@ import (
 	linkrepository "pocketrun-api/internal/repositories/link"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 	pagerepository "pocketrun-api/internal/repositories/page"
+	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
+	pageaccessattemptrepository "pocketrun-api/internal/repositories/pageaccessattempt"
+	pagebindingrepository "pocketrun-api/internal/repositories/pagebinding"
+	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
+	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
 	slugrepository "pocketrun-api/internal/repositories/slug"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
@@ -98,13 +103,13 @@ func run(logger *slog.Logger) error {
 	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))
 	linkOpenRepository := linkanalytics.NewMongoRepository(mongo.Collection("linkOpens"))
 	pageRepository := pagerepository.NewMongoRepository(mongo.Collection("pages"))
-	pageVersionRepository := version.NewMongoRepository(mongo.Collection("pageVersions"))
+	pageVersionRepository := pageversionrepository.NewMongoRepository(mongo.Collection("pageVersions"))
 	pageEventRepository := pagehistory.NewMongoRepository(mongo.Collection("pageEvents"))
 	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))
-	accessRepository := access.NewMongoRepository(mongo.Collection("pageAccess"))
-	accessAttemptRepository := access.NewMongoAttemptRepository(mongo.Collection("pageAccessAttempts"))
-	bindingRepository := binding.NewMongoRepository(mongo.Collection("pageBindings"))
-	bindingRequestRepository := binding.NewMongoRequestRepository(mongo.Collection("pageKvRequests"))
+	accessRepository := pageaccessrepository.NewMongoRepository(mongo.Collection("pageAccess"))
+	accessAttemptRepository := pageaccessattemptrepository.NewMongoRepository(mongo.Collection("pageAccessAttempts"))
+	bindingRepository := pagebindingrepository.NewMongoRepository(mongo.Collection("pageBindings"))
+	bindingRequestRepository := pagekvrequestrepository.NewMongoRepository(mongo.Collection("pageKvRequests"))
 	ensureIndexes(startupContext, logger,
 		userRepository, loginAttemptRepository, applicationRepository, documentRepository, usageRepository, uniqueRegistry, slugRepository, groupRepository,
 		linkRepository, linkEventRepository, linkOpenRepository,

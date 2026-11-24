@@ -1,4 +1,4 @@
-package access
+package pageaccess
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func (r *MongoRepository) Find(ctx context.Context, pageID bson.ObjectID) (*Acce
 	var access Access
 	err := r.collection.FindOne(ctx, bson.M{"_id": pageID}).Decode(&access)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, errAccessNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find page access: %w", err)
@@ -39,7 +39,7 @@ func (r *MongoRepository) Save(ctx context.Context, access *Access) error {
 	if expected == 0 {
 		_, err := r.collection.InsertOne(ctx, access)
 		if mongo.IsDuplicateKeyError(err) {
-			return ErrAccessConflict
+			return ErrConflict
 		}
 		if err != nil {
 			return fmt.Errorf("insert page access: %w", err)
@@ -52,7 +52,7 @@ func (r *MongoRepository) Save(ctx context.Context, access *Access) error {
 		return fmt.Errorf("replace page access: %w", err)
 	}
 	if result.MatchedCount == 0 {
-		return ErrAccessConflict
+		return ErrConflict
 	}
 	return nil
 }

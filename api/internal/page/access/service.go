@@ -11,12 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/page/history"
+	pageaccessattemptrepository "pocketrun-api/internal/repositories/pageaccessattempt"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/user"
 )
 
 const (
-	attemptRetention = 24 * time.Hour
 	pageLimitWindow  = time.Hour
 	pageLimitMax     = 50
 	visitorActorName = "Visitante"
@@ -30,7 +30,7 @@ type limit struct {
 }
 
 func clientLimits() []limit {
-	return []limit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: attemptRetention, max: 20}}
+	return []limit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: pageaccessattemptrepository.Retention, max: 20}}
 }
 
 type Repository interface {
@@ -148,7 +148,7 @@ func (s *Service) CreateKey(ctx context.Context, pageID bson.ObjectID, input Key
 	if len(access.Keys) >= MaxKeys {
 		return Issued{}, fmt.Errorf("create page access key: %w", ErrTooManyKeys)
 	}
-	if err := access.checkRole(input.Role, nil); err != nil {
+	if err := ensureRoleFree(access, input.Role, nil); err != nil {
 		return Issued{}, fmt.Errorf("create page access key: %w", err)
 	}
 
@@ -194,14 +194,14 @@ func (s *Service) RenameKey(ctx context.Context, pageID, keyID bson.ObjectID, ro
 	if err != nil {
 		return nil, fmt.Errorf("rename page access key: %w", err)
 	}
-	key, err := access.key(keyID)
+	key, err := findKey(access, keyID)
 	if err != nil {
 		return nil, fmt.Errorf("rename page access key: %w", err)
 	}
 	if key.Role == role {
 		return access, nil
 	}
-	if err := access.checkRole(role, &keyID); err != nil {
+	if err := ensureRoleFree(access, role, &keyID); err != nil {
 		return nil, fmt.Errorf("rename page access key: %w", err)
 	}
 
@@ -219,7 +219,7 @@ func (s *Service) ResetPIN(ctx context.Context, pageID, keyID bson.ObjectID, val
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
-	key, err := access.key(keyID)
+	key, err := findKey(access, keyID)
 	if err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
@@ -255,7 +255,7 @@ func (s *Service) RevealPIN(ctx context.Context, pageID, keyID bson.ObjectID) (R
 	if err != nil {
 		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
 	}
-	key, err := access.key(keyID)
+	key, err := findKey(access, keyID)
 	if err != nil {
 		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
 	}
@@ -276,7 +276,7 @@ func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*
 	if err != nil {
 		return nil, fmt.Errorf("remove page access key: %w", err)
 	}
-	key, err := access.key(keyID)
+	key, err := findKey(access, keyID)
 	if err != nil {
 		return nil, fmt.Errorf("remove page access key: %w", err)
 	}
@@ -378,7 +378,7 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 		return Grant{}, ErrWrongPIN
 	}
 
-	expiresAt := now.Add(access.sessionDuration())
+	expiresAt := now.Add(sessionDuration(access))
 	grant := Grant{Token: s.secrets.issueToken(pageID, *match, access.Revision, now, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
 	s.record(ctx, pageID, history.EventUnlocked, user.Actor{Name: visitorActorName}, []history.Change{{Field: roleField, From: nil, To: match.Role}})
 	return grant, nil
@@ -428,7 +428,7 @@ func (s *Service) resolvePIN(access *Access, value string, ownerID *bson.ObjectI
 			return "", "", err
 		}
 		hash := s.secrets.hashPIN(access.PageID, value)
-		if err := access.checkPIN(hash, ownerID); err != nil {
+		if err := ensurePINFree(access, hash, ownerID); err != nil {
 			return "", "", err
 		}
 		return value, hash, nil
@@ -440,7 +440,7 @@ func (s *Service) resolvePIN(access *Access, value string, ownerID *bson.ObjectI
 			return "", "", err
 		}
 		hash := s.secrets.hashPIN(access.PageID, pin)
-		if access.checkPIN(hash, ownerID) == nil {
+		if ensurePINFree(access, hash, ownerID) == nil {
 			return pin, hash, nil
 		}
 	}
@@ -455,7 +455,7 @@ func (s *Service) load(ctx context.Context, pageID bson.ObjectID) (*Access, erro
 	if err != nil {
 		return nil, err
 	}
-	access.applyDefaults()
+	applyAccessDefaults(access)
 	return access, nil
 }
 

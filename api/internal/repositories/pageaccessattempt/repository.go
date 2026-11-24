@@ -1,4 +1,4 @@
-package access
+package pageaccessattempt
 
 import (
 	"context"
@@ -10,26 +10,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type Attempt struct {
-	ID     bson.ObjectID `bson:"_id"`
-	PageID bson.ObjectID `bson:"pageId"`
-	Client string        `bson:"client"`
-	At     time.Time     `bson:"at"`
-}
-
-type MongoAttemptRepository struct {
+type MongoRepository struct {
 	collection *mongo.Collection
 }
 
-func NewMongoAttemptRepository(collection *mongo.Collection) *MongoAttemptRepository {
-	return &MongoAttemptRepository{collection: collection}
+func NewMongoRepository(collection *mongo.Collection) *MongoRepository {
+	return &MongoRepository{collection: collection}
 }
 
-func (r *MongoAttemptRepository) EnsureIndexes(ctx context.Context) error {
+func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{Keys: bson.D{{Key: "pageId", Value: 1}, {Key: "client", Value: 1}, {Key: "at", Value: -1}}},
 		{Keys: bson.D{{Key: "pageId", Value: 1}, {Key: "at", Value: -1}}},
-		{Keys: bson.D{{Key: "at", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(attemptRetention.Seconds()))},
+		{Keys: bson.D{{Key: "at", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(Retention.Seconds()))},
 	})
 	if err != nil {
 		return fmt.Errorf("create page access attempts indexes: %w", err)
@@ -37,14 +30,14 @@ func (r *MongoAttemptRepository) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (r *MongoAttemptRepository) Insert(ctx context.Context, attempt *Attempt) error {
+func (r *MongoRepository) Insert(ctx context.Context, attempt *Attempt) error {
 	if _, err := r.collection.InsertOne(ctx, attempt); err != nil {
 		return fmt.Errorf("insert page access attempt: %w", err)
 	}
 	return nil
 }
 
-func (r *MongoAttemptRepository) Count(ctx context.Context, pageID bson.ObjectID, client string, since time.Time) (int64, error) {
+func (r *MongoRepository) Count(ctx context.Context, pageID bson.ObjectID, client string, since time.Time) (int64, error) {
 	filter := bson.M{"pageId": pageID, "at": bson.M{"$gte": since}}
 	if client != "" {
 		filter["client"] = client
@@ -56,7 +49,7 @@ func (r *MongoAttemptRepository) Count(ctx context.Context, pageID bson.ObjectID
 	return total, nil
 }
 
-func (r *MongoAttemptRepository) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
+func (r *MongoRepository) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
 	if _, err := r.collection.DeleteMany(ctx, bson.M{"pageId": pageID}); err != nil {
 		return fmt.Errorf("delete page access attempts: %w", err)
 	}
