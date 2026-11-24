@@ -19,5 +19,9 @@ func Register(router httpx.Router, services Services, linksURL string, pages pub
 	linkhandler.NewHandler(services.Links, linksURL, router.Validate, router.Logger).Register(router.Admin, router.Authenticate)
 	history.NewHandler(services.History, services.Links, router.Validate, router.Logger).Register(router.Admin, router.Authenticate)
 	analytics.NewHandler(services.Analytics, services.Links, router.Validate, router.Logger).Register(router.Admin, router.Authenticate)
-	public.NewHandler(public.NewService(services.Links), pages, router.Logger).Register(router.Public)
+	publicHandler := public.NewHandler(public.NewService(services.Links), pages, router.Logger)
+	publicHandler.Register(router.Links)
+	if router.HasLinksDomain() {
+		publicHandler.RegisterOutsideLinksDomain(router.Public)
+	}
 }

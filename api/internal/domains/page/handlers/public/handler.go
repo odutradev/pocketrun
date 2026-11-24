@@ -294,16 +294,7 @@ func (h *Handler) isPagesHost(r *http.Request) bool {
 		return true
 	}
 
-	hosts := []string{r.Host}
-	for _, host := range strings.Split(r.Header.Get("X-Forwarded-Host"), ",") {
-		hosts = append(hosts, strings.TrimSpace(host))
-	}
-	for _, host := range hosts {
-		if strings.EqualFold(host, h.pagesHost) {
-			return true
-		}
-	}
-	return false
+	return utils.HasHost(r, h.pagesHost)
 }
 
 func (h *Handler) writeUnavailable(w http.ResponseWriter, r *http.Request) {

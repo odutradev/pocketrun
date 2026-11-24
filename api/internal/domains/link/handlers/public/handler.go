@@ -27,6 +27,17 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /{slug}", h.unlock)
 	mux.HandleFunc("POST /{slug}/{$}", h.unlock)
 	mux.HandleFunc("/{slug}/_/kv/{rest...}", h.data)
+	mux.HandleFunc("GET /{$}", h.notFound)
+}
+
+func (h *Handler) RegisterOutsideLinksDomain(mux *http.ServeMux) {
+	mux.HandleFunc("GET /{$}", h.notFound)
+	mux.HandleFunc("GET /{slug}", h.notFound)
+	mux.HandleFunc("GET /{slug}/{$}", h.notFound)
+}
+
+func (h *Handler) notFound(w http.ResponseWriter, r *http.Request) {
+	h.writeNotFoundPage(w, r)
 }
 
 func (h *Handler) data(w http.ResponseWriter, r *http.Request) {

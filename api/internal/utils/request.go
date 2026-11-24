@@ -25,6 +25,16 @@ func OriginIP(r *http.Request) string {
 	return remoteHost(r)
 }
 
+func HasHost(r *http.Request, host string) bool {
+	hosts := append([]string{r.Host}, strings.Split(r.Header.Get("X-Forwarded-Host"), ",")...)
+	for _, candidate := range hosts {
+		if strings.EqualFold(strings.TrimSpace(candidate), host) {
+			return true
+		}
+	}
+	return false
+}
+
 func remoteHost(r *http.Request) string {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

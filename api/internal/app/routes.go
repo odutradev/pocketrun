@@ -17,17 +17,23 @@ import (
 	"pocketrun-api/internal/domains/user"
 	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/utils"
 )
 
 const adminPrefix = "/admin"
 
 func newRouter(cfg config.Config, s services, validate *validator.Validate, logger *slog.Logger) http.Handler {
+	linksHost := utils.URLHost(cfg.LinksURL)
 	router := httpx.Router{
 		Admin:        http.NewServeMux(),
 		Public:       http.NewServeMux(),
+		Links:        http.NewServeMux(),
 		Authenticate: managerauth.Authenticate(s.signer, s.users, logger),
 		Validate:     validate,
 		Logger:       logger,
+	}
+	if linksHost == "" {
+		router.Links = router.Public
 	}
 
 	health.Register(router)
@@ -46,8 +52,19 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	overview.Register(router, s.overview)
 	backup.Register(router, s.backup)
 
-	root := http.NewServeMux()
-	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(router.Admin)))
-	root.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins, false)(router.Public))
-	return root
+	api := http.NewServeMux()
+	api.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(router.Admin)))
+	api.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins, false)(router.Public))
+	if linksHost == "" {
+		return api
+	}
+
+	links := httpx.CORS(cfg.CORSAllowedOrigins, false)(router.Links)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, pattern := router.Links.Handler(r); pattern != "" && utils.HasHost(r, linksHost) {
+			links.ServeHTTP(w, r)
+			return
+		}
+		api.ServeHTTP(w, r)
+	})
 }
