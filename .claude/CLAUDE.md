@@ -101,7 +101,8 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - Inside the network, apps reach services by name (`redis://redis:6379`), never `localhost`.
 - `docker-compose.yml` never publishes host ports: services use `expose: ["80"]` and Traefik routes by domain. Publishing a host port in production collides with other services on the server (`port is already allocated`).
 - There is no compose override file and no host ports. Local development runs the apps directly with `npm run dev`.
-- `depends_on` sets the startup order: support services before the API and the API before the frontend.
+- `depends_on` sets the startup order: support services before the API and the API before the frontend, always with `condition: service_healthy`.
+- Every image declares a `HEALTHCHECK`. The distroless API has no shell or curl, so it checks itself with `/app/api healthcheck` (GET `/ping` on its own port). The frontend uses busybox `wget` on `/healthz`. Support services declare `healthcheck:` in compose.
 - Every new variable goes into `.env.example` and into the compose service in the same commit.
 
 ### Nginx
@@ -127,10 +128,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/api ./c
 
 FROM gcr.io/distroless/static-debian12 AS runner
 WORKDIR /app
-ENV PORT=80
 COPY --from=builder /out/api /app/api
 EXPOSE 80
 USER nonroot:nonroot
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 CMD ["/app/api", "healthcheck"]
 ENTRYPOINT ["/app/api"]
 ```
 
@@ -164,6 +165,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY --chmod=755 docker/40-pocketrun-config.sh /docker-entrypoint.d/40-pocketrun-config.sh
 EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
@@ -209,7 +211,8 @@ services:
     expose:
       - "80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - app-network
 

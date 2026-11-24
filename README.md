@@ -109,7 +109,8 @@ services:
     expose:
       - "80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -161,7 +162,8 @@ services:
     expose:
       - "80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     networks:
       - app-network
 
