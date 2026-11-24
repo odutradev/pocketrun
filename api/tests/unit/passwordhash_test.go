@@ -1,8 +1,12 @@
-package passwordhash
+package unit
 
-import "testing"
+import (
+	"testing"
 
-func TestIsStrong(t *testing.T) {
+	"pocketrun-api/internal/domains/user/utils/passwordhash"
+)
+
+func TestPasswordHashIsStrong(t *testing.T) {
 	tests := []struct {
 		name     string
 		password string
@@ -18,7 +22,7 @@ func TestIsStrong(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsStrong(tt.password); got != tt.want {
+			if got := passwordhash.IsStrong(tt.password); got != tt.want {
 				t.Errorf("IsStrong(%q) = %v, want %v", tt.password, got, tt.want)
 			}
 		})

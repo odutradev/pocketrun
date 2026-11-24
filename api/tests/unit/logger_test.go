@@ -1,4 +1,4 @@
-package logger
+package unit
 
 import (
 	"bytes"
@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"strings"
 	"testing"
+
+	"pocketrun-api/internal/services/logger"
 )
 
-func TestHandlerHandle(t *testing.T) {
+func TestLoggerHandlerHandle(t *testing.T) {
 	tests := []struct {
 		name    string
 		color   bool
@@ -31,7 +33,7 @@ func TestHandlerHandle(t *testing.T) {
 			write: func(log *slog.Logger) {
 				log.Error("run api")
 			},
-			want: []string{colorRed + "ERROR" + colorReset, colorBold + "run api" + colorReset},
+			want: []string{"[31mERROR[0m", "[1mrun api[0m"},
 		},
 		{
 			name:  "skips debug",
@@ -46,7 +48,7 @@ func TestHandlerHandle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var out bytes.Buffer
-			tt.write(slog.New(NewHandler(&out, tt.color)))
+			tt.write(slog.New(logger.NewHandler(&out, tt.color)))
 			line := out.String()
 			for _, want := range tt.want {
 				if !strings.Contains(line, want) {
