@@ -16,22 +16,26 @@ This guide defines this Go project's architecture, package, naming and code rule
 | Logs | log/slog |
 | Tests | No tests |
 
-## 2. Architecture: Pacotes por domínio (cmd + internal)
+## 2. Architecture: domains, repositories and services (cmd + internal)
 
-O layout mais comum em Go: `cmd/api` sobe o servidor e cada domínio é um pacote em `internal` com handler, service, repository e o tipo do domínio.
+`cmd/api` only starts the app. `internal/app` wires everything. Domains hold business rules and HTTP, `repositories` holds every database access, `services` holds shared logic and infrastructure, and `utils` holds small pure helpers.
 
 **Rules:**
 
-- `cmd/api/main.go` só lê a configuração, monta as dependências e sobe o servidor. Nenhuma regra de negócio ali.
-- Cada domínio é um pacote em `internal/<dominio>` com `handler.go`, `service.go`, `repository.go` e o arquivo do tipo (`user.go`).
-- O service declara a interface do repositório que consome. O pacote exporta só o que outros pacotes usam.
-- Código compartilhado de infraestrutura fica em `internal/platform` (banco, HTTP, logs). Nada de pacotes `utils` ou `common`.
-- A domain that grows past one subject becomes a folder of subdomains, one package per subject: `internal/page/{page, version, history, analytics, access, public}` and `internal/link/{link, history, analytics, public}`. Each subdomain has its own handler, service, repository and type file, and registers its own routes.
+- `cmd/api/main.go` only creates the logger and the signal context and calls `app.Run`. No wiring and no business rules there.
+- `internal/app` builds everything: `repositories.go` creates every repository and runs `EnsureIndexes`, `services.go` creates the services and their dependencies, `routes.go` creates the handlers and the admin and public muxes, and `app.go` loads the config, connects to the database and starts the server.
+- **Domains:** each domain lives in `internal/domains/<domain>`. A domain with more than one subject becomes a folder of subdomains, one package per subject: `domains/page/{page, version, history, analytics, access, binding, public}`, `domains/link/{link, history, analytics, public}`, `domains/kv/{application, document, usage}` and `domains/user/{user, setup}`. Each package has `handler.go`, `service.go`, a type file and `models.go`, and registers its own routes.
+- **Repositories:** every repository lives in `internal/repositories/<name>`, one package per collection or per kind of record, with exactly two files: `model.go` (the stored struct, the sentinel errors the repository returns, and the filter and query types it receives) and `repository.go` (`MongoRepository`, its constructor and `EnsureIndexes`). Repositories never import `domains`. They may import `services` (activation, traffic, database) and other repositories' models.
+- **Models in domains:** domains use the repository model directly. `models.go` in the domain declares aliases (`type Page = pagerepository.Page`) and re-exports the constants it needs, so the rest of the domain and its importers keep using `page.Page`. Domain errors that come from the repository point at its sentinel (`ErrPageNotFound = pagerepository.ErrNotFound`). Business rules on a model stay in the domain as functions (`findKey(access, id)`), not as methods on the model.
+- **Import aliases:** a repository package is imported with the `repository` suffix (`pagerepository`, `eventrepository`), and a shared service with the `service` suffix when its name collides (`historyservice`, `analyticsservice`).
+- **Interfaces:** the service declares the interface of the repository it consumes (accept interfaces, return structs). A domain never uses another domain's repository: it calls that domain's exported service.
+- **Shared repositories:** records with the same shape share one repository, configured per collection. `repositories/event` stores the history of links and pages (`linkEvents`, `pageEvents`) and `repositories/open` stores their opens (`linkOpens`, `pageOpens`), both keyed by `targetId`.
+- **Services:** `internal/services` holds logic and infrastructure that several domains use: `database` (connection, index and field migration helpers), `httpx` (server, CORS, JSON, decoding), `ratelimit`, `activation` (schedules and click limits), `traffic` (visits, unique visitors and analytics math), `slug` (slug reservation for links and pages), `history` (event feed) and `analytics` (opens, ranking and overview). Services never import `domains`.
+- **Utils:** `internal/utils` holds small pure helpers used across packages, one file per subject (`pointers.go`, `urls.go`, `request.go`). Nothing with state, I/O or business rules goes there.
 - Dependencies between subdomains point one way: the core package (`page/page`, `link/link`) uses `version`, `history`, `analytics` and `access` through interfaces it declares, and those packages never import the core. When they need data from the core (expiry, titles, existence), their handler or service receives a small interface the core service implements.
 - `public` holds what visitors reach without login (redirects, page HTML). Admin routes stay in the other subdomains.
-- Shared non-domain logic used by several domains lives in `internal/platform` (`activation` for schedules and click limits, `traffic` for visits and analytics math). The event actor lives in `user` (`user.Actor`).
-- Um domínio nunca importa o repositório de outro: chama o service exportado dele.
-- Repository interfaces live in the consuming service.
+- The event actor lives in `repositories/user` (`Actor`, `SystemActor`) and is re-exported by `domains/user/user`.
+- **Data migrations:** a change to how a collection is stored ships with an idempotent migration in the repository's `EnsureIndexes` (rename the field, drop the old index, create the new one), using the `services/database` helpers. Backup restore runs those migrations again after promoting the collections.
 - Everything that is not public module API lives in `internal/`.
 
 **Folder structure:**
@@ -39,31 +43,39 @@ O layout mais comum em Go: `cmd/api` sobe o servidor e cada domínio é um pacot
 ```text
 .
 ├── cmd/
-│   └── api/
-│       └── main.go  # monta as dependências e sobe o servidor
+│   ├── api/
+│   │   └── main.go  # logger, signal context, app.Run
+│   └── reset/
+│       └── main.go  # local database reset
 ├── internal/
+│   ├── app/  # wiring: repositories, services, routes, server
 │   ├── config/
-│   │   └── config.go  # variáveis de ambiente
-│   ├── platform/
-│   │   ├── activation/  # agenda e limite de cliques
-│   │   ├── database/
-│   │   │   └── mongo.go  # conexão
-│   │   ├── httpx/
-│   │   │   └── respond.go  # JSON e erros HTTP
-│   │   └── traffic/  # visitas e contas de análise
-│   ├── page/  # domínio com subdomínios
-│   │   ├── page/  # página: handler, service, repository, page.go
-│   │   ├── version/  # versões do HTML
-│   │   ├── history/  # eventos da página
-│   │   ├── analytics/  # aberturas e análise
-│   │   ├── access/  # PIN, cargos e sessões
-│   │   └── public/  # entrega do HTML para o visitante
-│   └── user/
-│       ├── handler.go  # HTTP
-│       ├── repository.go  # acesso ao banco
-│       ├── service.go  # regra de negócio
-│       └── user.go  # tipo do domínio e erros
-└── go.mod  # module app
+│   │   └── config.go  # environment variables
+│   ├── domains/
+│   │   ├── kv/{application, document, usage}
+│   │   ├── link/{link, history, analytics, public}
+│   │   ├── page/{page, version, history, analytics, access, binding, public}
+│   │   ├── user/
+│   │   │   ├── setup/
+│   │   │   └── user/
+│   │   │       ├── handler.go  # HTTP
+│   │   │       ├── models.go  # aliases of the repository models
+│   │   │       ├── service.go  # business rules
+│   │   │       └── user.go  # inputs, errors, constants
+│   │   ├── group/
+│   │   ├── overview/
+│   │   ├── backup/
+│   │   └── health/
+│   ├── repositories/
+│   │   ├── user/
+│   │   │   ├── model.go  # stored struct and sentinel errors
+│   │   │   └── repository.go  # MongoRepository and indexes
+│   │   ├── event/  # history of links and pages
+│   │   ├── open/  # opens of links and pages
+│   │   └── ...  # one folder per collection
+│   ├── services/  # database, httpx, ratelimit, activation, traffic, slug, history, analytics
+│   └── utils/  # pure helpers
+└── go.mod  # module pocketrun-api
 ```
 
 ## 3. Naming
@@ -88,7 +100,7 @@ O layout mais comum em Go: `cmd/api` sobe o servidor e cada domínio é um pacot
 | Testes | Test + tipo + método | `TestServiceGetUserByID` |
 | Files | minúsculas juntas | `userhandler.go` |
 | Domain packages | in the identifier language | `user` |
-| Structural packages | in English, as in the Go ecosystem | `handler, service, repository, platform` |
+| Structural packages | in English, as in the Go ecosystem | `domains, repositories, services, utils` |
 | Domain errors | Err prefix in the identifier language | `ErrUserNotFound` |
 | Tables and collections | camelCase | `users` |
 | Columns and fields | camelCase | `createdAt` |
@@ -113,7 +125,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"app/internal/platform/httpx"
+	"app/internal/services/httpx"
 )
 ```
 
@@ -322,7 +334,7 @@ Use these files as a template. They follow every rule above.
 
 > Some standards were written by hand. Where the example differs from the sections above, follow the sections.
 
-### `internal/user/service.go`
+### `internal/domains/user/user/service.go`
 
 ```go
 package user
@@ -353,16 +365,36 @@ func (s *Service) GetUserByID(ctx context.Context, id string) (*User, error) {
 }
 ```
 
-### `internal/user/user.go`
+### `internal/domains/user/user/models.go`
+
+```go
+package user
+
+import userrepository "app/internal/repositories/user"
+
+type User = userrepository.User
+```
+
+### `internal/domains/user/user/user.go`
+
+```go
+package user
+
+import userrepository "app/internal/repositories/user"
+
+const MaxNameLength = 120
+
+var ErrUserNotFound = userrepository.ErrNotFound
+```
+
+### `internal/repositories/user/model.go`
 
 ```go
 package user
 
 import "errors"
 
-const MaxNameLength = 120
-
-var ErrUserNotFound = errors.New("user not found")
+var ErrNotFound = errors.New("user not found")
 
 type User struct {
 	ID       string `json:"id" bson:"_id"`
@@ -371,7 +403,7 @@ type User struct {
 }
 ```
 
-### `internal/user/repository.go`
+### `internal/repositories/user/repository.go`
 
 ```go
 package user
@@ -379,6 +411,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -396,16 +429,16 @@ func (r *MongoRepository) FindByID(ctx context.Context, id string) (*User, error
 	var user User
 	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrUserNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find user: %w", err)
 	}
 	return &user, nil
 }
 ```
 
-### `internal/user/handler.go`
+### `internal/domains/user/user/handler.go`
 
 ```go
 package user
@@ -415,7 +448,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"app/internal/platform/httpx"
+	"app/internal/services/httpx"
 )
 
 type Handler struct {
