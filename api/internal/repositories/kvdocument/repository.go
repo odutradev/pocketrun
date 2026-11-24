@@ -1,4 +1,4 @@
-package kv
+package kvdocument
 
 import (
 	"context"
@@ -90,7 +90,7 @@ func (r *MongoRepository) Aggregate(ctx context.Context, scope Scope, collection
 func (r *MongoRepository) FindAll(ctx context.Context, scope Scope, collectionName string) ([]Document, error) {
 	filter := bson.M{"appId": scope.ApplicationID}
 	if collectionName != "" {
-		filter = scope.filter(collectionName)
+		filter = scope.Filter(collectionName)
 	}
 
 	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "collectionName", Value: 1}, {Key: "createdAt", Value: 1}, {Key: "_id", Value: 1}}))
@@ -121,13 +121,13 @@ func (r *MongoRepository) FindRaw(ctx context.Context, applicationID bson.Object
 }
 
 func (r *MongoRepository) FindByID(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) (*Document, error) {
-	filter := scope.filter(collectionName)
+	filter := scope.Filter(collectionName)
 	filter["_id"] = id
 
 	var document Document
 	err := r.collection.FindOne(ctx, filter).Decode(&document)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrDocumentNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find document: %w", err)
@@ -136,7 +136,7 @@ func (r *MongoRepository) FindByID(ctx context.Context, scope Scope, collectionN
 }
 
 func (r *MongoRepository) Update(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID, set, unset bson.M) (*Document, error) {
-	filter := scope.filter(collectionName)
+	filter := scope.Filter(collectionName)
 	filter["_id"] = id
 
 	set["updatedAt"] = time.Now()
@@ -148,7 +148,7 @@ func (r *MongoRepository) Update(ctx context.Context, scope Scope, collectionNam
 	var document Document
 	err := r.collection.FindOneAndUpdate(ctx, filter, update, options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&document)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrDocumentNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("update document: %w", err)
@@ -157,7 +157,7 @@ func (r *MongoRepository) Update(ctx context.Context, scope Scope, collectionNam
 }
 
 func (r *MongoRepository) DeleteByID(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) error {
-	filter := scope.filter(collectionName)
+	filter := scope.Filter(collectionName)
 	filter["_id"] = id
 
 	result, err := r.collection.DeleteOne(ctx, filter)
@@ -166,13 +166,13 @@ func (r *MongoRepository) DeleteByID(ctx context.Context, scope Scope, collectio
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrDocumentNotFound
+		return ErrNotFound
 	}
 	return nil
 }
 
 func (r *MongoRepository) DeleteByCollection(ctx context.Context, scope Scope, collectionName string) (int64, error) {
-	return r.deleteMany(ctx, scope.filter(collectionName))
+	return r.deleteMany(ctx, scope.Filter(collectionName))
 }
 
 func (r *MongoRepository) DeleteByApplicationID(ctx context.Context, applicationID bson.ObjectID) (int64, error) {
@@ -215,7 +215,7 @@ func (r *MongoRepository) deleteMany(ctx context.Context, filter bson.M) (int64,
 }
 
 func scopedFilter(scope Scope, collectionName string, conditions bson.M) bson.M {
-	filter := scope.filter(collectionName)
+	filter := scope.Filter(collectionName)
 	for key, value := range conditions {
 		filter[key] = value
 	}

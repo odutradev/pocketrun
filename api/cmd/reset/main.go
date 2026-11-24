@@ -12,6 +12,8 @@ import (
 	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/config"
 	"pocketrun-api/internal/kv"
+	applicationrepository "pocketrun-api/internal/repositories/application"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
@@ -67,8 +69,8 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	logger.InfoContext(ctx, "database dropped", "database", cfg.MongoName)
 
 	userRepository := userrepository.NewMongoRepository(mongo.Collection("users"))
-	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
-	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
+	applicationRepository := applicationrepository.NewMongoRepository(mongo.Collection("applications"))
+	documentRepository := kvdocumentrepository.NewMongoRepository(mongo.Collection("kvDocuments"))
 	indexers := []indexer{userRepository, applicationRepository, documentRepository}
 	for _, target := range indexers {
 		if err := target.EnsureIndexes(ctx); err != nil {

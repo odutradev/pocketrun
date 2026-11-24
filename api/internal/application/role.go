@@ -5,63 +5,27 @@ import (
 	"regexp"
 	"slices"
 	"strings"
-	"time"
 )
 
 const (
-	AdminRole           = "admin"
-	AnyCollection       = "*"
 	MaxRoles            = 20
 	MaxRules            = 30
 	MaxRoleNameLength   = 40
 	MaxDescriptionChars = 200
 )
 
-type Operation string
-
-const (
-	OperationRead   Operation = "read"
-	OperationCreate Operation = "create"
-	OperationUpdate Operation = "update"
-	OperationDelete Operation = "delete"
-	OperationManage Operation = "manage"
-)
-
 var (
-	ErrRoleNotFound       = errors.New("role not found")
-	ErrRoleTaken          = errors.New("role name already used in this application")
-	ErrRoleReserved       = errors.New("role name is reserved")
-	ErrInvalidRoleName    = errors.New("invalid role name")
-	ErrInvalidRule        = errors.New("invalid role rule")
-	ErrTooManyRoles       = errors.New("application has too many roles")
-	ErrRoleInUse          = errors.New("role is used by a token")
-	ErrOperationForbidden = errors.New("operation not allowed for this role")
-	rolePattern           = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
-	rulePattern           = regexp.MustCompile(`^(\*|[A-Za-z0-9_-]{1,64})$`)
-	ruleOperations        = []Operation{OperationRead, OperationCreate, OperationUpdate, OperationDelete}
+	ErrRoleNotFound    = errors.New("role not found")
+	ErrRoleTaken       = errors.New("role name already used in this application")
+	ErrRoleReserved    = errors.New("role name is reserved")
+	ErrInvalidRoleName = errors.New("invalid role name")
+	ErrInvalidRule     = errors.New("invalid role rule")
+	ErrTooManyRoles    = errors.New("application has too many roles")
+	ErrRoleInUse       = errors.New("role is used by a token")
+	rolePattern        = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+	rulePattern        = regexp.MustCompile(`^(\*|[A-Za-z0-9_-]{1,64})$`)
+	ruleOperations     = []Operation{OperationRead, OperationCreate, OperationUpdate, OperationDelete}
 )
-
-type Rule struct {
-	Collection   string      `json:"collection" bson:"collection" validate:"required,max=64"`
-	Operations   []Operation `json:"operations" bson:"operations" validate:"required,min=1,max=4,dive,oneof=read create update delete"`
-	MaxDocuments int         `json:"maxDocuments" bson:"maxDocuments" validate:"min=0,max=1000000"`
-}
-
-type Role struct {
-	Name               string    `json:"name" bson:"name"`
-	Description        string    `json:"description" bson:"description"`
-	Rules              []Rule    `json:"rules" bson:"rules"`
-	IsOwnDocumentsOnly bool      `json:"isOwnDocumentsOnly" bson:"isOwnDocumentsOnly"`
-	CreatedAt          time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt          time.Time `json:"updatedAt" bson:"updatedAt"`
-}
-
-type Permission struct {
-	Role               string
-	IsAdmin            bool
-	IsOwnDocumentsOnly bool
-	MaxDocuments       int
-}
 
 type RoleInput struct {
 	Name               string `json:"name" validate:"required,max=40"`
@@ -133,56 +97,4 @@ func checkRules(rules []Rule) error {
 		seen[rule.Collection] = true
 	}
 	return nil
-}
-
-func (t Token) RoleName() string {
-	if t.Role == "" {
-		return AdminRole
-	}
-	return t.Role
-}
-
-func (a *Application) Role(name string) (*Role, bool) {
-	for index := range a.Roles {
-		if a.Roles[index].Name == name {
-			return &a.Roles[index], true
-		}
-	}
-	return nil, false
-}
-
-func (a *Application) HasRole(name string) bool {
-	_, found := a.Role(name)
-	return name == AdminRole || found
-}
-
-func (a *Application) Authorize(roleName, collectionName string, operation Operation) (Permission, error) {
-	if roleName == AdminRole {
-		return Permission{Role: AdminRole, IsAdmin: true}, nil
-	}
-
-	role, found := a.Role(roleName)
-	if !found || operation == OperationManage {
-		return Permission{}, ErrOperationForbidden
-	}
-
-	rule, found := role.rule(collectionName)
-	if !found || !slices.Contains(rule.Operations, operation) {
-		return Permission{}, ErrOperationForbidden
-	}
-	return Permission{Role: role.Name, IsOwnDocumentsOnly: role.IsOwnDocumentsOnly, MaxDocuments: rule.MaxDocuments}, nil
-}
-
-func (r *Role) rule(collectionName string) (Rule, bool) {
-	wildcard := Rule{}
-	hasWildcard := false
-	for _, rule := range r.Rules {
-		if rule.Collection == collectionName {
-			return rule, true
-		}
-		if rule.Collection == AnyCollection {
-			wildcard, hasWildcard = rule, true
-		}
-	}
-	return wildcard, hasWildcard
 }

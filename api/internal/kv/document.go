@@ -4,9 +4,8 @@ import (
 	"errors"
 	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
-
 	"pocketrun-api/internal/application"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 )
 
 const (
@@ -24,7 +23,7 @@ const (
 )
 
 var (
-	ErrDocumentNotFound   = errors.New("document not found")
+	ErrDocumentNotFound   = kvdocumentrepository.ErrNotFound
 	ErrInvalidDocumentID  = errors.New("invalid document id")
 	ErrInvalidCollection  = errors.New("invalid collection name")
 	ErrReservedCollection = errors.New("collection name is reserved")
@@ -37,14 +36,6 @@ var (
 	ErrCollectionFull     = errors.New("collection reached the document limit")
 )
 
-type Scope struct {
-	ApplicationID      bson.ObjectID
-	ProjectID          string
-	Role               string
-	IsOwnDocumentsOnly bool
-	MaxDocuments       int
-}
-
 func NewScope(app *application.Application, permission application.Permission) Scope {
 	return Scope{
 		ApplicationID:      app.ID,
@@ -53,14 +44,6 @@ func NewScope(app *application.Application, permission application.Permission) S
 		IsOwnDocumentsOnly: permission.IsOwnDocumentsOnly,
 		MaxDocuments:       permission.MaxDocuments,
 	}
-}
-
-func (s Scope) filter(collectionName string) bson.M {
-	filter := bson.M{"appId": s.ApplicationID, "collectionName": collectionName}
-	if s.IsOwnDocumentsOnly {
-		filter["createdByRole"] = s.Role
-	}
-	return filter
 }
 
 type ExplorerParams struct {
@@ -80,18 +63,6 @@ func (p ExplorerParams) LimitOrDefault() int {
 		return DefaultExplorerLimit
 	}
 	return p.Limit
-}
-
-type Document struct {
-	ID             bson.ObjectID `json:"id" bson:"_id"`
-	ApplicationID  bson.ObjectID `json:"appId" bson:"appId"`
-	ProjectID      string        `json:"projectId" bson:"projectId"`
-	CollectionName string        `json:"collectionName" bson:"collectionName"`
-	Data           bson.M        `json:"data" bson:"data"`
-	CreatedByRole  string        `json:"createdByRole,omitempty" bson:"createdByRole,omitempty"`
-	ExpiresAt      *time.Time    `json:"expiresAt,omitempty" bson:"expiresAt,omitempty"`
-	CreatedAt      time.Time     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt      time.Time     `json:"updatedAt" bson:"updatedAt"`
 }
 
 type CreateInput struct {
@@ -163,15 +134,6 @@ const (
 	ExportJSON ExportFormat = "json"
 	ExportCSV  ExportFormat = "csv"
 )
-
-type ListQuery struct {
-	Filter    bson.M
-	SortField string
-	SortOrder int
-	Page      int
-	Limit     int
-	Paginate  bool
-}
 
 type Page[T any] struct {
 	Data       []T   `json:"data"`

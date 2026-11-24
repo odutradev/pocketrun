@@ -115,7 +115,7 @@ func (r *MongoRepository) DeleteByPageID(ctx context.Context, pageID bson.Object
 	var application Application
 	err := r.collection.FindOneAndDelete(ctx, bson.M{"pageId": pageID}).Decode(&application)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrApplicationNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("delete page application: %w", err)
@@ -131,7 +131,7 @@ func (r *MongoRepository) SetRoles(ctx context.Context, managerID, id bson.Objec
 		return fmt.Errorf("set roles: %w", err)
 	}
 	if result.MatchedCount == 0 {
-		return ErrApplicationNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -166,7 +166,7 @@ func (r *MongoRepository) Update(ctx context.Context, managerID, id bson.ObjectI
 	}
 
 	if result.MatchedCount == 0 {
-		return ErrApplicationNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -178,7 +178,7 @@ func (r *MongoRepository) Delete(ctx context.Context, managerID, id bson.ObjectI
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrApplicationNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -192,7 +192,7 @@ func (r *MongoRepository) AddToken(ctx context.Context, managerID, id bson.Objec
 	}
 
 	if result.MatchedCount == 0 {
-		return ErrApplicationNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -206,7 +206,7 @@ func (r *MongoRepository) RemoveToken(ctx context.Context, managerID, id bson.Ob
 	}
 
 	if result.MatchedCount == 0 {
-		return ErrApplicationNotFound
+		return ErrNotFound
 	}
 	if result.ModifiedCount == 0 {
 		return ErrTokenNotFound
@@ -228,7 +228,7 @@ func (r *MongoRepository) findOne(ctx context.Context, filter bson.M) (*Applicat
 	var application Application
 	err := r.collection.FindOne(ctx, filter).Decode(&application)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrApplicationNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find application: %w", err)

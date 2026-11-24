@@ -1,4 +1,4 @@
-package kv
+package kvusage
 
 import (
 	"context"
@@ -10,19 +10,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type MongoUsageRepository struct {
+type MongoRepository struct {
 	collection *mongo.Collection
 }
 
-func NewMongoUsageRepository(collection *mongo.Collection) *MongoUsageRepository {
-	return &MongoUsageRepository{collection: collection}
+func NewMongoRepository(collection *mongo.Collection) *MongoRepository {
+	return &MongoRepository{collection: collection}
 }
 
-func (r *MongoUsageRepository) EnsureIndexes(ctx context.Context) error {
+func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{Keys: bson.D{{Key: "applicationId", Value: 1}, {Key: "hour", Value: 1}}, Options: options.Index().SetUnique(true)},
 		{Keys: bson.D{{Key: "managerId", Value: 1}, {Key: "hour", Value: 1}}},
-		{Keys: bson.D{{Key: "hour", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(UsageRetention.Seconds()))},
+		{Keys: bson.D{{Key: "hour", Value: 1}}, Options: options.Index().SetExpireAfterSeconds(int32(Retention.Seconds()))},
 	})
 	if err != nil {
 		return fmt.Errorf("create kv usage indexes: %w", err)
@@ -30,7 +30,7 @@ func (r *MongoUsageRepository) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (r *MongoUsageRepository) Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error {
+func (r *MongoRepository) Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error {
 	_, err := r.collection.UpdateOne(ctx,
 		bson.M{"applicationId": applicationID, "hour": hour},
 		bson.M{"$inc": bson.M{"requests": 1}, "$setOnInsert": bson.M{"managerId": managerID}},
@@ -42,7 +42,7 @@ func (r *MongoUsageRepository) Increment(ctx context.Context, applicationID, man
 	return nil
 }
 
-func (r *MongoUsageRepository) Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]UsageHour, error) {
+func (r *MongoRepository) Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]Hour, error) {
 	cursor, err := r.collection.Find(ctx,
 		bson.M{"managerId": managerID, "hour": bson.M{"$gte": from.UTC().Truncate(time.Hour), "$lt": to}},
 		options.Find().SetSort(bson.D{{Key: "hour", Value: 1}}),
@@ -52,7 +52,7 @@ func (r *MongoUsageRepository) Between(ctx context.Context, managerID bson.Objec
 	}
 	defer cursor.Close(ctx)
 
-	hours := []UsageHour{}
+	hours := []Hour{}
 	if err := cursor.All(ctx, &hours); err != nil {
 		return nil, fmt.Errorf("decode kv usage: %w", err)
 	}

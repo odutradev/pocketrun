@@ -10,16 +10,8 @@ import (
 )
 
 const (
-	UsageRetention    = 400 * 24 * time.Hour
 	usageRecordWindow = 5 * time.Second
 )
-
-type UsageHour struct {
-	ApplicationID bson.ObjectID `bson:"applicationId"`
-	ManagerID     bson.ObjectID `bson:"managerId"`
-	Hour          time.Time     `bson:"hour"`
-	Requests      int64         `bson:"requests"`
-}
 
 type UsageRepository interface {
 	Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error
