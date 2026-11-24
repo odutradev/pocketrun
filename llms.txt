@@ -5,6 +5,7 @@
 Notas importantes:
 
 - A URL da API (`{api}`) e o domínio das páginas e links (`{dominio}`) são da instância de quem usa. Peça esses valores, o token e os nomes das coleções antes de escrever código.
+- Páginas e links só abrem em `{dominio}`. Em `{api}/{slug}` e na raiz `/` dos dois domínios, a resposta é `404` com a tela "Link indisponível". O KV fica sempre em `{api}`.
 - KV por HTTP: todo pedido leva o token da aplicação em `Authorization: Bearer pk_live_...` (também aceitos: `X-Pocket-Token` e `controlAccess`). Corpo sempre JSON com `Content-Type: application/json`, até 1 MB.
 - Dentro de uma página do PocketRun, nunca use token nem URL da API: use `pocketrun.kv.collection("nome")`. O cargo vem do PIN de quem abriu.
 - Todo documento tem a forma `{ id, appId, projectId, collectionName, data, createdAt, updatedAt, expiresAt? }`. Os seus campos ficam sempre dentro de `data`.

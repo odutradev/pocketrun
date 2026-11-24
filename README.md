@@ -114,7 +114,7 @@ JWT_SECRET=gere_uma_chave_secreta_forte
 PAGE_ACCESS_SECRET=gere_outra_chave_longa_e_aleatoria
 ```
 
-- `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API.
+- `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Com ele definido, `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
 - `ADMIN_CORS_ALLOWED_ORIGINS` é a origem exata do painel. Nunca use `*`, porque o painel entra com cookie.
 - `PAGE_ACCESS_SECRET` deve ser diferente do `JWT_SECRET`. Trocar essa chave invalida os PINs já criados.
 
