@@ -41,7 +41,7 @@ internal/domains/<domain>/
 
 **Rules:**
 
-- `cmd/api/main.go` only creates the logger and the signal context and calls `app.Run`. No wiring and no business rules there.
+- `cmd/api/main.go` only creates the logger and the signal context and calls `app.Run`, or, with the `healthcheck` argument, runs `internal/services/healthcheck` (GET `/ping` on its own port, used by the Docker `HEALTHCHECK` of the distroless image). No wiring and no business rules there.
 - `internal/app` builds everything: `repositories.go` creates every repository and runs `EnsureIndexes`, `services.go` creates the services and their dependencies, `routes.go` builds the `httpx.Router` and calls each domain's `Register`, and `app.go` loads the config, connects to the database and starts the server.
 - **`domain.go`:** the domain root package exposes `Register(router httpx.Router, services Services, ...)`. It creates the domain's handlers and registers their routes on `router.Admin`, `router.Public` (the API domain) and `router.Links` (the `LINKS_URL` domain, which is required). Nothing else lives at the domain root.
 - **`handlers/<subject>/`:** one package per subject, always with exactly `handler.go`, `service.go` and `types.go`, even when one of them is small.
@@ -56,7 +56,7 @@ internal/domains/<domain>/
 - **Import aliases:** a repository package is imported with the `repository` suffix (`pagerepository`), a shared service with the `service` suffix when its name collides (`historyservice`, `analyticsservice`), and a handler package with the `handler` suffix inside `domain.go` when it has the domain's name (`pagehandler`).
 - **Interfaces:** the service declares the interface of the repository it consumes (accept interfaces, return structs). A domain never uses another domain's repository: it calls that domain's exported service.
 - **Shared repositories:** records with the same shape share one repository, configured per collection. `repositories/event` stores the history of links and pages and `repositories/open` stores their opens, both keyed by `targetId`.
-- **Services:** `internal/services` holds logic and infrastructure that several domains use: `database`, `httpx` (server, CORS, JSON, decoding, `Router`), `logger` (the colored `slog` handler of `cmd/`), `ratelimit`, `activation`, `traffic`, `slug`, `history` and `analytics`. Services never import `domains`.
+- **Services:** `internal/services` holds logic and infrastructure that several domains use: `database`, `httpx` (server, CORS, JSON, decoding, `Router`), `logger` (the colored `slog` handler of `cmd/`), `ratelimit`, `activation`, `traffic`, `slug`, `history`, `analytics` and `healthcheck`. Services never import `domains`.
 - **Utils (global):** `internal/utils` holds small pure helpers used across domains (`pointers.go`, `urls.go`, `request.go`). Domain-specific functions go to the domain's own `utils/`.
 - Dependencies between subjects point one way: the core subject (`page/handlers/page`, `link/handlers/link`) uses `version`, `history`, `analytics` and `access` through interfaces it declares, and those packages never import the core.
 - `public` holds what visitors reach without login (redirects, page HTML). Admin routes stay in the other subjects.
@@ -69,7 +69,7 @@ internal/domains/<domain>/
 .
 ├── cmd/
 │   ├── api/
-│   │   └── main.go  # logger, signal context, app.Run
+│   │   └── main.go  # logger, signal context, app.Run or healthcheck
 │   └── reset/
 │       └── main.go  # local database reset
 ├── internal/

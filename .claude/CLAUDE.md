@@ -29,7 +29,11 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 │   ├── nginx.conf
 │   ├── package.json
 │   └── src  # frontend code
-├── .env.example
+├── .env.example  # local dev and the repository compose
+├── .env.selfhost.example  # self-host with the Docker Hub images and a local MongoDB
+├── CHANGELOG.md
+├── LICENSE  # ISC
+├── SECURITY.md
 ├── docker-compose.yml
 └── package.json
 ```
@@ -103,7 +107,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - There is no compose override file and no host ports. Local development runs the apps directly with `npm run dev`.
 - `depends_on` sets the startup order: support services before the API and the API before the frontend, always with `condition: service_healthy`.
 - Every image declares a `HEALTHCHECK`. The distroless API has no shell or curl, so it checks itself with `/app/api healthcheck` (GET `/ping` on its own port). The frontend uses busybox `wget` on `/healthz`. Support services declare `healthcheck:` in compose.
-- Every new variable goes into `.env.example` and into the compose service in the same commit.
+- Every new variable goes into `.env.example`, `.env.selfhost.example`, the README compose examples and the compose service in the same commit.
 
 ### Nginx
 
@@ -310,6 +314,8 @@ Steps run in flag order. Default command:
 ```bash
 npx project-publisher --bump-package --push
 ```
+
+**Changelog:** every task that changes behavior, a variable, the deploy or a public contract adds a line to the `## Não publicado` section of `CHANGELOG.md`, in pt-BR, in the same work. Anything a self-hoster must change to upgrade goes under `### Ação necessária`. Right before running the publish command, rename `## Não publicado` to `## X.Y.Z (YYYY-MM-DD)` with the version the bump will create, and leave it uncommitted: the publish commit takes it. Then add a new empty `## Não publicado` section in the next task that needs it.
 
 **Before publishing:**
 
