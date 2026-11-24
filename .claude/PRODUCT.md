@@ -46,7 +46,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 
 - **Sem cadastro público.** O único cadastro aberto é o setup inicial, que cria o primeiro superadmin e depois responde `setup_completed`. Os outros usuários são criados por um superadmin, com senha inicial.
 - **Senha:** pelo menos 8 caracteres, com letras e números ou símbolos. Guardada com Argon2id; hashes antigos são convertidos no próximo login certo.
-- **Sessão:** 7 dias num cookie `__Host-` `HttpOnly; Secure; SameSite=Strict` que o JavaScript não lê. Toda chamada do painel leva o header `X-Pocketrun-Client: panel`, contra CSRF.
+- **Sessão:** 7 dias num cookie `__Host-` `HttpOnly; Secure; SameSite=Strict` que o JavaScript não lê. Com `ALLOW_HTTP=true`, o cookie perde o `Secure` e o prefixo `__Host-` para o login funcionar num domínio sem HTTPS, e a API avisa no log ao iniciar. Toda chamada do painel leva o header `X-Pocketrun-Client: panel`, contra CSRF.
 - **Limite de login:** contam só as falhas. Por e-mail, 5 em 15 min, 10 em 1 h e 20 em 24 h; por IP, 20, 50 e 100 nas mesmas janelas. Passou disso, `429 too_many_login_attempts` com `Retry-After`. Um login certo zera as falhas daquele e-mail.
 - **Encerrar sessões:** trocar a senha ou o cargo de alguém encerra as sessões dessa pessoa; **Sair de todos os dispositivos** encerra todas; trocar a própria senha mantém só a sessão atual.
 - **Usuários** (só superadmin): listar, criar, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário dono de aplicações não pode ser removido.

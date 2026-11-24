@@ -8,15 +8,17 @@ As versões seguem o `version` do `package.json`, e cada uma vira as imagens `od
 
 ### Ação necessária
 
-- **Todas as variáveis de ambiente passam a ser obrigatórias.** A API não inicia se faltar uma delas ou se o valor for inválido, e o log diz qual corrigir. Confira `HOST`, `PORT`, `CORS_ALLOWED_ORIGINS`, `ADMIN_CORS_ALLOWED_ORIGINS`, `MONGODB_URI`, `MONGODB_NAME`, `JWT_SECRET`, `PAGE_ACCESS_SECRET` e `LINKS_URL`.
+- **Todas as variáveis de ambiente passam a ser obrigatórias.** A API não inicia se faltar uma delas ou se o valor for inválido, e o log diz qual corrigir. Confira `HOST`, `PORT`, `CORS_ALLOWED_ORIGINS`, `ADMIN_CORS_ALLOWED_ORIGINS`, `MONGODB_URI`, `MONGODB_NAME`, `JWT_SECRET`, `PAGE_ACCESS_SECRET`, `LINKS_URL` e `ALLOW_HTTP`.
 - **`JWT_SECRET` e `PAGE_ACCESS_SECRET` precisam de 32 caracteres ou mais e não podem ser iguais.** Gere com `openssl rand -hex 32`. Trocar o `JWT_SECRET` encerra as sessões do painel e zera a contagem de visitantes únicos. Trocar o `PAGE_ACCESS_SECRET` invalida os PINs das páginas.
 - **Sem `PAGE_ACCESS_SECRET`, a API não deriva mais a chave dos PINs do `JWT_SECRET`.** Se a sua instância rodava sem ele, defina `PAGE_ACCESS_SECRET=page-access:` seguido do seu `JWT_SECRET` para manter os PINs atuais.
 - **`LINKS_URL` é obrigatório.** Links e páginas só abrem nesse domínio.
 - **O painel lê `API_URL` e `LINKS_URL` quando o container sobe.** Passe as duas no serviço `ui` do compose. `VITE_API_URL` deixa de valer no deploy.
+- **Nova variável obrigatória `ALLOW_HTTP`** (`true` ou `false`). Use `false` com HTTPS. Use `true` só num domínio sem HTTPS, como os `*.traefik.me` do Dokploy, onde o login do painel falhava.
 - **O compose não fixa mais `dns: 8.8.8.8 / 1.1.1.1`.** Se o container da API não resolver um endereço `mongodb+srv://`, adicione `dns:` no seu compose.
 
 ### Novidades
 
+- O login do painel pode funcionar em HTTP com `ALLOW_HTTP=true`, para domínios que ainda não têm HTTPS.
 - A mesma imagem do painel serve para qualquer domínio, sem compilar de novo.
 - As imagens da API e do painel verificam a própria saúde (`HEALTHCHECK`). O painel só sobe depois que a API responde, e a API ganhou o comando `api healthcheck` para isso.
 - Exemplos de compose com MongoDB no mesmo servidor (dados num volume e verificação de saúde) e com MongoDB externo, e o arquivo `.env.selfhost.example` para hospedar a sua instância.

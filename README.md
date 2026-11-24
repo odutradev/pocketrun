@@ -114,6 +114,7 @@ services:
       - LINKS_URL=${LINKS_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
+      - ALLOW_HTTP=${ALLOW_HTTP}
       - MONGODB_URI=${MONGODB_URI}
       - MONGODB_NAME=${MONGODB_NAME}
       - JWT_SECRET=${JWT_SECRET}
@@ -170,6 +171,7 @@ services:
       - LINKS_URL=${LINKS_URL}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
       - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
+      - ALLOW_HTTP=${ALLOW_HTTP}
       - MONGODB_URI=${MONGODB_URI}
       - MONGODB_NAME=${MONGODB_NAME}
       - JWT_SECRET=${JWT_SECRET}
@@ -209,6 +211,7 @@ API_URL=https://api.pocketrun.com
 LINKS_URL=https://link.pocketrun.com
 CORS_ALLOWED_ORIGINS=*
 ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.com
+ALLOW_HTTP=false
 # Só no compose com MongoDB externo
 MONGODB_URI=mongodb+srv://usuario:senha@cluster0.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
@@ -222,6 +225,7 @@ Todas são obrigatórias. Na partida, a API confere cada uma e não inicia se al
 - `API_URL` é o endereço da API que o painel chama. O container do painel lê `API_URL` e `LINKS_URL` ao iniciar, então a mesma imagem serve para qualquer domínio.
 - `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Por isso `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
 - `ADMIN_CORS_ALLOWED_ORIGINS` é a origem exata do painel. Nunca use `*`, porque o painel entra com cookie.
+- `ALLOW_HTTP` diz se o login do painel funciona em HTTP. Com `false`, o cookie de sessão só vai por HTTPS, e o login falha num domínio sem HTTPS. Use `true` só enquanto o domínio não tiver HTTPS, como os `*.traefik.me` que o Dokploy gera: em HTTP, quem estiver na mesma rede pode copiar a sessão. Ligue o HTTPS no domínio e volte para `false` assim que puder.
 - `JWT_SECRET` e `PAGE_ACCESS_SECRET` precisam de 32 caracteres ou mais e não podem ser iguais. Gere cada uma com `openssl rand -hex 32`. Trocar o `PAGE_ACCESS_SECRET` invalida os PINs já criados.
 - `MONGODB_URI` começa com `mongodb://` ou `mongodb+srv://`. No compose com MongoDB local, use `mongodb://mongo:27017`.
 

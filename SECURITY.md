@@ -36,6 +36,6 @@ Não entram:
 ## Para quem hospeda
 
 - Gere `JWT_SECRET` e `PAGE_ACCESS_SECRET` com `openssl rand -hex 32` e guarde os dois fora do repositório.
-- Use HTTPS nos três domínios: painel, API e links.
+- Use HTTPS nos três domínios: painel, API e links, e deixe `ALLOW_HTTP=false`.
 - `ADMIN_CORS_ALLOWED_ORIGINS` deve ser exatamente o endereço do painel.
 - O arquivo de backup do painel tem os hashes das senhas e dos tokens. Guarde-o fora do servidor.
