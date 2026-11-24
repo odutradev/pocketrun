@@ -73,10 +73,10 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - **Location:** one `.env` per context, each with its `.env.example`:
   - Root `.env`: read by docker-compose (and by Dokploy, from its Environment tab).
   - `api/.env`: local development of the API. The API reads `api/.env` first, then the root `.env`; the first value found wins.
-  - `ui/.env`: local development of the frontend. Vite reads only `ui/.env`; Docker builds receive the `VITE_` variables as `ARG`.
+  - `ui/.env`: local development of the frontend. Vite reads only `ui/.env`. The panel container reads `API_URL` and `LINKS_URL` when it starts.
 - Never commit `.env`. Every new variable goes into the matching `.env.example` (root and app) with a safe example value.
 - Variables read by the frontend use the `VITE_` prefix and are public: never put secrets in them.
-- `VITE_API_URL` points to the API's public URL in each environment.
+- `API_URL` (container) and `VITE_API_URL` (local development) point to the API's public URL in each environment.
 
 ## 4. Docker and deploy
 
@@ -86,7 +86,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - Base image for Node stages: `node:22-alpine`. Do not change the version unless asked.
 - Go API: the builder uses `golang:1.23-alpine`, downloads modules before copying the code (layer cache) and builds a static binary with `CGO_ENABLED=0 go build -trimpath -ldflags="-s -w"`. The runner is `gcr.io/distroless/static-debian12`, with only the binary, running as `nonroot`.
 
-- Frontend: Vite variables come in as `ARG` and become `ENV` before the build (`VITE_API_URL`), because Vite inlines them into the build. Never read secrets in the frontend.
+- Frontend: the image is built without environment values, so one image serves every domain. On start, `ui/docker/40-pocketrun-config.sh` (run by the nginx entrypoint) writes `/config.js` with `window.__POCKETRUN_CONFIG__` from `API_URL` and `LINKS_URL`. `index.html` loads it before the app, and `@assets/config` reads it first, then `import.meta.env` (`VITE_API_URL`, `VITE_LINKS_URL`) for local development. Never read secrets in the frontend.
 - The frontend runner is `nginx:alpine` serving `dist` with the app's `nginx.conf`.
 - Every container listens on port 80. The external port is set in compose or in the deploy.
 - Every folder with a `Dockerfile` has a `.dockerignore` that ignores `node_modules`, `dist`, `.git`, `.env`, `.env.*` and docs. Never copy `.env` into the image: configuration comes from environment variables.
@@ -105,7 +105,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 ### Nginx
 
 - nginx serves the frontend static build with SPA fallback: `try_files $uri $uri/ /index.html`.
-- The API does not go through nginx: it is exposed on its own port or domain, and the frontend calls `VITE_API_URL`.
+- The API does not go through nginx: it is exposed on its own port or domain, and the frontend calls `API_URL`.
 - `gzip` on for text, JS, CSS, JSON and SVG.
 - Security headers on every response: `X-Frame-Options`, `X-Content-Type-Options` and `Referrer-Policy`.
 - Cache: `/assets/` for 1 year and `immutable`; `index.html` never cached so updates are instant.
@@ -151,8 +151,6 @@ README.md
 ```dockerfile
 FROM node:22-alpine AS builder
 WORKDIR /app
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
@@ -162,6 +160,7 @@ FROM nginx:alpine AS runner
 RUN rm -rf /etc/nginx/conf.d/*
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --chmod=755 docker/40-pocketrun-config.sh /docker-entrypoint.d/40-pocketrun-config.sh
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
@@ -201,9 +200,10 @@ services:
   ui:
     build:
       context: ./ui
-      args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:5000}
     restart: unless-stopped
+    environment:
+      - API_URL=${API_URL:-http://localhost:5000}
+      - LINKS_URL=${LINKS_URL:-}
     expose:
       - "80"
     depends_on:
@@ -239,6 +239,11 @@ server {
         expires 1y;
         add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
+    }
+
+    location = /config.js {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+        expires 0;
     }
 
     location = /index.html {

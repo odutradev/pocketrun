@@ -101,6 +101,9 @@ services:
   ui:
     image: odutradev/pocketrun-ui:latest
     restart: unless-stopped
+    environment:
+      - API_URL=${API_URL}
+      - LINKS_URL=${LINKS_URL}
     expose:
       - "80"
     depends_on:
@@ -153,6 +156,9 @@ services:
   ui:
     image: odutradev/pocketrun-ui:latest
     restart: unless-stopped
+    environment:
+      - API_URL=${API_URL}
+      - LINKS_URL=${LINKS_URL}
     expose:
       - "80"
     depends_on:
@@ -174,7 +180,7 @@ networks:
 <summary><b>Variáveis de ambiente</b></summary>
 
 ```env
-VITE_API_URL=https://api.pocketrun.com
+API_URL=https://api.pocketrun.com
 LINKS_URL=https://link.pocketrun.com
 CORS_ALLOWED_ORIGINS=*
 ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.com
@@ -185,6 +191,7 @@ JWT_SECRET=gere_uma_chave_secreta_forte
 PAGE_ACCESS_SECRET=gere_outra_chave_longa_e_aleatoria
 ```
 
+- `API_URL` é o endereço da API que o painel chama. O container do painel lê `API_URL` e `LINKS_URL` ao iniciar, então a mesma imagem serve para qualquer domínio.
 - `LINKS_URL` é o domínio dos links e das páginas, para o HTML delas nunca rodar no domínio da API. Com ele definido, `api.pocketrun.com/{slug}` responde `404`, e a raiz `/` dos dois domínios mostra a tela de não encontrado.
 - `ADMIN_CORS_ALLOWED_ORIGINS` é a origem exata do painel. Nunca use `*`, porque o painel entra com cookie.
 - `PAGE_ACCESS_SECRET` deve ser diferente do `JWT_SECRET`. Trocar essa chave invalida os PINs já criados.
@@ -198,9 +205,6 @@ PAGE_ACCESS_SECRET=gere_outra_chave_longa_e_aleatoria
 | `api` | `link.pocketrun.com` | Links e páginas |
 
 Todos os containers escutam na porta `80`.
-
-> [!NOTE]
-> A imagem da UI é compilada sem `VITE_API_URL`. Para usar outros domínios, gere a imagem com `--build-arg VITE_API_URL=...` e `--build-arg VITE_LINKS_URL=...`, ou suba com o `docker-compose.yml` do repositório.
 
 > [!IMPORTANT]
 > O backup do painel inclui os hashes das senhas e dos tokens. Guarde o arquivo fora do servidor. Para restaurar em outra instância, use os mesmos `JWT_SECRET` e `PAGE_ACCESS_SECRET`.
