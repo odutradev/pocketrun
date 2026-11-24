@@ -28,6 +28,9 @@ import (
 	"pocketrun-api/internal/page/page"
 	pagepublic "pocketrun-api/internal/page/public"
 	"pocketrun-api/internal/page/version"
+	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
+	slugrepository "pocketrun-api/internal/repositories/slug"
+	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/slug"
@@ -77,13 +80,13 @@ func run(logger *slog.Logger) error {
 		return fmt.Errorf("register validations: %w", err)
 	}
 
-	userRepository := user.NewMongoRepository(mongo.Collection("users"))
-	loginAttemptRepository := user.NewMongoAttemptRepository(mongo.Collection("loginAttempts"))
+	userRepository := userrepository.NewMongoRepository(mongo.Collection("users"))
+	loginAttemptRepository := loginattemptrepository.NewMongoRepository(mongo.Collection("loginAttempts"))
 	applicationRepository := application.NewMongoRepository(mongo.Collection("applications"))
 	documentRepository := kv.NewMongoRepository(mongo.Collection("kvDocuments"))
 	uniqueRegistry := traffic.NewUniqueRegistry(mongo.Collection("uniqueVisitors"), cfg.JWTSecret)
 	usageRepository := kv.NewMongoUsageRepository(mongo.Collection("kvUsage"))
-	slugRepository := slug.NewMongoRepository(mongo.Collection("slugs"))
+	slugRepository := slugrepository.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
 	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))

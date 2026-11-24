@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 )
 
 type Repository interface {
@@ -321,11 +323,11 @@ type loginLimit struct {
 }
 
 func emailLimits() []loginLimit {
-	return []loginLimit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: loginAttemptRetention, max: 20}}
+	return []loginLimit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: loginattemptrepository.Retention, max: 20}}
 }
 
 func clientLimits() []loginLimit {
-	return []loginLimit{{window: 15 * time.Minute, max: 20}, {window: time.Hour, max: 50}, {window: loginAttemptRetention, max: 100}}
+	return []loginLimit{{window: 15 * time.Minute, max: 20}, {window: time.Hour, max: 50}, {window: loginattemptrepository.Retention, max: 100}}
 }
 
 func hashClient(client string) string {

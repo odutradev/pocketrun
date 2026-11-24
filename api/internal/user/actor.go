@@ -9,12 +9,6 @@ import (
 
 const systemActorName = "Sistema"
 
-type Actor struct {
-	ID    *bson.ObjectID `json:"id" bson:"id,omitempty"`
-	Name  string         `json:"name" bson:"name"`
-	Email string         `json:"email" bson:"email"`
-}
-
 func SystemActor() Actor {
 	return Actor{Name: systemActorName}
 }

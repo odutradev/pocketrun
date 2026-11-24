@@ -60,7 +60,7 @@ func (r *MongoRepository) findOne(ctx context.Context, filter bson.M) (*User, er
 	var user User
 	err := r.collection.FindOne(ctx, filter).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrUserNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find user: %w", err)
@@ -91,7 +91,7 @@ func (r *MongoRepository) Update(ctx context.Context, id bson.ObjectID, fields b
 		return fmt.Errorf("update user: %w", err)
 	}
 	if result.MatchedCount == 0 {
-		return ErrUserNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func (r *MongoRepository) IncrementTokenVersion(ctx context.Context, id bson.Obj
 		return fmt.Errorf("increment token version: %w", err)
 	}
 	if result.MatchedCount == 0 {
-		return ErrUserNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -113,7 +113,7 @@ func (r *MongoRepository) Delete(ctx context.Context, id bson.ObjectID) error {
 		return fmt.Errorf("delete user: %w", err)
 	}
 	if result.DeletedCount == 0 {
-		return ErrUserNotFound
+		return ErrNotFound
 	}
 	return nil
 }

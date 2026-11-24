@@ -30,7 +30,7 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 func (r *MongoRepository) Insert(ctx context.Context, entry *Entry) error {
 	_, err := r.collection.InsertOne(ctx, entry)
 	if mongo.IsDuplicateKeyError(err) {
-		return ErrSlugTaken
+		return ErrTaken
 	}
 	if err != nil {
 		return fmt.Errorf("insert slug: %w", err)
@@ -42,7 +42,7 @@ func (r *MongoRepository) Find(ctx context.Context, value string) (*Entry, error
 	var entry Entry
 	err := r.collection.FindOne(ctx, bson.M{"_id": value}).Decode(&entry)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrSlugNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find slug: %w", err)

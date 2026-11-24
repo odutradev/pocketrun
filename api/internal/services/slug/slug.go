@@ -3,9 +3,8 @@ package slug
 import (
 	"errors"
 	"regexp"
-	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
+	slugrepository "pocketrun-api/internal/repositories/slug"
 )
 
 const (
@@ -13,11 +12,14 @@ const (
 	RandomLength = 8
 )
 
-type Kind string
+type (
+	Kind  = slugrepository.Kind
+	Entry = slugrepository.Entry
+)
 
 const (
-	KindLink Kind = "link"
-	KindPage Kind = "page"
+	KindLink = slugrepository.KindLink
+	KindPage = slugrepository.KindPage
 )
 
 const (
@@ -27,20 +29,13 @@ const (
 )
 
 var (
-	ErrSlugTaken    = errors.New("slug already in use")
+	ErrSlugTaken    = slugrepository.ErrTaken
 	ErrInvalidSlug  = errors.New("invalid slug")
 	ErrReservedSlug = errors.New("reserved slug")
-	ErrSlugNotFound = errors.New("slug not found")
+	ErrSlugNotFound = slugrepository.ErrNotFound
 )
 
 var pattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
-
-type Entry struct {
-	Slug      string        `bson:"_id"`
-	Kind      Kind          `bson:"kind"`
-	TargetID  bson.ObjectID `bson:"targetId"`
-	CreatedAt time.Time     `bson:"createdAt"`
-}
 
 type Availability struct {
 	Slug        string `json:"slug"`

@@ -3,9 +3,8 @@ package user
 import (
 	"errors"
 	"strings"
-	"time"
 
-	"go.mongodb.org/mongo-driver/v2/bson"
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
 const (
@@ -14,8 +13,8 @@ const (
 )
 
 var (
-	ErrUserNotFound        = errors.New("user not found")
-	ErrEmailTaken          = errors.New("email already in use")
+	ErrUserNotFound        = userrepository.ErrNotFound
+	ErrEmailTaken          = userrepository.ErrEmailTaken
 	ErrInvalidCredentials  = errors.New("invalid credentials")
 	ErrInvalidToken        = errors.New("invalid token")
 	ErrExpiredToken        = errors.New("token expired")
@@ -26,17 +25,6 @@ var (
 	ErrInvalidUserID       = errors.New("invalid user id")
 	ErrTooManyAttempts     = errors.New("too many login attempts")
 )
-
-type User struct {
-	ID           bson.ObjectID `json:"id" bson:"_id"`
-	Name         string        `json:"name" bson:"name"`
-	Email        string        `json:"email" bson:"email"`
-	Role         string        `json:"role" bson:"role"`
-	PasswordHash string        `json:"-" bson:"passwordHash"`
-	TokenVersion int           `json:"-" bson:"tokenVersion"`
-	CreatedAt    time.Time     `json:"createdAt" bson:"createdAt"`
-	UpdatedAt    time.Time     `json:"updatedAt" bson:"updatedAt"`
-}
 
 type CreateInput struct {
 	Name     string `json:"name" validate:"required,min=2,max=100"`
