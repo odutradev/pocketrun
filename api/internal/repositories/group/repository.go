@@ -48,7 +48,7 @@ func (r *MongoRepository) FindByID(ctx context.Context, kind Kind, id bson.Objec
 	var group Group
 	err := r.collection.FindOne(ctx, bson.M{"_id": id, "kind": kind}).Decode(&group)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrGroupNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find group: %w", err)
@@ -59,7 +59,7 @@ func (r *MongoRepository) FindByID(ctx context.Context, kind Kind, id bson.Objec
 func (r *MongoRepository) Insert(ctx context.Context, group *Group) error {
 	_, err := r.collection.InsertOne(ctx, group)
 	if mongo.IsDuplicateKeyError(err) {
-		return ErrGroupNameTaken
+		return ErrNameTaken
 	}
 	if err != nil {
 		return fmt.Errorf("insert group: %w", err)
@@ -84,10 +84,10 @@ func (r *MongoRepository) Update(ctx context.Context, kind Kind, id bson.ObjectI
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&group)
 	if mongo.IsDuplicateKeyError(err) {
-		return nil, ErrGroupNameTaken
+		return nil, ErrNameTaken
 	}
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrGroupNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("update group: %w", err)
@@ -102,7 +102,7 @@ func (r *MongoRepository) Delete(ctx context.Context, kind Kind, id bson.ObjectI
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrGroupNotFound
+		return ErrNotFound
 	}
 	return nil
 }

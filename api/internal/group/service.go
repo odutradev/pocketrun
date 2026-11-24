@@ -35,7 +35,7 @@ func (s *Service) List(ctx context.Context, kind Kind) ([]Group, error) {
 	}
 
 	for index := range groups {
-		groups[index].applyDefaults()
+		groups[index].ApplyDefaults()
 	}
 	return groups, nil
 }
@@ -50,7 +50,7 @@ func (s *Service) Ensure(ctx context.Context, kind Kind, id bson.ObjectID) error
 func (s *Service) Create(ctx context.Context, kind Kind, input Input) (*Group, error) {
 	now := time.Now()
 	group := &Group{ID: bson.NewObjectID(), Kind: kind, Name: input.Name, Color: input.Color, Icon: input.Icon, CreatedAt: now, UpdatedAt: now}
-	group.applyDefaults()
+	group.ApplyDefaults()
 	if err := s.repository.Insert(ctx, group); err != nil {
 		return nil, fmt.Errorf("create %s group: %w", kind, err)
 	}
@@ -63,7 +63,7 @@ func (s *Service) Update(ctx context.Context, kind Kind, id bson.ObjectID, input
 		return nil, fmt.Errorf("update group %s: %w", id.Hex(), err)
 	}
 
-	group.applyDefaults()
+	group.ApplyDefaults()
 	return group, nil
 }
 

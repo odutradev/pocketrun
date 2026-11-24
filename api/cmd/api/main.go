@@ -29,6 +29,7 @@ import (
 	pagepublic "pocketrun-api/internal/page/public"
 	"pocketrun-api/internal/page/version"
 	applicationrepository "pocketrun-api/internal/repositories/application"
+	grouprepository "pocketrun-api/internal/repositories/group"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
@@ -90,7 +91,7 @@ func run(logger *slog.Logger) error {
 	uniqueRegistry := traffic.NewUniqueRegistry(mongo.Collection("uniqueVisitors"), cfg.JWTSecret)
 	usageRepository := kvusagerepository.NewMongoRepository(mongo.Collection("kvUsage"))
 	slugRepository := slugrepository.NewMongoRepository(mongo.Collection("slugs"))
-	groupRepository := group.NewMongoRepository(mongo.Collection("groups"))
+	groupRepository := grouprepository.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
 	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))
 	linkOpenRepository := linkanalytics.NewMongoRepository(mongo.Collection("linkOpens"))
