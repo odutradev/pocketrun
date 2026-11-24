@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -13,6 +12,7 @@ import (
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/user"
+	"pocketrun-api/internal/utils"
 )
 
 type Handler struct {
@@ -23,7 +23,7 @@ type Handler struct {
 }
 
 func NewHandler(service *Service, linksURL string, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, linksHost: urlHost(linksURL), validate: validate, logger: logger}
+	return &Handler{service: service, linksHost: utils.URLHost(linksURL), validate: validate, logger: logger}
 }
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -153,14 +153,6 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteMessage(w, http.StatusOK, "Link deleted successfully")
-}
-
-func urlHost(raw string) string {
-	parsed, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil {
-		return ""
-	}
-	return parsed.Host
 }
 
 func (h *Handler) requestHosts(r *http.Request) []string {

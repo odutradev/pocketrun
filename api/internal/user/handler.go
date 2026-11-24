@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/utils"
 )
 
 const retryAfterSeconds = "900"
@@ -51,7 +52,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.service.Login(ctx, input, httpx.ClientIP(r))
+	session, err := h.service.Login(ctx, input, utils.ClientIP(r))
 	if errors.Is(err, ErrInvalidCredentials) {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_credentials")
 		return

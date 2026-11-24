@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/ratelimit"
 	"pocketrun-api/internal/services/traffic"
+	"pocketrun-api/internal/utils"
 )
 
 const (
@@ -68,7 +68,7 @@ func NewHandler(dependencies Dependencies) *Handler {
 		pages:          dependencies.Pages,
 		guard:          dependencies.Guard,
 		data:           dependencies.Data,
-		pagesHost:      urlHost(dependencies.PagesURL),
+		pagesHost:      utils.URLHost(dependencies.PagesURL),
 		validate:       dependencies.Validate,
 		visitorLimiter: ratelimit.New(dataLimitWindow, visitorDataLimit),
 		pageLimiter:    ratelimit.New(dataLimitWindow, pageDataLimit),
@@ -245,12 +245,4 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, r *http.Request) {
 	if err := httpx.WriteUnavailablePage(w, unavailableHeading, unavailableMessage); err != nil {
 		h.logger.WarnContext(r.Context(), "write page unavailable", "error", err)
 	}
-}
-
-func urlHost(raw string) string {
-	parsed, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil {
-		return ""
-	}
-	return parsed.Host
 }

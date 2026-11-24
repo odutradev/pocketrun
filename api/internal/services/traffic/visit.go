@@ -5,12 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"pocketrun-api/internal/utils"
 )
 
 const Retention = 365 * 24 * time.Hour
@@ -45,22 +46,7 @@ type Hit struct {
 }
 
 func VisitFromRequest(r *http.Request) Visit {
-	return Visit{IP: clientIP(r), UserAgent: r.UserAgent(), Referrer: r.Referer(), IsProbe: r.Method == http.MethodHead}
-}
-
-func clientIP(r *http.Request) string {
-	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		first, _, _ := strings.Cut(forwarded, ",")
-		return strings.TrimSpace(first)
-	}
-	if realIP := r.Header.Get("X-Real-Ip"); realIP != "" {
-		return strings.TrimSpace(realIP)
-	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
-	}
-	return host
+	return Visit{IP: utils.OriginIP(r), UserAgent: r.UserAgent(), Referrer: r.Referer(), IsProbe: r.Method == http.MethodHead}
 }
 
 type VisitorHasher struct {

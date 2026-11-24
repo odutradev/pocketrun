@@ -13,6 +13,7 @@ import (
 	"pocketrun-api/internal/page/binding"
 	"pocketrun-api/internal/page/page"
 	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/utils"
 )
 
 const (
@@ -125,7 +126,7 @@ func isSameOriginCall(r *http.Request) bool {
 	if origin == "" {
 		return true
 	}
-	host := urlHost(origin)
+	host := utils.URLHost(origin)
 	if strings.EqualFold(host, r.Host) {
 		return true
 	}
