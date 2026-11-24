@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"pocketrun-api/internal/config"
-	"pocketrun-api/internal/domains/kv/application"
-	kvdocument "pocketrun-api/internal/domains/kv/document"
-	"pocketrun-api/internal/domains/user/user"
+	"pocketrun-api/internal/domains/kv/handlers/application"
+	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
+	"pocketrun-api/internal/domains/user/handlers/user"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"

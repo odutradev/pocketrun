@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"pocketrun-api/internal/config"
-	"pocketrun-api/internal/domains/user/user"
+	"pocketrun-api/internal/domains/user/handlers/user"
 	"pocketrun-api/internal/services/database"
 	"pocketrun-api/internal/services/httpx"
 )
