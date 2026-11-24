@@ -42,6 +42,13 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
+func (c Config) PageAccessKey() (string, bool) {
+	if c.PageAccessSecret != "" {
+		return c.PageAccessSecret, false
+	}
+	return "page-access:" + c.JWTSecret, true
+}
+
 func lookup(key, fallback string) string {
 	value := strings.TrimSpace(os.Getenv(key))
 	if value == "" {
