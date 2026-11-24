@@ -31,7 +31,6 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 │   └── src  # frontend code
 ├── .env.example
 ├── docker-compose.yml
-├── docker-compose.override.yml
 └── package.json
 ```
 
@@ -61,8 +60,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
     "build:web": "npm --prefix ui run build",
     "lint": "npm --prefix ui run lint",
     "test": "npm run test:api",
-    "test:api": "cd api && go test ./...",
-    "up": "docker compose up -d --build"
+    "test:api": "cd api && go test ./..."
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
@@ -100,7 +98,7 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 - Every service uses `restart: unless-stopped` and the same `app-network` bridge network.
 - Inside the network, apps reach services by name (`redis://redis:6379`), never `localhost`.
 - `docker-compose.yml` never publishes host ports: services use `expose: ["80"]` and Traefik routes by domain. Publishing a host port in production collides with other services on the server (`port is already allocated`).
-- Host ports for local runs live only in `docker-compose.override.yml`, which `docker compose up` loads automatically and Dokploy ignores. They use a variable with a default: `"${PORT:-5000}:80"`. Secrets have no default.
+- There is no compose override file and no host ports. Local development runs the apps directly with `npm run dev`.
 - `depends_on` sets the startup order: support services before the API and the API before the frontend.
 - Every new variable goes into `.env.example` and into the compose service in the same commit.
 
@@ -216,18 +214,6 @@ services:
 networks:
   app-network:
     driver: bridge
-```
-
-#### `docker-compose.override.yml`
-
-```yaml
-services:
-  api:
-    ports:
-      - "${PORT:-5000}:80"
-  ui:
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
 ```
 
 #### `ui/nginx.conf`

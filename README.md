@@ -44,7 +44,6 @@ O painel abre em `http://localhost:3000`, e o primeiro acesso cria o superadmin.
 | :--- | :--- |
 | `npm run dev` | Sobe a API e o painel. |
 | `npm run build` | Compila os dois apps e sincroniza o `llms.txt`. |
-| `npm run up` | Sobe tudo com Docker Compose. |
 | `npm run reset` | Apaga o banco local. `reset:admin` também cria `admin@pocketrun.local` com a senha `1234`. |
 
 ## Deploy
