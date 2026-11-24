@@ -74,7 +74,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	healthHandler.Register(publicMux)
 	applicationHandler.RegisterPublic(publicMux, authenticateApplication)
 	documentHandler.RegisterPublic(publicMux, authenticateApplication)
-	linkpublic.NewHandler(s.links, pagePublicHandler, logger).Register(publicMux)
+	linkpublic.NewHandler(linkpublic.NewService(s.links), pagePublicHandler, logger).Register(publicMux)
 
 	root := http.NewServeMux()
 	root.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(adminMux)))

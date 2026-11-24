@@ -1,7 +1,6 @@
 package history
 
 import (
-	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -27,10 +26,6 @@ const (
 	EventKVChanged            eventrepository.Type = "kv_changed"
 	EventKVUnlinked           eventrepository.Type = "kv_unlinked"
 )
-
-func NewService(repository historyservice.Repository, logger *slog.Logger) *historyservice.Service {
-	return historyservice.NewService(repository, "page", logger)
-}
 
 func NewEvent(pageID bson.ObjectID, eventType eventrepository.Type, actor userrepository.Actor, changes []eventrepository.Change, at time.Time) *eventrepository.Event {
 	return historyservice.NewEvent(pageID, eventType, actor, changes, at)

@@ -3,8 +3,16 @@ package overview
 import (
 	"time"
 
+	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 	"pocketrun-api/internal/services/traffic"
 )
+
+type activity struct {
+	pages  []time.Time
+	links  []time.Time
+	kv     []kvusagerepository.Hour
+	pageKV []time.Time
+}
 
 const minimumAllSpan = 7 * 24 * time.Hour
 

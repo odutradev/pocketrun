@@ -16,8 +16,6 @@ import (
 	"pocketrun-api/internal/utils"
 )
 
-const retryAfterSeconds = "900"
-
 type Handler struct {
 	service  *Service
 	validate *validator.Validate

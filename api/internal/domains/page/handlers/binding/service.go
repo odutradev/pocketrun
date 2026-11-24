@@ -27,13 +27,6 @@ import (
 	"pocketrun-api/internal/services/httpx"
 )
 
-const (
-	logTimeout        = 5 * time.Second
-	applicationField  = "kvApplication"
-	publicRoleField   = "kvPublicRole"
-	roleMappingsField = "kvRoles"
-)
-
 type Repository interface {
 	Find(ctx context.Context, pageID bson.ObjectID) (*pagebindingrepository.Binding, error)
 	Save(ctx context.Context, binding *pagebindingrepository.Binding) error

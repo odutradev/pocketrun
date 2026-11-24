@@ -13,6 +13,8 @@ import (
 	"pocketrun-api/internal/services/activation"
 )
 
+const recordTimeout = 5 * time.Second
+
 var (
 	ErrLinkNotFound    = linkrepository.ErrNotFound
 	ErrLinkUnavailable = linkrepository.ErrUnavailable

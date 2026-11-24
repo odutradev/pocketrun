@@ -25,8 +25,6 @@ import (
 	"pocketrun-api/internal/services/traffic"
 )
 
-const recordTimeout = 5 * time.Second
-
 type Repository interface {
 	Find(ctx context.Context, query pagerepository.ListQuery) ([]pagerepository.Page, error)
 	Count(ctx context.Context, query pagerepository.ListQuery) (int64, error)

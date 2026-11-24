@@ -1,46 +1,24 @@
 package public
 
 import (
-	"context"
 	"errors"
 	"log/slog"
 	"net/http"
-	"net/url"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/link/handlers/link"
-	linkrepository "pocketrun-api/internal/repositories/link"
 	slugrepository "pocketrun-api/internal/repositories/slug"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/traffic"
 )
 
-const (
-	unavailableHeading = "Link indisponível"
-	unavailableMessage = "Este endereço não existe, foi desativado ou já expirou. Confira o link com quem o enviou."
-)
-
-type LinkOpener interface {
-	Resolve(ctx context.Context, value string) (*slugrepository.Entry, error)
-	Open(ctx context.Context, value string, visit traffic.Visit) (*linkrepository.Link, error)
-}
-
-type PageServer interface {
-	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
-	UnlockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
-	ServeData(w http.ResponseWriter, r *http.Request, id bson.ObjectID, rest string)
-	WriteDataError(w http.ResponseWriter, status int, code string)
-}
-
 type Handler struct {
-	links  LinkOpener
-	pages  PageServer
-	logger *slog.Logger
+	service *Service
+	pages   PageServer
+	logger  *slog.Logger
 }
 
-func NewHandler(links LinkOpener, pages PageServer, logger *slog.Logger) *Handler {
-	return &Handler{links: links, pages: pages, logger: logger}
+func NewHandler(service *Service, pages PageServer, logger *slog.Logger) *Handler {
+	return &Handler{service: service, pages: pages, logger: logger}
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
@@ -52,7 +30,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 }
 
 func (h *Handler) data(w http.ResponseWriter, r *http.Request) {
-	entry, err := h.links.Resolve(r.Context(), r.PathValue("slug"))
+	entry, err := h.service.Resolve(r.Context(), r.PathValue("slug"))
 	if errors.Is(err, link.ErrLinkNotFound) {
 		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
 		return
@@ -70,7 +48,7 @@ func (h *Handler) data(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {
-	entry, err := h.links.Resolve(r.Context(), r.PathValue("slug"))
+	entry, err := h.service.Resolve(r.Context(), r.PathValue("slug"))
 	if errors.Is(err, link.ErrLinkNotFound) {
 		h.writeNotFoundPage(w, r)
 		return
@@ -89,7 +67,7 @@ func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
-	opened, err := h.links.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
+	opened, err := h.service.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
 	var kindError *link.KindError
 	if errors.As(err, &kindError) && kindError.Kind == slugrepository.KindPage {
 		h.pages.ServePage(w, r, kindError.TargetID)
@@ -110,47 +88,11 @@ func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Cache-Control", "no-store")
-	http.Redirect(w, r, withQuery(opened.URL, r.URL.Query()), http.StatusFound)
+	http.Redirect(w, r, h.service.Destination(opened, r.URL.Query()), http.StatusFound)
 }
 
 func (h *Handler) writeNotFoundPage(w http.ResponseWriter, r *http.Request) {
 	if err := httpx.WriteUnavailablePage(w, unavailableHeading, unavailableMessage); err != nil {
 		h.logger.WarnContext(r.Context(), "write not found page", "error", err)
 	}
-}
-
-func withQuery(destination string, query url.Values) string {
-	if len(query) == 0 {
-		return destination
-	}
-
-	target, err := url.Parse(destination)
-	if err != nil {
-		return destination
-	}
-
-	values := target.Query()
-	extra := url.Values{}
-	hasOverlap := false
-	for key, items := range query {
-		if values.Has(key) {
-			values[key] = items
-			hasOverlap = true
-			continue
-		}
-		extra[key] = items
-	}
-
-	switch {
-	case hasOverlap:
-		for key, items := range extra {
-			values[key] = items
-		}
-		target.RawQuery = values.Encode()
-	case target.RawQuery == "":
-		target.RawQuery = extra.Encode()
-	default:
-		target.RawQuery = target.RawQuery + "&" + extra.Encode()
-	}
-	return target.String()
 }

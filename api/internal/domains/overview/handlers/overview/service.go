@@ -33,13 +33,6 @@ type Service struct {
 	pageKV MomentFinder
 }
 
-type activity struct {
-	pages  []time.Time
-	links  []time.Time
-	kv     []kvusagerepository.Hour
-	pageKV []time.Time
-}
-
 func NewService(dependencies Dependencies) *Service {
 	return &Service{pages: dependencies.Pages, links: dependencies.Links, kv: dependencies.KV, pageKV: dependencies.PageKV}
 }

@@ -22,12 +22,97 @@ import (
 	"pocketrun-api/internal/utils"
 )
 
-const (
-	unavailableHeading = "Página indisponível"
-	unavailableMessage = "Esta página não existe, foi desativada ou já expirou. Confira o endereço com quem o enviou."
-)
+func (h *Handler) ServeData(w http.ResponseWriter, r *http.Request, id bson.ObjectID, rest string) {
+	ctx := r.Context()
+	w.Header().Del("Access-Control-Allow-Origin")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 
-const cookiePrefix = "pocketrun_page_"
+	if !h.isPagesHost(r) {
+		h.WriteDataError(w, http.StatusNotFound, "page_not_found")
+		return
+	}
+	if !isSameOriginCall(r) {
+		h.WriteDataError(w, http.StatusForbidden, "invalid_client")
+		return
+	}
+
+	if _, err := h.pages.Visible(ctx, id); err != nil {
+		if errors.Is(err, page.ErrPageNotFound) || errors.Is(err, page.ErrPageUnavailable) {
+			h.WriteDataError(w, http.StatusNotFound, "page_not_found")
+			return
+		}
+		h.logger.ErrorContext(ctx, "check page for kv", "error", err)
+		h.WriteDataError(w, http.StatusInternalServerError, "internal_error")
+		return
+	}
+
+	decision, err := h.guard.Allow(ctx, id, sessionToken(r, id))
+	if err != nil {
+		h.logger.ErrorContext(ctx, "check page access for kv", "error", err)
+		h.WriteDataError(w, http.StatusInternalServerError, "internal_error")
+		return
+	}
+	if !decision.IsAllowed {
+		h.WriteDataError(w, http.StatusUnauthorized, "page_locked")
+		return
+	}
+
+	now := time.Now()
+	if !h.pageLimiter.Allow(id.Hex(), now) || !h.visitorLimiter.Allow(id.Hex()+"|"+proxyClientIP(r), now) {
+		w.Header().Set("Retry-After", "60")
+		h.WriteDataError(w, http.StatusTooManyRequests, "too_many_requests")
+		return
+	}
+
+	request, err := binding.ParseRequest(w, r, h.validate, rest)
+	if err != nil {
+		h.writeDataFailure(w, r, err)
+		return
+	}
+
+	result, err := h.data.Run(ctx, id, binding.Subject{IsProtected: decision.IsProtected, PageRole: decision.Role}, request)
+	if err != nil {
+		h.writeDataFailure(w, r, err)
+		return
+	}
+	httpx.WriteJSON(w, result.Status, result.Payload)
+}
+
+func (h *Handler) WriteDataError(w http.ResponseWriter, status int, code string) {
+	w.Header().Del("Access-Control-Allow-Origin")
+	w.Header().Set("Cache-Control", "no-store")
+	httpx.WriteError(w, status, code)
+}
+
+func (h *Handler) writeDataFailure(w http.ResponseWriter, r *http.Request, err error) {
+	var validationError *httpx.ValidationError
+	if errors.As(err, &validationError) || errors.Is(err, httpx.ErrInvalidBody) {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+	status, code := binding.ErrorStatus(err)
+	if status == http.StatusInternalServerError {
+		h.logger.ErrorContext(r.Context(), "run page kv", "error", err)
+	}
+	h.WriteDataError(w, status, code)
+}
+
+func (h *Handler) runtimeExtra(ctx context.Context, id bson.ObjectID, decision access.Decision) runtimeExtra {
+	extra := runtimeExtra{Access: runtimeAccess{IsProtected: decision.IsProtected}}
+	if decision.IsProtected {
+		role := decision.Role
+		extra.Access.Role = &role
+	}
+
+	described, err := h.data.Describe(ctx, id, binding.Subject{IsProtected: decision.IsProtected, PageRole: decision.Role})
+	if err != nil {
+		h.logger.WarnContext(ctx, "describe page kv", "pageId", id.Hex(), "error", err)
+		return extra
+	}
+	extra.KV = described
+	return extra
+}
 
 type PageOpener interface {
 	Visible(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
@@ -42,15 +127,6 @@ type AccessGuard interface {
 type DataBridge interface {
 	Describe(ctx context.Context, pageID bson.ObjectID, subject binding.Subject) (*binding.Runtime, error)
 	Run(ctx context.Context, pageID bson.ObjectID, subject binding.Subject, request binding.Request) (binding.Result, error)
-}
-
-type Dependencies struct {
-	Pages    PageOpener
-	Guard    AccessGuard
-	Data     DataBridge
-	PagesURL string
-	Validate *validator.Validate
-	Logger   *slog.Logger
 }
 
 type Handler struct {

@@ -18,18 +18,6 @@ import (
 	"pocketrun-api/internal/services/slug"
 )
 
-const (
-	pageLimitMax     = 50
-	visitorActorName = "Visitante"
-	roleField        = "role"
-	sessionField     = "sessionHours"
-)
-
-type limit struct {
-	window time.Duration
-	max    int64
-}
-
 func clientLimits() []limit {
 	return []limit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: pageaccessattemptrepository.Retention, max: 20}}
 }

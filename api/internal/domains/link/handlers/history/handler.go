@@ -1,10 +1,8 @@
 package history
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -12,10 +10,6 @@ import (
 	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/httpx"
 )
-
-type ExpiryFinder interface {
-	ExpiredAt(ctx context.Context, id bson.ObjectID) (*time.Time, error)
-}
 
 type Handler struct {
 	service  *historyservice.Service

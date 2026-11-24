@@ -9,11 +9,6 @@ import (
 	"pocketrun-api/internal/services/traffic"
 )
 
-type Overview struct {
-	traffic.Analytics
-	TopPages []analyticsservice.Ranked `json:"topPages"`
-}
-
 type Service struct {
 	*analyticsservice.Service
 }

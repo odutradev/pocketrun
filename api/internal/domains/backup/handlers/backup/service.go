@@ -44,20 +44,6 @@ type Service struct {
 	restoring  sync.Mutex
 }
 
-type entry struct {
-	Collection string           `json:"collection,omitempty"`
-	Document   json.RawMessage  `json:"document,omitempty"`
-	End        bool             `json:"end,omitempty"`
-	Documents  map[string]int64 `json:"documents,omitempty"`
-}
-
-type restoreState struct {
-	header        Header
-	counts        map[string]int64
-	pending       map[string][]any
-	hasSuperadmin bool
-}
-
 func NewService(repository Repository, authorizer Authorizer, indexers []Indexer, logger *slog.Logger) *Service {
 	return &Service{repository: repository, authorizer: authorizer, indexers: indexers, logger: logger}
 }

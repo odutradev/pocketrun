@@ -343,11 +343,6 @@ func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) 
 	return actor, nil
 }
 
-type loginLimit struct {
-	window time.Duration
-	max    int64
-}
-
 func emailLimits() []loginLimit {
 	return []loginLimit{{window: 15 * time.Minute, max: 5}, {window: time.Hour, max: 10}, {window: loginattemptrepository.Retention, max: 20}}
 }

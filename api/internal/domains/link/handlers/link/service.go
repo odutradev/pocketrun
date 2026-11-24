@@ -11,6 +11,7 @@ import (
 
 	"pocketrun-api/internal/domains/group/handlers/group"
 	"pocketrun-api/internal/domains/link/handlers/history"
+	"pocketrun-api/internal/domains/link/utils/linkchanges"
 	eventrepository "pocketrun-api/internal/repositories/event"
 	grouprepository "pocketrun-api/internal/repositories/group"
 	linkrepository "pocketrun-api/internal/repositories/link"
@@ -21,8 +22,6 @@ import (
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
 )
-
-const recordTimeout = 5 * time.Second
 
 type Repository interface {
 	Find(ctx context.Context, query linkrepository.ListQuery) ([]linkrepository.Link, error)
@@ -214,7 +213,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 		return nil, errors.Join(fmt.Errorf("create link: %w", err), s.slugs.Release(ctx, link.Slug, link.ID))
 	}
 
-	s.history.Record(ctx, history.NewEvent(link.ID, historyservice.EventCreated, s.actor(ctx), snapshot(*link), now))
+	s.history.Record(ctx, history.NewEvent(link.ID, historyservice.EventCreated, s.actor(ctx), linkchanges.Snapshot(*link), now))
 	link.State = link.StateAt(now)
 	return link, nil
 }
@@ -266,7 +265,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*l
 		}
 	}
 
-	if changes := diff(previous, *link); len(changes) > 0 {
+	if changes := linkchanges.Diff(previous, *link); len(changes) > 0 {
 		s.history.Record(ctx, history.NewEvent(link.ID, historyservice.EventUpdated, s.actor(ctx), changes, link.UpdatedAt))
 	}
 	link.State = link.StateAt(link.UpdatedAt)

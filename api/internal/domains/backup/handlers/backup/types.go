@@ -1,11 +1,26 @@
 package backup
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
 	backuprepository "pocketrun-api/internal/repositories/backup"
 )
+
+type entry struct {
+	Collection string           `json:"collection,omitempty"`
+	Document   json.RawMessage  `json:"document,omitempty"`
+	End        bool             `json:"end,omitempty"`
+	Documents  map[string]int64 `json:"documents,omitempty"`
+}
+
+type restoreState struct {
+	header        Header
+	counts        map[string]int64
+	pending       map[string][]any
+	hasSuperadmin bool
+}
 
 const (
 	Format          = "pocketrun-backup"

@@ -1,4 +1,4 @@
-package link
+package linkchanges
 
 import (
 	eventrepository "pocketrun-api/internal/repositories/event"
@@ -6,7 +6,7 @@ import (
 	"pocketrun-api/internal/utils"
 )
 
-func diff(previous, next linkrepository.Link) []eventrepository.Change {
+func Diff(previous, next linkrepository.Link) []eventrepository.Change {
 	changes := []eventrepository.Change{}
 	add := func(field string, from, to any) {
 		if from != to {
@@ -26,6 +26,6 @@ func diff(previous, next linkrepository.Link) []eventrepository.Change {
 	return changes
 }
 
-func snapshot(link linkrepository.Link) []eventrepository.Change {
-	return diff(linkrepository.Link{}, link)
+func Snapshot(link linkrepository.Link) []eventrepository.Change {
+	return Diff(linkrepository.Link{}, link)
 }

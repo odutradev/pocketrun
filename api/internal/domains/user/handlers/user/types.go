@@ -3,10 +3,18 @@ package user
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"pocketrun-api/internal/domains/user/utils/jwt"
 	userrepository "pocketrun-api/internal/repositories/user"
 )
+
+const retryAfterSeconds = "900"
+
+type loginLimit struct {
+	window time.Duration
+	max    int64
+}
 
 var (
 	ErrUserNotFound        = userrepository.ErrNotFound
