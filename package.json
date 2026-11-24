@@ -23,7 +23,6 @@
     "lint": "npm --prefix ui run lint",
     "test": "npm run test:api",
     "test:api": "cd api && go test ./...",
-    "up": "docker compose up -d --build",
     "reset": "cd api && go run ./cmd/reset",
     "reset:admin": "cd api && go run ./cmd/reset --admin"
   },
