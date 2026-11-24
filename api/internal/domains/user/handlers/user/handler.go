@@ -18,12 +18,13 @@ import (
 
 type Handler struct {
 	service  *Service
+	session  sessioncookie.Cookie
 	validate *validator.Validate
 	logger   *slog.Logger
 }
 
-func NewHandler(service *Service, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, validate: validate, logger: logger}
+func NewHandler(service *Service, session sessioncookie.Cookie, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, session: session, validate: validate, logger: logger}
 }
 
 func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -67,7 +68,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
-	sessioncookie.Set(w, session.Token)
+	h.session.Set(w, session.Token)
 	httpx.WriteJSON(w, http.StatusOK, session)
 }
 
@@ -76,7 +77,7 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
-	sessioncookie.Clear(w)
+	h.session.Clear(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -92,7 +93,7 @@ func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request) {
 		h.writeServiceError(ctx, w, "revoke sessions", err)
 		return
 	}
-	sessioncookie.Clear(w)
+	h.session.Clear(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -158,7 +159,7 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 		h.writeServiceError(ctx, w, "change password", err)
 		return
 	}
-	sessioncookie.Set(w, session.Token)
+	h.session.Set(w, session.Token)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -225,7 +226,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 			h.writeServiceError(ctx, w, "update user", err)
 			return
 		}
-		sessioncookie.Set(w, session.Token)
+		h.session.Set(w, session.Token)
 	}
 	httpx.WriteJSON(w, http.StatusOK, user)
 }

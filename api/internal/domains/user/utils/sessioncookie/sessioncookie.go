@@ -7,33 +7,46 @@ import (
 )
 
 const (
-	Name              = "__Host-pocketrun_session"
+	SecureName        = "__Host-pocketrun_session"
+	InsecureName      = "pocketrun_session"
 	ClientHeader      = "X-Pocketrun-Client"
 	clientHeaderValue = "panel"
 )
 
-func Set(w http.ResponseWriter, token string) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     Name,
-		Value:    token,
-		Path:     "/",
-		MaxAge:   int(jwt.TTL.Seconds()),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
+type Cookie struct {
+	name     string
+	isSecure bool
 }
 
-func Clear(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     Name,
-		Value:    "",
+func New(allowsHTTP bool) Cookie {
+	if allowsHTTP {
+		return Cookie{name: InsecureName}
+	}
+	return Cookie{name: SecureName, isSecure: true}
+}
+
+func (c Cookie) Name() string {
+	return c.name
+}
+
+func (c Cookie) Set(w http.ResponseWriter, token string) {
+	http.SetCookie(w, c.build(token, int(jwt.TTL.Seconds())))
+}
+
+func (c Cookie) Clear(w http.ResponseWriter) {
+	http.SetCookie(w, c.build("", -1))
+}
+
+func (c Cookie) build(value string, maxAge int) *http.Cookie {
+	return &http.Cookie{
+		Name:     c.name,
+		Value:    value,
 		Path:     "/",
-		MaxAge:   -1,
+		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   c.isSecure,
 		SameSite: http.SameSiteStrictMode,
-	})
+	}
 }
 
 func IsPanelRequest(r *http.Request) bool {

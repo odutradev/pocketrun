@@ -49,6 +49,9 @@ func NewHandler(ctx context.Context, cfg config.Config, db *database.Mongo, logg
 	repos := newRepositories(db)
 	ensureIndexes(ctx, logger, repos.indexers())
 
+	if cfg.AllowsHTTP() {
+		logger.WarnContext(ctx, "ALLOW_HTTP is true, the panel session cookie is sent over plain http")
+	}
 	s := newServices(cfg, repos, logger)
 	if err := s.setup.ReportStatus(ctx); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)

@@ -36,7 +36,7 @@ func ManagerIDFromContext(ctx context.Context) (bson.ObjectID, error) {
 	return managerID, nil
 }
 
-func Authenticate(signer *jwt.Signer, sessions SessionChecker, logger *slog.Logger) func(http.Handler) http.Handler {
+func Authenticate(signer *jwt.Signer, sessions SessionChecker, session sessioncookie.Cookie, logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if !sessioncookie.IsPanelRequest(r) {
@@ -44,7 +44,7 @@ func Authenticate(signer *jwt.Signer, sessions SessionChecker, logger *slog.Logg
 				return
 			}
 
-			cookie, err := r.Cookie(sessioncookie.Name)
+			cookie, err := r.Cookie(session.Name())
 			if err != nil || cookie.Value == "" {
 				httpx.WriteError(w, http.StatusUnauthorized, "missing_authorization")
 				return
@@ -52,14 +52,14 @@ func Authenticate(signer *jwt.Signer, sessions SessionChecker, logger *slog.Logg
 
 			claims, err := signer.Verify(cookie.Value)
 			if err != nil {
-				sessioncookie.Clear(w)
+				session.Clear(w)
 				httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 				return
 			}
 
 			err = sessions.CheckSession(r.Context(), claims)
 			if errors.Is(err, jwt.ErrInvalidToken) {
-				sessioncookie.Clear(w)
+				session.Clear(w)
 				httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 				return
 			}

@@ -42,6 +42,7 @@ func Start(t *testing.T) *Env {
 		JWTSecret:               RandomText(32),
 		PageAccessSecret:        RandomText(32),
 		LinksURL:                "http://" + server.Listener.Addr().String(),
+		AllowHTTP:               "false",
 	}
 
 	handler, err := app.NewHandler(t.Context(), cfg, db, slog.New(slog.NewTextHandler(io.Discard, nil)))

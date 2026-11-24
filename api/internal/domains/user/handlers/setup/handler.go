@@ -14,12 +14,13 @@ import (
 
 type Handler struct {
 	service  *Service
+	session  sessioncookie.Cookie
 	validate *validator.Validate
 	logger   *slog.Logger
 }
 
-func NewHandler(service *Service, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, validate: validate, logger: logger}
+func NewHandler(service *Service, session sessioncookie.Cookie, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, session: session, validate: validate, logger: logger}
 }
 
 func (h *Handler) Register(mux *http.ServeMux) {
@@ -65,6 +66,6 @@ func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
-	sessioncookie.Set(w, session.Token)
+	h.session.Set(w, session.Token)
 	httpx.WriteJSON(w, http.StatusCreated, session)
 }

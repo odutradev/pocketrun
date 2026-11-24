@@ -19,6 +19,7 @@ func validConfig() config.Config {
 		JWTSecret:               strings.Repeat("a", 32),
 		PageAccessSecret:        strings.Repeat("b", 32),
 		LinksURL:                "https://link.pocketrun.com",
+		AllowHTTP:               "false",
 	}
 }
 
@@ -50,6 +51,9 @@ func TestConfigValidate(t *testing.T) {
 		{name: "rejects a short jwt secret", change: func(c *config.Config) { c.JWTSecret = "curta" }, wantKey: "JWT_SECRET"},
 		{name: "rejects an empty page access secret", change: func(c *config.Config) { c.PageAccessSecret = "" }, wantKey: "PAGE_ACCESS_SECRET"},
 		{name: "rejects equal secrets", change: func(c *config.Config) { c.PageAccessSecret = c.JWTSecret }, wantKey: "PAGE_ACCESS_SECRET"},
+		{name: "accepts http allowed", change: func(c *config.Config) { c.AllowHTTP = "true" }},
+		{name: "rejects an empty allow http", change: func(c *config.Config) { c.AllowHTTP = "" }, wantKey: "ALLOW_HTTP"},
+		{name: "rejects allow http that is not a boolean", change: func(c *config.Config) { c.AllowHTTP = "yes" }, wantKey: "ALLOW_HTTP"},
 		{name: "rejects an empty links url", change: func(c *config.Config) { c.LinksURL = "" }, wantKey: "LINKS_URL"},
 		{name: "rejects a links url without scheme", change: func(c *config.Config) { c.LinksURL = "link.pocketrun.com" }, wantKey: "LINKS_URL"},
 	}
@@ -74,7 +78,7 @@ func TestConfigValidate(t *testing.T) {
 
 func TestConfigValidateReportsEveryProblem(t *testing.T) {
 	err := config.Config{}.Validate()
-	keys := []string{"HOST", "PORT", "CORS_ALLOWED_ORIGINS", "ADMIN_CORS_ALLOWED_ORIGINS", "MONGODB_URI", "MONGODB_NAME", "JWT_SECRET", "PAGE_ACCESS_SECRET", "LINKS_URL"}
+	keys := []string{"HOST", "PORT", "CORS_ALLOWED_ORIGINS", "ADMIN_CORS_ALLOWED_ORIGINS", "MONGODB_URI", "MONGODB_NAME", "JWT_SECRET", "PAGE_ACCESS_SECRET", "LINKS_URL", "ALLOW_HTTP"}
 	for _, key := range keys {
 		if !strings.Contains(err.Error(), key+" is required") {
 			t.Errorf("missing %s in %v", key, err)

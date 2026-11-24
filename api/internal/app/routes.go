@@ -28,12 +28,12 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 		Admin:        http.NewServeMux(),
 		Public:       http.NewServeMux(),
 		Links:        http.NewServeMux(),
-		Authenticate: managerauth.Authenticate(s.signer, s.users, logger),
+		Authenticate: managerauth.Authenticate(s.signer, s.users, s.session, logger),
 		Validate:     validate,
 		Logger:       logger,
 	}
 	health.Register(router)
-	user.Register(router, user.Services{Users: s.users, Setup: s.setup})
+	user.Register(router, user.Services{Users: s.users, Setup: s.setup, Session: s.session})
 	kv.Register(router, kv.Services{Applications: s.applications, Documents: s.documents})
 	group.Register(router, group.Services{Groups: s.groups, Links: s.links, Pages: s.pages})
 	pageServer := page.Register(router, page.Services{

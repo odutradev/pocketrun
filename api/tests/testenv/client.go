@@ -6,12 +6,14 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"pocketrun-api/internal/domains/user/utils/sessioncookie"
 )
 
 const (
 	PanelHeader     = "X-Pocketrun-Client"
 	PanelClient     = "panel"
-	SessionCookie   = "__Host-pocketrun_session"
+	SessionCookie   = sessioncookie.SecureName
 	PageDataHeader  = "X-Pocketrun-Page"
 	ClientIPHeader  = "X-Forwarded-For"
 	UserAgentHeader = "User-Agent"

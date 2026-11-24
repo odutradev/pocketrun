@@ -21,6 +21,7 @@ import (
 	"pocketrun-api/internal/domains/user/handlers/setup"
 	"pocketrun-api/internal/domains/user/handlers/user"
 	"pocketrun-api/internal/domains/user/utils/jwt"
+	"pocketrun-api/internal/domains/user/utils/sessioncookie"
 	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
@@ -28,6 +29,7 @@ import (
 
 type services struct {
 	signer        *jwt.Signer
+	session       sessioncookie.Cookie
 	users         *user.Service
 	setup         *setup.Service
 	applications  *application.Service
@@ -112,6 +114,7 @@ func newServices(cfg config.Config, repos repositories, logger *slog.Logger) ser
 	migrations := []backup.Indexer{repos.linkEvents, repos.linkOpens, repos.pageEvents, repos.pageOpens}
 	return services{
 		signer:        signer,
+		session:       sessioncookie.New(cfg.AllowsHTTP()),
 		users:         users,
 		setup:         setup.NewService(users, logger),
 		applications:  applications,

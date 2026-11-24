@@ -30,6 +30,7 @@ type Config struct {
 	JWTSecret               string
 	PageAccessSecret        string
 	LinksURL                string
+	AllowHTTP               string
 }
 
 func Load() (Config, error) {
@@ -49,6 +50,7 @@ func Load() (Config, error) {
 		JWTSecret:               read("JWT_SECRET"),
 		PageAccessSecret:        read("PAGE_ACCESS_SECRET"),
 		LinksURL:                read("LINKS_URL"),
+		AllowHTTP:               read("ALLOW_HTTP"),
 	}
 	if err := cfg.Validate(); err != nil {
 		return Config{}, err
@@ -68,7 +70,12 @@ func (c Config) Validate() error {
 		checkSecret("PAGE_ACCESS_SECRET", c.PageAccessSecret),
 		checkDistinctSecrets(c.JWTSecret, c.PageAccessSecret),
 		checkOrigin("LINKS_URL", c.LinksURL),
+		checkBool("ALLOW_HTTP", c.AllowHTTP),
 	)
+}
+
+func (c Config) AllowsHTTP() bool {
+	return c.AllowHTTP == "true"
 }
 
 func invalid(key, reason string) error {
@@ -131,6 +138,16 @@ func checkOrigin(key, value string) error {
 	}
 	if strings.TrimSuffix(parsed.Path, "/") != "" || parsed.RawQuery != "" || parsed.Fragment != "" || parsed.User != nil {
 		return invalid(key, "must hold only the scheme and the host")
+	}
+	return nil
+}
+
+func checkBool(key, value string) error {
+	if value == "" {
+		return invalid(key, "is required")
+	}
+	if value != "true" && value != "false" {
+		return invalid(key, "must be true or false")
 	}
 	return nil
 }
