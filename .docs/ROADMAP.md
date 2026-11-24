@@ -40,7 +40,7 @@ Depende de 1.1 e 1.2.
 **Regra de negócio:** não existe um segundo front nem um serviço separado para páginas e links.
 
 - A mesma API em Go serve tudo. Páginas e links são um grupo de rotas próprio no código, ao lado das rotas públicas e das rotas `/admin`.
-- Páginas e links ficam num domínio só deles (ex: `s.odutra.com`), configurado por variável de ambiente. Esse domínio aponta para o mesmo container `api`, e a API escolhe o grupo de rotas pelo host da requisição.
+- Páginas e links ficam num domínio só deles (ex: `s.pocketrun.com`), configurado por variável de ambiente. Esse domínio aponta para o mesmo container `api`, e a API escolhe o grupo de rotas pelo host da requisição.
 - O domínio próprio é obrigatório por segurança. As páginas executam HTML e JS escritos pelo usuário, e no mesmo domínio do painel ou da API esse JS teria acesso à sessão do gestor.
 - A API entrega o HTML da página já montado, com cache e headers de segurança (CSP). O redirect é uma resposta `302` do servidor, nunca feito em JavaScript no navegador, para ser instantâneo e funcionar com robôs e prévias de link.
 - Como todas as aplicações compartilham o mesmo domínio, o slug tem que ser único na instância inteira (resposta do 1.2).
