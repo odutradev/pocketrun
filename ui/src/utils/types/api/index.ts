@@ -10,6 +10,7 @@ export type ApiErrorCode =
   | "too_many_login_attempts"
   | "invalid_client"
   | "setup_completed"
+  | "invalid_setup_token"
   | "user_not_found"
   | "email_taken"
   | "invalid_application_id"

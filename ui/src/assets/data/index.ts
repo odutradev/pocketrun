@@ -26,6 +26,7 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   too_many_login_attempts: "Muitas tentativas de entrar. Espere 15 minutos e tente de novo.",
   invalid_client: "Requisição recusada. Recarregue o painel e tente de novo.",
   setup_completed: "A configuração inicial já foi concluída.",
+  invalid_setup_token: "Token de setup inválido. Confira o token nos logs da API. Depois de 5 erros, a API gera um token novo.",
   user_not_found: "Usuário não encontrado.",
   email_taken: "Este e-mail já está em uso.",
   invalid_application_id: "Aplicação inválida.",

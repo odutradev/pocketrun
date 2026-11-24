@@ -18,6 +18,10 @@ export const signUpSchema = z.object({
   password: passwordSchema
 });
 
+export const setupTokenSchema = z.object({
+  setupToken: z.string().trim().min(1, "Informe o token de setup").max(32, "Token de setup muito longo")
+});
+
 export const setupSchema = signUpSchema
   .extend({ confirmPassword: z.string() })
   .refine((values) => values.password === values.confirmPassword, {

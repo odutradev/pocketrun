@@ -1,12 +1,12 @@
 import { ArrowRightIcon } from "@radix-ui/react-icons";
 
-import { Actions, Description, Form, Heading, Title } from "./styles";
+import { Actions, Description, Form, Heading, Title } from "../../styles";
 import Button from "@components/button";
 import Input from "@components/input";
 import useSetupPage from "../../hook";
 
 const SetupForm = () => {
-  const { form } = useSetupPage();
+  const { form, handleChangeToken } = useSetupPage();
   const { values, errors, isSubmitting, handleChange, handleSubmit } = form;
 
   return (
@@ -46,6 +46,9 @@ const SetupForm = () => {
         error={errors.confirmPassword}
       />
       <Actions>
+        <Button type="button" variant="ghost" onClick={handleChangeToken} disabled={isSubmitting}>
+          Trocar token
+        </Button>
         <Button type="submit" isLoading={isSubmitting} loadingLabel="Criando…" rightIcon={<ArrowRightIcon />}>
           Criar gestor e continuar
         </Button>
