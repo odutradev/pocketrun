@@ -25,5 +25,6 @@ type PageServer interface {
 	ServePage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
 	UnlockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
 	ServeData(w http.ResponseWriter, r *http.Request, id bson.ObjectID, rest string)
+	LockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID)
 	WriteDataError(w http.ResponseWriter, status int, code string)
 }

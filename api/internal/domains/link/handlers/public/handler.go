@@ -27,6 +27,7 @@ func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /{slug}", h.unlock)
 	mux.HandleFunc("POST /{slug}/{$}", h.unlock)
 	mux.HandleFunc("/{slug}/_/kv/{rest...}", h.data)
+	mux.HandleFunc("POST /{slug}/_/access/logout", h.logout)
 	mux.HandleFunc("GET /{$}", h.notFound)
 }
 
@@ -41,21 +42,33 @@ func (h *Handler) notFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) data(w http.ResponseWriter, r *http.Request) {
+	if entry, ok := h.resolvePage(w, r); ok {
+		h.pages.ServeData(w, r, entry.TargetID, r.PathValue("rest"))
+	}
+}
+
+func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
+	if entry, ok := h.resolvePage(w, r); ok {
+		h.pages.LockPage(w, r, entry.TargetID)
+	}
+}
+
+func (h *Handler) resolvePage(w http.ResponseWriter, r *http.Request) (*slugrepository.Entry, bool) {
 	entry, err := h.service.Resolve(r.Context(), r.PathValue("slug"))
 	if errors.Is(err, link.ErrLinkNotFound) {
 		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
-		return
+		return nil, false
 	}
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "resolve slug", "error", err)
 		h.pages.WriteDataError(w, http.StatusInternalServerError, "internal_error")
-		return
+		return nil, false
 	}
 	if entry.Kind != slugrepository.KindPage {
 		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
-		return
+		return nil, false
 	}
-	h.pages.ServeData(w, r, entry.TargetID, r.PathValue("rest"))
+	return entry, true
 }
 
 func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {

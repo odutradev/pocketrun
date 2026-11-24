@@ -241,6 +241,43 @@ func (h *Handler) UnlockPage(w http.ResponseWriter, r *http.Request, id bson.Obj
 	}
 }
 
+func (h *Handler) LockPage(w http.ResponseWriter, r *http.Request, id bson.ObjectID) {
+	w.Header().Del("Access-Control-Allow-Origin")
+	w.Header().Set("Cache-Control", "no-store")
+
+	if !h.isPagesHost(r) {
+		h.WriteDataError(w, http.StatusNotFound, "page_not_found")
+		return
+	}
+	if !isSameOriginCall(r) {
+		h.WriteDataError(w, http.StatusForbidden, "invalid_client")
+		return
+	}
+
+	target, err := h.pages.Visible(r.Context(), id)
+	if errors.Is(err, page.ErrPageNotFound) || errors.Is(err, page.ErrPageUnavailable) {
+		h.WriteDataError(w, http.StatusNotFound, "page_not_found")
+		return
+	}
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "lock page", "error", err)
+		h.WriteDataError(w, http.StatusInternalServerError, "internal_error")
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookiePrefix + id.Hex(),
+		Value:    "",
+		Path:     "/" + target.Slug,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   isSecure(r),
+		SameSite: http.SameSiteLaxMode,
+	})
+	httpx.WriteMessage(w, http.StatusOK, "Page access ended")
+}
+
 func (h *Handler) serveGate(w http.ResponseWriter, r *http.Request, id bson.ObjectID, status int, problem string) {
 	if _, err := h.pages.Visible(r.Context(), id); err != nil {
 		if errors.Is(err, page.ErrPageNotFound) || errors.Is(err, page.ErrPageUnavailable) {
