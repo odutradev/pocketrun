@@ -28,7 +28,7 @@ Itens de conversa, não de código: discutir com o dono e registrar a decisão e
 ## 2. Documentação e processo
 
 - **2.1** ⬜ Criar a referência da API pública (OpenAPI) com rotas `/kv/*`, `/validate/*` e `/ping`, payloads e códigos de erro.
-- **2.2** ⬜ Substituir o `ui/README.md`, que ainda é o template do Vite, por um README do painel.
+- **2.2** ✅ Feito. Decisão do dono: o `ui/README.md`, que era o template do Vite, foi removido em vez de substituído. O `README.md` da raiz cobre o painel.
 - **2.3** ⬜ Escrever o guia de migração PocketDB → PocketRun (troca de URL e de token, o que muda e o que é compatível).
 - **2.4** ⬜ Adotar o fluxo SDD: pasta `.claude/specs/<feature>/` com `requirements.md`, `design.md` e `tasks.md`, e a regra no `CLAUDE.md` de aprovar a spec antes do código.
 - **2.5** ⬜ Gerar um SDK em TypeScript da API pública a partir da referência OpenAPI. Depende de 2.1.
@@ -73,7 +73,7 @@ O painel de links já tem mais do que os itens abaixo: grupos com nome, cor e í
 - **4.1** ✅ Feito. Listagem com status e ações. Como links e páginas são globais da instância, não fica nos detalhes da aplicação: a de links é `/links` e a de páginas é `/pages`, com grupos, busca, filtro, ordenação e paginação.
 - **4.2** ✅ Feito. Editor de página com Monaco (só HTML, decisão do dono), pré-visualização ao lado, medidor do tamanho com quanto falta para o limite, e aba Versões com comparação (diff) e restauração.
 - **4.3** ✅ Feito. Formulário de criação e edição de link.
-- **4.4** 🔄 Em andamento. Ativar e desativar página ou link direto da listagem, e copiar a URL pública. Páginas: feito. Links: copiar a URL pública da listagem está feito; ativar e desativar da listagem falta (hoje só pelo formulário do link).
+- **4.4** ✅ Feito. Ativar e desativar página ou link direto da listagem (`PATCH /admin/links/{id}/status/set`, como nas páginas), e copiar a URL pública.
 
 ## 5. Analytics
 
