@@ -57,7 +57,75 @@ odutradev/pocketrun-ui:latest
 ```
 
 <details>
-<summary><b>docker-compose.yml</b></summary>
+<summary><b>docker-compose.yml com MongoDB local</b></summary>
+
+O banco roda no mesmo compose. Os dados ficam no volume `mongo-data` e não somem ao recriar o container. A API só sobe depois que o banco responde ao healthcheck.
+
+```yaml
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - app-network
+
+  api:
+    image: odutradev/pocketrun-api:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=80
+      - APP_ENV=production
+      - LINKS_URL=${LINKS_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - ADMIN_CORS_ALLOWED_ORIGINS=${ADMIN_CORS_ALLOWED_ORIGINS}
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_NAME=${MONGODB_NAME:-pocketrun}
+      - JWT_SECRET=${JWT_SECRET}
+      - PAGE_ACCESS_SECRET=${PAGE_ACCESS_SECRET}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  ui:
+    image: odutradev/pocketrun-ui:latest
+    restart: unless-stopped
+    expose:
+      - "80"
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge
+```
+
+- O `mongo` não publica porta no host: só a API o alcança, pela rede `app-network`.
+- Faça backup do volume `mongo-data` ou use o backup do painel.
+
+</details>
+
+<details>
+<summary><b>docker-compose.yml com MongoDB externo</b></summary>
+
+O banco fica fora do compose, como no MongoDB Atlas ou num servidor próprio. A `MONGODB_URI` vem do `.env`.
 
 ```yaml
 services:
@@ -98,6 +166,9 @@ networks:
     driver: bridge
 ```
 
+- O `dns` garante que o endereço `mongodb+srv://` do Atlas seja resolvido dentro do container.
+- Libere o IP do servidor na lista de acesso do banco externo.
+
 </details>
 
 <details>
@@ -108,6 +179,7 @@ VITE_API_URL=https://api.pocketrun.com
 LINKS_URL=https://link.pocketrun.com
 CORS_ALLOWED_ORIGINS=*
 ADMIN_CORS_ALLOWED_ORIGINS=https://pocketrun.com
+# Só no compose com MongoDB externo
 MONGODB_URI=mongodb+srv://usuario:senha@cluster0.mongodb.net/?retryWrites=true&w=majority
 MONGODB_NAME=pocketrun
 JWT_SECRET=gere_uma_chave_secreta_forte
