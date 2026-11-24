@@ -32,10 +32,6 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 		Validate:     validate,
 		Logger:       logger,
 	}
-	if linksHost == "" {
-		router.Links = router.Public
-	}
-
 	health.Register(router)
 	user.Register(router, user.Services{Users: s.users, Setup: s.setup})
 	kv.Register(router, kv.Services{Applications: s.applications, Documents: s.documents})
@@ -55,9 +51,6 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	api := http.NewServeMux()
 	api.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(router.Admin)))
 	api.Handle("/", httpx.CORS(cfg.CORSAllowedOrigins, false)(router.Public))
-	if linksHost == "" {
-		return api
-	}
 
 	links := httpx.CORS(cfg.CORSAllowedOrigins, false)(router.Links)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

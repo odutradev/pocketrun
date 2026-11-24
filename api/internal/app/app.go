@@ -49,11 +49,7 @@ func NewHandler(ctx context.Context, cfg config.Config, db *database.Mongo, logg
 	repos := newRepositories(db)
 	ensureIndexes(ctx, logger, repos.indexers())
 
-	accessKey, isDerived := cfg.PageAccessKey()
-	if isDerived {
-		logger.WarnContext(ctx, "PAGE_ACCESS_SECRET is empty, deriving the page pin key from JWT_SECRET")
-	}
-	s := newServices(cfg, repos, accessKey, logger)
+	s := newServices(cfg, repos, logger)
 	if err := s.setup.ReportStatus(ctx); err != nil {
 		logger.WarnContext(ctx, "report setup status", "error", err)
 	}

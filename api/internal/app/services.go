@@ -46,7 +46,7 @@ type services struct {
 	backup        *backup.Service
 }
 
-func newServices(cfg config.Config, repos repositories, accessKey string, logger *slog.Logger) services {
+func newServices(cfg config.Config, repos repositories, logger *slog.Logger) services {
 	uniques := traffic.NewUniqueRegistry(repos.uniqueVisitors, cfg.JWTSecret)
 	signer := jwt.NewSigner(cfg.JWTSecret)
 	documents := kvdocument.NewService(repos.documents, repos.usage, logger)
@@ -82,7 +82,7 @@ func newServices(cfg config.Config, repos repositories, accessKey string, logger
 		Attempts:   repos.pageAccessAttempt,
 		History:    pageHistory,
 		Actors:     users,
-		Secret:     accessKey,
+		Secret:     cfg.PageAccessSecret,
 		Logger:     logger,
 	})
 	bindings := binding.NewService(binding.Dependencies{

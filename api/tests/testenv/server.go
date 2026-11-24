@@ -35,19 +35,23 @@ func Start(t *testing.T) *Env {
 	t.Helper()
 
 	db := connect(t)
+	server := httptest.NewUnstartedServer(nil)
 	cfg := config.Config{
 		CORSAllowedOrigins:      "*",
 		AdminCORSAllowedOrigins: "http://panel.test",
 		JWTSecret:               RandomText(32),
 		PageAccessSecret:        RandomText(32),
+		LinksURL:                "http://" + server.Listener.Addr().String(),
 	}
 
 	handler, err := app.NewHandler(t.Context(), cfg, db, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
+		server.Close()
 		t.Fatalf("build handler: %v", err)
 	}
 
-	server := httptest.NewServer(handler)
+	server.Config.Handler = handler
+	server.Start()
 	t.Cleanup(server.Close)
 
 	return &Env{
