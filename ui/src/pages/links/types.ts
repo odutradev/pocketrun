@@ -5,4 +5,5 @@ export interface LinkColumnsOptions {
   onCopy: (link: Link) => void;
   onEdit: (link: Link) => void;
   onRemove: (link: Link) => void;
+  onToggle: (link: Link) => void;
 }

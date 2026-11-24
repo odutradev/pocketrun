@@ -52,6 +52,11 @@ export const updateLink = async (linkId: string, data: LinkPayload) => {
   return response.data;
 };
 
+export const setLinkStatus = async (linkId: string, isActive: boolean) => {
+  const response = await api.patch<Link>(`/links/${linkId}/status/set`, { isActive });
+  return response.data;
+};
+
 export const deleteLink = async (linkId: string) => {
   const response = await api.delete<MessageResponse>(`/links/${linkId}/delete`);
   return response.data;

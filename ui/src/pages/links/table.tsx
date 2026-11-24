@@ -1,4 +1,4 @@
-import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
+import { CheckIcon, CopyIcon, PauseIcon, Pencil1Icon, PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Clicks, ClicksLimit, Host, LinkCell, Meta, RowActions, Slug, StateCell, StateDetail, Title } from "./styles";
 import { countedOpens, describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
@@ -10,7 +10,7 @@ import type { DataTableColumn } from "@components/dataTable/types";
 import type { LinkColumnsOptions } from "./types";
 import type { Link } from "@utils/types/link";
 
-export const getLinkColumns = ({ isCopied, onCopy, onEdit, onRemove }: LinkColumnsOptions): DataTableColumn<Link>[] => [
+export const getLinkColumns = ({ isCopied, onCopy, onEdit, onRemove, onToggle }: LinkColumnsOptions): DataTableColumn<Link>[] => [
   {
     key: "link",
     header: "Link",
@@ -72,6 +72,12 @@ export const getLinkColumns = ({ isCopied, onCopy, onEdit, onRemove }: LinkColum
           icon={isCopied(link.id) ? <CheckIcon /> : <CopyIcon />}
           size="sm"
           onClick={() => onCopy(link)}
+        />
+        <IconButton
+          label={link.state === "inactive" ? `Ativar ${link.title}` : `Desativar ${link.title}`}
+          icon={link.state === "inactive" ? <PlayIcon /> : <PauseIcon />}
+          size="sm"
+          onClick={() => onToggle(link)}
         />
         <IconButton label={`Editar ${link.title}`} icon={<Pencil1Icon />} size="sm" onClick={() => onEdit(link)} />
         <IconButton

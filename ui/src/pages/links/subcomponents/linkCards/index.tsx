@@ -1,4 +1,4 @@
-import { CheckIcon, CopyIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
+import { CheckIcon, CopyIcon, PauseIcon, Pencil1Icon, PlayIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Actions, Body, CardItem, Clicks, ClicksLabel, Footer, Grid, Header, Host, Rule, Slug, Title, Usage } from "./styles";
 import { countedOpens, describeCountUnit, describeLinkRule, publicLinkUrl, urlHost } from "@utils/functions";
@@ -8,7 +8,7 @@ import Badge from "@components/badge";
 
 import type { LinkCardsProps } from "./types";
 
-const LinkCards = ({ links, isCopied, onCopy, onEdit, onRemove, isCompact = false }: LinkCardsProps) => (
+const LinkCards = ({ links, isCopied, onCopy, onEdit, onRemove, onToggle, isCompact = false }: LinkCardsProps) => (
   <Grid $isCompact={isCompact}>
     {links.map((link) => {
       const rule = describeLinkRule(link);
@@ -48,6 +48,12 @@ const LinkCards = ({ links, isCopied, onCopy, onEdit, onRemove, isCompact = fals
                 icon={isCopied(link.id) ? <CheckIcon /> : <CopyIcon />}
                 size="sm"
                 onClick={() => onCopy(link)}
+              />
+              <IconButton
+                label={link.state === "inactive" ? `Ativar ${link.title}` : `Desativar ${link.title}`}
+                icon={link.state === "inactive" ? <PlayIcon /> : <PauseIcon />}
+                size="sm"
+                onClick={() => onToggle(link)}
               />
               <IconButton label={`Editar ${link.title}`} icon={<Pencil1Icon />} size="sm" onClick={() => onEdit(link)} />
               <IconButton
