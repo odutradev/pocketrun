@@ -1,19 +1,20 @@
-package document
+package csvexport
 
 import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"sort"
 	"strconv"
 	"time"
+
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 )
 
 var metadataColumns = []string{"id", "collectionName", "createdAt", "updatedAt", "expiresAt"}
 
-func DocumentsCSV(documents []kvdocumentrepository.Document) ([]byte, error) {
+func Documents(documents []kvdocumentrepository.Document) ([]byte, error) {
 	var buffer bytes.Buffer
 	if err := writeCSV(&buffer, documents); err != nil {
 		return nil, err
@@ -21,7 +22,7 @@ func DocumentsCSV(documents []kvdocumentrepository.Document) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func ProjectCSV(collections map[string][]kvdocumentrepository.Document) ([]byte, error) {
+func Project(collections map[string][]kvdocumentrepository.Document) ([]byte, error) {
 	names := make([]string, 0, len(collections))
 	for name := range collections {
 		names = append(names, name)

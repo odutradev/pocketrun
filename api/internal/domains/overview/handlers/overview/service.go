@@ -16,7 +16,7 @@ type MomentFinder interface {
 }
 
 type KVUsageFinder interface {
-	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
+	UsageBetween(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
 }
 
 type Dependencies struct {
@@ -81,7 +81,7 @@ func (s *Service) collect(ctx context.Context, managerID bson.ObjectID, from, to
 	if err != nil {
 		return activity{}, fmt.Errorf("overview usage links: %w", err)
 	}
-	hours, err := s.kv.Between(ctx, managerID, from, to)
+	hours, err := s.kv.UsageBetween(ctx, managerID, from, to)
 	if err != nil {
 		return activity{}, fmt.Errorf("overview usage kv: %w", err)
 	}

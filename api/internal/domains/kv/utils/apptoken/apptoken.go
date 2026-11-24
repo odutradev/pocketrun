@@ -1,14 +1,23 @@
-package application
+package apptoken
 
 import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net/http"
-	applicationrepository "pocketrun-api/internal/repositories/application"
 	"strings"
 	"time"
+
+	applicationrepository "pocketrun-api/internal/repositories/application"
+)
+
+var (
+	ErrMissing      = errors.New("access token missing")
+	ErrInvalid      = errors.New("invalid access token")
+	ErrExpired      = errors.New("access token expired")
+	ErrOriginDenied = errors.New("origin not allowed")
 )
 
 const (
@@ -16,7 +25,7 @@ const (
 	tokenRandomBytes = 24
 )
 
-func generateToken(name string, validityDays int, now time.Time) (string, applicationrepository.Token, error) {
+func Generate(name string, validityDays int, now time.Time) (string, applicationrepository.Token, error) {
 	randomBytes := make([]byte, tokenRandomBytes)
 	if _, err := rand.Read(randomBytes); err != nil {
 		return "", applicationrepository.Token{}, fmt.Errorf("generate token bytes: %w", err)
@@ -28,7 +37,7 @@ func generateToken(name string, validityDays int, now time.Time) (string, applic
 	token := applicationrepository.Token{
 		ID:        "tok_" + randomHex[:8],
 		Name:      name,
-		Hash:      hashToken(rawToken),
+		Hash:      Hash(rawToken),
 		Prefix:    rawToken[:12] + "...",
 		CreatedAt: now,
 	}
@@ -39,12 +48,12 @@ func generateToken(name string, validityDays int, now time.Time) (string, applic
 	return rawToken, token, nil
 }
 
-func hashToken(rawToken string) string {
+func Hash(rawToken string) string {
 	digest := sha256.Sum256([]byte(strings.TrimSpace(rawToken)))
 	return hex.EncodeToString(digest[:])
 }
 
-func extractAccessToken(r *http.Request) string {
+func Extract(r *http.Request) string {
 	if token := r.Header.Get("controlAccess"); token != "" {
 		return token
 	}
@@ -57,7 +66,7 @@ func extractAccessToken(r *http.Request) string {
 	return ""
 }
 
-func findToken(tokens []applicationrepository.Token, hash string) (applicationrepository.Token, bool) {
+func Find(tokens []applicationrepository.Token, hash string) (applicationrepository.Token, bool) {
 	for _, token := range tokens {
 		if token.Hash == hash {
 			return token, true
@@ -66,7 +75,7 @@ func findToken(tokens []applicationrepository.Token, hash string) (applicationre
 	return applicationrepository.Token{}, false
 }
 
-func isOriginAllowed(allowedOrigins []string, origin string, allowNonBrowserRequests bool) bool {
+func IsOriginAllowed(allowedOrigins []string, origin string, allowNonBrowserRequests bool) bool {
 	normalizedOrigin := strings.TrimSuffix(strings.TrimSpace(origin), "/")
 	if normalizedOrigin == "" {
 		return allowNonBrowserRequests

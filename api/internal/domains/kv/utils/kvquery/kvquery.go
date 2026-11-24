@@ -1,23 +1,38 @@
-package document
+package kvquery
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
-	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 )
 
-const operatorSeparator = "__"
+const (
+	operatorSeparator   = "__"
+	DefaultListLimit    = 50
+	MaxListLimit        = 500
+	MaxCollectionLength = 64
+	MaxFieldLength      = 200
+	MaxContainsLength   = 100
+	ReservedCollection  = "project"
+)
 
 var (
-	fieldPattern      = regexp.MustCompile(`^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`)
-	collectionPattern = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
-	reservedParams    = map[string]bool{
+	ErrInvalidCollection  = errors.New("invalid collection name")
+	ErrReservedCollection = errors.New("collection name is reserved")
+	ErrInvalidFilter      = errors.New("invalid filter")
+	ErrInvalidSort        = errors.New("invalid sort")
+	ErrInvalidField       = errors.New("invalid field")
+	fieldPattern          = regexp.MustCompile(`^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`)
+	collectionPattern     = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+	reservedParams        = map[string]bool{
 		"page": true, "limit": true, "pagination": true, "sortBy": true, "sortOrder": true,
 		"createdAfter": true, "createdBefore": true, "format": true,
 	}
@@ -36,7 +51,7 @@ func CheckCollection(name string) error {
 	return nil
 }
 
-func checkWritableCollection(name string) error {
+func CheckWritableCollection(name string) error {
 	if err := CheckCollection(name); err != nil {
 		return err
 	}
@@ -46,7 +61,7 @@ func checkWritableCollection(name string) error {
 	return nil
 }
 
-func checkField(field string) error {
+func CheckField(field string) error {
 	if len(field) > MaxFieldLength || !fieldPattern.MatchString(field) {
 		return ErrInvalidField
 	}
@@ -127,7 +142,7 @@ func ParseBodyFilter(filters map[string]any) (bson.M, error) {
 
 func addCondition(filter bson.M, key string, value any) error {
 	field, operator, _ := strings.Cut(strings.TrimPrefix(key, "data."), operatorSeparator)
-	if err := checkField(field); err != nil {
+	if err := CheckField(field); err != nil {
 		return ErrInvalidFilter
 	}
 
@@ -202,7 +217,7 @@ func parseSortField(raw string) (string, error) {
 		return field, nil
 	}
 	field := strings.TrimPrefix(raw, "data.")
-	if err := checkField(field); err != nil {
+	if err := CheckField(field); err != nil {
 		return "", ErrInvalidSort
 	}
 	return "data." + field, nil
@@ -225,14 +240,4 @@ func parsePositive(raw string, fallback, maximum int) int {
 		return fallback
 	}
 	return value
-}
-
-func ParseExportFormat(raw string) (ExportFormat, error) {
-	switch ExportFormat(strings.ToLower(raw)) {
-	case "", ExportJSON:
-		return ExportJSON, nil
-	case ExportCSV:
-		return ExportCSV, nil
-	}
-	return "", ErrInvalidFormat
 }

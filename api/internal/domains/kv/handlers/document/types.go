@@ -2,34 +2,31 @@ package document
 
 import (
 	"errors"
+	"strings"
 	"time"
 
+	"pocketrun-api/internal/domains/kv/utils/kvquery"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 )
 
 const (
-	DefaultListLimit     = 50
-	MaxListLimit         = 500
+	usageRecordWindow    = 5 * time.Second
 	DefaultExplorerLimit = 20
 	MaxExpiryDays        = 3650
 	MaxImportItems       = 5000
 	MaxImportBytes       = 8 << 20
-	MaxCollectionLength  = 64
-	MaxFieldLength       = 200
-	MaxContainsLength    = 100
 	MaxDistinctValues    = 1000
-	ReservedCollection   = "project"
 )
 
 var (
 	ErrDocumentNotFound   = kvdocumentrepository.ErrNotFound
 	ErrInvalidDocumentID  = errors.New("invalid document id")
-	ErrInvalidCollection  = errors.New("invalid collection name")
-	ErrReservedCollection = errors.New("collection name is reserved")
-	ErrInvalidFilter      = errors.New("invalid filter")
-	ErrInvalidSort        = errors.New("invalid sort")
-	ErrInvalidField       = errors.New("invalid field")
+	ErrInvalidCollection  = kvquery.ErrInvalidCollection
+	ErrReservedCollection = kvquery.ErrReservedCollection
+	ErrInvalidFilter      = kvquery.ErrInvalidFilter
+	ErrInvalidSort        = kvquery.ErrInvalidSort
+	ErrInvalidField       = kvquery.ErrInvalidField
 	ErrInvalidFormat      = errors.New("invalid export format")
 	ErrInvalidImport      = errors.New("invalid import item")
 	ErrTooManyItems       = errors.New("too many import items")
@@ -156,4 +153,14 @@ func NewPage[T any](data []T, total int64, page, limit int) Page[T] {
 type DeleteResult struct {
 	Message      string `json:"message"`
 	DeletedCount int64  `json:"deletedCount"`
+}
+
+func ParseExportFormat(raw string) (ExportFormat, error) {
+	switch ExportFormat(strings.ToLower(raw)) {
+	case "", ExportJSON:
+		return ExportJSON, nil
+	case ExportCSV:
+		return ExportCSV, nil
+	}
+	return "", ErrInvalidFormat
 }

@@ -14,6 +14,7 @@ import (
 
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
+	"pocketrun-api/internal/domains/kv/utils/roles"
 	"pocketrun-api/internal/domains/page/handlers/history"
 	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
@@ -155,7 +156,7 @@ func (s *Service) Enable(ctx context.Context, input application.PageInput) (Deta
 	next := &pagebindingrepository.Binding{
 		PageID:        input.PageID,
 		ApplicationID: app.ID,
-		PublicRole:    availableRole(app, application.PageReadRole),
+		PublicRole:    availableRole(app, roles.PageRead),
 		Roles:         defaultMappings(app, pageAccess),
 		UpdatedAt:     time.Now(),
 	}
@@ -405,7 +406,7 @@ func availableRole(app *applicationrepository.Application, name string) string {
 }
 
 func defaultMappings(app *applicationrepository.Application, pageAccess *pageaccessrepository.Access) []pagebindingrepository.RoleMapping {
-	role := availableRole(app, application.PageWriteRole)
+	role := availableRole(app, roles.PageWrite)
 	mappings := []pagebindingrepository.RoleMapping{{PageRole: "", KVRole: role}}
 	for _, key := range pageAccess.Keys {
 		if key.Role != "" {

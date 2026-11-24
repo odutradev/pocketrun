@@ -8,7 +8,6 @@ import (
 	"pocketrun-api/internal/domains/group/handlers/group"
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
-	kvusage "pocketrun-api/internal/domains/kv/handlers/usage"
 	linkanalytics "pocketrun-api/internal/domains/link/handlers/analytics"
 	linkhistory "pocketrun-api/internal/domains/link/handlers/history"
 	"pocketrun-api/internal/domains/link/handlers/link"
@@ -33,7 +32,6 @@ type services struct {
 	setup         *setup.Service
 	applications  *application.Service
 	documents     *kvdocument.Service
-	usage         *kvusage.Service
 	groups        *group.Service
 	links         *link.Service
 	linkHistory   *historyservice.Service
@@ -51,8 +49,7 @@ type services struct {
 func newServices(cfg config.Config, repos repositories, accessKey string, logger *slog.Logger) services {
 	uniques := traffic.NewUniqueRegistry(repos.uniqueVisitors, cfg.JWTSecret)
 	signer := jwt.NewSigner(cfg.JWTSecret)
-	documents := kvdocument.NewService(repos.documents)
-	usage := kvusage.NewService(repos.usage, logger)
+	documents := kvdocument.NewService(repos.documents, repos.usage, logger)
 	applications := application.NewService(repos.applications, documents)
 	users := user.NewService(user.Dependencies{
 		Repository:   repos.users,
@@ -119,7 +116,6 @@ func newServices(cfg config.Config, repos repositories, accessKey string, logger
 		setup:         setup.NewService(users, logger),
 		applications:  applications,
 		documents:     documents,
-		usage:         usage,
 		groups:        groups,
 		links:         links,
 		linkHistory:   linkHistory,
@@ -130,7 +126,7 @@ func newServices(cfg config.Config, repos repositories, accessKey string, logger
 		pageAnalytics: pageAnalytics,
 		access:        pageAccess,
 		bindings:      bindings,
-		overview:      overview.NewService(overview.Dependencies{Pages: pageAnalytics, Links: linkAnalytics, KV: usage, PageKV: bindings}),
+		overview:      overview.NewService(overview.Dependencies{Pages: pageAnalytics, Links: linkAnalytics, KV: documents, PageKV: bindings}),
 		backup:        backup.NewService(repos.backup, users, migrations, logger),
 	}
 }

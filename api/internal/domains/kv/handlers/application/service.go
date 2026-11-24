@@ -4,11 +4,85 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	applicationrepository "pocketrun-api/internal/repositories/application"
 	"time"
+	"unicode/utf8"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/domains/kv/utils/apptoken"
+	"pocketrun-api/internal/domains/kv/utils/roles"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 )
+
+func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, input PageInput) (*applicationrepository.Application, bool, error) {
+	current, err := s.repository.FindByPageID(ctx, input.PageID)
+	if err == nil {
+		return current, false, nil
+	}
+	if !errors.Is(err, ErrApplicationNotFound) {
+		return nil, false, fmt.Errorf("find application of page %s: %w", input.PageID.Hex(), err)
+	}
+
+	now := time.Now()
+	pageID := input.PageID
+	created := &applicationrepository.Application{
+		ID:                      bson.NewObjectID(),
+		ManagerID:               managerID,
+		PageID:                  &pageID,
+		Name:                    pageName(input.Title),
+		ProjectID:               pageProjectIDTag + pageID.Hex(),
+		Description:             fmt.Sprintf("Dados da página /%s, criada pela aba Dados do Pages.", input.Slug),
+		AllowedOrigins:          []string{},
+		AllowNonBrowserRequests: false,
+		Tokens:                  []applicationrepository.Token{},
+		Roles:                   roles.ForPage(now),
+		CreatedAt:               now,
+		UpdatedAt:               now,
+	}
+
+	err = s.repository.Insert(ctx, created)
+	if errors.Is(err, ErrProjectIDTaken) {
+		existing, findErr := s.repository.FindByPageID(ctx, input.PageID)
+		if findErr != nil {
+			return nil, false, fmt.Errorf("find application of page %s: %w", input.PageID.Hex(), findErr)
+		}
+		return existing, false, nil
+	}
+	if err != nil {
+		return nil, false, fmt.Errorf("create application of page %s: %w", input.PageID.Hex(), err)
+	}
+	return created, true, nil
+}
+
+func (s *Service) FindForPage(ctx context.Context, pageID bson.ObjectID) (*applicationrepository.Application, error) {
+	current, err := s.repository.FindByPageID(ctx, pageID)
+	if err != nil {
+		return nil, fmt.Errorf("find application of page %s: %w", pageID.Hex(), err)
+	}
+	return current, nil
+}
+
+func (s *Service) DeleteForPage(ctx context.Context, pageID bson.ObjectID) error {
+	deleted, err := s.repository.DeleteByPageID(ctx, pageID)
+	if errors.Is(err, ErrApplicationNotFound) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("delete application of page %s: %w", pageID.Hex(), err)
+	}
+	if _, err := s.documents.DeleteByApplicationID(ctx, deleted.ID); err != nil {
+		return fmt.Errorf("delete documents of page application %s: %w", deleted.ID.Hex(), err)
+	}
+	return nil
+}
+
+func pageName(title string) string {
+	name := pageNamePrefix + title
+	if utf8.RuneCountInString(name) <= maxNameRunes {
+		return name
+	}
+	return string([]rune(name)[:maxNameRunes])
+}
 
 type Repository interface {
 	FindByManagerID(ctx context.Context, managerID bson.ObjectID) ([]applicationrepository.Application, error)
@@ -59,7 +133,7 @@ func (s *Service) CountByManager(ctx context.Context, managerID bson.ObjectID) (
 
 func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input CreateInput) (*Created, error) {
 	now := time.Now()
-	rawToken, token, err := generateToken(DefaultTokenName, DefaultTokenValidityDays, now)
+	rawToken, token, err := apptoken.Generate(DefaultTokenName, DefaultTokenValidityDays, now)
 	if err != nil {
 		return nil, fmt.Errorf("generate default token: %w", err)
 	}
@@ -142,7 +216,7 @@ func (s *Service) CreateToken(ctx context.Context, managerID, id bson.ObjectID, 
 		return nil, ErrRoleNotFound
 	}
 
-	rawToken, token, err := generateToken(name, input.ValidityDays, time.Now())
+	rawToken, token, err := apptoken.Generate(name, input.ValidityDays, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("generate token: %w", err)
 	}
@@ -168,7 +242,7 @@ func (s *Service) Authenticate(ctx context.Context, rawToken, origin string) (*a
 		return nil, applicationrepository.Token{}, ErrMissingAccessToken
 	}
 
-	hash := hashToken(rawToken)
+	hash := apptoken.Hash(rawToken)
 	application, err := s.repository.FindByTokenHash(ctx, hash)
 	if errors.Is(err, ErrApplicationNotFound) {
 		return nil, applicationrepository.Token{}, ErrInvalidAccessToken
@@ -177,7 +251,7 @@ func (s *Service) Authenticate(ctx context.Context, rawToken, origin string) (*a
 		return nil, applicationrepository.Token{}, fmt.Errorf("find application by token: %w", err)
 	}
 
-	token, found := findToken(application.Tokens, hash)
+	token, found := apptoken.Find(application.Tokens, hash)
 	if !found {
 		return nil, applicationrepository.Token{}, ErrInvalidAccessToken
 	}
@@ -190,7 +264,7 @@ func (s *Service) Authenticate(ctx context.Context, rawToken, origin string) (*a
 		return nil, applicationrepository.Token{}, ErrRoleNotFound
 	}
 
-	if !isOriginAllowed(application.AllowedOrigins, origin, application.AllowNonBrowserRequests) {
+	if !apptoken.IsOriginAllowed(application.AllowedOrigins, origin, application.AllowNonBrowserRequests) {
 		return nil, applicationrepository.Token{}, ErrOriginNotAllowed
 	}
 	return application, token, nil
@@ -205,10 +279,10 @@ func (s *Service) Find(ctx context.Context, id bson.ObjectID) (*applicationrepos
 }
 
 func (s *Service) CreateRole(ctx context.Context, managerID, id bson.ObjectID, input RoleInput) (*applicationrepository.Role, error) {
-	if err := checkRoleName(input.Name); err != nil {
+	if err := roles.CheckName(input.Name); err != nil {
 		return nil, err
 	}
-	if err := checkRules(input.Rules); err != nil {
+	if err := roles.CheckRules(input.Rules); err != nil {
 		return nil, err
 	}
 
@@ -239,7 +313,7 @@ func (s *Service) CreateRole(ctx context.Context, managerID, id bson.ObjectID, i
 }
 
 func (s *Service) UpdateRole(ctx context.Context, managerID, id bson.ObjectID, name string, input RoleUpdateInput) (*applicationrepository.Role, error) {
-	if err := checkRules(input.Rules); err != nil {
+	if err := roles.CheckRules(input.Rules); err != nil {
 		return nil, err
 	}
 

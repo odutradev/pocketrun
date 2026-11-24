@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/kv/middlewares/appauth"
 	"pocketrun-api/internal/domains/user/handlers/user"
 	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
@@ -242,7 +243,7 @@ func (h *Handler) deleteRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
-	application, ok := FromContext(r.Context())
+	application, ok := appauth.FromContext(r.Context())
 	if !ok {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
 		return
@@ -253,7 +254,7 @@ func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
 		Message:   "Access token and origin are valid",
 		ProjectID: application.ProjectID,
 		AppName:   application.Name,
-		Role:      RoleFromContext(r.Context()),
+		Role:      appauth.RoleFromContext(r.Context()),
 	})
 }
 

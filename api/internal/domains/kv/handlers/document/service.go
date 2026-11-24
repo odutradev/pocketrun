@@ -3,11 +3,15 @@ package document
 import (
 	"context"
 	"fmt"
-	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
+	"log/slog"
 	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/domains/kv/utils/kvquery"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
+	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 )
 
 type Repository interface {
@@ -26,16 +30,42 @@ type Repository interface {
 	DistinctCollections(ctx context.Context, applicationID bson.ObjectID) ([]string, error)
 }
 
-type Service struct {
-	repository Repository
+type UsageRepository interface {
+	Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error
+	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
 }
 
-func NewService(repository Repository) *Service {
-	return &Service{repository: repository}
+type Service struct {
+	repository Repository
+	usage      UsageRepository
+	logger     *slog.Logger
+}
+
+func NewService(repository Repository, usage UsageRepository, logger *slog.Logger) *Service {
+	return &Service{repository: repository, usage: usage, logger: logger}
+}
+
+func (s *Service) RecordUsage(ctx context.Context, applicationID, managerID bson.ObjectID) {
+	hour := time.Now().UTC().Truncate(time.Hour)
+	recordContext, cancel := context.WithTimeout(context.WithoutCancel(ctx), usageRecordWindow)
+	go func() {
+		defer cancel()
+		if err := s.usage.Increment(recordContext, applicationID, managerID, hour); err != nil {
+			s.logger.WarnContext(recordContext, "record kv usage", "applicationId", applicationID.Hex(), "error", err)
+		}
+	}()
+}
+
+func (s *Service) UsageBetween(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error) {
+	hours, err := s.usage.Between(ctx, managerID, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("list kv usage of manager %s: %w", managerID.Hex(), err)
+	}
+	return hours, nil
 }
 
 func (s *Service) Create(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, input CreateInput) (*kvdocumentrepository.Document, error) {
-	if err := checkWritableCollection(collectionName); err != nil {
+	if err := kvquery.CheckWritableCollection(collectionName); err != nil {
 		return nil, err
 	}
 	if err := s.checkCapacity(ctx, scope, collectionName, 1); err != nil {
@@ -78,7 +108,7 @@ func (s *Service) Count(ctx context.Context, scope kvdocumentrepository.Scope, c
 }
 
 func (s *Service) Eval(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, queryFilter bson.M, input EvalInput) (EvalResult, error) {
-	bodyFilter, err := ParseBodyFilter(input.Filters)
+	bodyFilter, err := kvquery.ParseBodyFilter(input.Filters)
 	if err != nil {
 		return EvalResult{}, err
 	}
@@ -89,7 +119,7 @@ func (s *Service) Eval(ctx context.Context, scope kvdocumentrepository.Scope, co
 
 	field := strings.TrimPrefix(input.Field, "data.")
 	if input.Operation != EvalCount {
-		if err := checkField(field); err != nil {
+		if err := kvquery.CheckField(field); err != nil {
 			return EvalResult{}, err
 		}
 	}
@@ -177,7 +207,7 @@ func (s *Service) ExportProject(ctx context.Context, scope kvdocumentrepository.
 }
 
 func (s *Service) Import(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, items []map[string]any) (ImportResult, error) {
-	if err := checkWritableCollection(collectionName); err != nil {
+	if err := kvquery.CheckWritableCollection(collectionName); err != nil {
 		return ImportResult{}, err
 	}
 	if len(items) > MaxImportItems {
@@ -204,7 +234,7 @@ func (s *Service) ImportProject(ctx context.Context, scope kvdocumentrepository.
 	total := 0
 	documents := []kvdocumentrepository.Document{}
 	for collectionName, items := range collections {
-		if err := checkWritableCollection(collectionName); err != nil {
+		if err := kvquery.CheckWritableCollection(collectionName); err != nil {
 			return ProjectImportResult{}, err
 		}
 		total += len(items)

@@ -12,6 +12,7 @@ import (
 	"pocketrun-api/internal/domains/health/handlers/health"
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
+	"pocketrun-api/internal/domains/kv/middlewares/appauth"
 	linkanalytics "pocketrun-api/internal/domains/link/handlers/analytics"
 	linkhistory "pocketrun-api/internal/domains/link/handlers/history"
 	"pocketrun-api/internal/domains/link/handlers/link"
@@ -35,7 +36,7 @@ const adminPrefix = "/admin"
 
 func newRouter(cfg config.Config, s services, validate *validator.Validate, logger *slog.Logger) http.Handler {
 	healthHandler := health.NewHandler(health.NewService())
-	documentHandler := kvdocument.NewHandler(s.documents, s.applications, s.usage, validate, logger)
+	documentHandler := kvdocument.NewHandler(s.documents, s.applications, validate, logger)
 	applicationHandler := application.NewHandler(s.applications, validate, logger)
 	groupHandler := group.NewHandler(s.groups, validate, logger)
 	pagePublicHandler := pagepublic.NewHandler(pagepublic.Dependencies{
@@ -69,7 +70,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	backup.NewHandler(s.backup, validate, logger).Register(adminMux, authenticateManager)
 
 	publicMux := http.NewServeMux()
-	authenticateApplication := application.Authenticate(s.applications, logger)
+	authenticateApplication := appauth.Authenticate(s.applications, logger)
 	healthHandler.Register(publicMux)
 	applicationHandler.RegisterPublic(publicMux, authenticateApplication)
 	documentHandler.RegisterPublic(publicMux, authenticateApplication)

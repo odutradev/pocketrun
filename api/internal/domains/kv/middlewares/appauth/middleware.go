@@ -1,25 +1,41 @@
-package application
+package appauth
 
 import (
 	"context"
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
 
+	"pocketrun-api/internal/domains/kv/utils/apptoken"
+	"pocketrun-api/internal/domains/kv/utils/roles"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	"pocketrun-api/internal/services/httpx"
 )
 
-const touchTimeout = 5 * time.Second
+func WithApplication(ctx context.Context, application *applicationrepository.Application, role string) context.Context {
+	return context.WithValue(ctx, applicationKey{}, grant{application: application, role: role})
+}
 
-func Authenticate(service *Service, logger *slog.Logger) func(http.Handler) http.Handler {
+func FromContext(ctx context.Context) (*applicationrepository.Application, bool) {
+	value, ok := ctx.Value(applicationKey{}).(grant)
+	return value.application, ok && value.application != nil
+}
+
+func RoleFromContext(ctx context.Context) string {
+	value, ok := ctx.Value(applicationKey{}).(grant)
+	if !ok || value.role == "" {
+		return applicationrepository.AdminRole
+	}
+	return value.role
+}
+
+func Authenticate(service Authenticator, logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			origin := r.Header.Get("Origin")
 
-			application, token, err := service.Authenticate(ctx, extractAccessToken(r), origin)
+			application, token, err := service.Authenticate(ctx, apptoken.Extract(r), origin)
 			if err != nil {
 				writeAuthenticationError(ctx, w, logger, err)
 				return
@@ -41,7 +57,7 @@ func Authenticate(service *Service, logger *slog.Logger) func(http.Handler) http
 	}
 }
 
-func touchToken(ctx context.Context, service *Service, logger *slog.Logger, application *applicationrepository.Application, hash string) {
+func touchToken(ctx context.Context, service Authenticator, logger *slog.Logger, application *applicationrepository.Application, hash string) {
 	touchContext, cancel := context.WithTimeout(ctx, touchTimeout)
 	defer cancel()
 
@@ -52,15 +68,15 @@ func touchToken(ctx context.Context, service *Service, logger *slog.Logger, appl
 
 func writeAuthenticationError(ctx context.Context, w http.ResponseWriter, logger *slog.Logger, err error) {
 	switch {
-	case errors.Is(err, ErrMissingAccessToken):
+	case errors.Is(err, apptoken.ErrMissing):
 		httpx.WriteError(w, http.StatusUnauthorized, "missing_access_token")
-	case errors.Is(err, ErrInvalidAccessToken):
+	case errors.Is(err, apptoken.ErrInvalid):
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
-	case errors.Is(err, ErrExpiredAccessToken):
+	case errors.Is(err, apptoken.ErrExpired):
 		httpx.WriteError(w, http.StatusUnauthorized, "expired_access_token")
-	case errors.Is(err, ErrRoleNotFound):
+	case errors.Is(err, roles.ErrNotFound):
 		httpx.WriteError(w, http.StatusForbidden, "role_not_found")
-	case errors.Is(err, ErrOriginNotAllowed):
+	case errors.Is(err, apptoken.ErrOriginDenied):
 		httpx.WriteError(w, http.StatusForbidden, "origin_not_allowed")
 	default:
 		logger.ErrorContext(ctx, "authenticate application", "error", err)

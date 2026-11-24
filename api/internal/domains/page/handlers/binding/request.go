@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
+	"pocketrun-api/internal/domains/kv/utils/kvquery"
 	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
 	"pocketrun-api/internal/services/httpx"
 )
@@ -41,7 +42,7 @@ func ParseRequest(w http.ResponseWriter, r *http.Request, validate *validator.Va
 	}
 
 	request := Request{Action: matched.action, Collection: parts[0]}
-	if err := kvdocument.CheckCollection(request.Collection); err != nil {
+	if err := kvquery.CheckCollection(request.Collection); err != nil {
 		return Request{}, err
 	}
 	if matched.hasID {
@@ -70,19 +71,19 @@ func matchRoute(method string, action pagekvrequestrepository.Action, hasID bool
 func decodeAction(w http.ResponseWriter, r *http.Request, validate *validator.Validate, request *Request) error {
 	switch request.Action {
 	case pagekvrequestrepository.ActionList:
-		query, err := kvdocument.ParseListQuery(r.URL.Query())
+		query, err := kvquery.ParseListQuery(r.URL.Query())
 		if err != nil {
 			return err
 		}
 		request.List = query
 	case pagekvrequestrepository.ActionCount:
-		filter, err := kvdocument.ParseQueryFilter(r.URL.Query())
+		filter, err := kvquery.ParseQueryFilter(r.URL.Query())
 		if err != nil {
 			return err
 		}
 		request.Filter = filter
 	case pagekvrequestrepository.ActionEval:
-		filter, err := kvdocument.ParseQueryFilter(r.URL.Query())
+		filter, err := kvquery.ParseQueryFilter(r.URL.Query())
 		if err != nil {
 			return err
 		}

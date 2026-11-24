@@ -12,6 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/kv/handlers/application"
+	"pocketrun-api/internal/domains/kv/middlewares/appauth"
+	"pocketrun-api/internal/domains/kv/utils/csvexport"
+	"pocketrun-api/internal/domains/kv/utils/kvquery"
 	"pocketrun-api/internal/domains/user/handlers/user"
 	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
@@ -23,20 +26,15 @@ type ApplicationFinder interface {
 	GetByID(ctx context.Context, managerID, id bson.ObjectID) (*applicationrepository.Application, error)
 }
 
-type UsageRecorder interface {
-	Record(ctx context.Context, applicationID, managerID bson.ObjectID)
-}
-
 type Handler struct {
 	service      *Service
 	applications ApplicationFinder
-	usage        UsageRecorder
 	validate     *validator.Validate
 	logger       *slog.Logger
 }
 
-func NewHandler(service *Service, applications ApplicationFinder, usage UsageRecorder, validate *validator.Validate, logger *slog.Logger) *Handler {
-	return &Handler{service: service, applications: applications, usage: usage, validate: validate, logger: logger}
+func NewHandler(service *Service, applications ApplicationFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
+	return &Handler{service: service, applications: applications, validate: validate, logger: logger}
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -61,8 +59,8 @@ func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Hand
 
 func (h *Handler) counted(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app, ok := application.FromContext(r.Context()); ok {
-			h.usage.Record(r.Context(), app.ID, app.ManagerID)
+		if app, ok := appauth.FromContext(r.Context()); ok {
+			h.service.RecordUsage(r.Context(), app.ID, app.ManagerID)
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -99,7 +97,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query, err := ParseListQuery(r.URL.Query())
+	query, err := kvquery.ParseListQuery(r.URL.Query())
 	if err != nil {
 		h.writeError(w, r, "list documents", err)
 		return
@@ -124,7 +122,7 @@ func (h *Handler) count(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter, err := ParseQueryFilter(r.URL.Query())
+	filter, err := kvquery.ParseQueryFilter(r.URL.Query())
 	if err != nil {
 		h.writeError(w, r, "count documents", err)
 		return
@@ -144,7 +142,7 @@ func (h *Handler) eval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filter, err := ParseQueryFilter(r.URL.Query())
+	filter, err := kvquery.ParseQueryFilter(r.URL.Query())
 	if err != nil {
 		h.writeError(w, r, "eval documents", err)
 		return
@@ -254,7 +252,7 @@ func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
 
 	filename := scope.ProjectID + "-" + collectionName
 	if format == ExportCSV {
-		body, err := DocumentsCSV(documents)
+		body, err := csvexport.Documents(documents)
 		if err != nil {
 			h.writeError(w, r, "export collection", err)
 			return
@@ -285,7 +283,7 @@ func (h *Handler) exportProject(w http.ResponseWriter, r *http.Request) {
 
 	filename := "project-" + scope.ProjectID
 	if format == ExportCSV {
-		body, err := ProjectCSV(collections)
+		body, err := csvexport.Project(collections)
 		if err != nil {
 			h.writeError(w, r, "export project", err)
 			return
@@ -390,13 +388,13 @@ func (h *Handler) exploreCollection(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) scope(w http.ResponseWriter, r *http.Request, operation applicationrepository.Operation) (kvdocumentrepository.Scope, bool) {
 	ctx := r.Context()
-	app, ok := application.FromContext(ctx)
+	app, ok := appauth.FromContext(ctx)
 	if !ok {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
 		return kvdocumentrepository.Scope{}, false
 	}
 
-	permission, err := app.Authorize(application.RoleFromContext(ctx), r.PathValue("collection"), operation)
+	permission, err := app.Authorize(appauth.RoleFromContext(ctx), r.PathValue("collection"), operation)
 	if err != nil {
 		h.writeError(w, r, "authorize kv operation", err)
 		return kvdocumentrepository.Scope{}, false
