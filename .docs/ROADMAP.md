@@ -99,7 +99,7 @@ Depende de 3.6 e 3.7.
 
 - **8.1** ⬜ Testes automatizados de isolamento: garantir que o token de uma aplicação nunca lê nem escreve dados, páginas ou links de outra.
 - **8.2** ⬜ Workflow de CI que roda `go vet`, `go test`, lint e build do painel a cada push, antes do `docker-publish.yml` publicar a imagem. Hoje o CI só publica, sem validar.
-- **8.3** ⬜ Testes das regras de negócio da API: cargos do KV (operações, limite de documentos, "só os próprios"), ativação por período e por acessos, contagem por clique e por visitante único, limites da ponte `pocketrun.kv` e do login. Hoje a API tem um teste só (`api/internal/domains/user/user/password_test.go`).
+- **8.3** ⬜ Testes das regras de negócio da API: cargos do KV (operações, limite de documentos, "só os próprios"), ativação por período e por acessos, contagem por clique e por visitante único, limites da ponte `pocketrun.kv` e do login. Hoje a API tem um teste só (`api/internal/domains/user/utils/passwordhash/passwordhash_test.go`).
 - **8.4** ⬜ Testes do painel: funções de `utils/functions` e os fluxos principais (login, criar aplicação, editor de página). Hoje o painel não tem nenhum teste.
 
 ## 9. Dados nas páginas e cargos do KV
