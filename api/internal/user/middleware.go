@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 )
 
 type SessionChecker interface {

@@ -11,7 +11,7 @@ import (
 
 	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/page/page"
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 )
 
 type PageChecker interface {

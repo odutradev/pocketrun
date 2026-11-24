@@ -28,11 +28,11 @@ import (
 	"pocketrun-api/internal/page/page"
 	pagepublic "pocketrun-api/internal/page/public"
 	"pocketrun-api/internal/page/version"
-	"pocketrun-api/internal/platform/database"
-	"pocketrun-api/internal/platform/httpx"
-	"pocketrun-api/internal/platform/traffic"
+	"pocketrun-api/internal/services/database"
+	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/services/slug"
+	"pocketrun-api/internal/services/traffic"
 	"pocketrun-api/internal/setup"
-	"pocketrun-api/internal/slug"
 	"pocketrun-api/internal/user"
 )
 

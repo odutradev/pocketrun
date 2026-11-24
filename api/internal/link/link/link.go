@@ -8,8 +8,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/platform/activation"
-	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/services/activation"
+	"pocketrun-api/internal/services/slug"
 )
 
 type Mode = activation.Mode

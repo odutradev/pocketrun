@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 )
 
 const touchTimeout = 5 * time.Second

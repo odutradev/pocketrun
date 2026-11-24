@@ -7,7 +7,7 @@ import (
 
 	"pocketrun-api/internal/page/history"
 	"pocketrun-api/internal/page/version"
-	"pocketrun-api/internal/platform/activation"
+	"pocketrun-api/internal/services/activation"
 )
 
 func diff(previous, next Page) []history.Change {

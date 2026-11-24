@@ -12,7 +12,7 @@ import (
 	"pocketrun-api/internal/page/access"
 	"pocketrun-api/internal/page/binding"
 	"pocketrun-api/internal/page/page"
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 )
 
 const (

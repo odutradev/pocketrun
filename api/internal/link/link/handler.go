@@ -10,8 +10,8 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"pocketrun-api/internal/group"
-	"pocketrun-api/internal/platform/httpx"
-	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/user"
 )
 

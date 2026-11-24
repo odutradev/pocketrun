@@ -8,7 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/platform/traffic"
+	"pocketrun-api/internal/services/traffic"
 )
 
 type Repository interface {

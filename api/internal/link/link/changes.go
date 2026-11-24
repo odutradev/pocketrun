@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/link/history"
-	"pocketrun-api/internal/platform/activation"
+	"pocketrun-api/internal/services/activation"
 )
 
 func diff(previous, next Link) []history.Change {

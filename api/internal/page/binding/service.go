@@ -16,7 +16,7 @@ import (
 	"pocketrun-api/internal/kv"
 	"pocketrun-api/internal/page/access"
 	"pocketrun-api/internal/page/history"
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/user"
 )
 

@@ -3,7 +3,7 @@ package overview
 import (
 	"time"
 
-	"pocketrun-api/internal/platform/traffic"
+	"pocketrun-api/internal/services/traffic"
 )
 
 const minimumAllSpan = 7 * 24 * time.Hour

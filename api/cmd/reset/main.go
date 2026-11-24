@@ -12,7 +12,7 @@ import (
 	"pocketrun-api/internal/application"
 	"pocketrun-api/internal/config"
 	"pocketrun-api/internal/kv"
-	"pocketrun-api/internal/platform/database"
+	"pocketrun-api/internal/services/database"
 	"pocketrun-api/internal/user"
 )
 

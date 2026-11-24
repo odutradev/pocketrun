@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/application"
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/user"
 )
 

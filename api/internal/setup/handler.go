@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"pocketrun-api/internal/platform/httpx"
+	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/user"
 )
 

@@ -13,9 +13,9 @@ import (
 	"pocketrun-api/internal/page/analytics"
 	"pocketrun-api/internal/page/history"
 	"pocketrun-api/internal/page/version"
-	"pocketrun-api/internal/platform/activation"
-	"pocketrun-api/internal/platform/traffic"
-	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/services/activation"
+	"pocketrun-api/internal/services/slug"
+	"pocketrun-api/internal/services/traffic"
 	"pocketrun-api/internal/user"
 )
 

@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 
-	"pocketrun-api/internal/platform/traffic"
+	"pocketrun-api/internal/services/traffic"
 )
 
 type MongoRepository struct {

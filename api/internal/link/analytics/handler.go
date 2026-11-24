@@ -7,8 +7,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/platform/httpx"
-	"pocketrun-api/internal/platform/traffic"
+	"pocketrun-api/internal/services/httpx"
+	"pocketrun-api/internal/services/traffic"
 )
 
 type Handler struct {

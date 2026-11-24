@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/page/history"
-	"pocketrun-api/internal/slug"
+	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/user"
 )
 
