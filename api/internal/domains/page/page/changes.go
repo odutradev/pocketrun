@@ -1,16 +1,17 @@
 package page
 
 import (
-	"pocketrun-api/internal/domains/page/history"
 	"pocketrun-api/internal/domains/page/version"
+	eventrepository "pocketrun-api/internal/repositories/event"
+	pagerepository "pocketrun-api/internal/repositories/page"
 	"pocketrun-api/internal/utils"
 )
 
-func diff(previous, next Page) []history.Change {
-	changes := []history.Change{}
+func diff(previous, next pagerepository.Page) []eventrepository.Change {
+	changes := []eventrepository.Change{}
 	add := func(field string, from, to any) {
 		if from != to {
-			changes = append(changes, history.Change{Field: field, From: from, To: to})
+			changes = append(changes, eventrepository.Change{Field: field, From: from, To: to})
 		}
 	}
 
@@ -26,8 +27,8 @@ func diff(previous, next Page) []history.Change {
 	return changes
 }
 
-func snapshot(page Page) []history.Change {
-	return diff(Page{}, page)
+func snapshot(page pagerepository.Page) []eventrepository.Change {
+	return diff(pagerepository.Page{}, page)
 }
 
 func versionOrNil(number int) any {

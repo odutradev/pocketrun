@@ -10,8 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/link/link"
+	linkrepository "pocketrun-api/internal/repositories/link"
+	slugrepository "pocketrun-api/internal/repositories/slug"
 	"pocketrun-api/internal/services/httpx"
-	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
 )
 
@@ -21,8 +22,8 @@ const (
 )
 
 type LinkOpener interface {
-	Resolve(ctx context.Context, value string) (*slug.Entry, error)
-	Open(ctx context.Context, value string, visit traffic.Visit) (*link.Link, error)
+	Resolve(ctx context.Context, value string) (*slugrepository.Entry, error)
+	Open(ctx context.Context, value string, visit traffic.Visit) (*linkrepository.Link, error)
 }
 
 type PageServer interface {
@@ -61,7 +62,7 @@ func (h *Handler) data(w http.ResponseWriter, r *http.Request) {
 		h.pages.WriteDataError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
-	if entry.Kind != slug.KindPage {
+	if entry.Kind != slugrepository.KindPage {
 		h.pages.WriteDataError(w, http.StatusNotFound, "page_not_found")
 		return
 	}
@@ -79,7 +80,7 @@ func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	if entry.Kind != slug.KindPage {
+	if entry.Kind != slugrepository.KindPage {
 		w.Header().Set("Allow", "GET, HEAD")
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
@@ -90,7 +91,7 @@ func (h *Handler) unlock(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	opened, err := h.links.Open(r.Context(), r.PathValue("slug"), traffic.VisitFromRequest(r))
 	var kindError *link.KindError
-	if errors.As(err, &kindError) && kindError.Kind == slug.KindPage {
+	if errors.As(err, &kindError) && kindError.Kind == slugrepository.KindPage {
 		h.pages.ServePage(w, r, kindError.TargetID)
 		return
 	}

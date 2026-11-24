@@ -2,6 +2,7 @@ package application
 
 import (
 	"errors"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	"regexp"
 	"slices"
 	"strings"
@@ -24,14 +25,14 @@ var (
 	ErrRoleInUse       = errors.New("role is used by a token")
 	rolePattern        = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	rulePattern        = regexp.MustCompile(`^(\*|[A-Za-z0-9_-]{1,64})$`)
-	ruleOperations     = []Operation{OperationRead, OperationCreate, OperationUpdate, OperationDelete}
+	ruleOperations     = []applicationrepository.Operation{applicationrepository.OperationRead, applicationrepository.OperationCreate, applicationrepository.OperationUpdate, applicationrepository.OperationDelete}
 )
 
 type RoleInput struct {
-	Name               string `json:"name" validate:"required,max=40"`
-	Description        string `json:"description" validate:"max=200"`
-	Rules              []Rule `json:"rules" validate:"required,min=1,max=30,dive"`
-	IsOwnDocumentsOnly bool   `json:"isOwnDocumentsOnly"`
+	Name               string                       `json:"name" validate:"required,max=40"`
+	Description        string                       `json:"description" validate:"max=200"`
+	Rules              []applicationrepository.Rule `json:"rules" validate:"required,min=1,max=30,dive"`
+	IsOwnDocumentsOnly bool                         `json:"isOwnDocumentsOnly"`
 }
 
 func (i *RoleInput) Normalize() {
@@ -41,9 +42,9 @@ func (i *RoleInput) Normalize() {
 }
 
 type RoleUpdateInput struct {
-	Description        string `json:"description" validate:"max=200"`
-	Rules              []Rule `json:"rules" validate:"required,min=1,max=30,dive"`
-	IsOwnDocumentsOnly bool   `json:"isOwnDocumentsOnly"`
+	Description        string                       `json:"description" validate:"max=200"`
+	Rules              []applicationrepository.Rule `json:"rules" validate:"required,min=1,max=30,dive"`
+	IsOwnDocumentsOnly bool                         `json:"isOwnDocumentsOnly"`
 }
 
 func (i *RoleUpdateInput) Normalize() {
@@ -59,10 +60,10 @@ func (i *TokenRoleInput) Normalize() {
 	i.Role = strings.ToLower(strings.TrimSpace(i.Role))
 }
 
-func normalizeRules(rules []Rule) []Rule {
-	normalized := make([]Rule, 0, len(rules))
+func normalizeRules(rules []applicationrepository.Rule) []applicationrepository.Rule {
+	normalized := make([]applicationrepository.Rule, 0, len(rules))
 	for _, rule := range rules {
-		operations := []Operation{}
+		operations := []applicationrepository.Operation{}
 		for _, operation := range ruleOperations {
 			if slices.Contains(rule.Operations, operation) {
 				operations = append(operations, operation)
@@ -73,13 +74,13 @@ func normalizeRules(rules []Rule) []Rule {
 				operations = append(operations, operation)
 			}
 		}
-		normalized = append(normalized, Rule{Collection: strings.TrimSpace(rule.Collection), Operations: operations, MaxDocuments: rule.MaxDocuments})
+		normalized = append(normalized, applicationrepository.Rule{Collection: strings.TrimSpace(rule.Collection), Operations: operations, MaxDocuments: rule.MaxDocuments})
 	}
 	return normalized
 }
 
 func checkRoleName(name string) error {
-	if name == AdminRole {
+	if name == applicationrepository.AdminRole {
 		return ErrRoleReserved
 	}
 	if len(name) > MaxRoleNameLength || !rolePattern.MatchString(name) {
@@ -88,7 +89,7 @@ func checkRoleName(name string) error {
 	return nil
 }
 
-func checkRules(rules []Rule) error {
+func checkRules(rules []applicationrepository.Rule) error {
 	seen := map[string]bool{}
 	for _, rule := range rules {
 		if !rulePattern.MatchString(rule.Collection) || seen[rule.Collection] {

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	userrepository "pocketrun-api/internal/repositories/user"
 	"strings"
 	"time"
 )
@@ -34,7 +35,7 @@ func NewTokenSigner(secret string) *TokenSigner {
 	return &TokenSigner{secret: []byte(secret)}
 }
 
-func (s *TokenSigner) Sign(user *User) (string, error) {
+func (s *TokenSigner) Sign(user *userrepository.User) (string, error) {
 	role := user.Role
 	if role == "" {
 		role = RoleAdmin

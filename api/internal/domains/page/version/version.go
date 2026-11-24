@@ -8,8 +8,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/domains/user/user"
 	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
 const MaxKept = 50
@@ -31,8 +31,8 @@ func ParseNumber(value string) (int, error) {
 	return number, nil
 }
 
-func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor user.Actor, at time.Time) *Version {
-	return &Version{
+func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *int, actor userrepository.Actor, at time.Time) *pageversionrepository.Version {
+	return &pageversionrepository.Version{
 		ID:           bson.NewObjectID(),
 		PageID:       pageID,
 		Number:       number,
@@ -45,7 +45,7 @@ func New(pageID bson.ObjectID, number int, html, message string, restoredFrom *i
 	}
 }
 
-func withLabel(v *Version) *Version {
+func withLabel(v *pageversionrepository.Version) *pageversionrepository.Version {
 	v.Label = Label(v.Number)
 	return v
 }

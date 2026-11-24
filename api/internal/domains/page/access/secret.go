@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,10 +20,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const (
-	maxGenerateTries = 50
-	clockSkew        = time.Minute
-)
+const maxGenerateTries = 50
 
 var pinPattern = regexp.MustCompile(`^[0-9]{6}$`)
 
@@ -103,13 +101,13 @@ func (s secrets) hashClient(pageID bson.ObjectID, client string) string {
 	return sign(s.client, pageID.Hex(), client)[:32]
 }
 
-func (s secrets) issueToken(pageID bson.ObjectID, key Key, revision int, issuedAt, expiresAt time.Time) string {
+func (s secrets) issueToken(pageID bson.ObjectID, key pageaccessrepository.Key, revision int, issuedAt, expiresAt time.Time) string {
 	payload := []string{key.ID.Hex(), strconv.Itoa(revision), strconv.FormatInt(issuedAt.Unix(), 10), strconv.FormatInt(expiresAt.Unix(), 10)}
 	signature := sign(s.session, append([]string{pageID.Hex(), key.Secret}, payload...)...)
 	return strings.Join(append(payload, signature), ".")
 }
 
-func (s secrets) verifyToken(access *Access, token string, now time.Time) (*Key, bool) {
+func (s secrets) verifyToken(access *pageaccessrepository.Access, token string, now time.Time) (*pageaccessrepository.Key, bool) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 5 {
 		return nil, false
@@ -127,7 +125,7 @@ func (s secrets) verifyToken(access *Access, token string, now time.Time) (*Key,
 		return nil, false
 	}
 	issuedAt, err := strconv.ParseInt(parts[2], 10, 64)
-	if err != nil || time.Unix(issuedAt, 0).After(now.Add(clockSkew)) {
+	if err != nil || time.Unix(issuedAt, 0).After(now.Add(time.Minute)) {
 		return nil, false
 	}
 	expiresAt, err := strconv.ParseInt(parts[3], 10, 64)

@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	dataHeader       = "X-Pocketrun-Page"
-	dataLimitWindow  = time.Minute
+	dataHeader = "X-Pocketrun-Page"
+
 	visitorDataLimit = 120
 	pageDataLimit    = 1200
 )

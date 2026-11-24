@@ -10,11 +10,17 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/group"
-	"pocketrun-api/internal/domains/page/analytics"
 	"pocketrun-api/internal/domains/page/history"
 	"pocketrun-api/internal/domains/page/version"
-	"pocketrun-api/internal/domains/user/user"
+	eventrepository "pocketrun-api/internal/repositories/event"
+	grouprepository "pocketrun-api/internal/repositories/group"
+	pagerepository "pocketrun-api/internal/repositories/page"
+	pageversionrepository "pocketrun-api/internal/repositories/pageversion"
+	slugrepository "pocketrun-api/internal/repositories/slug"
+	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/activation"
+	analyticsservice "pocketrun-api/internal/services/analytics"
+	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
 )
@@ -22,17 +28,17 @@ import (
 const recordTimeout = 5 * time.Second
 
 type Repository interface {
-	Find(ctx context.Context, query ListQuery) ([]Page, error)
-	Count(ctx context.Context, query ListQuery) (int64, error)
-	Totals(ctx context.Context) ([]GroupTotals, error)
-	FindByID(ctx context.Context, id bson.ObjectID) (*Page, error)
-	FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]Page, error)
-	Insert(ctx context.Context, page *Page) error
-	Replace(ctx context.Context, page *Page) error
+	Find(ctx context.Context, query pagerepository.ListQuery) ([]pagerepository.Page, error)
+	Count(ctx context.Context, query pagerepository.ListQuery) (int64, error)
+	Totals(ctx context.Context) ([]pagerepository.GroupTotals, error)
+	FindByID(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
+	FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]pagerepository.Page, error)
+	Insert(ctx context.Context, page *pagerepository.Page) error
+	Replace(ctx context.Context, page *pagerepository.Page) error
 	Delete(ctx context.Context, id bson.ObjectID) error
 	UnsetGroup(ctx context.Context, groupID bson.ObjectID) error
-	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Page, error)
-	CountVisitor(ctx context.Context, id bson.ObjectID) (*Page, error)
+	RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*pagerepository.Page, error)
+	CountVisitor(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
 }
 
 type UniqueTracker interface {
@@ -41,12 +47,12 @@ type UniqueTracker interface {
 }
 
 type VersionKeeper interface {
-	Save(ctx context.Context, version *version.Version)
+	Save(ctx context.Context, version *pageversionrepository.Version)
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type EventRecorder interface {
-	Record(ctx context.Context, event *history.Event)
+	Record(ctx context.Context, event *eventrepository.Event)
 }
 
 type OpenTracker interface {
@@ -64,17 +70,17 @@ type BindingCleaner interface {
 
 type SlugRegistry interface {
 	Check(ctx context.Context, value string, ownerID *bson.ObjectID) (slug.Availability, error)
-	Reserve(ctx context.Context, value string, kind slug.Kind, targetID bson.ObjectID) error
-	ReserveRandom(ctx context.Context, kind slug.Kind, targetID bson.ObjectID) (string, error)
+	Reserve(ctx context.Context, value string, kind slugrepository.Kind, targetID bson.ObjectID) error
+	ReserveRandom(ctx context.Context, kind slugrepository.Kind, targetID bson.ObjectID) (string, error)
 	Release(ctx context.Context, value string, targetID bson.ObjectID) error
 }
 
 type GroupChecker interface {
-	Ensure(ctx context.Context, kind group.Kind, id bson.ObjectID) error
+	Ensure(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID) error
 }
 
 type ActorResolver interface {
-	Actor(ctx context.Context) (user.Actor, error)
+	Actor(ctx context.Context) (userrepository.Actor, error)
 }
 
 type Dependencies struct {
@@ -121,7 +127,7 @@ func NewService(dependencies Dependencies) *Service {
 	}
 }
 
-func (s *Service) List(ctx context.Context, query ListQuery) (ListPage, error) {
+func (s *Service) List(ctx context.Context, query pagerepository.ListQuery) (ListPage, error) {
 	query.Now = time.Now()
 	pages, err := s.repository.Find(ctx, query)
 	if err != nil {
@@ -145,7 +151,7 @@ func (s *Service) Summary(ctx context.Context) (Summary, error) {
 		return Summary{}, fmt.Errorf("summarize pages: %w", err)
 	}
 
-	summary := Summary{Groups: []GroupTotals{}}
+	summary := Summary{Groups: []pagerepository.GroupTotals{}}
 	for _, item := range totals {
 		summary.Total += item.Pages
 		if item.GroupID == nil {
@@ -157,7 +163,7 @@ func (s *Service) Summary(ctx context.Context) (Summary, error) {
 	return summary, nil
 }
 
-func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Page, error) {
+func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error) {
 	page, err := s.repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get page %s: %w", id.Hex(), err)
@@ -166,7 +172,7 @@ func (s *Service) GetByID(ctx context.Context, id bson.ObjectID) (*Page, error) 
 	return page, nil
 }
 
-func (s *Service) Visible(ctx context.Context, id bson.ObjectID) (*Page, error) {
+func (s *Service) Visible(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error) {
 	page, err := s.repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("find visible page %s: %w", id.Hex(), err)
@@ -202,15 +208,15 @@ func (s *Service) ExpiredAt(ctx context.Context, id bson.ObjectID) (*time.Time, 
 	return page.EndsAt, nil
 }
 
-func (s *Service) Targets(ctx context.Context, ids []bson.ObjectID) ([]analytics.Target, error) {
+func (s *Service) Targets(ctx context.Context, ids []bson.ObjectID) ([]analyticsservice.Target, error) {
 	pages, err := s.repository.FindByIDs(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("find analytics pages: %w", err)
 	}
 
-	targets := make([]analytics.Target, 0, len(pages))
+	targets := make([]analyticsservice.Target, 0, len(pages))
 	for _, page := range pages {
-		targets = append(targets, analytics.Target{ID: page.ID, Title: page.Title, Slug: page.Slug, CreatedAt: page.CreatedAt})
+		targets = append(targets, analyticsservice.Target{ID: page.ID, Title: page.Title, Slug: page.Slug, CreatedAt: page.CreatedAt})
 	}
 	return targets, nil
 }
@@ -223,7 +229,7 @@ func (s *Service) CheckSlug(ctx context.Context, value string, ownerID *bson.Obj
 	return availability, nil
 }
 
-func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Input) (*Page, error) {
+func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Input) (*pagerepository.Page, error) {
 	groupID, err := s.prepareInput(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("create page: %w", err)
@@ -235,7 +241,7 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 	}
 
 	now := time.Now()
-	page := &Page{
+	page := &pagerepository.Page{
 		ID:        bson.NewObjectID(),
 		Title:     input.Title,
 		HTML:      html,
@@ -263,12 +269,12 @@ func (s *Service) Create(ctx context.Context, managerID bson.ObjectID, input Inp
 
 	actor := s.actor(ctx)
 	s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, nil, actor, now))
-	s.history.Record(ctx, history.NewEvent(page.ID, history.EventCreated, actor, snapshot(*page), now))
+	s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventCreated, actor, snapshot(*page), now))
 	page.State = page.StateAt(now)
 	return page, nil
 }
 
-func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*Page, error) {
+func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*pagerepository.Page, error) {
 	page, err := s.repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("update page %s: %w", id.Hex(), err)
@@ -285,7 +291,7 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*P
 		nextSlug = previous.Slug
 	}
 	if nextSlug != previous.Slug {
-		if err := s.slugs.Reserve(ctx, nextSlug, slug.KindPage, page.ID); err != nil {
+		if err := s.slugs.Reserve(ctx, nextSlug, slugrepository.KindPage, page.ID); err != nil {
 			return nil, fmt.Errorf("update page %s: %w", id.Hex(), err)
 		}
 	}
@@ -325,13 +331,13 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*P
 		s.versions.Save(ctx, version.New(page.ID, page.Version, page.HTML, input.Message, restored, actor, page.UpdatedAt))
 	}
 	if changes := diff(previous, *page); len(changes) > 0 {
-		s.history.Record(ctx, history.NewEvent(page.ID, history.EventUpdated, actor, changes, page.UpdatedAt))
+		s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventUpdated, actor, changes, page.UpdatedAt))
 	}
 	page.State = page.StateAt(page.UpdatedAt)
 	return page, nil
 }
 
-func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool) (*Page, error) {
+func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool) (*pagerepository.Page, error) {
 	page, err := s.repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("set page %s status: %w", id.Hex(), err)
@@ -354,7 +360,7 @@ func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool
 	if err := s.repository.Replace(ctx, page); err != nil {
 		return nil, fmt.Errorf("set page %s status: %w", id.Hex(), err)
 	}
-	s.history.Record(ctx, history.NewEvent(page.ID, history.EventUpdated, s.actor(ctx), changes, page.UpdatedAt))
+	s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventUpdated, s.actor(ctx), changes, page.UpdatedAt))
 	page.State = page.StateAt(page.UpdatedAt)
 	return page, nil
 }
@@ -373,7 +379,7 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 		return fmt.Errorf("delete page %s: %w", id.Hex(), err)
 	}
 
-	s.history.Record(ctx, history.NewEvent(page.ID, history.EventDeleted, s.actor(ctx), nil, time.Now()))
+	s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventDeleted, s.actor(ctx), nil, time.Now()))
 	if err := s.uniques.Forget(ctx, page.ID); err != nil {
 		s.logger.WarnContext(ctx, "forget page unique visitors", "pageId", page.ID.Hex(), "error", err)
 	}
@@ -393,7 +399,7 @@ func (s *Service) Delete(ctx context.Context, id bson.ObjectID) error {
 }
 
 func (s *Service) DetachGroup(ctx context.Context, groupID bson.ObjectID) error {
-	members, err := s.repository.Find(ctx, ListQuery{GroupID: &groupID})
+	members, err := s.repository.Find(ctx, pagerepository.ListQuery{GroupID: &groupID})
 	if err != nil {
 		return fmt.Errorf("detach pages from group %s: %w", groupID.Hex(), err)
 	}
@@ -405,13 +411,13 @@ func (s *Service) DetachGroup(ctx context.Context, groupID bson.ObjectID) error 
 	actor := s.actor(ctx)
 	now := time.Now()
 	for _, member := range members {
-		changes := []history.Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
-		s.history.Record(ctx, history.NewEvent(member.ID, history.EventGroupDetached, actor, changes, now))
+		changes := []eventrepository.Change{{Field: "groupId", From: groupID.Hex(), To: nil}}
+		s.history.Record(ctx, history.NewEvent(member.ID, historyservice.EventGroupDetached, actor, changes, now))
 	}
 	return nil
 }
 
-func (s *Service) Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*Page, error) {
+func (s *Service) Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*pagerepository.Page, error) {
 	now := time.Now()
 	isCounted := !visit.IsBot()
 	page, err := s.repository.RegisterOpen(ctx, id, now, isCounted)
@@ -446,7 +452,7 @@ func (s *Service) prepareInput(ctx context.Context, input Input) (*bson.ObjectID
 		return nil, fmt.Errorf("parse page group id: %w", err)
 	}
 
-	if err := s.groups.Ensure(ctx, group.KindPages, groupID); err != nil {
+	if err := s.groups.Ensure(ctx, grouprepository.KindPages, groupID); err != nil {
 		return nil, fmt.Errorf("resolve page group: %w", err)
 	}
 	return &groupID, nil
@@ -454,20 +460,20 @@ func (s *Service) prepareInput(ctx context.Context, input Input) (*bson.ObjectID
 
 func (s *Service) reserveSlug(ctx context.Context, value string, targetID bson.ObjectID) (string, error) {
 	if value == "" {
-		reserved, err := s.slugs.ReserveRandom(ctx, slug.KindPage, targetID)
+		reserved, err := s.slugs.ReserveRandom(ctx, slugrepository.KindPage, targetID)
 		if err != nil {
 			return "", fmt.Errorf("reserve page slug: %w", err)
 		}
 		return reserved, nil
 	}
 
-	if err := s.slugs.Reserve(ctx, value, slug.KindPage, targetID); err != nil {
+	if err := s.slugs.Reserve(ctx, value, slugrepository.KindPage, targetID); err != nil {
 		return "", fmt.Errorf("reserve page slug: %w", err)
 	}
 	return value, nil
 }
 
-func (s *Service) countOpen(ctx context.Context, page *Page, visit traffic.Visit, isCounted bool) (bool, error) {
+func (s *Service) countOpen(ctx context.Context, page *pagerepository.Page, visit traffic.Visit, isCounted bool) (bool, error) {
 	rule := page.Rule()
 	if !isCounted {
 		return false, nil
@@ -488,7 +494,7 @@ func (s *Service) countOpen(ctx context.Context, page *Page, visit traffic.Visit
 	return rule.ExhaustedBy(counted.Visitors), nil
 }
 
-func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit, at time.Time, isExhausted bool) {
+func (s *Service) recordOpen(ctx context.Context, page pagerepository.Page, visit traffic.Visit, at time.Time, isExhausted bool) {
 	ctx, cancel := context.WithTimeout(ctx, recordTimeout)
 	defer cancel()
 
@@ -497,11 +503,11 @@ func (s *Service) recordOpen(ctx context.Context, page Page, visit traffic.Visit
 	}
 
 	if isExhausted {
-		s.history.Record(ctx, history.NewEvent(page.ID, history.EventExhausted, user.SystemActor(), nil, at))
+		s.history.Record(ctx, history.NewEvent(page.ID, historyservice.EventExhausted, userrepository.SystemActor(), nil, at))
 	}
 }
 
-func (s *Service) actor(ctx context.Context) user.Actor {
+func (s *Service) actor(ctx context.Context) userrepository.Actor {
 	actor, err := s.actors.Actor(ctx)
 	if err != nil {
 		s.logger.WarnContext(ctx, "resolve page event actor", "error", err)

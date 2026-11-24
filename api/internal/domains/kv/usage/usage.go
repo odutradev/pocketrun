@@ -11,15 +11,11 @@ import (
 	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 )
 
-const (
-	usageRecordWindow = 5 * time.Second
-)
-
-type Hour = kvusagerepository.Hour
+const usageRecordWindow = 5 * time.Second
 
 type Repository interface {
 	Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error
-	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]Hour, error)
+	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
 }
 
 type Service struct {
@@ -42,7 +38,7 @@ func (s *Service) Record(ctx context.Context, applicationID, managerID bson.Obje
 	}()
 }
 
-func (s *Service) Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]Hour, error) {
+func (s *Service) Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error) {
 	hours, err := s.repository.Between(ctx, managerID, from, to)
 	if err != nil {
 		return nil, fmt.Errorf("list kv usage of manager %s: %w", managerID.Hex(), err)

@@ -4,10 +4,10 @@ import (
 	"html"
 	"strings"
 
-	"pocketrun-api/internal/domains/page/page"
+	pagerepository "pocketrun-api/internal/repositories/page"
 )
 
-func render(target page.Page, extra runtimeExtra) (string, error) {
+func render(target pagerepository.Page, extra runtimeExtra) (string, error) {
 	tag, err := runtimeTag(target, extra)
 	if err != nil {
 		return "", err
@@ -15,7 +15,7 @@ func render(target page.Page, extra runtimeExtra) (string, error) {
 	return injectRuntime(document(target), tag), nil
 }
 
-func document(target page.Page) string {
+func document(target pagerepository.Page) string {
 	lower := strings.ToLower(target.HTML)
 	if strings.Contains(lower, "<html") || strings.Contains(lower, "<!doctype") {
 		return target.HTML

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
+	grouprepository "pocketrun-api/internal/repositories/group"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -20,14 +21,14 @@ func NewHandler(service *Service, validate *validator.Validate, logger *slog.Log
 	return &Handler{service: service, validate: validate, logger: logger}
 }
 
-func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler, prefix string, kind Kind, members Detacher) {
+func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) http.Handler, prefix string, kind grouprepository.Kind, members Detacher) {
 	mux.Handle("GET "+prefix+"/list", authenticate(h.list(kind)))
 	mux.Handle("POST "+prefix+"/create", authenticate(h.create(kind)))
 	mux.Handle("PATCH "+prefix+"/{id}/update", authenticate(h.update(kind)))
 	mux.Handle("DELETE "+prefix+"/{id}/delete", authenticate(h.delete(kind, members)))
 }
 
-func (h *Handler) list(kind Kind) http.HandlerFunc {
+func (h *Handler) list(kind grouprepository.Kind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		groups, err := h.service.List(r.Context(), kind)
 		if err != nil {
@@ -38,9 +39,9 @@ func (h *Handler) list(kind Kind) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) create(kind Kind) http.HandlerFunc {
+func (h *Handler) create(kind grouprepository.Kind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var input Input
+		var input grouprepository.Input
 		if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 			httpx.WriteDecodeError(w, err)
 			return
@@ -55,7 +56,7 @@ func (h *Handler) create(kind Kind) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) update(kind Kind) http.HandlerFunc {
+func (h *Handler) update(kind grouprepository.Kind) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := ParseID(r.PathValue("id"))
 		if err != nil {
@@ -63,7 +64,7 @@ func (h *Handler) update(kind Kind) http.HandlerFunc {
 			return
 		}
 
-		var input Input
+		var input grouprepository.Input
 		if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 			httpx.WriteDecodeError(w, err)
 			return
@@ -78,7 +79,7 @@ func (h *Handler) update(kind Kind) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) delete(kind Kind, members Detacher) http.HandlerFunc {
+func (h *Handler) delete(kind grouprepository.Kind, members Detacher) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := ParseID(r.PathValue("id"))
 		if err != nil {

@@ -74,17 +74,17 @@ type ListParams struct {
 	Limit   int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
-func (p ListParams) Query() ListQuery {
-	query := ListQuery{
+func (p ListParams) Query() pagerepository.ListQuery {
+	query := pagerepository.ListQuery{
 		Ungrouped: p.GroupID == UngroupedFilter,
 		Search:    strings.TrimSpace(p.Search),
 		State:     activation.State(p.State),
-		Sort:      SortRecent,
+		Sort:      pagerepository.SortRecent,
 		Page:      max(p.Page, 1),
 		Limit:     DefaultListLimit,
 	}
 	if p.Sort != "" {
-		query.Sort = Sort(p.Sort)
+		query.Sort = pagerepository.Sort(p.Sort)
 	}
 	if p.Limit > 0 {
 		query.Limit = p.Limit
@@ -96,14 +96,14 @@ func (p ListParams) Query() ListQuery {
 }
 
 type ListPage struct {
-	Data       []Page `json:"data"`
-	Total      int64  `json:"total"`
-	Page       int    `json:"page"`
-	Limit      int    `json:"limit"`
-	TotalPages int64  `json:"totalPages"`
+	Data       []pagerepository.Page `json:"data"`
+	Total      int64                 `json:"total"`
+	Page       int                   `json:"page"`
+	Limit      int                   `json:"limit"`
+	TotalPages int64                 `json:"totalPages"`
 }
 
-func newListPage(pages []Page, total int64, query ListQuery) ListPage {
+func newListPage(pages []pagerepository.Page, total int64, query pagerepository.ListQuery) ListPage {
 	limit := int64(max(query.Limit, 1))
 	return ListPage{
 		Data:       pages,
@@ -115,9 +115,9 @@ func newListPage(pages []Page, total int64, query ListQuery) ListPage {
 }
 
 type Summary struct {
-	Total     int64         `json:"total"`
-	Ungrouped int64         `json:"ungrouped"`
-	Groups    []GroupTotals `json:"groups"`
+	Total     int64                        `json:"total"`
+	Ungrouped int64                        `json:"ungrouped"`
+	Groups    []pagerepository.GroupTotals `json:"groups"`
 }
 
 type SlugCheckParams struct {

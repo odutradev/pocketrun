@@ -8,13 +8,14 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	openrepository "pocketrun-api/internal/repositories/open"
 	"pocketrun-api/internal/services/traffic"
 )
 
 type Repository interface {
-	Insert(ctx context.Context, open *Open) error
-	Find(ctx context.Context, targetID bson.ObjectID, from, to time.Time) ([]Open, error)
-	FindBetween(ctx context.Context, from, to time.Time) ([]Open, error)
+	Insert(ctx context.Context, open *openrepository.Open) error
+	Find(ctx context.Context, targetID bson.ObjectID, from, to time.Time) ([]openrepository.Open, error)
+	FindBetween(ctx context.Context, from, to time.Time) ([]openrepository.Open, error)
 	DeleteAll(ctx context.Context, targetID bson.ObjectID) error
 }
 

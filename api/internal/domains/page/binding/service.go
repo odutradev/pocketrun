@@ -14,9 +14,15 @@ import (
 
 	"pocketrun-api/internal/domains/kv/application"
 	kvdocument "pocketrun-api/internal/domains/kv/document"
-	"pocketrun-api/internal/domains/page/access"
 	"pocketrun-api/internal/domains/page/history"
 	"pocketrun-api/internal/domains/user/user"
+	applicationrepository "pocketrun-api/internal/repositories/application"
+	eventrepository "pocketrun-api/internal/repositories/event"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
+	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
+	pagebindingrepository "pocketrun-api/internal/repositories/pagebinding"
+	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
+	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -28,46 +34,46 @@ const (
 )
 
 type Repository interface {
-	Find(ctx context.Context, pageID bson.ObjectID) (*Binding, error)
-	Save(ctx context.Context, binding *Binding) error
+	Find(ctx context.Context, pageID bson.ObjectID) (*pagebindingrepository.Binding, error)
+	Save(ctx context.Context, binding *pagebindingrepository.Binding) error
 	Delete(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type RequestRepository interface {
-	Insert(ctx context.Context, request *LoggedRequest) error
-	Recent(ctx context.Context, pageID bson.ObjectID, limit int) ([]LoggedRequest, error)
+	Insert(ctx context.Context, request *pagekvrequestrepository.Request) error
+	Recent(ctx context.Context, pageID bson.ObjectID, limit int) ([]pagekvrequestrepository.Request, error)
 	Count(ctx context.Context, pageID bson.ObjectID, since time.Time, isDenied bool) (int64, error)
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 	Moments(ctx context.Context, from, to time.Time) ([]time.Time, error)
 }
 
 type ApplicationFinder interface {
-	Find(ctx context.Context, id bson.ObjectID) (*application.Application, error)
-	EnsureForPage(ctx context.Context, managerID bson.ObjectID, input application.PageInput) (*application.Application, bool, error)
+	Find(ctx context.Context, id bson.ObjectID) (*applicationrepository.Application, error)
+	EnsureForPage(ctx context.Context, managerID bson.ObjectID, input application.PageInput) (*applicationrepository.Application, bool, error)
 	DeleteForPage(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type AccessReader interface {
-	Get(ctx context.Context, pageID bson.ObjectID) (*access.Access, error)
+	Get(ctx context.Context, pageID bson.ObjectID) (*pageaccessrepository.Access, error)
 }
 
 type DocumentStore interface {
-	Create(ctx context.Context, scope kvdocument.Scope, collectionName string, input kvdocument.CreateInput) (*kvdocument.Document, error)
-	List(ctx context.Context, scope kvdocument.Scope, collectionName string, query kvdocument.ListQuery) ([]kvdocument.Document, int64, error)
-	Count(ctx context.Context, scope kvdocument.Scope, collectionName string, filter bson.M) (int64, error)
-	Eval(ctx context.Context, scope kvdocument.Scope, collectionName string, queryFilter bson.M, input kvdocument.EvalInput) (kvdocument.EvalResult, error)
-	Get(ctx context.Context, scope kvdocument.Scope, collectionName string, id bson.ObjectID) (*kvdocument.Document, error)
-	Update(ctx context.Context, scope kvdocument.Scope, collectionName string, id bson.ObjectID, input kvdocument.UpdateInput) (*kvdocument.Document, error)
-	Replace(ctx context.Context, scope kvdocument.Scope, collectionName string, id bson.ObjectID, input kvdocument.UpdateInput) (*kvdocument.Document, error)
-	Delete(ctx context.Context, scope kvdocument.Scope, collectionName string, id bson.ObjectID) error
+	Create(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, input kvdocument.CreateInput) (*kvdocumentrepository.Document, error)
+	List(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, query kvdocumentrepository.ListQuery) ([]kvdocumentrepository.Document, int64, error)
+	Count(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, filter bson.M) (int64, error)
+	Eval(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, queryFilter bson.M, input kvdocument.EvalInput) (kvdocument.EvalResult, error)
+	Get(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) (*kvdocumentrepository.Document, error)
+	Update(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, input kvdocument.UpdateInput) (*kvdocumentrepository.Document, error)
+	Replace(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, input kvdocument.UpdateInput) (*kvdocumentrepository.Document, error)
+	Delete(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) error
 }
 
 type EventRecorder interface {
-	Record(ctx context.Context, event *history.Event)
+	Record(ctx context.Context, event *eventrepository.Event)
 }
 
 type ActorResolver interface {
-	Actor(ctx context.Context) (user.Actor, error)
+	Actor(ctx context.Context) (userrepository.Actor, error)
 }
 
 type Dependencies struct {
@@ -146,7 +152,7 @@ func (s *Service) Enable(ctx context.Context, input application.PageInput) (Deta
 		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
 	}
 
-	next := &Binding{
+	next := &pagebindingrepository.Binding{
 		PageID:        input.PageID,
 		ApplicationID: app.ID,
 		PublicRole:    availableRole(app, application.PageReadRole),
@@ -176,7 +182,7 @@ func (s *Service) Set(ctx context.Context, pageID bson.ObjectID, input SetInput)
 		return Details{}, err
 	}
 
-	next := &Binding{PageID: pageID, ApplicationID: app.ID, PublicRole: input.PublicRole, Roles: input.Roles, Revision: previous.Revision + 1, UpdatedAt: time.Now()}
+	next := &pagebindingrepository.Binding{PageID: pageID, ApplicationID: app.ID, PublicRole: input.PublicRole, Roles: input.Roles, Revision: previous.Revision + 1, UpdatedAt: time.Now()}
 	if err := s.repository.Save(ctx, next); err != nil {
 		return Details{}, fmt.Errorf("set page kv roles %s: %w", pageID.Hex(), err)
 	}
@@ -194,7 +200,7 @@ func (s *Service) Remove(ctx context.Context, pageID bson.ObjectID) error {
 	if err := s.repository.Delete(ctx, pageID); err != nil {
 		return fmt.Errorf("unlink page %s: %w", pageID.Hex(), err)
 	}
-	s.record(ctx, pageID, history.EventKVUnlinked, []history.Change{{Field: applicationField, From: s.applicationName(ctx, previous.ApplicationID), To: nil}})
+	s.record(ctx, pageID, history.EventKVUnlinked, []eventrepository.Change{{Field: applicationField, From: s.applicationName(ctx, previous.ApplicationID), To: nil}})
 	return nil
 }
 
@@ -297,9 +303,9 @@ func (s *Service) run(ctx context.Context, pageID bson.ObjectID, subject Subject
 	return result, roleName, err
 }
 
-func (s *Service) execute(ctx context.Context, scope kvdocument.Scope, request Request) (Result, error) {
+func (s *Service) execute(ctx context.Context, scope kvdocumentrepository.Scope, request Request) (Result, error) {
 	switch request.Action {
-	case ActionList:
+	case pagekvrequestrepository.ActionList:
 		documents, total, err := s.documents.List(ctx, scope, request.Collection, request.List)
 		if err != nil {
 			return Result{}, err
@@ -308,25 +314,25 @@ func (s *Service) execute(ctx context.Context, scope kvdocument.Scope, request R
 			return Result{Status: http.StatusOK, Payload: documents}, nil
 		}
 		return Result{Status: http.StatusOK, Payload: kvdocument.NewPage(documents, total, request.List.Page, request.List.Limit)}, nil
-	case ActionCount:
+	case pagekvrequestrepository.ActionCount:
 		count, err := s.documents.Count(ctx, scope, request.Collection, request.Filter)
 		return Result{Status: http.StatusOK, Payload: kvdocument.CountResult{Count: count}}, err
-	case ActionEval:
+	case pagekvrequestrepository.ActionEval:
 		evaluated, err := s.documents.Eval(ctx, scope, request.Collection, request.Filter, request.Eval)
 		return Result{Status: http.StatusOK, Payload: evaluated}, err
-	case ActionGet:
+	case pagekvrequestrepository.ActionGet:
 		document, err := s.documents.Get(ctx, scope, request.Collection, request.DocumentID)
 		return Result{Status: http.StatusOK, Payload: document}, err
-	case ActionCreate:
+	case pagekvrequestrepository.ActionCreate:
 		document, err := s.documents.Create(ctx, scope, request.Collection, request.Create)
 		return Result{Status: http.StatusCreated, Payload: document}, err
-	case ActionUpdate:
+	case pagekvrequestrepository.ActionUpdate:
 		document, err := s.documents.Update(ctx, scope, request.Collection, request.DocumentID, request.Update)
 		return Result{Status: http.StatusOK, Payload: document}, err
-	case ActionReplace:
+	case pagekvrequestrepository.ActionReplace:
 		document, err := s.documents.Replace(ctx, scope, request.Collection, request.DocumentID, request.Update)
 		return Result{Status: http.StatusOK, Payload: document}, err
-	case ActionDelete:
+	case pagekvrequestrepository.ActionDelete:
 		err := s.documents.Delete(ctx, scope, request.Collection, request.DocumentID)
 		return Result{Status: http.StatusOK, Payload: httpx.MessageResponse{Message: "Document deleted successfully"}}, err
 	}
@@ -338,7 +344,7 @@ func (s *Service) log(ctx context.Context, pageID bson.ObjectID, subject Subject
 	if err != nil {
 		status, code = ErrorStatus(err)
 	}
-	entry := &LoggedRequest{
+	entry := &pagekvrequestrepository.Request{
 		ID:         bson.NewObjectID(),
 		PageID:     pageID,
 		Action:     request.Action,
@@ -358,7 +364,7 @@ func (s *Service) log(ctx context.Context, pageID bson.ObjectID, subject Subject
 	}
 }
 
-func (s *Service) record(ctx context.Context, pageID bson.ObjectID, eventType history.EventType, changes []history.Change) {
+func (s *Service) record(ctx context.Context, pageID bson.ObjectID, eventType eventrepository.Type, changes []eventrepository.Change) {
 	actor, err := s.actors.Actor(ctx)
 	if err != nil {
 		s.logger.WarnContext(ctx, "resolve page binding actor", "error", err)
@@ -374,7 +380,7 @@ func (s *Service) applicationName(ctx context.Context, id bson.ObjectID) string 
 	return app.Name
 }
 
-func checkMappings(app *application.Application, input SetInput) error {
+func checkMappings(app *applicationrepository.Application, input SetInput) error {
 	if input.PublicRole != "" && !app.HasRole(input.PublicRole) {
 		return application.ErrRoleNotFound
 	}
@@ -391,47 +397,47 @@ func checkMappings(app *application.Application, input SetInput) error {
 	return nil
 }
 
-func availableRole(app *application.Application, name string) string {
+func availableRole(app *applicationrepository.Application, name string) string {
 	if !app.HasRole(name) {
 		return ""
 	}
 	return name
 }
 
-func defaultMappings(app *application.Application, pageAccess *access.Access) []RoleMapping {
+func defaultMappings(app *applicationrepository.Application, pageAccess *pageaccessrepository.Access) []pagebindingrepository.RoleMapping {
 	role := availableRole(app, application.PageWriteRole)
-	mappings := []RoleMapping{{PageRole: "", KVRole: role}}
+	mappings := []pagebindingrepository.RoleMapping{{PageRole: "", KVRole: role}}
 	for _, key := range pageAccess.Keys {
 		if key.Role != "" {
-			mappings = append(mappings, RoleMapping{PageRole: key.Role, KVRole: role})
+			mappings = append(mappings, pagebindingrepository.RoleMapping{PageRole: key.Role, KVRole: role})
 		}
 	}
 	return mappings
 }
 
-func bindingChanges(previous, next *Binding, previousName, applicationName string) []history.Change {
+func bindingChanges(previous, next *pagebindingrepository.Binding, previousName, applicationName string) []eventrepository.Change {
 	if previous == nil {
-		return []history.Change{
+		return []eventrepository.Change{
 			{Field: applicationField, From: nil, To: applicationName},
 			{Field: publicRoleField, From: nil, To: next.PublicRole},
 			{Field: roleMappingsField, From: nil, To: describeMappings(next.Roles)},
 		}
 	}
 
-	changes := []history.Change{}
+	changes := []eventrepository.Change{}
 	if previous.ApplicationID != next.ApplicationID {
-		changes = append(changes, history.Change{Field: applicationField, From: previousName, To: applicationName})
+		changes = append(changes, eventrepository.Change{Field: applicationField, From: previousName, To: applicationName})
 	}
 	if previous.PublicRole != next.PublicRole {
-		changes = append(changes, history.Change{Field: publicRoleField, From: previous.PublicRole, To: next.PublicRole})
+		changes = append(changes, eventrepository.Change{Field: publicRoleField, From: previous.PublicRole, To: next.PublicRole})
 	}
 	if before, after := describeMappings(previous.Roles), describeMappings(next.Roles); before != after {
-		changes = append(changes, history.Change{Field: roleMappingsField, From: before, To: after})
+		changes = append(changes, eventrepository.Change{Field: roleMappingsField, From: before, To: after})
 	}
 	return changes
 }
 
-func describeMappings(mappings []RoleMapping) string {
+func describeMappings(mappings []pagebindingrepository.RoleMapping) string {
 	described := []string{}
 	for _, mapping := range mappings {
 		if mapping.KVRole == "" {
@@ -447,10 +453,10 @@ func describeMappings(mappings []RoleMapping) string {
 	return strings.Join(described, ", ")
 }
 
-func describeRole(app *application.Application, roleName string) *Runtime {
+func describeRole(app *applicationrepository.Application, roleName string) *Runtime {
 	runtime := &Runtime{Role: roleName, Rules: []RuntimeRule{}}
-	if roleName == application.AdminRole {
-		runtime.Rules = append(runtime.Rules, RuntimeRule{Collection: application.AnyCollection, Operations: []application.Operation{application.OperationRead, application.OperationCreate, application.OperationUpdate, application.OperationDelete}})
+	if roleName == applicationrepository.AdminRole {
+		runtime.Rules = append(runtime.Rules, RuntimeRule{Collection: applicationrepository.AnyCollection, Operations: []applicationrepository.Operation{applicationrepository.OperationRead, applicationrepository.OperationCreate, applicationrepository.OperationUpdate, applicationrepository.OperationDelete}})
 		return runtime
 	}
 
@@ -465,7 +471,7 @@ func describeRole(app *application.Application, roleName string) *Runtime {
 	return runtime
 }
 
-func summarize(app *application.Application) *ApplicationSummary {
+func summarize(app *applicationrepository.Application) *ApplicationSummary {
 	return &ApplicationSummary{ID: app.ID, PageID: app.PageID, Name: app.Name, ProjectID: app.ProjectID, Roles: app.Roles}
 }
 

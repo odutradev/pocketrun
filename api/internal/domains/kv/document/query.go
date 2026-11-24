@@ -3,6 +3,7 @@ package document
 import (
 	"fmt"
 	"net/url"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"regexp"
 	"strconv"
 	"strings"
@@ -52,15 +53,15 @@ func checkField(field string) error {
 	return nil
 }
 
-func ParseListQuery(values url.Values) (ListQuery, error) {
+func ParseListQuery(values url.Values) (kvdocumentrepository.ListQuery, error) {
 	filter, err := ParseQueryFilter(values)
 	if err != nil {
-		return ListQuery{}, err
+		return kvdocumentrepository.ListQuery{}, err
 	}
 
 	sortField, err := parseSortField(values.Get("sortBy"))
 	if err != nil {
-		return ListQuery{}, err
+		return kvdocumentrepository.ListQuery{}, err
 	}
 
 	sortOrder := -1
@@ -69,10 +70,10 @@ func ParseListQuery(values url.Values) (ListQuery, error) {
 	case "asc":
 		sortOrder = 1
 	default:
-		return ListQuery{}, ErrInvalidSort
+		return kvdocumentrepository.ListQuery{}, ErrInvalidSort
 	}
 
-	return ListQuery{
+	return kvdocumentrepository.ListQuery{
 		Filter:    filter,
 		SortField: sortField,
 		SortOrder: sortOrder,

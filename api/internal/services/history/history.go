@@ -11,20 +11,13 @@ import (
 
 const PageSize = 30
 
-type (
-	EventType = eventrepository.Type
-	Event     = eventrepository.Event
-	Change    = eventrepository.Change
-	Query     = eventrepository.Query
-)
-
 const (
-	EventCreated       EventType = "created"
-	EventUpdated       EventType = "updated"
-	EventDeleted       EventType = "deleted"
-	EventExpired       EventType = "expired"
-	EventExhausted     EventType = "exhausted"
-	EventGroupDetached EventType = "group_detached"
+	EventCreated       eventrepository.Type = "created"
+	EventUpdated       eventrepository.Type = "updated"
+	EventDeleted       eventrepository.Type = "deleted"
+	EventExpired       eventrepository.Type = "expired"
+	EventExhausted     eventrepository.Type = "exhausted"
+	EventGroupDetached eventrepository.Type = "group_detached"
 )
 
 type Params struct {
@@ -32,8 +25,8 @@ type Params struct {
 	Limit  int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
-func (p Params) Query() Query {
-	query := Query{Limit: PageSize}
+func (p Params) Query() eventrepository.Query {
+	query := eventrepository.Query{Limit: PageSize}
 	if p.Limit > 0 {
 		query.Limit = p.Limit
 	}
@@ -44,19 +37,19 @@ func (p Params) Query() Query {
 }
 
 type Feed struct {
-	Events     []Event    `json:"events"`
-	NextCursor *time.Time `json:"nextCursor"`
-	Total      int64      `json:"total"`
+	Events     []eventrepository.Event `json:"events"`
+	NextCursor *time.Time              `json:"nextCursor"`
+	Total      int64                   `json:"total"`
 }
 
-func NewEvent(targetID bson.ObjectID, eventType EventType, actor userrepository.Actor, changes []Change, at time.Time) *Event {
+func NewEvent(targetID bson.ObjectID, eventType eventrepository.Type, actor userrepository.Actor, changes []eventrepository.Change, at time.Time) *eventrepository.Event {
 	if changes == nil {
-		changes = []Change{}
+		changes = []eventrepository.Change{}
 	}
-	return &Event{ID: bson.NewObjectID(), TargetID: targetID, Type: eventType, Actor: actor, Changes: changes, At: at}
+	return &eventrepository.Event{ID: bson.NewObjectID(), TargetID: targetID, Type: eventType, Actor: actor, Changes: changes, At: at}
 }
 
-func expirationEvent(targetID bson.ObjectID, expiredAt *time.Time, before *time.Time) *Event {
+func expirationEvent(targetID bson.ObjectID, expiredAt *time.Time, before *time.Time) *eventrepository.Event {
 	if expiredAt == nil {
 		return nil
 	}

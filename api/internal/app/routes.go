@@ -26,6 +26,7 @@ import (
 	"pocketrun-api/internal/domains/page/version"
 	"pocketrun-api/internal/domains/user/setup"
 	"pocketrun-api/internal/domains/user/user"
+	grouprepository "pocketrun-api/internal/repositories/group"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -52,11 +53,11 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	user.NewHandler(s.users, validate, logger).Register(adminMux, authenticateManager)
 	applicationHandler.RegisterAdmin(adminMux, authenticateManager)
 	documentHandler.RegisterAdmin(adminMux, authenticateManager)
-	groupHandler.Register(adminMux, authenticateManager, "/links/groups", group.KindLinks, s.links)
+	groupHandler.Register(adminMux, authenticateManager, "/links/groups", grouprepository.KindLinks, s.links)
 	link.NewHandler(s.links, cfg.LinksURL, validate, logger).Register(adminMux, authenticateManager)
 	linkhistory.NewHandler(s.linkHistory, s.links, validate, logger).Register(adminMux, authenticateManager)
 	linkanalytics.NewHandler(s.linkAnalytics, s.links, validate, logger).Register(adminMux, authenticateManager)
-	groupHandler.Register(adminMux, authenticateManager, "/pages/groups", group.KindPages, s.pages)
+	groupHandler.Register(adminMux, authenticateManager, "/pages/groups", grouprepository.KindPages, s.pages)
 	page.NewHandler(s.pages, validate, logger).Register(adminMux, authenticateManager)
 	version.NewHandler(s.versions, s.pages, logger).Register(adminMux, authenticateManager)
 	pagehistory.NewHandler(s.pageHistory, s.pages, validate, logger).Register(adminMux, authenticateManager)

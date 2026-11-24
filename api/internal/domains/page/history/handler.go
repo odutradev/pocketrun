@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -17,13 +18,13 @@ type ExpiryFinder interface {
 }
 
 type Handler struct {
-	service  *Service
+	service  *historyservice.Service
 	pages    ExpiryFinder
 	validate *validator.Validate
 	logger   *slog.Logger
 }
 
-func NewHandler(service *Service, pages ExpiryFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
+func NewHandler(service *historyservice.Service, pages ExpiryFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
 	return &Handler{service: service, pages: pages, validate: validate, logger: logger}
 }
 
@@ -39,7 +40,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var params Params
+	var params historyservice.Params
 	if err := httpx.DecodeQuery(r, h.validate, &params); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return

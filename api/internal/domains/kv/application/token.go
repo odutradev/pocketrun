@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/http"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	"strings"
 	"time"
 )
@@ -15,16 +16,16 @@ const (
 	tokenRandomBytes = 24
 )
 
-func generateToken(name string, validityDays int, now time.Time) (string, Token, error) {
+func generateToken(name string, validityDays int, now time.Time) (string, applicationrepository.Token, error) {
 	randomBytes := make([]byte, tokenRandomBytes)
 	if _, err := rand.Read(randomBytes); err != nil {
-		return "", Token{}, fmt.Errorf("generate token bytes: %w", err)
+		return "", applicationrepository.Token{}, fmt.Errorf("generate token bytes: %w", err)
 	}
 
 	randomHex := hex.EncodeToString(randomBytes)
 	rawToken := tokenPrefix + randomHex
 
-	token := Token{
+	token := applicationrepository.Token{
 		ID:        "tok_" + randomHex[:8],
 		Name:      name,
 		Hash:      hashToken(rawToken),
@@ -56,13 +57,13 @@ func extractAccessToken(r *http.Request) string {
 	return ""
 }
 
-func findToken(tokens []Token, hash string) (Token, bool) {
+func findToken(tokens []applicationrepository.Token, hash string) (applicationrepository.Token, bool) {
 	for _, token := range tokens {
 		if token.Hash == hash {
 			return token, true
 		}
 	}
-	return Token{}, false
+	return applicationrepository.Token{}, false
 }
 
 func isOriginAllowed(allowedOrigins []string, origin string, allowNonBrowserRequests bool) bool {

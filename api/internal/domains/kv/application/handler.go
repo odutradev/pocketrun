@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/user/user"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -101,7 +102,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var input UpdateInput
+	var input applicationrepository.UpdateInput
 	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return

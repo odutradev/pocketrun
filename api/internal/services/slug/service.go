@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	slugrepository "pocketrun-api/internal/repositories/slug"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -16,8 +17,8 @@ const (
 )
 
 type Repository interface {
-	Insert(ctx context.Context, entry *Entry) error
-	Find(ctx context.Context, value string) (*Entry, error)
+	Insert(ctx context.Context, entry *slugrepository.Entry) error
+	Find(ctx context.Context, value string) (*slugrepository.Entry, error)
 	Delete(ctx context.Context, value string, targetID bson.ObjectID) error
 }
 
@@ -56,7 +57,7 @@ func (s *Service) Check(ctx context.Context, value string, ownerID *bson.ObjectI
 	return availability, nil
 }
 
-func (s *Service) Find(ctx context.Context, value string) (*Entry, error) {
+func (s *Service) Find(ctx context.Context, value string) (*slugrepository.Entry, error) {
 	entry, err := s.repository.Find(ctx, value)
 	if err != nil {
 		return nil, fmt.Errorf("find slug %s: %w", value, err)
@@ -64,19 +65,19 @@ func (s *Service) Find(ctx context.Context, value string) (*Entry, error) {
 	return entry, nil
 }
 
-func (s *Service) Reserve(ctx context.Context, value string, kind Kind, targetID bson.ObjectID) error {
+func (s *Service) Reserve(ctx context.Context, value string, kind slugrepository.Kind, targetID bson.ObjectID) error {
 	if err := Validate(value); err != nil {
 		return fmt.Errorf("reserve slug %s: %w", value, err)
 	}
 
-	entry := &Entry{Slug: value, Kind: kind, TargetID: targetID, CreatedAt: time.Now()}
+	entry := &slugrepository.Entry{Slug: value, Kind: kind, TargetID: targetID, CreatedAt: time.Now()}
 	if err := s.repository.Insert(ctx, entry); err != nil {
 		return fmt.Errorf("reserve slug %s: %w", value, err)
 	}
 	return nil
 }
 
-func (s *Service) ReserveRandom(ctx context.Context, kind Kind, targetID bson.ObjectID) (string, error) {
+func (s *Service) ReserveRandom(ctx context.Context, kind slugrepository.Kind, targetID bson.ObjectID) (string, error) {
 	for range randomAttempts {
 		value, err := Random()
 		if err != nil {

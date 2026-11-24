@@ -6,52 +6,32 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/domains/user/user"
+	eventrepository "pocketrun-api/internal/repositories/event"
+	userrepository "pocketrun-api/internal/repositories/user"
 	historyservice "pocketrun-api/internal/services/history"
 )
 
-const PageSize = historyservice.PageSize
-
-type (
-	EventType = historyservice.EventType
-	Event     = historyservice.Event
-	Change    = historyservice.Change
-	Query     = historyservice.Query
-	Params    = historyservice.Params
-	Feed      = historyservice.Feed
-	Service   = historyservice.Service
-)
-
 const (
-	EventCreated       = historyservice.EventCreated
-	EventUpdated       = historyservice.EventUpdated
-	EventDeleted       = historyservice.EventDeleted
-	EventExpired       = historyservice.EventExpired
-	EventExhausted     = historyservice.EventExhausted
-	EventGroupDetached = historyservice.EventGroupDetached
+	EventAccessEnabled        eventrepository.Type = "access_enabled"
+	EventAccessDisabled       eventrepository.Type = "access_disabled"
+	EventAccessKeyCreated     eventrepository.Type = "access_key_created"
+	EventAccessKeyRenamed     eventrepository.Type = "access_key_renamed"
+	EventAccessPINReset       eventrepository.Type = "access_pin_reset"
+	EventAccessPINViewed      eventrepository.Type = "access_pin_viewed"
+	EventAccessKeyRemoved     eventrepository.Type = "access_key_removed"
+	EventAccessRevoked        eventrepository.Type = "access_sessions_revoked"
+	EventAccessSessionChanged eventrepository.Type = "access_session_changed"
+	EventAccessLocked         eventrepository.Type = "access_locked"
+	EventUnlocked             eventrepository.Type = "unlocked"
+	EventKVLinked             eventrepository.Type = "kv_linked"
+	EventKVChanged            eventrepository.Type = "kv_changed"
+	EventKVUnlinked           eventrepository.Type = "kv_unlinked"
 )
 
-const (
-	EventAccessEnabled        EventType = "access_enabled"
-	EventAccessDisabled       EventType = "access_disabled"
-	EventAccessKeyCreated     EventType = "access_key_created"
-	EventAccessKeyRenamed     EventType = "access_key_renamed"
-	EventAccessPINReset       EventType = "access_pin_reset"
-	EventAccessPINViewed      EventType = "access_pin_viewed"
-	EventAccessKeyRemoved     EventType = "access_key_removed"
-	EventAccessRevoked        EventType = "access_sessions_revoked"
-	EventAccessSessionChanged EventType = "access_session_changed"
-	EventAccessLocked         EventType = "access_locked"
-	EventUnlocked             EventType = "unlocked"
-	EventKVLinked             EventType = "kv_linked"
-	EventKVChanged            EventType = "kv_changed"
-	EventKVUnlinked           EventType = "kv_unlinked"
-)
-
-func NewService(repository historyservice.Repository, logger *slog.Logger) *Service {
+func NewService(repository historyservice.Repository, logger *slog.Logger) *historyservice.Service {
 	return historyservice.NewService(repository, "page", logger)
 }
 
-func NewEvent(pageID bson.ObjectID, eventType EventType, actor user.Actor, changes []Change, at time.Time) *Event {
+func NewEvent(pageID bson.ObjectID, eventType eventrepository.Type, actor userrepository.Actor, changes []eventrepository.Change, at time.Time) *eventrepository.Event {
 	return historyservice.NewEvent(pageID, eventType, actor, changes, at)
 }

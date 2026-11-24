@@ -15,6 +15,7 @@ import (
 	"pocketrun-api/internal/domains/page/access"
 	"pocketrun-api/internal/domains/page/binding"
 	"pocketrun-api/internal/domains/page/page"
+	pagerepository "pocketrun-api/internal/repositories/page"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/ratelimit"
 	"pocketrun-api/internal/services/traffic"
@@ -29,8 +30,8 @@ const (
 const cookiePrefix = "pocketrun_page_"
 
 type PageOpener interface {
-	Visible(ctx context.Context, id bson.ObjectID) (*page.Page, error)
-	Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*page.Page, error)
+	Visible(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
+	Open(ctx context.Context, id bson.ObjectID, visit traffic.Visit) (*pagerepository.Page, error)
 }
 
 type AccessGuard interface {
@@ -70,8 +71,8 @@ func NewHandler(dependencies Dependencies) *Handler {
 		data:           dependencies.Data,
 		pagesHost:      utils.URLHost(dependencies.PagesURL),
 		validate:       dependencies.Validate,
-		visitorLimiter: ratelimit.New(dataLimitWindow, visitorDataLimit),
-		pageLimiter:    ratelimit.New(dataLimitWindow, pageDataLimit),
+		visitorLimiter: ratelimit.New(time.Minute, visitorDataLimit),
+		pageLimiter:    ratelimit.New(time.Minute, pageDataLimit),
 		logger:         dependencies.Logger,
 	}
 }

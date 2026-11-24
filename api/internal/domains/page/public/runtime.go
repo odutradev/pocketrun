@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"pocketrun-api/internal/domains/page/binding"
-	"pocketrun-api/internal/domains/page/page"
+	pagerepository "pocketrun-api/internal/repositories/page"
 )
 
 const runtimeAPIVersion = 1
@@ -40,7 +40,7 @@ type runtimeExtra struct {
 	KV     *binding.Runtime `json:"kv"`
 }
 
-func runtimeTag(target page.Page, extra runtimeExtra) (string, error) {
+func runtimeTag(target pagerepository.Page, extra runtimeExtra) (string, error) {
 	info, err := json.Marshal(runtimePage{
 		Slug:      target.Slug,
 		Title:     target.Title,

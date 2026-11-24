@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -40,7 +41,7 @@ func Authenticate(service *Service, logger *slog.Logger) func(http.Handler) http
 	}
 }
 
-func touchToken(ctx context.Context, service *Service, logger *slog.Logger, application *Application, hash string) {
+func touchToken(ctx context.Context, service *Service, logger *slog.Logger, application *applicationrepository.Application, hash string) {
 	touchContext, cancel := context.WithTimeout(ctx, touchTimeout)
 	defer cancel()
 

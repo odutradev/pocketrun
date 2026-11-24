@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	"time"
 	"unicode/utf8"
 
@@ -25,33 +26,33 @@ type PageInput struct {
 	Slug   string
 }
 
-func PageRoles(now time.Time) []Role {
-	return []Role{
+func PageRoles(now time.Time) []applicationrepository.Role {
+	return []applicationrepository.Role{
 		{
 			Name:        PageReadRole,
 			Description: "Só lê os documentos",
-			Rules:       []Rule{{Collection: AnyCollection, Operations: []Operation{OperationRead}}},
+			Rules:       []applicationrepository.Rule{{Collection: applicationrepository.AnyCollection, Operations: []applicationrepository.Operation{applicationrepository.OperationRead}}},
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
 		{
 			Name:        PageWriteRole,
 			Description: "Lê, cria e edita os documentos",
-			Rules:       []Rule{{Collection: AnyCollection, Operations: []Operation{OperationRead, OperationCreate, OperationUpdate}}},
+			Rules:       []applicationrepository.Rule{{Collection: applicationrepository.AnyCollection, Operations: []applicationrepository.Operation{applicationrepository.OperationRead, applicationrepository.OperationCreate, applicationrepository.OperationUpdate}}},
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
 		{
 			Name:        PageManageRole,
 			Description: "Lê, cria, edita e apaga os documentos",
-			Rules:       []Rule{{Collection: AnyCollection, Operations: []Operation{OperationRead, OperationCreate, OperationUpdate, OperationDelete}}},
+			Rules:       []applicationrepository.Rule{{Collection: applicationrepository.AnyCollection, Operations: []applicationrepository.Operation{applicationrepository.OperationRead, applicationrepository.OperationCreate, applicationrepository.OperationUpdate, applicationrepository.OperationDelete}}},
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
 	}
 }
 
-func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, input PageInput) (*Application, bool, error) {
+func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, input PageInput) (*applicationrepository.Application, bool, error) {
 	current, err := s.repository.FindByPageID(ctx, input.PageID)
 	if err == nil {
 		return current, false, nil
@@ -62,7 +63,7 @@ func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, in
 
 	now := time.Now()
 	pageID := input.PageID
-	created := &Application{
+	created := &applicationrepository.Application{
 		ID:                      bson.NewObjectID(),
 		ManagerID:               managerID,
 		PageID:                  &pageID,
@@ -71,7 +72,7 @@ func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, in
 		Description:             fmt.Sprintf("Dados da página /%s, criada pela aba Dados do Pages.", input.Slug),
 		AllowedOrigins:          []string{},
 		AllowNonBrowserRequests: false,
-		Tokens:                  []Token{},
+		Tokens:                  []applicationrepository.Token{},
 		Roles:                   PageRoles(now),
 		CreatedAt:               now,
 		UpdatedAt:               now,
@@ -91,7 +92,7 @@ func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, in
 	return created, true, nil
 }
 
-func (s *Service) FindForPage(ctx context.Context, pageID bson.ObjectID) (*Application, error) {
+func (s *Service) FindForPage(ctx context.Context, pageID bson.ObjectID) (*applicationrepository.Application, error) {
 	current, err := s.repository.FindByPageID(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("find application of page %s: %w", pageID.Hex(), err)

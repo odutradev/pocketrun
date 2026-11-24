@@ -12,16 +12,6 @@ const (
 	RandomLength = 8
 )
 
-type (
-	Kind  = slugrepository.Kind
-	Entry = slugrepository.Entry
-)
-
-const (
-	KindLink = slugrepository.KindLink
-	KindPage = slugrepository.KindPage
-)
-
 const (
 	ReasonInvalid  = "invalid"
 	ReasonReserved = "reserved"

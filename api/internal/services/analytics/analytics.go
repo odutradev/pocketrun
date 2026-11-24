@@ -12,8 +12,6 @@ import (
 
 const MaxRanked = 8
 
-type Open = openrepository.Open
-
 type Target struct {
 	ID        bson.ObjectID
 	Title     string
@@ -34,11 +32,11 @@ type tally struct {
 	visitors map[string]struct{}
 }
 
-func newOpen(targetID bson.ObjectID, visit traffic.Visit, visitor string, at time.Time) *Open {
-	return &Open{ID: bson.NewObjectID(), TargetID: targetID, Hit: traffic.NewHit(visit, visitor, at)}
+func newOpen(targetID bson.ObjectID, visit traffic.Visit, visitor string, at time.Time) *openrepository.Open {
+	return &openrepository.Open{ID: bson.NewObjectID(), TargetID: targetID, Hit: traffic.NewHit(visit, visitor, at)}
 }
 
-func rank(opens []Open) []Ranked {
+func rank(opens []openrepository.Open) []Ranked {
 	tallies := map[bson.ObjectID]*tally{}
 	for _, open := range opens {
 		if open.IsBot {
@@ -69,7 +67,7 @@ func rank(opens []Open) []Ranked {
 	return ranked
 }
 
-func hitsOf(opens []Open) []traffic.Hit {
+func hitsOf(opens []openrepository.Open) []traffic.Hit {
 	hits := make([]traffic.Hit, 0, len(opens))
 	for _, open := range opens {
 		hits = append(hits, open.Hit)

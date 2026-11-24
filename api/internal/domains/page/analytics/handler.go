@@ -7,18 +7,19 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	analyticsservice "pocketrun-api/internal/services/analytics"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/traffic"
 )
 
 type Handler struct {
 	service  *Service
-	pages    TargetFinder
+	pages    analyticsservice.TargetFinder
 	validate *validator.Validate
 	logger   *slog.Logger
 }
 
-func NewHandler(service *Service, pages TargetFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
+func NewHandler(service *Service, pages analyticsservice.TargetFinder, validate *validator.Validate, logger *slog.Logger) *Handler {
 	return &Handler{service: service, pages: pages, validate: validate, logger: logger}
 }
 

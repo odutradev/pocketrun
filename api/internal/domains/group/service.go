@@ -3,17 +3,18 @@ package group
 import (
 	"context"
 	"fmt"
+	grouprepository "pocketrun-api/internal/repositories/group"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Repository interface {
-	FindByKind(ctx context.Context, kind Kind) ([]Group, error)
-	FindByID(ctx context.Context, kind Kind, id bson.ObjectID) (*Group, error)
-	Insert(ctx context.Context, group *Group) error
-	Update(ctx context.Context, kind Kind, id bson.ObjectID, input Input) (*Group, error)
-	Delete(ctx context.Context, kind Kind, id bson.ObjectID) error
+	FindByKind(ctx context.Context, kind grouprepository.Kind) ([]grouprepository.Group, error)
+	FindByID(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID) (*grouprepository.Group, error)
+	Insert(ctx context.Context, group *grouprepository.Group) error
+	Update(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID, input grouprepository.Input) (*grouprepository.Group, error)
+	Delete(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID) error
 }
 
 type Detacher interface {
@@ -28,7 +29,7 @@ func NewService(repository Repository) *Service {
 	return &Service{repository: repository}
 }
 
-func (s *Service) List(ctx context.Context, kind Kind) ([]Group, error) {
+func (s *Service) List(ctx context.Context, kind grouprepository.Kind) ([]grouprepository.Group, error) {
 	groups, err := s.repository.FindByKind(ctx, kind)
 	if err != nil {
 		return nil, fmt.Errorf("list %s groups: %w", kind, err)
@@ -40,16 +41,16 @@ func (s *Service) List(ctx context.Context, kind Kind) ([]Group, error) {
 	return groups, nil
 }
 
-func (s *Service) Ensure(ctx context.Context, kind Kind, id bson.ObjectID) error {
+func (s *Service) Ensure(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID) error {
 	if _, err := s.repository.FindByID(ctx, kind, id); err != nil {
 		return fmt.Errorf("ensure group %s: %w", id.Hex(), err)
 	}
 	return nil
 }
 
-func (s *Service) Create(ctx context.Context, kind Kind, input Input) (*Group, error) {
+func (s *Service) Create(ctx context.Context, kind grouprepository.Kind, input grouprepository.Input) (*grouprepository.Group, error) {
 	now := time.Now()
-	group := &Group{ID: bson.NewObjectID(), Kind: kind, Name: input.Name, Color: input.Color, Icon: input.Icon, CreatedAt: now, UpdatedAt: now}
+	group := &grouprepository.Group{ID: bson.NewObjectID(), Kind: kind, Name: input.Name, Color: input.Color, Icon: input.Icon, CreatedAt: now, UpdatedAt: now}
 	group.ApplyDefaults()
 	if err := s.repository.Insert(ctx, group); err != nil {
 		return nil, fmt.Errorf("create %s group: %w", kind, err)
@@ -57,7 +58,7 @@ func (s *Service) Create(ctx context.Context, kind Kind, input Input) (*Group, e
 	return group, nil
 }
 
-func (s *Service) Update(ctx context.Context, kind Kind, id bson.ObjectID, input Input) (*Group, error) {
+func (s *Service) Update(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID, input grouprepository.Input) (*grouprepository.Group, error) {
 	group, err := s.repository.Update(ctx, kind, id, input)
 	if err != nil {
 		return nil, fmt.Errorf("update group %s: %w", id.Hex(), err)
@@ -67,7 +68,7 @@ func (s *Service) Update(ctx context.Context, kind Kind, id bson.ObjectID, input
 	return group, nil
 }
 
-func (s *Service) Delete(ctx context.Context, kind Kind, id bson.ObjectID, members Detacher) error {
+func (s *Service) Delete(ctx context.Context, kind grouprepository.Kind, id bson.ObjectID, members Detacher) error {
 	if err := s.repository.Delete(ctx, kind, id); err != nil {
 		return fmt.Errorf("delete group %s: %w", id.Hex(), err)
 	}

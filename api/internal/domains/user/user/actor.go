@@ -5,15 +5,17 @@ import (
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
-func (s *Service) Actor(ctx context.Context) (Actor, error) {
+func (s *Service) Actor(ctx context.Context) (userrepository.Actor, error) {
 	claims, ok := ClaimsFromContext(ctx)
 	if !ok {
-		return SystemActor(), nil
+		return userrepository.SystemActor(), nil
 	}
 
-	actor := Actor{Name: claims.Email, Email: claims.Email}
+	actor := userrepository.Actor{Name: claims.Email, Email: claims.Email}
 	id, err := bson.ObjectIDFromHex(claims.UserID)
 	if err != nil {
 		return actor, nil

@@ -86,6 +86,6 @@ func (i *LoginInput) Normalize() {
 }
 
 type Session struct {
-	Token string `json:"-"`
-	User  *User  `json:"user"`
+	Token string               `json:"-"`
+	User  *userrepository.User `json:"user"`
 }

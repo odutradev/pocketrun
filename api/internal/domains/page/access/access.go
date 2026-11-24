@@ -37,11 +37,11 @@ var (
 	errAccessNotFound  = pageaccessrepository.ErrNotFound
 )
 
-func newAccess(pageID bson.ObjectID) *Access {
-	return &Access{PageID: pageID, Keys: []Key{}, SessionHours: DefaultSessionHours}
+func newAccess(pageID bson.ObjectID) *pageaccessrepository.Access {
+	return &pageaccessrepository.Access{PageID: pageID, Keys: []pageaccessrepository.Key{}, SessionHours: DefaultSessionHours}
 }
 
-func applyAccessDefaults(a *Access) {
+func applyAccessDefaults(a *pageaccessrepository.Access) {
 	if a.SessionHours <= 0 {
 		a.SessionHours = DefaultSessionHours
 	}
@@ -50,12 +50,12 @@ func applyAccessDefaults(a *Access) {
 	}
 }
 
-func sessionDuration(a *Access) time.Duration {
+func sessionDuration(a *pageaccessrepository.Access) time.Duration {
 	applyAccessDefaults(a)
 	return time.Duration(a.SessionHours) * time.Hour
 }
 
-func findKey(a *Access, id bson.ObjectID) (*Key, error) {
+func findKey(a *pageaccessrepository.Access, id bson.ObjectID) (*pageaccessrepository.Key, error) {
 	for index := range a.Keys {
 		if a.Keys[index].ID == id {
 			return &a.Keys[index], nil
@@ -64,7 +64,7 @@ func findKey(a *Access, id bson.ObjectID) (*Key, error) {
 	return nil, ErrKeyNotFound
 }
 
-func ensureRoleFree(a *Access, role string, ownerID *bson.ObjectID) error {
+func ensureRoleFree(a *pageaccessrepository.Access, role string, ownerID *bson.ObjectID) error {
 	for _, key := range a.Keys {
 		if key.Role == role && (ownerID == nil || key.ID != *ownerID) {
 			return ErrRoleTaken
@@ -73,7 +73,7 @@ func ensureRoleFree(a *Access, role string, ownerID *bson.ObjectID) error {
 	return nil
 }
 
-func ensurePINFree(a *Access, hash string, ownerID *bson.ObjectID) error {
+func ensurePINFree(a *pageaccessrepository.Access, hash string, ownerID *bson.ObjectID) error {
 	for _, key := range a.Keys {
 		if key.PINHash == hash && (ownerID == nil || key.ID != *ownerID) {
 			return ErrPINInUse
@@ -133,8 +133,8 @@ type Revealed struct {
 }
 
 type Issued struct {
-	Access *Access `json:"access"`
-	PIN    string  `json:"pin"`
+	Access *pageaccessrepository.Access `json:"access"`
+	PIN    string                       `json:"pin"`
 }
 
 func ParseKeyID(value string) (bson.ObjectID, error) {

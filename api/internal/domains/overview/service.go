@@ -7,7 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	kvusage "pocketrun-api/internal/domains/kv/usage"
+	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 	"pocketrun-api/internal/services/traffic"
 )
 
@@ -16,7 +16,7 @@ type MomentFinder interface {
 }
 
 type KVUsageFinder interface {
-	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusage.Hour, error)
+	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
 }
 
 type Dependencies struct {
@@ -36,7 +36,7 @@ type Service struct {
 type activity struct {
 	pages  []time.Time
 	links  []time.Time
-	kv     []kvusage.Hour
+	kv     []kvusagerepository.Hour
 	pageKV []time.Time
 }
 
@@ -158,7 +158,7 @@ func build(query traffic.AnalyticsQuery, from, to time.Time, current activity) U
 	return usage
 }
 
-func sumRequests(hours []kvusage.Hour) int64 {
+func sumRequests(hours []kvusagerepository.Hour) int64 {
 	total := int64(0)
 	for _, hour := range hours {
 		total += hour.Requests

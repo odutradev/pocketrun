@@ -21,6 +21,7 @@ import (
 	"pocketrun-api/internal/domains/page/version"
 	"pocketrun-api/internal/domains/user/setup"
 	"pocketrun-api/internal/domains/user/user"
+	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
 )
@@ -34,11 +35,11 @@ type services struct {
 	usage         *kvusage.Service
 	groups        *group.Service
 	links         *link.Service
-	linkHistory   *linkhistory.Service
+	linkHistory   *historyservice.Service
 	linkAnalytics *linkanalytics.Service
 	pages         *page.Service
 	versions      *version.Service
-	pageHistory   *pagehistory.Service
+	pageHistory   *historyservice.Service
 	pageAnalytics *pageanalytics.Service
 	access        *access.Service
 	bindings      *binding.Service

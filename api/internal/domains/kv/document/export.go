@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"sort"
 	"strconv"
 	"time"
@@ -12,7 +13,7 @@ import (
 
 var metadataColumns = []string{"id", "collectionName", "createdAt", "updatedAt", "expiresAt"}
 
-func DocumentsCSV(documents []Document) ([]byte, error) {
+func DocumentsCSV(documents []kvdocumentrepository.Document) ([]byte, error) {
 	var buffer bytes.Buffer
 	if err := writeCSV(&buffer, documents); err != nil {
 		return nil, err
@@ -20,7 +21,7 @@ func DocumentsCSV(documents []Document) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func ProjectCSV(collections map[string][]Document) ([]byte, error) {
+func ProjectCSV(collections map[string][]kvdocumentrepository.Document) ([]byte, error) {
 	names := make([]string, 0, len(collections))
 	for name := range collections {
 		names = append(names, name)
@@ -40,7 +41,7 @@ func ProjectCSV(collections map[string][]Document) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func writeCSV(buffer *bytes.Buffer, documents []Document) error {
+func writeCSV(buffer *bytes.Buffer, documents []kvdocumentrepository.Document) error {
 	keys := dataKeys(documents)
 	writer := csv.NewWriter(buffer)
 	if err := writer.Write(append(append([]string{}, metadataColumns...), keys...)); err != nil {
@@ -68,7 +69,7 @@ func writeCSV(buffer *bytes.Buffer, documents []Document) error {
 	return nil
 }
 
-func dataKeys(documents []Document) []string {
+func dataKeys(documents []kvdocumentrepository.Document) []string {
 	seen := map[string]bool{}
 	keys := []string{}
 	for _, document := range documents {

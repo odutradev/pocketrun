@@ -11,13 +11,14 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/page/history"
-	"pocketrun-api/internal/domains/user/user"
+	eventrepository "pocketrun-api/internal/repositories/event"
+	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
 	pageaccessattemptrepository "pocketrun-api/internal/repositories/pageaccessattempt"
+	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/slug"
 )
 
 const (
-	pageLimitWindow  = time.Hour
 	pageLimitMax     = 50
 	visitorActorName = "Visitante"
 	roleField        = "role"
@@ -34,23 +35,23 @@ func clientLimits() []limit {
 }
 
 type Repository interface {
-	Find(ctx context.Context, pageID bson.ObjectID) (*Access, error)
-	Save(ctx context.Context, access *Access) error
+	Find(ctx context.Context, pageID bson.ObjectID) (*pageaccessrepository.Access, error)
+	Save(ctx context.Context, access *pageaccessrepository.Access) error
 	Delete(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type AttemptRepository interface {
-	Insert(ctx context.Context, attempt *Attempt) error
+	Insert(ctx context.Context, attempt *pageaccessattemptrepository.Attempt) error
 	Count(ctx context.Context, pageID bson.ObjectID, client string, since time.Time) (int64, error)
 	DeleteAll(ctx context.Context, pageID bson.ObjectID) error
 }
 
 type EventRecorder interface {
-	Record(ctx context.Context, event *history.Event)
+	Record(ctx context.Context, event *eventrepository.Event)
 }
 
 type ActorResolver interface {
-	Actor(ctx context.Context) (user.Actor, error)
+	Actor(ctx context.Context) (userrepository.Actor, error)
 }
 
 type Dependencies struct {
@@ -82,7 +83,7 @@ func NewService(dependencies Dependencies) *Service {
 	}
 }
 
-func (s *Service) Get(ctx context.Context, pageID bson.ObjectID) (*Access, error) {
+func (s *Service) Get(ctx context.Context, pageID bson.ObjectID) (*pageaccessrepository.Access, error) {
 	access, err := s.load(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("get page access %s: %w", pageID.Hex(), err)
@@ -90,7 +91,7 @@ func (s *Service) Get(ctx context.Context, pageID bson.ObjectID) (*Access, error
 	return access, nil
 }
 
-func (s *Service) SetEnabled(ctx context.Context, pageID bson.ObjectID, isEnabled bool) (*Access, error) {
+func (s *Service) SetEnabled(ctx context.Context, pageID bson.ObjectID, isEnabled bool) (*pageaccessrepository.Access, error) {
 	access, err := s.load(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("set page access %s: %w", pageID.Hex(), err)
@@ -118,7 +119,7 @@ func (s *Service) SetEnabled(ctx context.Context, pageID bson.ObjectID, isEnable
 	return access, nil
 }
 
-func (s *Service) SetSessionHours(ctx context.Context, pageID bson.ObjectID, hours int) (*Access, error) {
+func (s *Service) SetSessionHours(ctx context.Context, pageID bson.ObjectID, hours int) (*pageaccessrepository.Access, error) {
 	access, err := s.load(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("set page access session %s: %w", pageID.Hex(), err)
@@ -132,7 +133,7 @@ func (s *Service) SetSessionHours(ctx context.Context, pageID bson.ObjectID, hou
 	if err := s.save(ctx, access); err != nil {
 		return nil, fmt.Errorf("set page access session %s: %w", pageID.Hex(), err)
 	}
-	s.record(ctx, pageID, history.EventAccessSessionChanged, s.actor(ctx), []history.Change{{Field: sessionField, From: previous, To: hours}})
+	s.record(ctx, pageID, history.EventAccessSessionChanged, s.actor(ctx), []eventrepository.Change{{Field: sessionField, From: previous, To: hours}})
 	return access, nil
 }
 
@@ -168,7 +169,7 @@ func (s *Service) CreateKey(ctx context.Context, pageID bson.ObjectID, input Key
 	}
 
 	now := time.Now()
-	access.Keys = append(access.Keys, Key{ID: keyID, Role: input.Role, PINHash: hash, PINCipher: sealed, IsRevealable: true, Secret: secret, CreatedAt: now, PINUpdatedAt: now})
+	access.Keys = append(access.Keys, pageaccessrepository.Key{ID: keyID, Role: input.Role, PINHash: hash, PINCipher: sealed, IsRevealable: true, Secret: secret, CreatedAt: now, PINUpdatedAt: now})
 	isFirstKey := len(access.Keys) == 1 && !access.IsEnabled
 	if isFirstKey {
 		access.IsEnabled = true
@@ -178,14 +179,14 @@ func (s *Service) CreateKey(ctx context.Context, pageID bson.ObjectID, input Key
 	}
 
 	actor := s.actor(ctx)
-	s.record(ctx, pageID, history.EventAccessKeyCreated, actor, []history.Change{{Field: roleField, From: nil, To: input.Role}})
+	s.record(ctx, pageID, history.EventAccessKeyCreated, actor, []eventrepository.Change{{Field: roleField, From: nil, To: input.Role}})
 	if isFirstKey {
 		s.record(ctx, pageID, history.EventAccessEnabled, actor, nil)
 	}
 	return Issued{Access: access, PIN: pin}, nil
 }
 
-func (s *Service) RenameKey(ctx context.Context, pageID, keyID bson.ObjectID, role string) (*Access, error) {
+func (s *Service) RenameKey(ctx context.Context, pageID, keyID bson.ObjectID, role string) (*pageaccessrepository.Access, error) {
 	if err := checkRole(role); err != nil {
 		return nil, fmt.Errorf("rename page access key: %w", err)
 	}
@@ -210,7 +211,7 @@ func (s *Service) RenameKey(ctx context.Context, pageID, keyID bson.ObjectID, ro
 	if err := s.save(ctx, access); err != nil {
 		return nil, fmt.Errorf("rename page access key: %w", err)
 	}
-	s.record(ctx, pageID, history.EventAccessKeyRenamed, s.actor(ctx), []history.Change{{Field: roleField, From: previous, To: role}})
+	s.record(ctx, pageID, history.EventAccessKeyRenamed, s.actor(ctx), []eventrepository.Change{{Field: roleField, From: previous, To: role}})
 	return access, nil
 }
 
@@ -246,7 +247,7 @@ func (s *Service) ResetPIN(ctx context.Context, pageID, keyID bson.ObjectID, val
 	if err := s.save(ctx, access); err != nil {
 		return Issued{}, fmt.Errorf("reset page access pin: %w", err)
 	}
-	s.record(ctx, pageID, history.EventAccessPINReset, s.actor(ctx), []history.Change{{Field: roleField, From: nil, To: role}})
+	s.record(ctx, pageID, history.EventAccessPINReset, s.actor(ctx), []eventrepository.Change{{Field: roleField, From: nil, To: role}})
 	return Issued{Access: access, PIN: pin}, nil
 }
 
@@ -267,11 +268,11 @@ func (s *Service) RevealPIN(ctx context.Context, pageID, keyID bson.ObjectID) (R
 	if err != nil {
 		return Revealed{}, fmt.Errorf("reveal page access pin: %w", err)
 	}
-	s.record(ctx, pageID, history.EventAccessPINViewed, s.actor(ctx), []history.Change{{Field: roleField, From: nil, To: key.Role}})
+	s.record(ctx, pageID, history.EventAccessPINViewed, s.actor(ctx), []eventrepository.Change{{Field: roleField, From: nil, To: key.Role}})
 	return Revealed{PIN: pin}, nil
 }
 
-func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*Access, error) {
+func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*pageaccessrepository.Access, error) {
 	access, err := s.load(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("remove page access key: %w", err)
@@ -285,7 +286,7 @@ func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*
 	}
 
 	role := key.Role
-	keys := make([]Key, 0, len(access.Keys)-1)
+	keys := make([]pageaccessrepository.Key, 0, len(access.Keys)-1)
 	for _, current := range access.Keys {
 		if current.ID != keyID {
 			keys = append(keys, current)
@@ -295,11 +296,11 @@ func (s *Service) RemoveKey(ctx context.Context, pageID, keyID bson.ObjectID) (*
 	if err := s.save(ctx, access); err != nil {
 		return nil, fmt.Errorf("remove page access key: %w", err)
 	}
-	s.record(ctx, pageID, history.EventAccessKeyRemoved, s.actor(ctx), []history.Change{{Field: roleField, From: role, To: nil}})
+	s.record(ctx, pageID, history.EventAccessKeyRemoved, s.actor(ctx), []eventrepository.Change{{Field: roleField, From: role, To: nil}})
 	return access, nil
 }
 
-func (s *Service) RevokeSessions(ctx context.Context, pageID bson.ObjectID) (*Access, error) {
+func (s *Service) RevokeSessions(ctx context.Context, pageID bson.ObjectID) (*pageaccessrepository.Access, error) {
 	access, err := s.load(ctx, pageID)
 	if err != nil {
 		return nil, fmt.Errorf("revoke page access sessions: %w", err)
@@ -367,7 +368,7 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 	}
 
 	hash := s.secrets.hashPIN(pageID, pin)
-	var match *Key
+	var match *pageaccessrepository.Key
 	for index := range access.Keys {
 		if hmac.Equal([]byte(access.Keys[index].PINHash), []byte(hash)) && match == nil {
 			match = &access.Keys[index]
@@ -380,12 +381,12 @@ func (s *Service) Unlock(ctx context.Context, pageID bson.ObjectID, pin, client 
 
 	expiresAt := now.Add(sessionDuration(access))
 	grant := Grant{Token: s.secrets.issueToken(pageID, *match, access.Revision, now, expiresAt), ExpiresAt: expiresAt, Role: match.Role}
-	s.record(ctx, pageID, history.EventUnlocked, user.Actor{Name: visitorActorName}, []history.Change{{Field: roleField, From: nil, To: match.Role}})
+	s.record(ctx, pageID, history.EventUnlocked, userrepository.Actor{Name: visitorActorName}, []eventrepository.Change{{Field: roleField, From: nil, To: match.Role}})
 	return grant, nil
 }
 
 func (s *Service) checkLimits(ctx context.Context, pageID bson.ObjectID, client string, now time.Time) error {
-	pageFailures, err := s.attempts.Count(ctx, pageID, "", now.Add(-pageLimitWindow))
+	pageFailures, err := s.attempts.Count(ctx, pageID, "", now.Add(-time.Hour))
 	if err != nil {
 		return err
 	}
@@ -406,23 +407,23 @@ func (s *Service) checkLimits(ctx context.Context, pageID bson.ObjectID, client 
 }
 
 func (s *Service) registerFailure(ctx context.Context, pageID bson.ObjectID, client string, now time.Time) {
-	attempt := &Attempt{ID: bson.NewObjectID(), PageID: pageID, Client: client, At: now}
+	attempt := &pageaccessattemptrepository.Attempt{ID: bson.NewObjectID(), PageID: pageID, Client: client, At: now}
 	if err := s.attempts.Insert(ctx, attempt); err != nil {
 		s.logger.WarnContext(ctx, "record page access attempt", "pageId", pageID.Hex(), "error", err)
 		return
 	}
 
-	pageFailures, err := s.attempts.Count(ctx, pageID, "", now.Add(-pageLimitWindow))
+	pageFailures, err := s.attempts.Count(ctx, pageID, "", now.Add(-time.Hour))
 	if err != nil {
 		s.logger.WarnContext(ctx, "count page access attempts", "pageId", pageID.Hex(), "error", err)
 		return
 	}
 	if pageFailures == pageLimitMax {
-		s.record(ctx, pageID, history.EventAccessLocked, user.SystemActor(), nil)
+		s.record(ctx, pageID, history.EventAccessLocked, userrepository.SystemActor(), nil)
 	}
 }
 
-func (s *Service) resolvePIN(access *Access, value string, ownerID *bson.ObjectID) (string, string, error) {
+func (s *Service) resolvePIN(access *pageaccessrepository.Access, value string, ownerID *bson.ObjectID) (string, string, error) {
 	if value != "" {
 		if err := checkPIN(value); err != nil {
 			return "", "", err
@@ -447,7 +448,7 @@ func (s *Service) resolvePIN(access *Access, value string, ownerID *bson.ObjectI
 	return "", "", ErrPINInUse
 }
 
-func (s *Service) load(ctx context.Context, pageID bson.ObjectID) (*Access, error) {
+func (s *Service) load(ctx context.Context, pageID bson.ObjectID) (*pageaccessrepository.Access, error) {
 	access, err := s.repository.Find(ctx, pageID)
 	if errors.Is(err, errAccessNotFound) {
 		return newAccess(pageID), nil
@@ -459,17 +460,17 @@ func (s *Service) load(ctx context.Context, pageID bson.ObjectID) (*Access, erro
 	return access, nil
 }
 
-func (s *Service) save(ctx context.Context, access *Access) error {
+func (s *Service) save(ctx context.Context, access *pageaccessrepository.Access) error {
 	now := time.Now()
 	access.UpdatedAt = &now
 	return s.repository.Save(ctx, access)
 }
 
-func (s *Service) record(ctx context.Context, pageID bson.ObjectID, eventType history.EventType, actor user.Actor, changes []history.Change) {
+func (s *Service) record(ctx context.Context, pageID bson.ObjectID, eventType eventrepository.Type, actor userrepository.Actor, changes []eventrepository.Change) {
 	s.history.Record(ctx, history.NewEvent(pageID, eventType, actor, changes, time.Now()))
 }
 
-func (s *Service) actor(ctx context.Context) user.Actor {
+func (s *Service) actor(ctx context.Context) userrepository.Actor {
 	actor, err := s.actors.Actor(ctx)
 	if err != nil {
 		s.logger.WarnContext(ctx, "resolve page access actor", "error", err)

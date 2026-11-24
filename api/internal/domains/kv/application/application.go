@@ -15,6 +15,7 @@ const (
 
 var (
 	ErrApplicationNotFound  = applicationrepository.ErrNotFound
+	ErrOperationForbidden   = applicationrepository.ErrOperationForbidden
 	ErrProjectIDTaken       = applicationrepository.ErrProjectIDTaken
 	ErrTokenNotFound        = applicationrepository.ErrTokenNotFound
 	ErrMissingAccessToken   = errors.New("access token missing")
@@ -51,13 +52,13 @@ func (i *CreateTokenInput) Normalize() {
 }
 
 type Created struct {
-	Application *Application `json:"application"`
-	RawToken    string       `json:"rawToken"`
+	Application *applicationrepository.Application `json:"application"`
+	RawToken    string                             `json:"rawToken"`
 }
 
 type CreatedToken struct {
-	Token    Token  `json:"token"`
-	RawToken string `json:"rawToken"`
+	Token    applicationrepository.Token `json:"token"`
+	RawToken string                      `json:"rawToken"`
 }
 
 type AccessValidation struct {

@@ -12,22 +12,23 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
 type Repository interface {
 	Count(ctx context.Context) (int64, error)
-	Insert(ctx context.Context, user *User) error
-	FindByEmail(ctx context.Context, email string) (*User, error)
-	FindByID(ctx context.Context, id bson.ObjectID) (*User, error)
-	FindAll(ctx context.Context) ([]User, error)
+	Insert(ctx context.Context, user *userrepository.User) error
+	FindByEmail(ctx context.Context, email string) (*userrepository.User, error)
+	FindByID(ctx context.Context, id bson.ObjectID) (*userrepository.User, error)
+	FindAll(ctx context.Context) ([]userrepository.User, error)
 	Update(ctx context.Context, id bson.ObjectID, fields bson.M) error
 	IncrementTokenVersion(ctx context.Context, id bson.ObjectID) error
 	Delete(ctx context.Context, id bson.ObjectID) error
 }
 
 type AttemptRepository interface {
-	Insert(ctx context.Context, attempt *LoginAttempt) error
-	Count(ctx context.Context, filter AttemptFilter) (int64, error)
+	Insert(ctx context.Context, attempt *loginattemptrepository.Attempt) error
+	Count(ctx context.Context, filter loginattemptrepository.Filter) (int64, error)
 	DeleteByEmail(ctx context.Context, email string) error
 }
 
@@ -69,14 +70,14 @@ func (s *Service) Count(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
-func (s *Service) Create(ctx context.Context, input CreateInput, role string) (*User, error) {
+func (s *Service) Create(ctx context.Context, input CreateInput, role string) (*userrepository.User, error) {
 	passwordHash, err := hashPassword(input.Password)
 	if err != nil {
 		return nil, fmt.Errorf("hash password: %w", err)
 	}
 
 	now := time.Now()
-	user := &User{
+	user := &userrepository.User{
 		ID:           bson.NewObjectID(),
 		Name:         input.Name,
 		Email:        input.Email,
@@ -92,7 +93,7 @@ func (s *Service) Create(ctx context.Context, input CreateInput, role string) (*
 	return user, nil
 }
 
-func (s *Service) IssueSession(user *User) (*Session, error) {
+func (s *Service) IssueSession(user *userrepository.User) (*Session, error) {
 	token, err := s.signer.Sign(user)
 	if err != nil {
 		return nil, fmt.Errorf("sign token for user %s: %w", user.ID.Hex(), err)
@@ -163,7 +164,7 @@ func (s *Service) rejectLogin(ctx context.Context, email, client string, now tim
 	return ErrInvalidCredentials
 }
 
-func (s *Service) upgradePassword(ctx context.Context, user *User, password string) {
+func (s *Service) upgradePassword(ctx context.Context, user *userrepository.User, password string) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
 		s.logger.WarnContext(ctx, "rehash password", "userId", user.ID.Hex(), "error", err)
@@ -174,7 +175,7 @@ func (s *Service) upgradePassword(ctx context.Context, user *User, password stri
 	}
 }
 
-func (s *Service) GetUserByID(ctx context.Context, id bson.ObjectID) (*User, error) {
+func (s *Service) GetUserByID(ctx context.Context, id bson.ObjectID) (*userrepository.User, error) {
 	user, err := s.repository.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("get user %s: %w", id.Hex(), err)
@@ -182,7 +183,7 @@ func (s *Service) GetUserByID(ctx context.Context, id bson.ObjectID) (*User, err
 	return user, nil
 }
 
-func (s *Service) List(ctx context.Context, actorID bson.ObjectID) ([]User, error) {
+func (s *Service) List(ctx context.Context, actorID bson.ObjectID) ([]userrepository.User, error) {
 	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
 	}
@@ -194,14 +195,14 @@ func (s *Service) List(ctx context.Context, actorID bson.ObjectID) ([]User, erro
 	return users, nil
 }
 
-func (s *Service) CreateByManager(ctx context.Context, actorID bson.ObjectID, input ManageInput) (*User, error) {
+func (s *Service) CreateByManager(ctx context.Context, actorID bson.ObjectID, input ManageInput) (*userrepository.User, error) {
 	if _, err := s.requireSuperadmin(ctx, actorID); err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
 	return s.Create(ctx, CreateInput{Name: input.Name, Email: input.Email, Password: input.Password}, input.Role)
 }
 
-func (s *Service) UpdateByManager(ctx context.Context, actorID, id bson.ObjectID, input UpdateInput) (*User, error) {
+func (s *Service) UpdateByManager(ctx context.Context, actorID, id bson.ObjectID, input UpdateInput) (*userrepository.User, error) {
 	actor, err := s.requireSuperadmin(ctx, actorID)
 	if err != nil {
 		return nil, fmt.Errorf("update user %s: %w", id.Hex(), err)
@@ -260,7 +261,7 @@ func (s *Service) Remove(ctx context.Context, actorID, id bson.ObjectID) error {
 	return nil
 }
 
-func (s *Service) UpdateProfile(ctx context.Context, id bson.ObjectID, input ProfileInput) (*User, error) {
+func (s *Service) UpdateProfile(ctx context.Context, id bson.ObjectID, input ProfileInput) (*userrepository.User, error) {
 	fields := bson.M{"name": input.Name, "email": input.Email, "updatedAt": time.Now()}
 	if err := s.repository.Update(ctx, id, fields); err != nil {
 		return nil, fmt.Errorf("update profile %s: %w", id.Hex(), err)
@@ -305,7 +306,7 @@ func (s *Service) EnsureSuperadmin(ctx context.Context, actorID bson.ObjectID) e
 	return nil
 }
 
-func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) (*User, error) {
+func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) (*userrepository.User, error) {
 	actor, err := s.GetUserByID(ctx, actorID)
 	if err != nil {
 		return nil, fmt.Errorf("require superadmin: %w", err)
@@ -337,11 +338,11 @@ func hashClient(client string) string {
 
 func (s *Service) checkLoginLimits(ctx context.Context, email, client string, now time.Time) error {
 	checks := []struct {
-		filter AttemptFilter
+		filter loginattemptrepository.Filter
 		limits []loginLimit
 	}{
-		{filter: AttemptFilter{Email: email}, limits: emailLimits()},
-		{filter: AttemptFilter{Client: client}, limits: clientLimits()},
+		{filter: loginattemptrepository.Filter{Email: email}, limits: emailLimits()},
+		{filter: loginattemptrepository.Filter{Client: client}, limits: clientLimits()},
 	}
 
 	for _, check := range checks {
@@ -361,5 +362,5 @@ func (s *Service) checkLoginLimits(ctx context.Context, email, client string, no
 }
 
 func (s *Service) registerLoginFailure(ctx context.Context, email, client string, now time.Time) error {
-	return s.attempts.Insert(ctx, &LoginAttempt{ID: bson.NewObjectID(), Email: email, Client: client, At: now})
+	return s.attempts.Insert(ctx, &loginattemptrepository.Attempt{ID: bson.NewObjectID(), Email: email, Client: client, At: now})
 }

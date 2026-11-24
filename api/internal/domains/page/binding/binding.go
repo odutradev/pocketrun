@@ -6,9 +6,11 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"pocketrun-api/internal/domains/kv/application"
 	kvdocument "pocketrun-api/internal/domains/kv/document"
+	applicationrepository "pocketrun-api/internal/repositories/application"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	pagebindingrepository "pocketrun-api/internal/repositories/pagebinding"
+	pagekvrequestrepository "pocketrun-api/internal/repositories/pagekvrequest"
 )
 
 const (
@@ -29,19 +31,19 @@ var (
 	ErrApplicationGone = errors.New("linked application no longer exists")
 )
 
-func operation(a Action) application.Operation {
+func operation(a pagekvrequestrepository.Action) applicationrepository.Operation {
 	switch a {
-	case ActionCreate:
-		return application.OperationCreate
-	case ActionUpdate, ActionReplace:
-		return application.OperationUpdate
-	case ActionDelete:
-		return application.OperationDelete
+	case pagekvrequestrepository.ActionCreate:
+		return applicationrepository.OperationCreate
+	case pagekvrequestrepository.ActionUpdate, pagekvrequestrepository.ActionReplace:
+		return applicationrepository.OperationUpdate
+	case pagekvrequestrepository.ActionDelete:
+		return applicationrepository.OperationDelete
 	}
-	return application.OperationRead
+	return applicationrepository.OperationRead
 }
 
-func role(b *Binding, subject Subject) string {
+func role(b *pagebindingrepository.Binding, subject Subject) string {
 	if !subject.IsProtected {
 		return b.PublicRole
 	}
@@ -54,28 +56,28 @@ func role(b *Binding, subject Subject) string {
 }
 
 type ApplicationSummary struct {
-	ID        bson.ObjectID      `json:"id"`
-	PageID    *bson.ObjectID     `json:"pageId"`
-	Name      string             `json:"name"`
-	ProjectID string             `json:"projectId"`
-	Roles     []application.Role `json:"roles"`
+	ID        bson.ObjectID                `json:"id"`
+	PageID    *bson.ObjectID               `json:"pageId"`
+	Name      string                       `json:"name"`
+	ProjectID string                       `json:"projectId"`
+	Roles     []applicationrepository.Role `json:"roles"`
 }
 
 type Details struct {
-	Binding     *Binding            `json:"binding"`
-	Application *ApplicationSummary `json:"application"`
+	Binding     *pagebindingrepository.Binding `json:"binding"`
+	Application *ApplicationSummary            `json:"application"`
 }
 
 type SetInput struct {
-	PublicRole string        `json:"publicRole" validate:"max=40"`
-	Roles      []RoleMapping `json:"roles" validate:"max=21,dive"`
+	PublicRole string                              `json:"publicRole" validate:"max=40"`
+	Roles      []pagebindingrepository.RoleMapping `json:"roles" validate:"max=21,dive"`
 }
 
 func (i *SetInput) Normalize() {
 	i.PublicRole = strings.ToLower(strings.TrimSpace(i.PublicRole))
-	roles := make([]RoleMapping, 0, len(i.Roles))
+	roles := make([]pagebindingrepository.RoleMapping, 0, len(i.Roles))
 	for _, mapping := range i.Roles {
-		roles = append(roles, RoleMapping{PageRole: strings.ToLower(strings.TrimSpace(mapping.PageRole)), KVRole: strings.ToLower(strings.TrimSpace(mapping.KVRole))})
+		roles = append(roles, pagebindingrepository.RoleMapping{PageRole: strings.ToLower(strings.TrimSpace(mapping.PageRole)), KVRole: strings.ToLower(strings.TrimSpace(mapping.KVRole))})
 	}
 	i.Roles = roles
 }
@@ -99,10 +101,10 @@ func ParseSubject(value string) (Subject, error) {
 }
 
 type Request struct {
-	Action     Action
+	Action     pagekvrequestrepository.Action
 	Collection string
 	DocumentID bson.ObjectID
-	List       kvdocument.ListQuery
+	List       kvdocumentrepository.ListQuery
 	Filter     bson.M
 	Create     kvdocument.CreateInput
 	Update     kvdocument.UpdateInput
@@ -115,8 +117,8 @@ type Result struct {
 }
 
 type RuntimeRule struct {
-	Collection string                  `json:"collection"`
-	Operations []application.Operation `json:"operations"`
+	Collection string                            `json:"collection"`
+	Operations []applicationrepository.Operation `json:"operations"`
 }
 
 type Runtime struct {
@@ -126,7 +128,7 @@ type Runtime struct {
 }
 
 type RequestSummary struct {
-	Requests []LoggedRequest `json:"requests"`
-	Total    int64           `json:"total"`
-	Denied   int64           `json:"denied"`
+	Requests []pagekvrequestrepository.Request `json:"requests"`
+	Total    int64                             `json:"total"`
+	Denied   int64                             `json:"denied"`
 }

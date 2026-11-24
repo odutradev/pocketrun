@@ -3,6 +3,7 @@ package document
 import (
 	"context"
 	"fmt"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"strings"
 	"time"
 
@@ -10,17 +11,17 @@ import (
 )
 
 type Repository interface {
-	Insert(ctx context.Context, document *Document) error
-	InsertMany(ctx context.Context, documents []Document) (int64, error)
-	Find(ctx context.Context, scope Scope, collectionName string, query ListQuery) ([]Document, int64, error)
-	FindAll(ctx context.Context, scope Scope, collectionName string) ([]Document, error)
-	Count(ctx context.Context, scope Scope, collectionName string, filter bson.M) (int64, error)
-	Aggregate(ctx context.Context, scope Scope, collectionName string, filter bson.M, stages []bson.M) ([]bson.M, error)
+	Insert(ctx context.Context, document *kvdocumentrepository.Document) error
+	InsertMany(ctx context.Context, documents []kvdocumentrepository.Document) (int64, error)
+	Find(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, query kvdocumentrepository.ListQuery) ([]kvdocumentrepository.Document, int64, error)
+	FindAll(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string) ([]kvdocumentrepository.Document, error)
+	Count(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, filter bson.M) (int64, error)
+	Aggregate(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, filter bson.M, stages []bson.M) ([]bson.M, error)
 	FindRaw(ctx context.Context, applicationID bson.ObjectID, collectionName string, page, limit int) ([]bson.M, int64, error)
-	FindByID(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) (*Document, error)
-	Update(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID, set, unset bson.M) (*Document, error)
-	DeleteByID(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) error
-	DeleteByCollection(ctx context.Context, scope Scope, collectionName string) (int64, error)
+	FindByID(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) (*kvdocumentrepository.Document, error)
+	Update(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, set, unset bson.M) (*kvdocumentrepository.Document, error)
+	DeleteByID(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) error
+	DeleteByCollection(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string) (int64, error)
 	DeleteByApplicationID(ctx context.Context, applicationID bson.ObjectID) (int64, error)
 	DistinctCollections(ctx context.Context, applicationID bson.ObjectID) ([]string, error)
 }
@@ -33,7 +34,7 @@ func NewService(repository Repository) *Service {
 	return &Service{repository: repository}
 }
 
-func (s *Service) Create(ctx context.Context, scope Scope, collectionName string, input CreateInput) (*Document, error) {
+func (s *Service) Create(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, input CreateInput) (*kvdocumentrepository.Document, error) {
 	if err := checkWritableCollection(collectionName); err != nil {
 		return nil, err
 	}
@@ -42,7 +43,7 @@ func (s *Service) Create(ctx context.Context, scope Scope, collectionName string
 	}
 
 	now := time.Now()
-	document := &Document{
+	document := &kvdocumentrepository.Document{
 		ID:             bson.NewObjectID(),
 		ApplicationID:  scope.ApplicationID,
 		ProjectID:      scope.ProjectID,
@@ -60,7 +61,7 @@ func (s *Service) Create(ctx context.Context, scope Scope, collectionName string
 	return document, nil
 }
 
-func (s *Service) List(ctx context.Context, scope Scope, collectionName string, query ListQuery) ([]Document, int64, error) {
+func (s *Service) List(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, query kvdocumentrepository.ListQuery) ([]kvdocumentrepository.Document, int64, error) {
 	documents, total, err := s.repository.Find(ctx, scope, collectionName, query)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list documents in %s: %w", collectionName, err)
@@ -68,7 +69,7 @@ func (s *Service) List(ctx context.Context, scope Scope, collectionName string, 
 	return documents, total, nil
 }
 
-func (s *Service) Count(ctx context.Context, scope Scope, collectionName string, filter bson.M) (int64, error) {
+func (s *Service) Count(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, filter bson.M) (int64, error) {
 	count, err := s.repository.Count(ctx, scope, collectionName, filter)
 	if err != nil {
 		return 0, fmt.Errorf("count documents in %s: %w", collectionName, err)
@@ -76,7 +77,7 @@ func (s *Service) Count(ctx context.Context, scope Scope, collectionName string,
 	return count, nil
 }
 
-func (s *Service) Eval(ctx context.Context, scope Scope, collectionName string, queryFilter bson.M, input EvalInput) (EvalResult, error) {
+func (s *Service) Eval(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, queryFilter bson.M, input EvalInput) (EvalResult, error) {
 	bodyFilter, err := ParseBodyFilter(input.Filters)
 	if err != nil {
 		return EvalResult{}, err
@@ -116,7 +117,7 @@ func (s *Service) Eval(ctx context.Context, scope Scope, collectionName string, 
 	return result, nil
 }
 
-func (s *Service) Get(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) (*Document, error) {
+func (s *Service) Get(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) (*kvdocumentrepository.Document, error) {
 	document, err := s.repository.FindByID(ctx, scope, collectionName, id)
 	if err != nil {
 		return nil, fmt.Errorf("get document %s: %w", id.Hex(), err)
@@ -124,7 +125,7 @@ func (s *Service) Get(ctx context.Context, scope Scope, collectionName string, i
 	return document, nil
 }
 
-func (s *Service) Update(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID, input UpdateInput) (*Document, error) {
+func (s *Service) Update(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, input UpdateInput) (*kvdocumentrepository.Document, error) {
 	set := bson.M{}
 	for key, value := range input.Data {
 		if err := checkDataKey(key); err != nil {
@@ -135,18 +136,18 @@ func (s *Service) Update(ctx context.Context, scope Scope, collectionName string
 	return s.update(ctx, scope, collectionName, id, set, input)
 }
 
-func (s *Service) Replace(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID, input UpdateInput) (*Document, error) {
+func (s *Service) Replace(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, input UpdateInput) (*kvdocumentrepository.Document, error) {
 	return s.update(ctx, scope, collectionName, id, bson.M{"data": input.Data}, input)
 }
 
-func (s *Service) Delete(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID) error {
+func (s *Service) Delete(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID) error {
 	if err := s.repository.DeleteByID(ctx, scope, collectionName, id); err != nil {
 		return fmt.Errorf("delete document %s: %w", id.Hex(), err)
 	}
 	return nil
 }
 
-func (s *Service) DeleteCollection(ctx context.Context, scope Scope, collectionName string) (int64, error) {
+func (s *Service) DeleteCollection(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string) (int64, error) {
 	deletedCount, err := s.repository.DeleteByCollection(ctx, scope, collectionName)
 	if err != nil {
 		return 0, fmt.Errorf("delete collection %s: %w", collectionName, err)
@@ -154,7 +155,7 @@ func (s *Service) DeleteCollection(ctx context.Context, scope Scope, collectionN
 	return deletedCount, nil
 }
 
-func (s *Service) Export(ctx context.Context, scope Scope, collectionName string) ([]Document, error) {
+func (s *Service) Export(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string) ([]kvdocumentrepository.Document, error) {
 	documents, err := s.repository.FindAll(ctx, scope, collectionName)
 	if err != nil {
 		return nil, fmt.Errorf("export %s: %w", collectionName, err)
@@ -162,20 +163,20 @@ func (s *Service) Export(ctx context.Context, scope Scope, collectionName string
 	return documents, nil
 }
 
-func (s *Service) ExportProject(ctx context.Context, scope Scope) (map[string][]Document, error) {
+func (s *Service) ExportProject(ctx context.Context, scope kvdocumentrepository.Scope) (map[string][]kvdocumentrepository.Document, error) {
 	documents, err := s.repository.FindAll(ctx, scope, "")
 	if err != nil {
 		return nil, fmt.Errorf("export project %s: %w", scope.ProjectID, err)
 	}
 
-	grouped := map[string][]Document{}
+	grouped := map[string][]kvdocumentrepository.Document{}
 	for _, document := range documents {
 		grouped[document.CollectionName] = append(grouped[document.CollectionName], document)
 	}
 	return grouped, nil
 }
 
-func (s *Service) Import(ctx context.Context, scope Scope, collectionName string, items []map[string]any) (ImportResult, error) {
+func (s *Service) Import(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, items []map[string]any) (ImportResult, error) {
 	if err := checkWritableCollection(collectionName); err != nil {
 		return ImportResult{}, err
 	}
@@ -198,10 +199,10 @@ func (s *Service) Import(ctx context.Context, scope Scope, collectionName string
 	return ImportResult{Imported: true, Count: count}, nil
 }
 
-func (s *Service) ImportProject(ctx context.Context, scope Scope, collections map[string][]map[string]any) (ProjectImportResult, error) {
+func (s *Service) ImportProject(ctx context.Context, scope kvdocumentrepository.Scope, collections map[string][]map[string]any) (ProjectImportResult, error) {
 	now := time.Now()
 	total := 0
-	documents := []Document{}
+	documents := []kvdocumentrepository.Document{}
 	for collectionName, items := range collections {
 		if err := checkWritableCollection(collectionName); err != nil {
 			return ProjectImportResult{}, err
@@ -254,7 +255,7 @@ func (s *Service) ExploreCollection(ctx context.Context, applicationID bson.Obje
 	return NewPage(documents, total, page, limit), nil
 }
 
-func (s *Service) update(ctx context.Context, scope Scope, collectionName string, id bson.ObjectID, set bson.M, input UpdateInput) (*Document, error) {
+func (s *Service) update(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, id bson.ObjectID, set bson.M, input UpdateInput) (*kvdocumentrepository.Document, error) {
 	unset := bson.M{}
 	now := time.Now()
 	switch {
@@ -273,7 +274,7 @@ func (s *Service) update(ctx context.Context, scope Scope, collectionName string
 	return document, nil
 }
 
-func (s *Service) checkCapacity(ctx context.Context, scope Scope, collectionName string, adding int) error {
+func (s *Service) checkCapacity(ctx context.Context, scope kvdocumentrepository.Scope, collectionName string, adding int) error {
 	if scope.MaxDocuments <= 0 {
 		return nil
 	}
@@ -311,8 +312,8 @@ func emptyEvalResult(operation EvalOperation) any {
 	return nil
 }
 
-func importDocuments(scope Scope, collectionName string, items []map[string]any, now time.Time) ([]Document, error) {
-	documents := make([]Document, 0, len(items))
+func importDocuments(scope kvdocumentrepository.Scope, collectionName string, items []map[string]any, now time.Time) ([]kvdocumentrepository.Document, error) {
+	documents := make([]kvdocumentrepository.Document, 0, len(items))
 	for _, item := range items {
 		document, err := importDocument(scope, collectionName, item, now)
 		if err != nil {
@@ -323,8 +324,8 @@ func importDocuments(scope Scope, collectionName string, items []map[string]any,
 	return documents, nil
 }
 
-func importDocument(scope Scope, collectionName string, item map[string]any, now time.Time) (Document, error) {
-	document := Document{
+func importDocument(scope kvdocumentrepository.Scope, collectionName string, item map[string]any, now time.Time) (kvdocumentrepository.Document, error) {
+	document := kvdocumentrepository.Document{
 		ID:             bson.NewObjectID(),
 		ApplicationID:  scope.ApplicationID,
 		ProjectID:      scope.ProjectID,
@@ -343,7 +344,7 @@ func importDocument(scope Scope, collectionName string, item map[string]any, now
 	document.Data = data
 	createdAt, err := optionalDate(item["createdAt"])
 	if err != nil {
-		return Document{}, ErrInvalidImport
+		return kvdocumentrepository.Document{}, ErrInvalidImport
 	}
 	if createdAt != nil {
 		document.CreatedAt = *createdAt
@@ -352,11 +353,11 @@ func importDocument(scope Scope, collectionName string, item map[string]any, now
 
 	expiresAt, err := optionalDate(item["expiresAt"])
 	if err != nil {
-		return Document{}, ErrInvalidImport
+		return kvdocumentrepository.Document{}, ErrInvalidImport
 	}
 	days, err := optionalDays(item["expiresInDays"])
 	if err != nil {
-		return Document{}, ErrInvalidImport
+		return kvdocumentrepository.Document{}, ErrInvalidImport
 	}
 	document.ExpiresAt = expiry(now, days, expiresAt)
 	return document, nil

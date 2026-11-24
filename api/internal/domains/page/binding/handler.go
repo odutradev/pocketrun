@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/kv/application"
-	"pocketrun-api/internal/domains/page/page"
+	pagerepository "pocketrun-api/internal/repositories/page"
 	"pocketrun-api/internal/services/httpx"
 )
 
 type PageChecker interface {
 	Exists(ctx context.Context, id bson.ObjectID) (bool, error)
-	GetByID(ctx context.Context, id bson.ObjectID) (*page.Page, error)
+	GetByID(ctx context.Context, id bson.ObjectID) (*pagerepository.Page, error)
 }
 
 type Handler struct {

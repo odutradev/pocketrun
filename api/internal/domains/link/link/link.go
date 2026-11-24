@@ -9,27 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	linkrepository "pocketrun-api/internal/repositories/link"
+	slugrepository "pocketrun-api/internal/repositories/slug"
 	"pocketrun-api/internal/services/activation"
-	"pocketrun-api/internal/services/slug"
-)
-
-type Mode = activation.Mode
-
-type State = activation.State
-
-const (
-	ModeActive   = activation.ModeActive
-	ModeInactive = activation.ModeInactive
-	ModePeriod   = activation.ModePeriod
-	ModeClicks   = activation.ModeClicks
-)
-
-const (
-	StateActive    = activation.StateActive
-	StateInactive  = activation.StateInactive
-	StateScheduled = activation.StateScheduled
-	StateExpired   = activation.StateExpired
-	StateExhausted = activation.StateExhausted
 )
 
 var (
@@ -41,7 +22,7 @@ var (
 )
 
 type KindError struct {
-	Kind     slug.Kind
+	Kind     slugrepository.Kind
 	TargetID bson.ObjectID
 }
 
@@ -54,7 +35,7 @@ type Input struct {
 	Slug      string             `json:"slug" validate:"max=64"`
 	URL       string             `json:"url" validate:"required,http_url,max=2048"`
 	GroupID   string             `json:"groupId" validate:"omitempty,mongodb"`
-	Mode      Mode               `json:"mode" validate:"required,oneof=active inactive period clicks"`
+	Mode      activation.Mode    `json:"mode" validate:"required,oneof=active inactive period clicks"`
 	StartsAt  *time.Time         `json:"startsAt"`
 	EndsAt    *time.Time         `json:"endsAt"`
 	MaxClicks *int64             `json:"maxClicks" validate:"omitempty,min=1"`
@@ -125,17 +106,17 @@ type ListParams struct {
 	Limit   int    `json:"limit" query:"limit" validate:"omitempty,min=1,max=100"`
 }
 
-func (p ListParams) Query() ListQuery {
-	query := ListQuery{
+func (p ListParams) Query() linkrepository.ListQuery {
+	query := linkrepository.ListQuery{
 		Ungrouped: p.GroupID == UngroupedFilter,
 		Search:    strings.TrimSpace(p.Search),
-		State:     State(p.State),
-		Sort:      SortRecent,
+		State:     activation.State(p.State),
+		Sort:      linkrepository.SortRecent,
 		Page:      max(p.Page, 1),
 		Limit:     DefaultListLimit,
 	}
 	if p.Sort != "" {
-		query.Sort = Sort(p.Sort)
+		query.Sort = linkrepository.Sort(p.Sort)
 	}
 	if p.Limit > 0 {
 		query.Limit = p.Limit
@@ -147,14 +128,14 @@ func (p ListParams) Query() ListQuery {
 }
 
 type ListPage struct {
-	Data       []Link `json:"data"`
-	Total      int64  `json:"total"`
-	Page       int    `json:"page"`
-	Limit      int    `json:"limit"`
-	TotalPages int64  `json:"totalPages"`
+	Data       []linkrepository.Link `json:"data"`
+	Total      int64                 `json:"total"`
+	Page       int                   `json:"page"`
+	Limit      int                   `json:"limit"`
+	TotalPages int64                 `json:"totalPages"`
 }
 
-func newListPage(links []Link, total int64, query ListQuery) ListPage {
+func newListPage(links []linkrepository.Link, total int64, query linkrepository.ListQuery) ListPage {
 	limit := int64(max(query.Limit, 1))
 	return ListPage{
 		Data:       links,
@@ -166,9 +147,9 @@ func newListPage(links []Link, total int64, query ListQuery) ListPage {
 }
 
 type Summary struct {
-	Total     int64         `json:"total"`
-	Ungrouped int64         `json:"ungrouped"`
-	Groups    []GroupTotals `json:"groups"`
+	Total     int64                        `json:"total"`
+	Ungrouped int64                        `json:"ungrouped"`
+	Groups    []linkrepository.GroupTotals `json:"groups"`
 }
 
 type SlugCheckParams struct {

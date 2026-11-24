@@ -13,11 +13,13 @@ import (
 
 	"pocketrun-api/internal/domains/kv/application"
 	"pocketrun-api/internal/domains/user/user"
+	applicationrepository "pocketrun-api/internal/repositories/application"
+	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"pocketrun-api/internal/services/httpx"
 )
 
 type ApplicationFinder interface {
-	GetByID(ctx context.Context, managerID, id bson.ObjectID) (*application.Application, error)
+	GetByID(ctx context.Context, managerID, id bson.ObjectID) (*applicationrepository.Application, error)
 }
 
 type UsageRecorder interface {
@@ -71,7 +73,7 @@ func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handl
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationCreate)
+	scope, ok := h.scope(w, r, applicationrepository.OperationCreate)
 	if !ok {
 		return
 	}
@@ -91,7 +93,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationRead)
+	scope, ok := h.scope(w, r, applicationrepository.OperationRead)
 	if !ok {
 		return
 	}
@@ -116,7 +118,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) count(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationRead)
+	scope, ok := h.scope(w, r, applicationrepository.OperationRead)
 	if !ok {
 		return
 	}
@@ -136,7 +138,7 @@ func (h *Handler) count(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) eval(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationRead)
+	scope, ok := h.scope(w, r, applicationrepository.OperationRead)
 	if !ok {
 		return
 	}
@@ -162,7 +164,7 @@ func (h *Handler) eval(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
-	scope, id, ok := h.documentTarget(w, r, application.OperationRead)
+	scope, id, ok := h.documentTarget(w, r, applicationrepository.OperationRead)
 	if !ok {
 		return
 	}
@@ -183,8 +185,8 @@ func (h *Handler) replace(w http.ResponseWriter, r *http.Request) {
 	h.change(w, r, "replace document", h.service.Replace)
 }
 
-func (h *Handler) change(w http.ResponseWriter, r *http.Request, operation string, apply func(context.Context, Scope, string, bson.ObjectID, UpdateInput) (*Document, error)) {
-	scope, id, ok := h.documentTarget(w, r, application.OperationUpdate)
+func (h *Handler) change(w http.ResponseWriter, r *http.Request, operation string, apply func(context.Context, kvdocumentrepository.Scope, string, bson.ObjectID, UpdateInput) (*kvdocumentrepository.Document, error)) {
+	scope, id, ok := h.documentTarget(w, r, applicationrepository.OperationUpdate)
 	if !ok {
 		return
 	}
@@ -204,7 +206,7 @@ func (h *Handler) change(w http.ResponseWriter, r *http.Request, operation strin
 }
 
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
-	scope, id, ok := h.documentTarget(w, r, application.OperationDelete)
+	scope, id, ok := h.documentTarget(w, r, applicationrepository.OperationDelete)
 	if !ok {
 		return
 	}
@@ -217,7 +219,7 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteCollection(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationManage)
+	scope, ok := h.scope(w, r, applicationrepository.OperationManage)
 	if !ok {
 		return
 	}
@@ -231,7 +233,7 @@ func (h *Handler) deleteCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationRead)
+	scope, ok := h.scope(w, r, applicationrepository.OperationRead)
 	if !ok {
 		return
 	}
@@ -263,7 +265,7 @@ func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) exportProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationManage)
+	scope, ok := h.scope(w, r, applicationrepository.OperationManage)
 	if !ok {
 		return
 	}
@@ -294,7 +296,7 @@ func (h *Handler) exportProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) importCollection(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationCreate)
+	scope, ok := h.scope(w, r, applicationrepository.OperationCreate)
 	if !ok {
 		return
 	}
@@ -314,7 +316,7 @@ func (h *Handler) importCollection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) importProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationManage)
+	scope, ok := h.scope(w, r, applicationrepository.OperationManage)
 	if !ok {
 		return
 	}
@@ -334,7 +336,7 @@ func (h *Handler) importProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) deleteProject(w http.ResponseWriter, r *http.Request) {
-	scope, ok := h.scope(w, r, application.OperationManage)
+	scope, ok := h.scope(w, r, applicationrepository.OperationManage)
 	if !ok {
 		return
 	}
@@ -385,37 +387,37 @@ func (h *Handler) exploreCollection(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, documentsPage)
 }
 
-func (h *Handler) scope(w http.ResponseWriter, r *http.Request, operation application.Operation) (Scope, bool) {
+func (h *Handler) scope(w http.ResponseWriter, r *http.Request, operation applicationrepository.Operation) (kvdocumentrepository.Scope, bool) {
 	ctx := r.Context()
 	app, ok := application.FromContext(ctx)
 	if !ok {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_access_token")
-		return Scope{}, false
+		return kvdocumentrepository.Scope{}, false
 	}
 
 	permission, err := app.Authorize(application.RoleFromContext(ctx), r.PathValue("collection"), operation)
 	if err != nil {
 		h.writeError(w, r, "authorize kv operation", err)
-		return Scope{}, false
+		return kvdocumentrepository.Scope{}, false
 	}
 	return NewScope(app, permission), true
 }
 
-func (h *Handler) documentTarget(w http.ResponseWriter, r *http.Request, operation application.Operation) (Scope, bson.ObjectID, bool) {
+func (h *Handler) documentTarget(w http.ResponseWriter, r *http.Request, operation applicationrepository.Operation) (kvdocumentrepository.Scope, bson.ObjectID, bool) {
 	scope, ok := h.scope(w, r, operation)
 	if !ok {
-		return Scope{}, bson.ObjectID{}, false
+		return kvdocumentrepository.Scope{}, bson.ObjectID{}, false
 	}
 
 	id, err := bson.ObjectIDFromHex(r.PathValue("id"))
 	if err != nil {
 		h.writeError(w, r, "parse document id", ErrInvalidDocumentID)
-		return Scope{}, bson.ObjectID{}, false
+		return kvdocumentrepository.Scope{}, bson.ObjectID{}, false
 	}
 	return scope, id, true
 }
 
-func (h *Handler) ownedApplication(r *http.Request) (*application.Application, error) {
+func (h *Handler) ownedApplication(r *http.Request) (*applicationrepository.Application, error) {
 	ctx := r.Context()
 	managerID, err := user.ManagerIDFromContext(ctx)
 	if err != nil {

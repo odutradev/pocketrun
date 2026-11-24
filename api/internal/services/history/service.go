@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	eventrepository "pocketrun-api/internal/repositories/event"
 	"sort"
 	"time"
 
@@ -11,8 +12,8 @@ import (
 )
 
 type Repository interface {
-	Insert(ctx context.Context, event *Event) error
-	Find(ctx context.Context, targetID bson.ObjectID, query Query) ([]Event, error)
+	Insert(ctx context.Context, event *eventrepository.Event) error
+	Find(ctx context.Context, targetID bson.ObjectID, query eventrepository.Query) ([]eventrepository.Event, error)
 	Count(ctx context.Context, targetID bson.ObjectID) (int64, error)
 }
 
@@ -26,13 +27,13 @@ func NewService(repository Repository, subject string, logger *slog.Logger) *Ser
 	return &Service{repository: repository, subject: subject, logger: logger}
 }
 
-func (s *Service) Record(ctx context.Context, event *Event) {
+func (s *Service) Record(ctx context.Context, event *eventrepository.Event) {
 	if err := s.repository.Insert(ctx, event); err != nil {
 		s.logger.WarnContext(ctx, "record "+s.subject+" event", "targetId", event.TargetID.Hex(), "type", event.Type, "error", err)
 	}
 }
 
-func (s *Service) List(ctx context.Context, targetID bson.ObjectID, query Query, expiredAt *time.Time) (Feed, error) {
+func (s *Service) List(ctx context.Context, targetID bson.ObjectID, query eventrepository.Query, expiredAt *time.Time) (Feed, error) {
 	lookup := query
 	lookup.Limit = query.Limit + 1
 	events, err := s.repository.Find(ctx, targetID, lookup)

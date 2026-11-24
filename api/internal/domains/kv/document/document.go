@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"pocketrun-api/internal/domains/kv/application"
+	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 )
 
@@ -36,8 +36,8 @@ var (
 	ErrCollectionFull     = errors.New("collection reached the document limit")
 )
 
-func NewScope(app *application.Application, permission application.Permission) Scope {
-	return Scope{
+func NewScope(app *applicationrepository.Application, permission applicationrepository.Permission) kvdocumentrepository.Scope {
+	return kvdocumentrepository.Scope{
 		ApplicationID:      app.ID,
 		ProjectID:          app.ProjectID,
 		Role:               permission.Role,

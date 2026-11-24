@@ -7,12 +7,13 @@ import (
 	"sync"
 
 	"pocketrun-api/internal/domains/user/user"
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
 type UserService interface {
 	Count(ctx context.Context) (int64, error)
-	Create(ctx context.Context, input user.CreateInput, role string) (*user.User, error)
-	IssueSession(user *user.User) (*user.Session, error)
+	Create(ctx context.Context, input user.CreateInput, role string) (*userrepository.User, error)
+	IssueSession(user *userrepository.User) (*user.Session, error)
 }
 
 type Service struct {
