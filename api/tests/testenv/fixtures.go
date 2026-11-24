@@ -27,7 +27,7 @@ func (e *Env) Setup() {
 
 	e.Email = "admin-" + RandomText(4) + "@pocketrun.test"
 	e.password = "Senha-" + RandomText(8)
-	response := e.Admin(http.MethodPost, "/setup/admin/create", map[string]string{"name": "Admin Teste", "email": e.Email, "password": e.password})
+	response := e.Admin(http.MethodPost, "/setup/admin/create", map[string]string{"name": "Admin Teste", "email": e.Email, "password": e.password, "setupToken": e.SetupToken()})
 	e.Expect(response, http.StatusCreated, "create admin")
 	if e.session == "" {
 		e.t.Fatal("setup did not return a session cookie")

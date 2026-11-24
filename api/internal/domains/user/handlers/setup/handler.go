@@ -25,6 +25,7 @@ func NewHandler(service *Service, session sessioncookie.Cookie, validate *valida
 
 func (h *Handler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /setup/status/details", h.getStatus)
+	mux.HandleFunc("POST /setup/token/verify", h.verifyToken)
 	mux.HandleFunc("POST /setup/admin/create", h.createAdmin)
 }
 
@@ -39,33 +40,56 @@ func (h *Handler) getStatus(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, status)
 }
 
-func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+func (h *Handler) verifyToken(w http.ResponseWriter, r *http.Request) {
 	if !sessioncookie.IsPanelRequest(r) {
 		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
 
-	var input user.CreateInput
+	var input TokenInput
 	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
 		httpx.WriteDecodeError(w, err)
 		return
 	}
 
-	session, err := h.service.CreateAdmin(ctx, input)
-	if errors.Is(err, ErrSetupCompleted) {
-		httpx.WriteError(w, http.StatusForbidden, "setup_completed")
+	if err := h.service.VerifyToken(r.Context(), input.SetupToken); err != nil {
+		h.writeError(w, r, "verify setup token", err)
 		return
 	}
-	if errors.Is(err, user.ErrEmailTaken) {
-		httpx.WriteError(w, http.StatusConflict, "email_taken")
+	httpx.WriteMessage(w, http.StatusOK, "setup token accepted")
+}
+
+func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
+	if !sessioncookie.IsPanelRequest(r) {
+		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
+
+	var input CreateAdminInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	session, err := h.service.CreateAdmin(r.Context(), input)
 	if err != nil {
-		h.logger.ErrorContext(ctx, "create superadmin", "error", err)
-		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+		h.writeError(w, r, "create superadmin", err)
 		return
 	}
 	h.session.Set(w, session.Token)
 	httpx.WriteJSON(w, http.StatusCreated, session)
+}
+
+func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {
+	switch {
+	case errors.Is(err, ErrSetupCompleted):
+		httpx.WriteError(w, http.StatusForbidden, "setup_completed")
+	case errors.Is(err, ErrInvalidSetupToken):
+		httpx.WriteError(w, http.StatusForbidden, "invalid_setup_token")
+	case errors.Is(err, user.ErrEmailTaken):
+		httpx.WriteError(w, http.StatusConflict, "email_taken")
+	default:
+		h.logger.ErrorContext(r.Context(), operation, "error", err)
+		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+	}
 }

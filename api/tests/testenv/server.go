@@ -3,7 +3,6 @@ package testenv
 import (
 	"context"
 	"crypto/rand"
-	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -28,6 +27,7 @@ type Env struct {
 	client   *http.Client
 	session  string
 	password string
+	logs     *logBuffer
 	Email    string
 }
 
@@ -45,7 +45,8 @@ func Start(t *testing.T) *Env {
 		AllowHTTP:               "false",
 	}
 
-	handler, err := app.NewHandler(t.Context(), cfg, db, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	logs := &logBuffer{}
+	handler, err := app.NewHandler(t.Context(), cfg, db, slog.New(slog.NewTextHandler(logs, nil)))
 	if err != nil {
 		server.Close()
 		t.Fatalf("build handler: %v", err)
@@ -58,6 +59,7 @@ func Start(t *testing.T) *Env {
 	return &Env{
 		t:      t,
 		URL:    server.URL,
+		logs:   logs,
 		client: &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }},
 	}
 }
