@@ -32,7 +32,9 @@ import (
 	grouprepository "pocketrun-api/internal/repositories/group"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
+	linkrepository "pocketrun-api/internal/repositories/link"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
+	pagerepository "pocketrun-api/internal/repositories/page"
 	slugrepository "pocketrun-api/internal/repositories/slug"
 	userrepository "pocketrun-api/internal/repositories/user"
 	"pocketrun-api/internal/services/database"
@@ -92,10 +94,10 @@ func run(logger *slog.Logger) error {
 	usageRepository := kvusagerepository.NewMongoRepository(mongo.Collection("kvUsage"))
 	slugRepository := slugrepository.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := grouprepository.NewMongoRepository(mongo.Collection("groups"))
-	linkRepository := link.NewMongoRepository(mongo.Collection("links"))
+	linkRepository := linkrepository.NewMongoRepository(mongo.Collection("links"))
 	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))
 	linkOpenRepository := linkanalytics.NewMongoRepository(mongo.Collection("linkOpens"))
-	pageRepository := page.NewMongoRepository(mongo.Collection("pages"))
+	pageRepository := pagerepository.NewMongoRepository(mongo.Collection("pages"))
 	pageVersionRepository := version.NewMongoRepository(mongo.Collection("pageVersions"))
 	pageEventRepository := pagehistory.NewMongoRepository(mongo.Collection("pageEvents"))
 	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))

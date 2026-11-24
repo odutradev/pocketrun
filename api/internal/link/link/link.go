@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	linkrepository "pocketrun-api/internal/repositories/link"
 	"pocketrun-api/internal/services/activation"
 	"pocketrun-api/internal/services/slug"
 )
@@ -32,8 +33,8 @@ const (
 )
 
 var (
-	ErrLinkNotFound    = errors.New("link not found")
-	ErrLinkUnavailable = errors.New("link unavailable")
+	ErrLinkNotFound    = linkrepository.ErrNotFound
+	ErrLinkUnavailable = linkrepository.ErrUnavailable
 	ErrInvalidLinkID   = errors.New("invalid link id")
 	ErrInvalidSchedule = activation.ErrInvalidSchedule
 	ErrSelfRedirect    = errors.New("destination points to this shortener")
@@ -46,33 +47,6 @@ type KindError struct {
 
 func (e *KindError) Error() string {
 	return "slug belongs to a " + string(e.Kind)
-}
-
-type Link struct {
-	ID        bson.ObjectID      `json:"id" bson:"_id"`
-	Title     string             `json:"title" bson:"title"`
-	Slug      string             `json:"slug" bson:"slug"`
-	URL       string             `json:"url" bson:"url"`
-	GroupID   *bson.ObjectID     `json:"groupId" bson:"groupId,omitempty"`
-	Mode      Mode               `json:"mode" bson:"mode"`
-	StartsAt  *time.Time         `json:"startsAt" bson:"startsAt,omitempty"`
-	EndsAt    *time.Time         `json:"endsAt" bson:"endsAt,omitempty"`
-	MaxClicks *int64             `json:"maxClicks" bson:"maxClicks,omitempty"`
-	CountBy   activation.CountBy `json:"countBy" bson:"countBy,omitempty"`
-	Visitors  int64              `json:"uniqueVisitors" bson:"uniqueVisitors"`
-	Clicks    int64              `json:"clicks" bson:"clicks"`
-	State     State              `json:"state" bson:"-"`
-	CreatedBy bson.ObjectID      `json:"createdBy" bson:"createdBy"`
-	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
-}
-
-func (l Link) Rule() activation.Rule {
-	return activation.Rule{Mode: l.Mode, StartsAt: l.StartsAt, EndsAt: l.EndsAt, MaxClicks: l.MaxClicks, CountBy: l.CountBy}
-}
-
-func (l Link) StateAt(now time.Time) State {
-	return l.Rule().StateAt(activation.Counts{Clicks: l.Clicks, Visitors: l.Visitors}, now)
 }
 
 type Input struct {
@@ -142,26 +116,6 @@ const (
 	UngroupedFilter  = "none"
 )
 
-type Sort string
-
-const (
-	SortRecent   Sort = "recent"
-	SortClicks   Sort = "clicks"
-	SortTitle    Sort = "title"
-	SortExpiring Sort = "expiring"
-)
-
-type ListQuery struct {
-	GroupID   *bson.ObjectID
-	Ungrouped bool
-	Search    string
-	State     State
-	Sort      Sort
-	Page      int
-	Limit     int
-	Now       time.Time
-}
-
 type ListParams struct {
 	GroupID string `json:"groupId" query:"groupId" validate:"omitempty,mongodb|eq=none"`
 	Search  string `json:"search" query:"search" validate:"max=100"`
@@ -209,12 +163,6 @@ func newListPage(links []Link, total int64, query ListQuery) ListPage {
 		Limit:      query.Limit,
 		TotalPages: (total + limit - 1) / limit,
 	}
-}
-
-type GroupTotals struct {
-	GroupID *bson.ObjectID `json:"groupId" bson:"_id"`
-	Links   int64          `json:"links" bson:"links"`
-	Clicks  int64          `json:"clicks" bson:"clicks"`
 }
 
 type Summary struct {

@@ -1,0 +1,70 @@
+package page
+
+import (
+	"errors"
+	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+
+	"pocketrun-api/internal/services/activation"
+)
+
+var (
+	ErrNotFound    = errors.New("page not found")
+	ErrUnavailable = errors.New("page unavailable")
+)
+
+type Page struct {
+	ID        bson.ObjectID      `json:"id" bson:"_id"`
+	Title     string             `json:"title" bson:"title"`
+	Slug      string             `json:"slug" bson:"slug"`
+	HTML      string             `json:"html,omitempty" bson:"html,omitempty"`
+	Size      int64              `json:"size" bson:"size"`
+	Version   int                `json:"version" bson:"version"`
+	GroupID   *bson.ObjectID     `json:"groupId" bson:"groupId,omitempty"`
+	Mode      activation.Mode    `json:"mode" bson:"mode"`
+	StartsAt  *time.Time         `json:"startsAt" bson:"startsAt,omitempty"`
+	EndsAt    *time.Time         `json:"endsAt" bson:"endsAt,omitempty"`
+	MaxClicks *int64             `json:"maxClicks" bson:"maxClicks,omitempty"`
+	CountBy   activation.CountBy `json:"countBy" bson:"countBy,omitempty"`
+	Visitors  int64              `json:"uniqueVisitors" bson:"uniqueVisitors"`
+	Clicks    int64              `json:"clicks" bson:"clicks"`
+	State     activation.State   `json:"state" bson:"-"`
+	CreatedBy bson.ObjectID      `json:"createdBy" bson:"createdBy"`
+	CreatedAt time.Time          `json:"createdAt" bson:"createdAt"`
+	UpdatedAt time.Time          `json:"updatedAt" bson:"updatedAt"`
+}
+
+func (p Page) Rule() activation.Rule {
+	return activation.Rule{Mode: p.Mode, StartsAt: p.StartsAt, EndsAt: p.EndsAt, MaxClicks: p.MaxClicks, CountBy: p.CountBy}
+}
+
+func (p Page) StateAt(now time.Time) activation.State {
+	return p.Rule().StateAt(activation.Counts{Clicks: p.Clicks, Visitors: p.Visitors}, now)
+}
+
+type Sort string
+
+const (
+	SortRecent   Sort = "recent"
+	SortClicks   Sort = "clicks"
+	SortTitle    Sort = "title"
+	SortExpiring Sort = "expiring"
+)
+
+type ListQuery struct {
+	GroupID   *bson.ObjectID
+	Ungrouped bool
+	Search    string
+	State     activation.State
+	Sort      Sort
+	Page      int
+	Limit     int
+	Now       time.Time
+}
+
+type GroupTotals struct {
+	GroupID *bson.ObjectID `json:"groupId" bson:"_id"`
+	Pages   int64          `json:"pages" bson:"pages"`
+	Clicks  int64          `json:"clicks" bson:"clicks"`
+}

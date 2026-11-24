@@ -1,4 +1,4 @@
-package page
+package link
 
 import (
 	"context"
@@ -28,7 +28,7 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 		{Keys: bson.D{{Key: "groupId", Value: 1}}},
 	})
 	if err != nil {
-		return fmt.Errorf("create pages indexes: %w", err)
+		return fmt.Errorf("create links indexes: %w", err)
 	}
 	return nil
 }
@@ -52,7 +52,7 @@ func listFilter(query ListQuery) bson.M {
 	conditions := bson.A{}
 	if query.Search != "" {
 		pattern := bson.Regex{Pattern: regexp.QuoteMeta(query.Search), Options: "i"}
-		conditions = append(conditions, bson.M{"$or": bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}}})
+		conditions = append(conditions, bson.M{"$or": bson.A{bson.M{"title": pattern}, bson.M{"slug": pattern}, bson.M{"url": pattern}}})
 	}
 	if query.State != "" {
 		conditions = append(conditions, activation.StateFilter(query.State, queryTime(query)))
@@ -77,10 +77,11 @@ func listSort(sort Sort) bson.D {
 	}
 }
 
-func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Page, error) {
+func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Link, error) {
 	pipeline := mongo.Pipeline{{{Key: "$match", Value: listFilter(query)}}}
 	if query.Sort == SortExpiring {
-		pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{{Key: "expiresSort", Value: activation.UpcomingExpiry(queryTime(query))}}}})
+		upcoming := activation.UpcomingExpiry(queryTime(query))
+		pipeline = append(pipeline, bson.D{{Key: "$addFields", Value: bson.D{{Key: "expiresSort", Value: upcoming}}}})
 	}
 	pipeline = append(pipeline, bson.D{{Key: "$sort", Value: listSort(query.Sort)}})
 	if query.Limit > 0 {
@@ -89,7 +90,9 @@ func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Page, er
 			bson.D{{Key: "$limit", Value: int64(query.Limit)}},
 		)
 	}
-	pipeline = append(pipeline, bson.D{{Key: "$project", Value: bson.D{{Key: "html", Value: 0}, {Key: "expiresSort", Value: 0}}}})
+	if query.Sort == SortExpiring {
+		pipeline = append(pipeline, bson.D{{Key: "$project", Value: bson.D{{Key: "expiresSort", Value: 0}}}})
+	}
 
 	aggregateOptions := options.Aggregate()
 	if query.Sort == SortTitle {
@@ -98,21 +101,21 @@ func (r *MongoRepository) Find(ctx context.Context, query ListQuery) ([]Page, er
 
 	cursor, err := r.collection.Aggregate(ctx, pipeline, aggregateOptions)
 	if err != nil {
-		return nil, fmt.Errorf("find pages: %w", err)
+		return nil, fmt.Errorf("find links: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	pages := []Page{}
-	if err := cursor.All(ctx, &pages); err != nil {
-		return nil, fmt.Errorf("decode pages: %w", err)
+	links := []Link{}
+	if err := cursor.All(ctx, &links); err != nil {
+		return nil, fmt.Errorf("decode links: %w", err)
 	}
-	return pages, nil
+	return links, nil
 }
 
 func (r *MongoRepository) Count(ctx context.Context, query ListQuery) (int64, error) {
 	total, err := r.collection.CountDocuments(ctx, listFilter(query))
 	if err != nil {
-		return 0, fmt.Errorf("count pages: %w", err)
+		return 0, fmt.Errorf("count links: %w", err)
 	}
 	return total, nil
 }
@@ -121,64 +124,63 @@ func (r *MongoRepository) Totals(ctx context.Context) ([]GroupTotals, error) {
 	cursor, err := r.collection.Aggregate(ctx, mongo.Pipeline{
 		{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: "$groupId"},
-			{Key: "pages", Value: bson.D{{Key: "$sum", Value: 1}}},
+			{Key: "links", Value: bson.D{{Key: "$sum", Value: 1}}},
 			{Key: "clicks", Value: bson.D{{Key: "$sum", Value: "$clicks"}}},
 		}}},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("aggregate page totals: %w", err)
+		return nil, fmt.Errorf("aggregate link totals: %w", err)
 	}
 	defer cursor.Close(ctx)
 
 	totals := []GroupTotals{}
 	if err := cursor.All(ctx, &totals); err != nil {
-		return nil, fmt.Errorf("decode page totals: %w", err)
+		return nil, fmt.Errorf("decode link totals: %w", err)
 	}
 	return totals, nil
 }
 
-func (r *MongoRepository) FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]Page, error) {
-	findOptions := options.Find().SetProjection(bson.D{{Key: "html", Value: 0}})
-	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}}, findOptions)
+func (r *MongoRepository) FindByIDs(ctx context.Context, ids []bson.ObjectID) ([]Link, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
 	if err != nil {
-		return nil, fmt.Errorf("find pages by ids: %w", err)
+		return nil, fmt.Errorf("find links by ids: %w", err)
 	}
 	defer cursor.Close(ctx)
 
-	pages := []Page{}
-	if err := cursor.All(ctx, &pages); err != nil {
-		return nil, fmt.Errorf("decode pages by ids: %w", err)
+	links := []Link{}
+	if err := cursor.All(ctx, &links); err != nil {
+		return nil, fmt.Errorf("decode links by ids: %w", err)
 	}
-	return pages, nil
+	return links, nil
 }
 
-func (r *MongoRepository) FindByID(ctx context.Context, id bson.ObjectID) (*Page, error) {
-	var page Page
-	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&page)
+func (r *MongoRepository) FindByID(ctx context.Context, id bson.ObjectID) (*Link, error) {
+	var link Link
+	err := r.collection.FindOne(ctx, bson.M{"_id": id}).Decode(&link)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrPageNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("find page: %w", err)
+		return nil, fmt.Errorf("find link: %w", err)
 	}
-	return &page, nil
+	return &link, nil
 }
 
-func (r *MongoRepository) Insert(ctx context.Context, page *Page) error {
-	if _, err := r.collection.InsertOne(ctx, page); err != nil {
-		return fmt.Errorf("insert page: %w", err)
+func (r *MongoRepository) Insert(ctx context.Context, link *Link) error {
+	if _, err := r.collection.InsertOne(ctx, link); err != nil {
+		return fmt.Errorf("insert link: %w", err)
 	}
 	return nil
 }
 
-func (r *MongoRepository) Replace(ctx context.Context, page *Page) error {
-	result, err := r.collection.ReplaceOne(ctx, bson.M{"_id": page.ID}, page)
+func (r *MongoRepository) Replace(ctx context.Context, link *Link) error {
+	result, err := r.collection.ReplaceOne(ctx, bson.M{"_id": link.ID}, link)
 	if err != nil {
-		return fmt.Errorf("replace page: %w", err)
+		return fmt.Errorf("replace link: %w", err)
 	}
 
 	if result.MatchedCount == 0 {
-		return ErrPageNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -186,11 +188,11 @@ func (r *MongoRepository) Replace(ctx context.Context, page *Page) error {
 func (r *MongoRepository) Delete(ctx context.Context, id bson.ObjectID) error {
 	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
-		return fmt.Errorf("delete page: %w", err)
+		return fmt.Errorf("delete link: %w", err)
 	}
 
 	if result.DeletedCount == 0 {
-		return ErrPageNotFound
+		return ErrNotFound
 	}
 	return nil
 }
@@ -201,40 +203,40 @@ func (r *MongoRepository) UnsetGroup(ctx context.Context, groupID bson.ObjectID)
 		"$set":   bson.M{"updatedAt": time.Now()},
 	})
 	if err != nil {
-		return fmt.Errorf("unset pages group: %w", err)
+		return fmt.Errorf("unset links group: %w", err)
 	}
 	return nil
 }
 
-func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Page, error) {
+func (r *MongoRepository) RegisterOpen(ctx context.Context, id bson.ObjectID, now time.Time, isCounted bool) (*Link, error) {
 	filter := bson.M{"_id": id, "$or": activation.AvailableConditions(now)}
 
-	var page Page
+	var link Link
 	var err error
 	if isCounted {
-		err = r.collection.FindOneAndUpdate(ctx, filter, bson.M{"$inc": bson.M{"clicks": 1}}).Decode(&page)
+		err = r.collection.FindOneAndUpdate(ctx, filter, bson.M{"$inc": bson.M{"clicks": 1}}).Decode(&link)
 	} else {
-		err = r.collection.FindOne(ctx, filter).Decode(&page)
+		err = r.collection.FindOne(ctx, filter).Decode(&link)
 	}
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrPageUnavailable
+		return nil, ErrUnavailable
 	}
 	if err != nil {
-		return nil, fmt.Errorf("register page open: %w", err)
+		return nil, fmt.Errorf("register link open: %w", err)
 	}
-	return &page, nil
+	return &link, nil
 }
 
-func (r *MongoRepository) CountVisitor(ctx context.Context, id bson.ObjectID) (*Page, error) {
-	var page Page
+func (r *MongoRepository) CountVisitor(ctx context.Context, id bson.ObjectID) (*Link, error) {
+	var link Link
 	err := r.collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, bson.M{"$inc": bson.M{"uniqueVisitors": 1}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
-	).Decode(&page)
+	).Decode(&link)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, ErrPageNotFound
+		return nil, ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("count page visitor: %w", err)
+		return nil, fmt.Errorf("count link visitor: %w", err)
 	}
-	return &page, nil
+	return &link, nil
 }
