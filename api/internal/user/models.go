@@ -11,3 +11,7 @@ type (
 	LoginAttempt  = loginattemptrepository.Attempt
 	AttemptFilter = loginattemptrepository.Filter
 )
+
+func SystemActor() Actor {
+	return userrepository.SystemActor()
+}

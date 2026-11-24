@@ -30,11 +30,13 @@ import (
 	"pocketrun-api/internal/page/version"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	backuprepository "pocketrun-api/internal/repositories/backup"
+	eventrepository "pocketrun-api/internal/repositories/event"
 	grouprepository "pocketrun-api/internal/repositories/group"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 	linkrepository "pocketrun-api/internal/repositories/link"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
+	openrepository "pocketrun-api/internal/repositories/open"
 	pagerepository "pocketrun-api/internal/repositories/page"
 	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
 	pageaccessattemptrepository "pocketrun-api/internal/repositories/pageaccessattempt"
@@ -102,12 +104,12 @@ func run(logger *slog.Logger) error {
 	slugRepository := slugrepository.NewMongoRepository(mongo.Collection("slugs"))
 	groupRepository := grouprepository.NewMongoRepository(mongo.Collection("groups"))
 	linkRepository := linkrepository.NewMongoRepository(mongo.Collection("links"))
-	linkEventRepository := linkhistory.NewMongoRepository(mongo.Collection("linkEvents"))
-	linkOpenRepository := linkanalytics.NewMongoRepository(mongo.Collection("linkOpens"))
+	linkEventRepository := eventrepository.NewMongoRepository(mongo.Collection("linkEvents"), "linkId")
+	linkOpenRepository := openrepository.NewMongoRepository(mongo.Collection("linkOpens"), "linkId")
 	pageRepository := pagerepository.NewMongoRepository(mongo.Collection("pages"))
 	pageVersionRepository := pageversionrepository.NewMongoRepository(mongo.Collection("pageVersions"))
-	pageEventRepository := pagehistory.NewMongoRepository(mongo.Collection("pageEvents"))
-	pageOpenRepository := pageanalytics.NewMongoRepository(mongo.Collection("pageOpens"))
+	pageEventRepository := eventrepository.NewMongoRepository(mongo.Collection("pageEvents"), "pageId")
+	pageOpenRepository := openrepository.NewMongoRepository(mongo.Collection("pageOpens"), "pageId")
 	accessRepository := pageaccessrepository.NewMongoRepository(mongo.Collection("pageAccess"))
 	accessAttemptRepository := pageaccessattemptrepository.NewMongoRepository(mongo.Collection("pageAccessAttempts"))
 	bindingRepository := pagebindingrepository.NewMongoRepository(mongo.Collection("pageBindings"))
@@ -190,7 +192,7 @@ func run(logger *slog.Logger) error {
 		logger.WarnContext(ctx, "report setup status", "error", err)
 	}
 
-	backupService := backup.NewService(backuprepository.NewMongoRepository(mongo), userService, logger)
+	backupService := backup.NewService(backuprepository.NewMongoRepository(mongo), userService, []backup.Indexer{linkEventRepository, linkOpenRepository, pageEventRepository, pageOpenRepository}, logger)
 
 	healthHandler := health.NewHandler()
 	userHandler := user.NewHandler(userService, validate, logger)

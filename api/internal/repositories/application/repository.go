@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	"pocketrun-api/internal/services/database"
 )
 
 type MongoRepository struct {
@@ -22,7 +24,7 @@ func NewMongoRepository(collection *mongo.Collection) *MongoRepository {
 var legacyIndexes = []string{"manager_id_1", "project_id_1", "tokens.token_hash_1"}
 
 func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
-	if err := r.dropLegacyIndexes(ctx); err != nil {
+	if err := database.DropIndexes(ctx, r.collection, legacyIndexes...); err != nil {
 		return err
 	}
 	_, err := r.collection.Indexes().CreateMany(ctx, []mongo.IndexModel{
@@ -33,26 +35,6 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	})
 	if err != nil {
 		return fmt.Errorf("create applications indexes: %w", err)
-	}
-	return nil
-}
-
-func (r *MongoRepository) dropLegacyIndexes(ctx context.Context) error {
-	specifications, err := r.collection.Indexes().ListSpecifications(ctx)
-	if err != nil {
-		return fmt.Errorf("list applications indexes: %w", err)
-	}
-	existing := map[string]bool{}
-	for _, specification := range specifications {
-		existing[specification.Name] = true
-	}
-	for _, name := range legacyIndexes {
-		if !existing[name] {
-			continue
-		}
-		if err := r.collection.Indexes().DropOne(ctx, name); err != nil {
-			return fmt.Errorf("drop legacy index %s: %w", name, err)
-		}
 	}
 	return nil
 }

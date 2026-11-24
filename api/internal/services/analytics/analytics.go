@@ -6,20 +6,13 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	openrepository "pocketrun-api/internal/repositories/open"
 	"pocketrun-api/internal/services/traffic"
 )
 
 const MaxRanked = 8
 
-type Open struct {
-	ID          bson.ObjectID `bson:"_id"`
-	LinkID      bson.ObjectID `bson:"linkId"`
-	traffic.Hit `bson:",inline"`
-}
-
-func newOpen(linkID bson.ObjectID, visit traffic.Visit, visitor string, at time.Time) *Open {
-	return &Open{ID: bson.NewObjectID(), LinkID: linkID, Hit: traffic.NewHit(visit, visitor, at)}
-}
+type Open = openrepository.Open
 
 type Target struct {
 	ID        bson.ObjectID
@@ -28,7 +21,7 @@ type Target struct {
 	CreatedAt time.Time
 }
 
-type RankedLink struct {
+type Ranked struct {
 	ID       bson.ObjectID `json:"id"`
 	Title    string        `json:"title"`
 	Slug     string        `json:"slug"`
@@ -36,34 +29,33 @@ type RankedLink struct {
 	Visitors int64         `json:"visitors"`
 }
 
-type Overview struct {
-	traffic.Analytics
-	TopLinks []RankedLink `json:"topLinks"`
-}
-
 type tally struct {
 	clicks   int64
 	visitors map[string]struct{}
 }
 
-func rank(opens []Open) []RankedLink {
+func newOpen(targetID bson.ObjectID, visit traffic.Visit, visitor string, at time.Time) *Open {
+	return &Open{ID: bson.NewObjectID(), TargetID: targetID, Hit: traffic.NewHit(visit, visitor, at)}
+}
+
+func rank(opens []Open) []Ranked {
 	tallies := map[bson.ObjectID]*tally{}
 	for _, open := range opens {
 		if open.IsBot {
 			continue
 		}
-		current, ok := tallies[open.LinkID]
+		current, ok := tallies[open.TargetID]
 		if !ok {
 			current = &tally{visitors: map[string]struct{}{}}
-			tallies[open.LinkID] = current
+			tallies[open.TargetID] = current
 		}
 		current.clicks++
 		current.visitors[open.Visitor] = struct{}{}
 	}
 
-	ranked := make([]RankedLink, 0, len(tallies))
+	ranked := make([]Ranked, 0, len(tallies))
 	for id, current := range tallies {
-		ranked = append(ranked, RankedLink{ID: id, Clicks: current.clicks, Visitors: int64(len(current.visitors))})
+		ranked = append(ranked, Ranked{ID: id, Clicks: current.clicks, Visitors: int64(len(current.visitors))})
 	}
 	sort.Slice(ranked, func(i, j int) bool {
 		if ranked[i].Clicks == ranked[j].Clicks {

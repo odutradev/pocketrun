@@ -28,3 +28,9 @@ type Actor struct {
 	Name  string         `json:"name" bson:"name"`
 	Email string         `json:"email" bson:"email"`
 }
+
+const systemActorName = "Sistema"
+
+func SystemActor() Actor {
+	return Actor{Name: systemActorName}
+}

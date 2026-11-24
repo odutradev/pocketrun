@@ -30,9 +30,14 @@ type Authorizer interface {
 	EnsureSuperadmin(ctx context.Context, actorID bson.ObjectID) error
 }
 
+type Indexer interface {
+	EnsureIndexes(ctx context.Context) error
+}
+
 type Service struct {
 	repository Repository
 	authorizer Authorizer
+	indexers   []Indexer
 	logger     *slog.Logger
 	restoring  sync.Mutex
 }
@@ -51,8 +56,8 @@ type restoreState struct {
 	hasSuperadmin bool
 }
 
-func NewService(repository Repository, authorizer Authorizer, logger *slog.Logger) *Service {
-	return &Service{repository: repository, authorizer: authorizer, logger: logger}
+func NewService(repository Repository, authorizer Authorizer, indexers []Indexer, logger *slog.Logger) *Service {
+	return &Service{repository: repository, authorizer: authorizer, indexers: indexers, logger: logger}
 }
 
 func (s *Service) Summary(ctx context.Context, actorID bson.ObjectID) (Summary, error) {
@@ -171,6 +176,11 @@ func (s *Service) Restore(ctx context.Context, actorID bson.ObjectID, source io.
 	for _, name := range state.header.Collections {
 		if err := s.repository.Promote(ctx, name); err != nil {
 			return nil, fmt.Errorf("restore backup: %w", err)
+		}
+	}
+	for _, indexer := range s.indexers {
+		if err := indexer.EnsureIndexes(ctx); err != nil {
+			s.logger.WarnContext(ctx, "ensure indexes after restore", "error", err)
 		}
 	}
 

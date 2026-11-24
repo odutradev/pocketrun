@@ -7,12 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-const systemActorName = "Sistema"
-
-func SystemActor() Actor {
-	return Actor{Name: systemActorName}
-}
-
 func (s *Service) Actor(ctx context.Context) (Actor, error) {
 	claims, ok := ClaimsFromContext(ctx)
 	if !ok {
