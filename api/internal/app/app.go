@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"pocketrun-api/internal/config"
-	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/utils/passwordhash"
 	"pocketrun-api/internal/services/database"
 	"pocketrun-api/internal/services/httpx"
 )
@@ -32,7 +32,7 @@ func Run(ctx context.Context, logger *slog.Logger) error {
 	logger.InfoContext(ctx, "database connected", "database", cfg.MongoName)
 
 	validate := httpx.NewValidator()
-	if err := user.RegisterValidations(validate); err != nil {
+	if err := passwordhash.RegisterValidations(validate); err != nil {
 		return fmt.Errorf("register validations: %w", err)
 	}
 

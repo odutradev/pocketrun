@@ -4,20 +4,16 @@ import (
 	"errors"
 	"strings"
 
+	"pocketrun-api/internal/domains/user/utils/jwt"
 	userrepository "pocketrun-api/internal/repositories/user"
-)
-
-const (
-	RoleSuperadmin = "superadmin"
-	RoleAdmin      = "admin"
 )
 
 var (
 	ErrUserNotFound        = userrepository.ErrNotFound
 	ErrEmailTaken          = userrepository.ErrEmailTaken
 	ErrInvalidCredentials  = errors.New("invalid credentials")
-	ErrInvalidToken        = errors.New("invalid token")
-	ErrExpiredToken        = errors.New("token expired")
+	ErrInvalidToken        = jwt.ErrInvalidToken
+	ErrExpiredToken        = jwt.ErrExpiredToken
 	ErrForbidden           = errors.New("action not allowed for this role")
 	ErrSelfAction          = errors.New("action not allowed on own account")
 	ErrUserHasApplications = errors.New("user still owns applications")

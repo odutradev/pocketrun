@@ -26,6 +26,7 @@ import (
 	"pocketrun-api/internal/domains/page/handlers/version"
 	"pocketrun-api/internal/domains/user/handlers/setup"
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	grouprepository "pocketrun-api/internal/repositories/group"
 	"pocketrun-api/internal/services/httpx"
 )
@@ -47,7 +48,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	})
 
 	adminMux := http.NewServeMux()
-	authenticateManager := user.Authenticate(s.signer, s.users, logger)
+	authenticateManager := managerauth.Authenticate(s.signer, s.users, logger)
 	healthHandler.Register(adminMux)
 	setup.NewHandler(s.setup, validate, logger).Register(adminMux)
 	user.NewHandler(s.users, validate, logger).Register(adminMux, authenticateManager)

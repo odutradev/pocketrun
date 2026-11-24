@@ -13,6 +13,7 @@ import (
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/utils/jwt"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
@@ -86,12 +87,12 @@ func run(logger *slog.Logger, withAdmin bool) error {
 	userService := user.NewService(user.Dependencies{
 		Repository:   userRepository,
 		Attempts:     loginattemptrepository.NewMongoRepository(mongo.Collection("loginAttempts")),
-		Signer:       user.NewTokenSigner(cfg.JWTSecret),
+		Signer:       jwt.NewSigner(cfg.JWTSecret),
 		Applications: applicationService,
 		Logger:       logger,
 	})
 	input := user.CreateInput{Name: adminName, Email: adminEmail, Password: adminPassword}
-	if _, err := userService.Create(ctx, input, user.RoleSuperadmin); err != nil {
+	if _, err := userService.Create(ctx, input, userrepository.RoleSuperadmin); err != nil {
 		return fmt.Errorf("create superadmin: %w", err)
 	}
 	logger.InfoContext(ctx, "superadmin created", "email", adminEmail, "password", adminPassword)

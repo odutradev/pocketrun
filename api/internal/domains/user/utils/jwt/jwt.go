@@ -1,17 +1,24 @@
-package user
+package jwt
 
 import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
-	userrepository "pocketrun-api/internal/repositories/user"
 	"strings"
 	"time"
+
+	userrepository "pocketrun-api/internal/repositories/user"
 )
 
-const TokenTTL = 7 * 24 * time.Hour
+const TTL = 7 * 24 * time.Hour
+
+var (
+	ErrInvalidToken = errors.New("invalid token")
+	ErrExpiredToken = errors.New("token expired")
+)
 
 type Claims struct {
 	UserID    string `json:"userId"`
@@ -27,18 +34,18 @@ type tokenHeader struct {
 	Type      string `json:"typ"`
 }
 
-type TokenSigner struct {
+type Signer struct {
 	secret []byte
 }
 
-func NewTokenSigner(secret string) *TokenSigner {
-	return &TokenSigner{secret: []byte(secret)}
+func NewSigner(secret string) *Signer {
+	return &Signer{secret: []byte(secret)}
 }
 
-func (s *TokenSigner) Sign(user *userrepository.User) (string, error) {
+func (s *Signer) Sign(user *userrepository.User) (string, error) {
 	role := user.Role
 	if role == "" {
-		role = RoleAdmin
+		role = userrepository.RoleAdmin
 	}
 
 	header, err := json.Marshal(tokenHeader{Algorithm: "HS256", Type: "JWT"})
@@ -53,7 +60,7 @@ func (s *TokenSigner) Sign(user *userrepository.User) (string, error) {
 		Role:      role,
 		Version:   user.TokenVersion,
 		IssuedAt:  now.Unix(),
-		ExpiresAt: now.Add(TokenTTL).Unix(),
+		ExpiresAt: now.Add(TTL).Unix(),
 	})
 	if err != nil {
 		return "", fmt.Errorf("marshal token claims: %w", err)
@@ -63,7 +70,7 @@ func (s *TokenSigner) Sign(user *userrepository.User) (string, error) {
 	return unsigned + "." + s.signature(unsigned), nil
 }
 
-func (s *TokenSigner) Verify(token string) (*Claims, error) {
+func (s *Signer) Verify(token string) (*Claims, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return nil, ErrInvalidToken
@@ -89,7 +96,7 @@ func (s *TokenSigner) Verify(token string) (*Claims, error) {
 	return &claims, nil
 }
 
-func (s *TokenSigner) signature(unsigned string) string {
+func (s *Signer) signature(unsigned string) string {
 	signer := hmac.New(sha256.New, s.secret)
 	signer.Write([]byte(unsigned))
 	return base64.RawURLEncoding.EncodeToString(signer.Sum(nil))

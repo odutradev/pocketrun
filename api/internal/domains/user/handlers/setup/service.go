@@ -47,7 +47,7 @@ func (s *Service) CreateAdmin(ctx context.Context, input user.CreateInput) (*use
 		return nil, ErrSetupCompleted
 	}
 
-	admin, err := s.users.Create(ctx, input, user.RoleSuperadmin)
+	admin, err := s.users.Create(ctx, input, userrepository.RoleSuperadmin)
 	if err != nil {
 		return nil, fmt.Errorf("create superadmin: %w", err)
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"pocketrun-api/internal/domains/group/handlers/group"
-	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	"pocketrun-api/internal/services/activation"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/services/slug"
@@ -76,7 +76,7 @@ func (h *Handler) checkSlug(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return

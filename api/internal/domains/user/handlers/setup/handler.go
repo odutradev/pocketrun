@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/utils/sessioncookie"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -39,7 +40,7 @@ func (h *Handler) getStatus(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if !user.IsPanelRequest(r) {
+	if !sessioncookie.IsPanelRequest(r) {
 		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
@@ -64,6 +65,6 @@ func (h *Handler) createAdmin(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
-	user.SetSessionCookie(w, session)
+	sessioncookie.Set(w, session.Token)
 	httpx.WriteJSON(w, http.StatusCreated, session)
 }

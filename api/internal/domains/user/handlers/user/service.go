@@ -11,9 +11,34 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
+	"pocketrun-api/internal/domains/user/utils/jwt"
+	"pocketrun-api/internal/domains/user/utils/passwordhash"
 	loginattemptrepository "pocketrun-api/internal/repositories/loginattempt"
 	userrepository "pocketrun-api/internal/repositories/user"
 )
+
+func (s *Service) Actor(ctx context.Context) (userrepository.Actor, error) {
+	claims, ok := managerauth.ClaimsFromContext(ctx)
+	if !ok {
+		return userrepository.SystemActor(), nil
+	}
+
+	actor := userrepository.Actor{Name: claims.Email, Email: claims.Email}
+	id, err := bson.ObjectIDFromHex(claims.UserID)
+	if err != nil {
+		return actor, nil
+	}
+	actor.ID = &id
+
+	member, err := s.GetUserByID(ctx, id)
+	if err != nil {
+		return actor, fmt.Errorf("resolve actor %s: %w", claims.UserID, err)
+	}
+	actor.Name = member.Name
+	actor.Email = member.Email
+	return actor, nil
+}
 
 type Repository interface {
 	Count(ctx context.Context) (int64, error)
@@ -39,7 +64,7 @@ type ApplicationCounter interface {
 type Dependencies struct {
 	Repository   Repository
 	Attempts     AttemptRepository
-	Signer       *TokenSigner
+	Signer       *jwt.Signer
 	Applications ApplicationCounter
 	Logger       *slog.Logger
 }
@@ -47,7 +72,7 @@ type Dependencies struct {
 type Service struct {
 	repository   Repository
 	attempts     AttemptRepository
-	signer       *TokenSigner
+	signer       *jwt.Signer
 	applications ApplicationCounter
 	logger       *slog.Logger
 }
@@ -71,7 +96,7 @@ func (s *Service) Count(ctx context.Context) (int64, error) {
 }
 
 func (s *Service) Create(ctx context.Context, input CreateInput, role string) (*userrepository.User, error) {
-	passwordHash, err := hashPassword(input.Password)
+	passwordHash, err := passwordhash.Hash(input.Password)
 	if err != nil {
 		return nil, fmt.Errorf("hash password: %w", err)
 	}
@@ -110,14 +135,14 @@ func (s *Service) Login(ctx context.Context, input LoginInput, client string) (*
 
 	user, err := s.repository.FindByEmail(ctx, input.Email)
 	if errors.Is(err, ErrUserNotFound) {
-		burnPasswordCheck(input.Password)
+		passwordhash.BurnCheck(input.Password)
 		return nil, s.rejectLogin(ctx, input.Email, clientHash, now)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("find user %s: %w", input.Email, err)
 	}
 
-	isValid, needsRehash := checkPassword(input.Password, user.PasswordHash)
+	isValid, needsRehash := passwordhash.Check(input.Password, user.PasswordHash)
 	if !isValid {
 		return nil, s.rejectLogin(ctx, input.Email, clientHash, now)
 	}
@@ -130,7 +155,7 @@ func (s *Service) Login(ctx context.Context, input LoginInput, client string) (*
 	return s.IssueSession(user)
 }
 
-func (s *Service) CheckSession(ctx context.Context, claims *Claims) error {
+func (s *Service) CheckSession(ctx context.Context, claims *jwt.Claims) error {
 	id, err := bson.ObjectIDFromHex(claims.UserID)
 	if err != nil {
 		return fmt.Errorf("check session: %w", ErrInvalidToken)
@@ -165,7 +190,7 @@ func (s *Service) rejectLogin(ctx context.Context, email, client string, now tim
 }
 
 func (s *Service) upgradePassword(ctx context.Context, user *userrepository.User, password string) {
-	passwordHash, err := hashPassword(password)
+	passwordHash, err := passwordhash.Hash(password)
 	if err != nil {
 		s.logger.WarnContext(ctx, "rehash password", "userId", user.ID.Hex(), "error", err)
 		return
@@ -219,7 +244,7 @@ func (s *Service) UpdateByManager(ctx context.Context, actorID, id bson.ObjectID
 
 	fields := bson.M{"name": input.Name, "email": input.Email, "role": input.Role, "updatedAt": time.Now()}
 	if input.Password != "" {
-		passwordHash, err := hashPassword(input.Password)
+		passwordHash, err := passwordhash.Hash(input.Password)
 		if err != nil {
 			return nil, fmt.Errorf("hash password: %w", err)
 		}
@@ -275,11 +300,11 @@ func (s *Service) ChangePassword(ctx context.Context, id bson.ObjectID, input Pa
 		return nil, fmt.Errorf("change password: %w", err)
 	}
 
-	if isValid, _ := checkPassword(input.CurrentPassword, user.PasswordHash); !isValid {
+	if isValid, _ := passwordhash.Check(input.CurrentPassword, user.PasswordHash); !isValid {
 		return nil, ErrInvalidPassword
 	}
 
-	passwordHash, err := hashPassword(input.NewPassword)
+	passwordHash, err := passwordhash.Hash(input.NewPassword)
 	if err != nil {
 		return nil, fmt.Errorf("hash password: %w", err)
 	}
@@ -312,7 +337,7 @@ func (s *Service) requireSuperadmin(ctx context.Context, actorID bson.ObjectID) 
 		return nil, fmt.Errorf("require superadmin: %w", err)
 	}
 
-	if actor.Role != RoleSuperadmin {
+	if actor.Role != userrepository.RoleSuperadmin {
 		return nil, ErrForbidden
 	}
 	return actor, nil

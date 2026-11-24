@@ -10,6 +10,8 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
+	"pocketrun-api/internal/domains/user/utils/sessioncookie"
 	"pocketrun-api/internal/services/httpx"
 	"pocketrun-api/internal/utils"
 )
@@ -41,7 +43,7 @@ func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) h
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if !IsPanelRequest(r) {
+	if !sessioncookie.IsPanelRequest(r) {
 		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
@@ -67,22 +69,22 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
 		return
 	}
-	SetSessionCookie(w, session)
+	sessioncookie.Set(w, session.Token)
 	httpx.WriteJSON(w, http.StatusOK, session)
 }
 
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
-	if !IsPanelRequest(r) {
+	if !sessioncookie.IsPanelRequest(r) {
 		httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 		return
 	}
-	ClearSessionCookie(w)
+	sessioncookie.Clear(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -92,13 +94,13 @@ func (h *Handler) revokeSessions(w http.ResponseWriter, r *http.Request) {
 		h.writeServiceError(ctx, w, "revoke sessions", err)
 		return
 	}
-	ClearSessionCookie(w)
+	sessioncookie.Clear(w)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -119,7 +121,7 @@ func (h *Handler) me(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -141,7 +143,7 @@ func (h *Handler) updateProfile(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -158,13 +160,13 @@ func (h *Handler) changePassword(w http.ResponseWriter, r *http.Request) {
 		h.writeServiceError(ctx, w, "change password", err)
 		return
 	}
-	SetSessionCookie(w, session)
+	sessioncookie.Set(w, session.Token)
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -180,7 +182,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -225,7 +227,7 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 			h.writeServiceError(ctx, w, "update user", err)
 			return
 		}
-		SetSessionCookie(w, session)
+		sessioncookie.Set(w, session.Token)
 	}
 	httpx.WriteJSON(w, http.StatusOK, user)
 }
@@ -270,7 +272,7 @@ func (h *Handler) writeServiceError(ctx context.Context, w http.ResponseWriter, 
 }
 
 func parseIDs(r *http.Request) (bson.ObjectID, bson.ObjectID, error) {
-	managerID, err := ManagerIDFromContext(r.Context())
+	managerID, err := managerauth.ManagerIDFromContext(r.Context())
 	if err != nil {
 		return bson.ObjectID{}, bson.ObjectID{}, fmt.Errorf("parse manager id: %w", err)
 	}

@@ -1,4 +1,4 @@
-package user
+package passwordhash
 
 import (
 	"crypto/hmac"
@@ -30,7 +30,7 @@ const (
 
 func RegisterValidations(validate *validator.Validate) error {
 	err := validate.RegisterValidation("strongpassword", func(field validator.FieldLevel) bool {
-		return IsStrongPassword(field.Field().String())
+		return IsStrong(field.Field().String())
 	})
 	if err != nil {
 		return fmt.Errorf("register strongpassword validation: %w", err)
@@ -38,7 +38,7 @@ func RegisterValidations(validate *validator.Validate) error {
 	return nil
 }
 
-func IsStrongPassword(password string) bool {
+func IsStrong(password string) bool {
 	if len(password) < MinPasswordLength || len(password) > MaxPasswordLength {
 		return false
 	}
@@ -50,7 +50,7 @@ func IsStrongPassword(password string) bool {
 	return hasLetter && hasDigitOrSymbol
 }
 
-func hashPassword(password string) (string, error) {
+func Hash(password string) (string, error) {
 	salt := make([]byte, saltLength)
 	if _, err := rand.Read(salt); err != nil {
 		return "", fmt.Errorf("generate salt: %w", err)
@@ -60,7 +60,7 @@ func hashPassword(password string) (string, error) {
 	return fmt.Sprintf("%s$v=%d$m=%d,t=%d,p=%d$%s$%s", argonPrefix, argon2.Version, argonMemory, argonTime, argonThreads, encoding.EncodeToString(salt), encoding.EncodeToString(digest)), nil
 }
 
-func checkPassword(password, storedHash string) (bool, bool) {
+func Check(password, storedHash string) (bool, bool) {
 	if strings.HasPrefix(storedHash, argonPrefix+"$") {
 		return checkArgonPassword(password, storedHash)
 	}
@@ -127,6 +127,6 @@ func legacyDigest(salt []byte, password string) []byte {
 	return hasher.Sum(nil)
 }
 
-func burnPasswordCheck(password string) {
+func BurnCheck(password string) {
 	argon2.IDKey([]byte(password), make([]byte, saltLength), argonTime, argonMemory, argonThreads, argonKeyLength)
 }

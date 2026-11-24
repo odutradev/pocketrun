@@ -15,7 +15,7 @@ import (
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
 	"pocketrun-api/internal/domains/page/handlers/history"
-	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	eventrepository "pocketrun-api/internal/repositories/event"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
@@ -139,7 +139,7 @@ func (s *Service) Enable(ctx context.Context, input application.PageInput) (Deta
 		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
 	}
 
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		return Details{}, fmt.Errorf("enable page kv %s: %w", input.PageID.Hex(), err)
 	}

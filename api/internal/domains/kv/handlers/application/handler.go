@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	"pocketrun-api/internal/services/httpx"
 )
@@ -44,7 +45,7 @@ func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Hand
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -60,7 +61,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -291,7 +292,7 @@ func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation s
 }
 
 func parseIDs(r *http.Request) (bson.ObjectID, bson.ObjectID, error) {
-	managerID, err := user.ManagerIDFromContext(r.Context())
+	managerID, err := managerauth.ManagerIDFromContext(r.Context())
 	if err != nil {
 		return bson.ObjectID{}, bson.ObjectID{}, fmt.Errorf("parse manager id: %w", err)
 	}

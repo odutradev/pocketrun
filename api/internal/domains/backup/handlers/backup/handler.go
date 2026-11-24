@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -32,7 +33,7 @@ func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) h
 
 func (h *Handler) summary(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -48,7 +49,7 @@ func (h *Handler) summary(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return
@@ -75,7 +76,7 @@ func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) restore(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
 		return

@@ -13,6 +13,7 @@ import (
 
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
 	"pocketrun-api/internal/services/httpx"
@@ -419,7 +420,7 @@ func (h *Handler) documentTarget(w http.ResponseWriter, r *http.Request, operati
 
 func (h *Handler) ownedApplication(r *http.Request) (*applicationrepository.Application, error) {
 	ctx := r.Context()
-	managerID, err := user.ManagerIDFromContext(ctx)
+	managerID, err := managerauth.ManagerIDFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("parse manager id: %w", err)
 	}

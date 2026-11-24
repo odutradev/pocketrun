@@ -1,28 +1,32 @@
-package user
+package sessioncookie
 
-import "net/http"
+import (
+	"net/http"
+
+	"pocketrun-api/internal/domains/user/utils/jwt"
+)
 
 const (
-	SessionCookieName = "__Host-pocketrun_session"
+	Name              = "__Host-pocketrun_session"
 	ClientHeader      = "X-Pocketrun-Client"
 	clientHeaderValue = "panel"
 )
 
-func SetSessionCookie(w http.ResponseWriter, session *Session) {
+func Set(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     SessionCookieName,
-		Value:    session.Token,
+		Name:     Name,
+		Value:    token,
 		Path:     "/",
-		MaxAge:   int(TokenTTL.Seconds()),
+		MaxAge:   int(jwt.TTL.Seconds()),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	})
 }
 
-func ClearSessionCookie(w http.ResponseWriter) {
+func Clear(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     SessionCookieName,
+		Name:     Name,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,

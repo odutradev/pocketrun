@@ -1,8 +1,8 @@
-package user
+package passwordhash
 
 import "testing"
 
-func TestIsStrongPassword(t *testing.T) {
+func TestIsStrong(t *testing.T) {
 	tests := []struct {
 		name     string
 		password string
@@ -18,8 +18,8 @@ func TestIsStrongPassword(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsStrongPassword(tt.password); got != tt.want {
-				t.Errorf("IsStrongPassword(%q) = %v, want %v", tt.password, got, tt.want)
+			if got := IsStrong(tt.password); got != tt.want {
+				t.Errorf("IsStrong(%q) = %v, want %v", tt.password, got, tt.want)
 			}
 		})
 	}

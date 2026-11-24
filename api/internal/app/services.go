@@ -21,13 +21,14 @@ import (
 	"pocketrun-api/internal/domains/page/handlers/version"
 	"pocketrun-api/internal/domains/user/handlers/setup"
 	"pocketrun-api/internal/domains/user/handlers/user"
+	"pocketrun-api/internal/domains/user/utils/jwt"
 	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/slug"
 	"pocketrun-api/internal/services/traffic"
 )
 
 type services struct {
-	signer        *user.TokenSigner
+	signer        *jwt.Signer
 	users         *user.Service
 	setup         *setup.Service
 	applications  *application.Service
@@ -49,7 +50,7 @@ type services struct {
 
 func newServices(cfg config.Config, repos repositories, accessKey string, logger *slog.Logger) services {
 	uniques := traffic.NewUniqueRegistry(repos.uniqueVisitors, cfg.JWTSecret)
-	signer := user.NewTokenSigner(cfg.JWTSecret)
+	signer := jwt.NewSigner(cfg.JWTSecret)
 	documents := kvdocument.NewService(repos.documents)
 	usage := kvusage.NewService(repos.usage, logger)
 	applications := application.NewService(repos.applications, documents)
