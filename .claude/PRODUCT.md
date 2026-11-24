@@ -44,7 +44,8 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 
 ### 5.1 Acesso ao painel
 
-- **Sem cadastro público.** O único cadastro aberto é o setup inicial, que cria o primeiro superadmin e depois responde `setup_completed`. Os outros usuários são criados por um superadmin, com senha inicial.
+- **Sem cadastro público.** O único cadastro aberto é o setup inicial, que cria o primeiro superadmin e depois responde `setup_completed`.
+- **Token de setup.** Enquanto não há nenhum gestor, a API gera um token curto (`XXXX-XXXX`, sem letras ou números ambíguos) e mostra nos logs, na linha `initial setup required`. O painel pede esse token antes do formulário do superadmin, e a API exige o token também ao criar o superadmin (`invalid_setup_token` quando errado). Maiúsculas, minúsculas, hífen e espaços não importam. Depois de 5 tentativas erradas, a API troca o token e mostra o novo nos logs. O token vive só na memória: muda a cada reinício e some quando o setup termina. Assim, só quem vê os logs do servidor cria o primeiro superadmin. Os outros usuários são criados por um superadmin, com senha inicial.
 - **Senha:** pelo menos 8 caracteres, com letras e números ou símbolos. Guardada com Argon2id; hashes antigos são convertidos no próximo login certo.
 - **Sessão:** 7 dias num cookie `__Host-` `HttpOnly; Secure; SameSite=Strict` que o JavaScript não lê. Com `ALLOW_HTTP=true`, o cookie perde o `Secure` e o prefixo `__Host-` para o login funcionar num domínio sem HTTPS, e a API avisa no log ao iniciar. Toda chamada do painel leva o header `X-Pocketrun-Client: panel`, contra CSRF.
 - **Limite de login:** contam só as falhas. Por e-mail, 5 em 15 min, 10 em 1 h e 20 em 24 h; por IP, 20, 50 e 100 nas mesmas janelas. Passou disso, `429 too_many_login_attempts` com `Retry-After`. Um login certo zera as falhas daquele e-mail.

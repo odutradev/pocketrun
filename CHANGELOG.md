@@ -4,6 +4,16 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+### Ação necessária
+
+- **O setup inicial pede um token de setup.** Numa instância ainda sem gestor, abra os logs da API, copie o token da linha `initial setup required` e informe no painel antes de criar o superadmin. Depois de 5 erros, a API gera um token novo e mostra nos logs. Instâncias que já têm gestor não mudam.
+
+### Novidades
+
+- Rota `POST /admin/setup/token/verify` para conferir o token, e `POST /admin/setup/admin/create` passa a exigir o campo `setupToken`.
+
 ## 1.8.1 (2026-11-24)
 
 ### Ação necessária

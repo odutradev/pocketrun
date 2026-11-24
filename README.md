@@ -64,7 +64,7 @@ npm run dev
 
 Antes do `npm run dev`, preencha `JWT_SECRET` e `PAGE_ACCESS_SECRET` em `api/.env` com `openssl rand -hex 32` (uma chave diferente para cada). Nenhuma variável tem valor padrão: se faltar uma ou ela for inválida, a API e o painel não iniciam e dizem qual variável corrigir.
 
-O painel abre em `http://localhost:3000`, e o primeiro acesso cria o superadmin. A API fica em `http://localhost:5000`.
+O painel abre em `http://localhost:3000`, e o primeiro acesso cria o superadmin. Antes, o painel pede o token de setup que a API mostra no terminal, na linha `initial setup required`. A API fica em `http://localhost:5000`.
 
 | Script | O que faz |
 | :--- | :--- |

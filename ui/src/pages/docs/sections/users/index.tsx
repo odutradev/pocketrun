@@ -5,7 +5,7 @@ const UsersSection = () => (
   <DocSection id="users">
     <Bullets>
       <li>
-        Não há cadastro público. O primeiro superadmin nasce no setup inicial, e os outros usuários são criados em <strong>Usuários</strong>,
+        Não há cadastro público. O primeiro superadmin nasce no setup inicial, depois de informar o token de setup que a API mostra nos logs, e os outros usuários são criados em <strong>Usuários</strong>,
         com uma senha inicial.
       </li>
       <li>
