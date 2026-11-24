@@ -4,7 +4,7 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
-## Não publicado
+## 1.8.1 (2026-11-24)
 
 ### Ação necessária
 
