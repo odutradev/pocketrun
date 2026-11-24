@@ -8,7 +8,7 @@ Notas importantes:
 - Páginas e links só abrem em `{dominio}`. Em `{api}/{slug}` e na raiz `/` dos dois domínios, a resposta é `404` com a tela "Link indisponível". O KV fica sempre em `{api}`.
 - KV por HTTP: todo pedido leva o token da aplicação em `Authorization: Bearer pk_live_...` (também aceitos: `X-Pocket-Token` e `controlAccess`). Corpo sempre JSON com `Content-Type: application/json`, até 1 MB.
 - Dentro de uma página do PocketRun, nunca use token nem URL da API: use `pocketrun.kv.collection("nome")`. O cargo vem do PIN de quem abriu.
-- Todo documento tem a forma `{ id, appId, projectId, collectionName, data, createdAt, updatedAt, expiresAt? }`. Os seus campos ficam sempre dentro de `data`.
+- Todo documento tem a forma `{ id, appId, projectId, collectionName, data, createdByRole, createdAt, updatedAt, expiresAt? }`. Os seus campos ficam sempre dentro de `data`.
 - Erros respondem `{ "error": "codigo", "fields": { ... } }` com status HTTP. Na página, viram um `Error` com `code`, `status` e `fields`.
 - O cargo de cada token ou PIN decide, por coleção, as operações `read`, `create`, `update` e `delete`. Fora do cargo: `403 forbidden_operation`.
 - Nome de coleção: letras, números, `_` e `-`, até 64 caracteres. `project` é reservado. A coleção nasce no primeiro documento gravado.
@@ -69,7 +69,8 @@ Authorization: Bearer pk_live_xxx
 
 - `data` é obrigatório e é um objeto livre, sem esquema.
 - Validade opcional: `expiresInDays` (0 a 3650, 0 é sem validade) ou `expiresAt` (data ISO). O documento some sozinho depois, com até cerca de 1 minuto de atraso.
-- Erros: `400 validation_failed` (com `fields`), `400 invalid_body`, `400 invalid_collection`, `400 reserved_collection`, `409 collection_full` (limite do cargo).
+- Erros: `400 validation_failed` (com `fields`), `400 invalid_body` (JSON inválido ou acima de 1 MB), `400 invalid_collection`, `400 reserved_collection`, `403 forbidden_operation`, `409 collection_full` (limite do cargo).
+- Qualquer rota pode responder `500 internal_error`: tente de novo depois.
 
 ## KV: listar e filtrar
 
@@ -176,7 +177,8 @@ if (pocketrun.kv.can("pedidos", "delete")) mostrarBotaoApagar();
 - Cada método devolve uma Promise com a mesma resposta da API HTTP: `list` dá um array, ou `{ data, total, page, limit, totalPages }` com paginação. `get`, `create`, `update` e `replace` dão o documento, `count` dá `{ count }` e `eval` dá `{ operation, field, result }`.
 - `list` e `count` recebem os filtros como objeto, com os mesmos operadores (`{ valor__gte: 100 }`). Textos vão sempre como texto: `{ codigo: "010" }` procura o texto "010".
 - `pocketrun.kv.collection(nome).can(operacao)` e `pocketrun.kv.can(colecao, operacao)` dizem o que o cargo permite, para esconder botões. Quem decide é sempre o servidor.
-- Erros viram `Error` com `name: "PocketrunKVError"`, `code`, `status` e `fields`. Os mais comuns: `401 page_locked` (o PIN expirou: recarregue a página), `403 forbidden_operation`, `403 kv_access_denied` (quem abriu não tem cargo nos dados), `404 kv_not_linked` (dados desativados), `429 too_many_requests` (mais de 120 pedidos por minuto por visitante ou 1.200 pela página).
+- Erros viram `Error` com `name: "PocketrunKVError"`, `code`, `status` e `fields`: `401 page_locked` (o PIN expirou ou o acesso foi encerrado: recarregue a página), `403 forbidden_operation` (o cargo não permite), `403 kv_access_denied` (quem abriu não tem cargo nos dados), `403 invalid_client` (chamada de outro endereço), `404 kv_not_linked` (dados desativados), `404 kv_application_missing` (a aplicação ligada sumiu), `404 route_not_found` (operação que não existe pela página), `404 page_not_found` (página fora do ar), `404 document_not_found`, `429 too_many_requests` (mais de 120 pedidos por minuto por visitante ou 1.200 pela página) e os erros de documento do KV (`400 validation_failed`, `400 invalid_filter`, `409 collection_full` e afins).
+- Só os próprios documentos: com um cargo `isOwnDocumentsOnly`, a página vê, edita e apaga só o que foi criado com o mesmo cargo.
 - Pela página só há operações de documento: limpar coleção, importar e exportar ficam de fora. Corpo de até 256 KB.
 - Por baixo, as chamadas vão para `{dominio}/{slug}/_/kv/{colecao}/...` com o header `X-Pocketrun-Page: 1` e só da mesma origem. Não chame esse endereço de outro site.
 - Na prévia do editor, as chamadas passam pelo painel com o cargo escolhido em "Ver como".
@@ -192,7 +194,8 @@ if (pocketrun.kv.can("pedidos", "delete")) mostrarBotaoApagar();
 
 - `active`: no ar. `inactive`: fora do ar. `period`: no ar até a data de fim (o início é opcional). `clicks`: no ar até o limite de acessos.
 - No modo `clicks`, a contagem é por clique (cada abertura conta) ou por visitante único (cada pessoa conta uma vez).
-- Robôs, prévias de link e `HEAD` nunca gastam o limite. Fora da regra, o endereço responde `404` e o slug continua reservado.
+- Robôs, prévias de link e `HEAD` nunca gastam o limite. Fora da regra, o endereço responde `404` com a tela "Link indisponível" ou "Página indisponível", e o slug continua reservado.
+- Datas da regra (`startsAt`, `endsAt`) e o limite (`maxClicks`) são definidos no painel. Quem abre o endereço não vê a regra, só o resultado.
 
 ## Optional
 
