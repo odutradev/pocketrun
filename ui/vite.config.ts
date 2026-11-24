@@ -1,9 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
 import type { Connect, Plugin } from "vite";
 import path from "node:path";
+
+const requiredDevEnv = ["VITE_API_URL", "VITE_LINKS_URL"];
+
+const checkDevEnv = (mode: string) => {
+  const env = loadEnv(mode, import.meta.dirname, "VITE_");
+  const missing = requiredDevEnv.filter((key) => !/^https?:\/\/\S+$/.test(env[key] ?? ""));
+  if (missing.length > 0) throw new Error(`Set ${missing.join(" and ")} in ui/.env to an http or https URL`);
+};
 
 const sourceFolder = (folder: string) => path.resolve(import.meta.dirname, "./src", folder);
 
@@ -34,25 +42,28 @@ const utf8TextFiles = (): Plugin => {
   };
 };
 
-export default defineConfig({
-  define: {
-    __APP_VERSION__: JSON.stringify(readProjectVersion())
-  },
-  plugins: [react(), utf8TextFiles()],
-  resolve: {
-    alias: {
-      "@actions": sourceFolder("actions"),
-      "@assets": sourceFolder("assets"),
-      "@components": sourceFolder("components"),
-      "@hooks": sourceFolder("hooks"),
-      "@pages": sourceFolder("pages"),
-      "@routes": sourceFolder("routes"),
-      "@stores": sourceFolder("stores"),
-      "@styles": sourceFolder("styles"),
-      "@utils": sourceFolder("utils")
+export default defineConfig(({ command, mode }) => {
+  if (command === "serve") checkDevEnv(mode);
+  return {
+    define: {
+      __APP_VERSION__: JSON.stringify(readProjectVersion())
+    },
+    plugins: [react(), utf8TextFiles()],
+    resolve: {
+      alias: {
+        "@actions": sourceFolder("actions"),
+        "@assets": sourceFolder("assets"),
+        "@components": sourceFolder("components"),
+        "@hooks": sourceFolder("hooks"),
+        "@pages": sourceFolder("pages"),
+        "@routes": sourceFolder("routes"),
+        "@stores": sourceFolder("stores"),
+        "@styles": sourceFolder("styles"),
+        "@utils": sourceFolder("utils")
+      }
+    },
+    server: {
+      port: 3000
     }
-  },
-  server: {
-    port: 3000
-  }
+  };
 });

@@ -2,11 +2,11 @@ const trimTrailingSlash = (url: string) => url.replace(/\/+$/, "");
 
 const runtimeConfig = window.__POCKETRUN_CONFIG__ ?? {};
 
-export const apiUrl = trimTrailingSlash(runtimeConfig.apiUrl || import.meta.env.VITE_API_URL || "http://localhost:5000");
+export const apiUrl = trimTrailingSlash(runtimeConfig.apiUrl || import.meta.env.VITE_API_URL || "");
 
 export const adminApiUrl = `${apiUrl}/admin`;
 
-export const linksUrl = trimTrailingSlash(runtimeConfig.linksUrl || import.meta.env.VITE_LINKS_URL || apiUrl);
+export const linksUrl = trimTrailingSlash(runtimeConfig.linksUrl || import.meta.env.VITE_LINKS_URL || "");
 
 export const appVersion = __APP_VERSION__;
 
