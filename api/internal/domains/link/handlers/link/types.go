@@ -32,6 +32,10 @@ func (e *KindError) Error() string {
 	return "slug belongs to a " + string(e.Kind)
 }
 
+type StatusInput struct {
+	IsActive *bool `json:"isActive" validate:"required"`
+}
+
 type Input struct {
 	Title     string             `json:"title" validate:"required,max=20"`
 	Slug      string             `json:"slug" validate:"max=64"`

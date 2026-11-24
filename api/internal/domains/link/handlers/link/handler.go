@@ -33,6 +33,7 @@ func (h *Handler) Register(mux *http.ServeMux, authenticate func(http.Handler) h
 	mux.Handle("POST /links/create", authenticate(http.HandlerFunc(h.create)))
 	mux.Handle("GET /links/{id}/details", authenticate(http.HandlerFunc(h.getByID)))
 	mux.Handle("PATCH /links/{id}/update", authenticate(http.HandlerFunc(h.update)))
+	mux.Handle("PATCH /links/{id}/status/set", authenticate(http.HandlerFunc(h.setStatus)))
 	mux.Handle("DELETE /links/{id}/delete", authenticate(http.HandlerFunc(h.delete)))
 }
 
@@ -136,6 +137,27 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	link, err := h.service.Update(r.Context(), id, input)
 	if err != nil {
 		h.writeError(w, r, "update link", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, link)
+}
+
+func (h *Handler) setStatus(w http.ResponseWriter, r *http.Request) {
+	id, err := ParseID(r.PathValue("id"))
+	if err != nil {
+		h.writeError(w, r, "set link status", err)
+		return
+	}
+
+	var input StatusInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	link, err := h.service.SetStatus(r.Context(), id, *input.IsActive)
+	if err != nil {
+		h.writeError(w, r, "set link status", err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, link)

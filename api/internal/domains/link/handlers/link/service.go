@@ -17,6 +17,7 @@ import (
 	linkrepository "pocketrun-api/internal/repositories/link"
 	slugrepository "pocketrun-api/internal/repositories/slug"
 	userrepository "pocketrun-api/internal/repositories/user"
+	"pocketrun-api/internal/services/activation"
 	analyticsservice "pocketrun-api/internal/services/analytics"
 	historyservice "pocketrun-api/internal/services/history"
 	"pocketrun-api/internal/services/slug"
@@ -268,6 +269,34 @@ func (s *Service) Update(ctx context.Context, id bson.ObjectID, input Input) (*l
 	if changes := linkchanges.Diff(previous, *link); len(changes) > 0 {
 		s.history.Record(ctx, history.NewEvent(link.ID, historyservice.EventUpdated, s.actor(ctx), changes, link.UpdatedAt))
 	}
+	link.State = link.StateAt(link.UpdatedAt)
+	return link, nil
+}
+
+func (s *Service) SetStatus(ctx context.Context, id bson.ObjectID, isActive bool) (*linkrepository.Link, error) {
+	link, err := s.repository.FindByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("set link %s status: %w", id.Hex(), err)
+	}
+
+	previous := *link
+	link.Mode = activation.ModeInactive
+	if isActive {
+		link.Mode = activation.ModeActive
+	}
+	link.StartsAt, link.EndsAt, link.MaxClicks, link.CountBy = nil, nil, nil, ""
+	link.UpdatedAt = time.Now()
+
+	changes := linkchanges.Diff(previous, *link)
+	if len(changes) == 0 {
+		link.State = link.StateAt(link.UpdatedAt)
+		return link, nil
+	}
+
+	if err := s.repository.Replace(ctx, link); err != nil {
+		return nil, fmt.Errorf("set link %s status: %w", id.Hex(), err)
+	}
+	s.history.Record(ctx, history.NewEvent(link.ID, historyservice.EventUpdated, s.actor(ctx), changes, link.UpdatedAt))
 	link.State = link.StateAt(link.UpdatedAt)
 	return link, nil
 }
