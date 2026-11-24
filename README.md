@@ -240,6 +240,6 @@ Todos os containers escutam na porta `80`.
 
 ## Mais
 
-- [CHANGELOG](CHANGELOG.md): o que muda em cada versão. Leia antes de atualizar uma instância.
-- [SECURITY](SECURITY.md): como reportar uma vulnerabilidade.
-- [LICENSE](LICENSE): ISC.
+- [Histórico de versões](CHANGELOG.md): o que muda em cada versão. Leia antes de atualizar uma instância.
+- [Segurança](SECURITY.md): como reportar uma vulnerabilidade.
+- [Licença](LICENSE): ISC.

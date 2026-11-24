@@ -1,8 +1,8 @@
-# Changelog
+# Histórico de versões
 
 Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma instância própria: a seção **Ação necessária** lista o que você precisa mudar no deploy.
 
-As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub. As entradas anteriores à seção "Não publicado" vêm das mensagens dos commits, em inglês.
+As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
 ## Não publicado
 
@@ -18,18 +18,18 @@ As versões seguem o `version` do `package.json`, e cada uma vira as imagens `od
 ### Novidades
 
 - A mesma imagem do painel serve para qualquer domínio, sem compilar de novo.
-- As imagens da API e do painel têm `HEALTHCHECK`. O painel só sobe depois que a API responde, e a API ganhou o subcomando `api healthcheck`.
-- Exemplos de compose com MongoDB local (volume e healthcheck) e com MongoDB externo, e o `.env.selfhost.example`.
-- `LICENSE` (ISC), `SECURITY.md` e este `CHANGELOG.md`.
+- As imagens da API e do painel verificam a própria saúde (`HEALTHCHECK`). O painel só sobe depois que a API responde, e a API ganhou o comando `api healthcheck` para isso.
+- Exemplos de compose com MongoDB no mesmo servidor (dados num volume e verificação de saúde) e com MongoDB externo, e o arquivo `.env.selfhost.example` para hospedar a sua instância.
+- Licença ISC (`LICENSE`), política de segurança (`SECURITY.md`) e este histórico de versões (`CHANGELOG.md`).
 
 ## 1.7.8 (2026-11-24)
 
 ### Novidades
 
-- print colored text logs instead of json
-- add link status endpoint
-- toggle link status from the list
-- serve links and pages only on the links domain
+- Logs em texto colorido no lugar de JSON
+- Rota para ligar e desligar um link
+- Ligar e desligar links direto da lista
+- Links e páginas só abrem no domínio de links
 
 ## 1.7.7 (2026-11-24)
 
@@ -43,13 +43,13 @@ Só manutenção, documentação e ajustes internos.
 
 ### Correções
 
-- drop legacy application indexes that block kv creation
+- Remoção de índices antigos de aplicações que impediam criar dados no KV
 
 ## 1.7.4 (2026-11-20)
 
 ### Correções
 
-- pass the project build context to the ui image in ci
+- O CI passa o contexto do projeto para a imagem do painel
 
 ## 1.7.3 (2026-11-20)
 
@@ -59,255 +59,255 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- share the public llms.txt link in the docs
+- A Documentação mostra o link público do llms.txt
 
 ### Correções
 
-- serve panel text files as utf-8
-- serve text files as utf-8 in the vite dev server
+- O painel serve arquivos de texto em UTF-8
+- O servidor de desenvolvimento serve arquivos de texto em UTF-8
 
 ## 1.7.1 (2026-11-20)
 
 ### Novidades
 
-- add instance backup export and restore to the api
-- add backup actions, types and helpers to the panel
-- add backup page to export and restore the instance
-- move documentation to a general page in the menu
+- Exportação e restauração do backup da instância na API
+- Suporte ao backup no painel
+- Tela de Backup para exportar e restaurar a instância
+- A Documentação virou uma página própria no menu
 
 ## 1.7.0 (2026-11-20)
 
 ### Correções
 
-- count page kv requests in overview usage from the request log
+- O uso da Geral conta os pedidos ao KV feitos pelas páginas
 
 ## 1.6.9 (2026-11-20)
 
 ### Novidades
 
-- count kv requests per hour and expose environment usage
-- add period, csv export and service usage chart to overview
-- let click limits count unique visitors instead of clicks
-- add a click or unique visitor toggle to limit activation
+- Contagem de pedidos ao KV por hora e uso geral da instância
+- Período, exportação em CSV e gráfico de uso dos serviços na Geral
+- O limite de acessos pode contar visitantes únicos no lugar de cliques
+- Escolha entre cliques e visitantes únicos na ativação por limite
 
 ## 1.6.8 (2026-11-20)
 
 ### Novidades
 
-- add an environment overview page as the panel home
+- Página Geral como início do painel
 
 ## 1.6.7 (2026-11-20)
 
 ### Novidades
 
-- add page-owned kv applications with base roles
-- enable page data with a dedicated kv application
-- mark page kv applications and block their removal
-- replace the kv app picker with one-click page data
+- Aplicações do KV que pertencem a uma página, com cargos base
+- Ativar dados numa página cria uma aplicação do KV só dela
+- Aplicações de página marcadas e protegidas contra exclusão
+- Dados da página ativados com um clique, sem escolher aplicação
 
 ## 1.6.6 (2026-11-20)
 
 ### Novidades
 
-- add count, eval, import and export routes to the kv api
-- add roles with collection permissions to kv applications
-- add kv roles tab and token roles to the panel
-- link kv applications to pages through a same-origin bridge
-- add a data tab and kv preview bridge to the page editor
+- Rotas de contagem, agregação, importação e exportação no KV
+- Cargos com permissões por collection nas aplicações do KV
+- Aba de cargos do KV e cargo por token no painel
+- Páginas acessam o KV por uma ponte na mesma origem
+- Aba Dados e ponte do KV na prévia do editor de páginas
 
 ### Correções
 
-- record kv role mappings as text in the page history
+- O histórico da página registra os cargos do KV em texto
 
 ## 1.6.5 (2026-11-18)
 
 ### Novidades
 
-- add a crud with kv template for new pages
-- add a kv documentation page to the panel
+- Modelo de página com CRUD no KV
+- Documentação do KV no painel
 
 ## 1.6.4 (2026-11-18)
 
 ### Novidades
 
-- add application filters, sorting and editor tab data
-- redesign the kv list like the pages and links lists
-- turn the application page into a tabbed editor
+- Filtros, ordenação e abas no editor de aplicações
+- Lista do KV no mesmo formato das listas de páginas e links
+- Página da aplicação virou um editor com abas
 
 ## 1.6.3 (2026-11-18)
 
 ### Novidades
 
-- inject a window.pocketrun runtime into served pages
-- add the pocketrun runtime to the editor preview
+- As páginas publicadas recebem o window.pocketrun
+- O window.pocketrun também funciona na prévia do editor
 
 ## 1.6.2 (2026-11-18)
 
 ### Novidades
 
-- secure panel login with argon2id, attempt limits and session cookie
-- use cookie sessions in the panel and add sign out everywhere
+- Login do painel com Argon2id, limite de tentativas e cookie de sessão
+- Sessão por cookie no painel e opção de sair de todos os dispositivos
 
 ## 1.6.1 (2026-11-18)
 
 ### Correções
 
-- drop the one-time warning when a page pin is created
+- Fim do aviso de exibição única ao criar um PIN
 
 ## 1.6.0 (2026-11-18)
 
 ### Novidades
 
-- store page pins encrypted so they can be shown again
-- add view, copy and edit actions to page pins
+- PINs das páginas guardados cifrados, para poderem ser vistos de novo
+- Ver, copiar e editar PINs das páginas
 
 ## 1.5.9 (2026-11-18)
 
 ### Novidades
 
-- let each page set how long a pin unlock lasts
-- add access duration select to the page access tab
+- Cada página define quanto tempo dura o acesso com PIN
+- Seletor da duração do acesso na aba Acesso
 
 ## 1.5.8 (2026-11-18)
 
 ### Novidades
 
-- add six digit pin input component
-- type or generate the pin in the access dialog
-- show six pin boxes on the protected page gate
+- Campo de PIN com seis dígitos
+- Digitar ou gerar o PIN na janela de acesso
+- Tela de PIN da página protegida com seis caixas
 
 ## 1.5.7 (2026-11-18)
 
 ### Correções
 
-- move the page access status route off the groups pattern
+- Rota do estado de acesso da página separada das rotas de grupos
 
 ## 1.5.6 (2026-11-18)
 
 ### Novidades
 
-- add pin protection with roles for pages
-- ask for the pin before serving a protected page
-- add page access tab to manage pins and roles
+- Proteção de páginas por PIN, com cargos
+- A página protegida pede o PIN antes de mostrar o conteúdo
+- Aba Acesso para gerenciar PINs e cargos
 
 ## 1.5.5 (2026-11-18)
 
 ### Novidades
 
-- add version messages and keep the last 50 page versions
-- add version messages and compare any two page versions
-- keep unsaved page drafts in the browser and offer to recover them
-- format and check page html in the editor
+- Mensagem por versão e as últimas 50 versões guardadas
+- Mensagem por versão e comparação entre quaisquer duas versões
+- Rascunhos não salvos guardados no navegador, com opção de recuperar
+- Formatação e verificação do HTML no editor
 
 ## 1.5.4 (2026-11-18)
 
 ### Novidades
 
-- filter and sort single-page link lists locally
-- add the pages domain with versions, history and analytics
-- add page types, actions and shared list helpers
-- add the pages panel with editor, versions and diff
-- add view modes, full screen and a readable diff to the page editor
+- Filtro e ordenação no navegador quando a lista de links cabe numa página
+- Serviço de páginas com versões, histórico e análise
+- Suporte às páginas no painel
+- Painel de páginas com editor, versões e comparação
+- Modos de visualização, tela cheia e comparação legível no editor de páginas
 
 ### Correções
 
-- wait longer before searching links while typing
+- A busca de links espera mais antes de pesquisar
 
 ## 1.5.3 (2026-11-18)
 
 ### Novidades
 
-- read the public links url from the environment
-- build short link urls from the public links url
+- URL pública dos links lida das variáveis de ambiente
+- Links curtos montados com a URL pública dos links
 
 ## 1.5.2 (2026-11-18)
 
 ### Novidades
 
-- harden link redirects and add list filters and overview
-- add state filter and sorting to the links list
-- add a qr code tab and group preselection to the link editor
-- add the links analytics overview page
+- Redirecionamentos mais seguros, filtros na lista e visão geral de links
+- Filtro por estado e ordenação na lista de links
+- Aba de QR code e grupo já escolhido no editor de links
+- Página de análise geral dos links
 
 ## 1.5.1 (2026-11-18)
 
 ### Novidades
 
-- add color and icon to groups
-- add group color and icon options to the frontend
-- replace the groups dialog with group pages and settings
+- Cor e ícone nos grupos
+- Escolha de cor e ícone dos grupos no painel
+- Grupos com página e configurações próprias, no lugar da janela
 
 ## 1.5.0 (2026-11-18)
 
 ### Novidades
 
-- show parent pages as a breadcrumb in the page header
-- use a breadcrumb title inside a link group
-- show the list total before the links search
-- show an accent spinner in place of the search icon while loading
-- keep the search spinner visible for at least 500 ms
-- restore the cached links list when the search is cleared
-- color the current breadcrumb page with the accent
-- show the links and group breadcrumb in the link editor
+- Caminho das páginas pai no título
+- Título com caminho dentro de um grupo de links
+- Total da lista antes da busca de links
+- Indicador de carregamento no lugar do ícone da busca
+- Indicador da busca visível por pelo menos 500 ms
+- Limpar a busca volta para a lista já carregada
+- Página atual do caminho destacada com a cor de destaque
+- Caminho de links e grupo no editor de links
 
 ### Correções
 
-- place the links total between search and view toggle
+- Total de links entre a busca e a troca de visualização
 
 ## 1.4.9 (2026-11-18)
 
 ### Novidades
 
-- show group cards and ungrouped links on the links page
-- place the links toolbar between groups and links
-- add search, pagination and group totals to the links API
-- add a debounced search input component
-- paginate and search the links list through the API
-- search single-page link lists locally
+- Cards de grupos e links sem grupo na página de links
+- Barra de ferramentas entre os grupos e os links
+- Busca, paginação e totais por grupo na API de links
+- Campo de busca que espera o fim da digitação
+- Lista de links paginada e pesquisada pela API
+- Busca no navegador quando a lista de links cabe numa página
 
 ## 1.4.8 (2026-11-17)
 
 ### Novidades
 
-- open the short link from the links list slug
+- Abrir o link curto pelo slug na lista
 
 ## 1.4.7 (2026-11-17)
 
 ### Novidades
 
-- smooth page transitions in link history
-- bind the API to localhost in local development
+- Transições suaves entre páginas do histórico de links
+- A API escuta só em localhost no desenvolvimento local
 
 ## 1.4.6 (2026-11-17)
 
 ### Novidades
 
-- add delete action to the link editor
-- clear strikethrough when hovering history changes
-- return total count in link history
-- paginate link history and show total beside filters
-- show defined and removed tags for empty history values
-- center history pagination
+- Excluir link pelo editor
+- O riscado some ao passar o mouse nas mudanças do histórico
+- O histórico de links devolve o total
+- Histórico de links paginado, com o total ao lado dos filtros
+- Marcas de definido e removido para valores vazios no histórico
+- Paginação do histórico centralizada
 
 ## 1.4.5 (2026-11-17)
 
 ### Novidades
 
-- stretch link editor tabs to full width
-- limit link title to 20 characters
-- open the link editor after creating or saving a link
+- Abas do editor de links na largura toda
+- Título do link limitado a 20 caracteres
+- O editor abre depois de criar ou salvar um link
 
 ## 1.4.4 (2026-11-17)
 
 ### Novidades
 
-- add icon-only mode to button and link button
+- Botões só com ícone
 
 ### Correções
 
-- keep content navbar on one line on mobile
-- animate mobile logo after the menu closes
-- show links view toggle only on desktop
+- Cabeçalho das páginas numa linha só no celular
+- Animação do logo no celular depois de fechar o menu
+- Troca de visualização dos links só no computador
 
 ## 1.4.3 (2026-11-17)
 
@@ -317,73 +317,73 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- add link change history and open analytics endpoints
-- support icon-only segments and hidden select labels
-- simplify links table and add list and cards view toggle
-- add link history and analytics types and actions
-- split the link editor into settings, analytics and history tabs
-- add link change history timeline
-- add link analytics dashboard with recharts
-- stack data table rows as cards on mobile
-- show a compact link list on mobile
+- Rotas de histórico de mudanças e de análise de acessos dos links
+- Seletores só com ícone e rótulos escondidos
+- Tabela de links mais simples e troca entre lista e cards
+- Suporte ao histórico e à análise de links no painel
+- Editor de links com abas de configurações, análise e histórico
+- Linha do tempo das mudanças do link
+- Painel de análise dos links com gráficos
+- Linhas das tabelas viram cards no celular
+- Lista de links compacta no celular
 
 ### Correções
 
-- stop dialog form submits from submitting the parent form
-- keep link form and analytics within mobile width
+- Formulários de janelas não enviam mais o formulário da página
+- Formulário e análise de links cabem na largura do celular
 
 ## 1.4.1 (2026-11-17)
 
 ### Novidades
 
-- add an action item to the select dropdown
-- move new group into the group dropdown
-- require a link slug and validate the destination url
-- stretch range slider to manual values above its max
-- animate range slider to manually typed values
-- add copy button to the link public url
+- Item de ação na lista de seleção
+- Novo grupo dentro da lista de grupos
+- Slug obrigatório e destino do link validado
+- O controle deslizante acompanha valores digitados acima do máximo
+- O controle deslizante anima até o valor digitado
+- Botão de copiar a URL pública do link
 
 ### Correções
 
-- set the minimum click limit to one
-- require only the end date in custom link periods
+- Limite mínimo de cliques igual a um
+- Período personalizado só exige a data de fim
 
 ## 1.4.0 (2026-11-17)
 
 ### Novidades
 
-- add range field with slider and exact value input
-- add period presets and click limit slider to link form
-- start link slug empty and generate it on save
-- replace native select with themed dropdown
-- add protocol selector to link destination
-- create link groups from the link form
+- Campo com controle deslizante e valor exato
+- Períodos prontos e limite de cliques no formulário de links
+- Slug começa vazio e é gerado ao salvar
+- Lista de seleção no tema do painel
+- Seletor de protocolo no destino do link
+- Criar grupos pelo formulário do link
 
 ## 1.3.9 (2026-11-17)
 
 ### Correções
 
-- make link and security forms fill the page width
+- Formulários de link e de segurança na largura toda
 
 ## 1.3.8 (2026-11-17)
 
 ### Novidades
 
-- add content navbar component
-- use content navbar in service pages
-- center logo loader in content area
-- add shared slug registry
-- add groups domain for links and pages
-- add links domain with schedules and click limits
-- wire links admin routes and public redirect
-- list services before panel in the sidebar
-- add trailing slot to input and extra navbar actions
-- add links actions, types and validations
-- add links list page with groups
-- add shared create and edit page for links
-- mark links as live in the brand tools
-- allow a button variant on the content navbar action
-- use content navbar in users, profile and app details
+- Cabeçalho padrão das páginas
+- Cabeçalho padrão nas páginas dos serviços
+- Carregamento com o logo no centro do conteúdo
+- Registro único de slugs para links e páginas
+- Grupos para links e páginas
+- Serviço de links com período e limite de cliques
+- Rotas de links no painel e redirecionamento público
+- Serviços antes do Painel no menu lateral
+- Campos com conteúdo no fim e ações extras no cabeçalho
+- Suporte aos links no painel
+- Lista de links com grupos
+- Mesma tela para criar e editar links
+- Links marcados como disponíveis na identidade visual
+- Variação de botão na ação do cabeçalho
+- Cabeçalho padrão em usuários, perfil e detalhes da aplicação
 
 ## 1.3.7 (2026-11-17)
 
@@ -393,48 +393,48 @@ Só manutenção, documentação e ajustes internos.
 
 ### Correções
 
-- let the profile page use the full page area
+- Perfil ocupa a área toda da página
 
 ## 1.3.5 (2026-11-17)
 
 ### Novidades
 
-- count applications per manager
-- add user management and profile routes to the api
-- add user management types, actions and validations to the panel
-- replace the top navbar with a side menu
-- add users management and profile pages
-- add a services group to the side menu
-- add kv, pages and links service pages
-- add context transition and hover variants to the brand mark
-- animate the side menu logo when the product changes
-- add pulsing api status dot with address and version tooltip
-- move api status next to the side menu logo
+- Contagem de aplicações por gestor
+- Rotas de usuários e de perfil na API
+- Suporte à gestão de usuários no painel
+- Menu lateral no lugar da barra superior
+- Páginas de usuários e de perfil
+- Grupo Serviços no menu lateral
+- Páginas dos serviços KV, Páginas e Links
+- Transições e efeitos de passar o mouse no símbolo da marca
+- Animação do logo do menu ao trocar de serviço
+- Indicador do estado da API com endereço e versão
+- Estado da API ao lado do logo do menu
 
 ### Correções
 
-- keep blade intro from restarting on pose changes
+- A animação de entrada do símbolo não recomeça ao mudar de pose
 
 ## 1.3.4 (2026-11-17)
 
 ### Novidades
 
-- remove sign-up from the login page
+- Fim do cadastro na tela de login
 
 ## 1.3.3 (2026-11-17)
 
 ### Novidades
 
-- add database reset command with optional superadmin
-- redirect setup page to login when a manager exists
-- recheck setup status after a failed setup submit
+- Comando para apagar o banco local, com superadmin opcional
+- O setup leva ao login quando já existe um gestor
+- O estado do setup é conferido de novo depois de uma falha
 
 ## 1.3.2 (2026-11-17)
 
 ### Correções
 
-- use brand symbol as site favicon
-- keep PocketRun as the browser title on every page
+- Símbolo da marca como ícone do site
+- PocketRun como título da aba em todas as páginas
 
 ## 1.3.1 (2026-11-17)
 
@@ -444,13 +444,13 @@ Só manutenção, documentação e ajustes internos.
 
 ### Correções
 
-- expose service ports only locally to avoid host port conflicts
+- Portas publicadas só localmente, para não disputar portas no servidor
 
 ## 1.2.9 (2026-11-17)
 
 ### Novidades
 
-- redesign panel with brand design system components
+- Painel redesenhado com os componentes da identidade visual
 
 ## 1.2.8 (2026-11-17)
 
@@ -460,22 +460,22 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- add brand mark component with all identity variations
-- add motion section to visual identity page
+- Símbolo da marca com todas as variações
+- Seção de movimento na página de identidade visual
 
 ## 1.2.6 (2026-11-17)
 
 ### Correções
 
-- use brass tone for run letter in light logo
+- Tom dourado no "RUN" do logo claro
 
 ## 1.2.5 (2026-11-17)
 
 ### Novidades
 
-- add brand tokens, data and asset builders
-- add brand symbol and logo components
-- add visual identity page at /id
+- Cores, dados e geradores de arquivos da marca
+- Componentes do símbolo e do logo
+- Página de identidade visual em /id
 
 ## 1.2.4 (2026-11-16)
 
@@ -501,7 +501,7 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- add user repository and model in repositories package
+- Armazenamento de usuários na API
 
 ## 1.1.8 (2026-10-27)
 
@@ -511,14 +511,14 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- segregate admin and public routers with dedicated endpoints
-- add dual-listener and mode support for public and admin servers
-- configure docker and ui to consume segregated admin api
-- migrate health and setup domains with unified handlers and routes
-- unify handlers and routes in user, application and kv domains
-- add system store for local user settings and theme mode
-- update radix theme palette to vivo verde-azulado and bind appearance to system store
-- apply mint theme across components and add navbar dark mode toggle
+- Rotas do painel separadas das rotas públicas
+- Servidores separados para as rotas públicas e do painel
+- Docker e painel usam as rotas separadas do painel
+- Rotas de saúde e de setup reorganizadas
+- Rotas de usuários, aplicações e KV reorganizadas
+- Preferências locais e tema claro ou escuro guardados no navegador
+- Paleta verde-azulada e aparência ligada às preferências
+- Tema verde-menta nos componentes e botão de modo escuro
 
 ## 1.1.6 (2026-10-20)
 
@@ -528,7 +528,7 @@ Só manutenção, documentação e ajustes internos.
 
 ### Correções
 
-- synchronize package-lock with dependencies for docker build
+- package-lock sincronizado para o build do Docker
 
 ## 1.1.4 (2026-10-15)
 
@@ -538,49 +538,49 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- add concurrently dev script to run api and ui concurrently
-- install and configure radix ui themes
-- migrate navbar, auth and setup wizard to radix ui
-- migrate dashboard, create app and token modals to radix ui
-- migrate app detail and data explorer to radix ui
-- add global types and centralized api client infrastructure
-- add domain http actions and contract types
-- add zustand stores for auth, toast and navigation
-- add design system ui components, layout and useForm hook
-- implement self-contained page slices for auth, setup and home
-- implement declarative routing, layout guards and integrate main entrypoint
+- Script de desenvolvimento que sobe a API e o painel juntos
+- Radix UI Themes instalado e configurado
+- Barra, login e setup migrados para o Radix UI
+- Início e janelas de aplicação e token migrados para o Radix UI
+- Detalhes da aplicação e explorador de dados migrados para o Radix UI
+- Cliente HTTP único e tipos globais no painel
+- Chamadas à API e tipos dos contratos no painel
+- Estado global de login, avisos e navegação
+- Componentes base, layout e formulários do painel
+- Páginas de login, setup e início
+- Rotas do painel com proteção por login
 
 ## 1.1.2 (2026-10-15)
 
 ### Novidades
 
-- implement initial superadmin setup endpoints and verification
-- add initial superadmin setup wizard component in ui
-- integrate setup flow into app routing and auth guards
+- Rotas do setup inicial do superadmin
+- Assistente de setup do superadmin no painel
+- Setup integrado às rotas e ao login
 
 ## 1.1.1 (2026-10-15)
 
 ### Correções
 
-- replace host ports with expose to allow repeating ports in Dokploy without conflict
+- Portas internas no compose, para o Dokploy não disputar portas
 
 ## 1.1.0 (2026-10-15)
 
 ### Correções
 
-- change default host port to 5002 to avoid conflict with existing service on 5000
+- Porta padrão 5002, para não disputar a 5000
 
 ## 1.0.9 (2026-10-15)
 
 ### Novidades
 
-- align ports with reference compose using port 80 and port 5000
+- Portas alinhadas ao compose de referência (80 e 5000)
 
 ## 1.0.8 (2026-10-15)
 
 ### Correções
 
-- use API_PORT and safe UI port default to prevent host port 3000 collision
+- API_PORT e porta do painel sem disputar a 3000
 
 ## 1.0.7 (2026-10-15)
 
@@ -590,7 +590,7 @@ Só manutenção, documentação e ajustes internos.
 
 ### Novidades
 
-- add JWT_SECRET configuration to docker-compose and docs
+- JWT_SECRET no compose e na documentação
 
 ## 1.0.5 (2026-10-15)
 
@@ -600,41 +600,41 @@ Só manutenção, documentação e ajustes internos.
 
 ### Correções
 
-- fix compilation errors in app_handler.go and kv_handler.go
+- Erros de compilação nas rotas de aplicações e do KV
 
 ## 1.0.3 (2026-09-23)
 
 ### Novidades
 
-- implement manager auth, application management and v2 cors control
+- Login do gestor, gestão de aplicações e novo controle de CORS
 
 ## 1.0.2 (2026-09-23)
 
 ### Correções
 
-- add go mod tidy to api docker build
+- go mod tidy no build da imagem da API
 
 ## 1.0.1 (2026-09-23)
 
 ### Novidades
 
-- initial commit
-- creates base rest api structure with router, cors, env and ping
-- refactor api by domain and create health domain
-- removing the test, initially unnecessary
-- add dockerfile docker-compose and readme for dokploy
-- initialize ui frontend base structure with react vite and typescript
-- add ui service to docker compose and update documentation
-- add github actions workflow for build and push to docker hub
-- update docker-compose and readme with dokploy and hostinger support
-- connect api to mongodb and add success log to console
-- add support and documentation for local and remote mongodb via uri
+- Primeira versão
+- Estrutura base da API com rotas, CORS, variáveis de ambiente e ping
+- API organizada por domínio e rota de saúde
+- Remoção de um teste desnecessário no início
+- Dockerfile, compose e README para o Dokploy
+- Estrutura base do painel com React, Vite e TypeScript
+- Painel no compose e documentação atualizada
+- Publicação das imagens no Docker Hub pelo GitHub Actions
+- Compose e README com suporte ao Dokploy e à Hostinger
+- API conectada ao MongoDB, com log de sucesso
+- MongoDB local ou remoto pela URI, com documentação
 
 ### Correções
 
-- adding the .env
-- add error check for config scanner and validate ping tests
-- change default ui port to 3001 in docker compose to prevent host port collision
-- replace host ports with expose in dokploy compose to prevent port collisions
-- adjust healthcheck status validation to accept success response
-- remove fixed host port mappings to avoid conflicts on dokploy
+- Arquivo .env de exemplo
+- Erro na leitura do .env tratado e testes do ping
+- Porta padrão do painel 3001, para não disputar portas
+- Portas internas no compose do Dokploy, para não disputar portas
+- Verificação de saúde aceita a resposta de sucesso
+- Fim das portas fixas no servidor, para não disputar portas no Dokploy
