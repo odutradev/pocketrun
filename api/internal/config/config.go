@@ -20,15 +20,6 @@ const (
 
 var ErrInvalidEnv = errors.New("invalid environment variable")
 
-var publicSecrets = []string{
-	"pocketrun-secret-key-change-in-production",
-	"troque_por_uma_chave_secreta_forte",
-	"troque_por_uma_chave_longa_e_aleatoria",
-	"troque_por_outra_chave_longa_e_aleatoria",
-	"gere_uma_chave_secreta_forte",
-	"gere_outra_chave_longa_e_aleatoria",
-}
-
 type Config struct {
 	Host                    string
 	Port                    string
@@ -168,9 +159,6 @@ func checkMongoName(key, value string) error {
 func checkSecret(key, value string) error {
 	if value == "" {
 		return invalid(key, "is required")
-	}
-	if slices.Contains(publicSecrets, value) {
-		return invalid(key, "uses a public example value")
 	}
 	if len(value) < minSecretLength {
 		return invalid(key, fmt.Sprintf("must have at least %d characters", minSecretLength))
