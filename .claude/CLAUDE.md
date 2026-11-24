@@ -4,11 +4,9 @@ This repository holds the API in `api/` and the frontend in `ui/`. This guide de
 
 **Directive:** before changing an app, read its guide: `api/CLAUDE.md` for the API and `ui/CLAUDE.md` for the frontend. Each app's code, architecture and naming rules live there.
 
-**Product:** `.claude/PRODUCT.md` describes what PocketRun is, its concepts, modules and roadmap. Read it before designing a feature or writing user-facing text.
+**Product:** `.claude/PRODUCT.md` describes what PocketRun is, its concepts, modules and business rules. Read it before designing a feature or writing user-facing text, and update it in the same work when a business rule changes.
 
 **Service usage guide:** `llms.txt` at the root explains how to use the services (KV HTTP API, pages with `window.pocketrun` and `pocketrun.kv`, PIN access, links and activation) in the [llms.txt](https://llmstxt.org) format, with every request, response and error an AI needs to build a client or a page. It is for whoever uses the services, not a map of this repository. When a public route, payload, response, error code or page runtime behavior changes, update `llms.txt` in the same work. The panel serves a copy at `/llms.txt` from `ui/public/llms.txt`, and its **Documentação** page (`/docs`) gives that link to paste into an AI: run `npm run sync:llms` after editing (`npm run build` does it too), because the `ui` Docker build cannot read files outside `ui/`.
-
-**Roadmap:** `.docs/ROADMAP.md` lists planned work as numbered items. Only the user decides what runs: never start, continue or suggest-and-do a roadmap item unless the user asks for it by number in their message. Doing one item never authorizes another, dependencies included. When an item is done, mark it `✅ Feito` in that file in the same work.
 
 **Reply language:** always talk to the user in Brazilian Portuguese (pt-BR): answers, explanations, questions, plans and summaries. This guide is written in English only because AI models follow English instructions more reliably. Code, identifiers and commit messages follow the rules below.
 
