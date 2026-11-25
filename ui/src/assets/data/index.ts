@@ -8,6 +8,7 @@ import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageT
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
 import type { KvDocError, KvDocMethod, KvDocRoute, ConfigDocField } from "@utils/types/kvDocs";
 import type { BackupGroup, BackupScope } from "@utils/types/backup";
+import type { ApiKeyScope, ApiKeyScopeOption, McpClientOption } from "@utils/types/apiKey";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
 import type { ApiErrorCode } from "@utils/types/api";
@@ -28,6 +29,9 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   setup_completed: "A configuração inicial já foi concluída.",
   invalid_setup_token: "Token de setup inválido. Confira o token nos logs da API. Depois de 5 erros, a API gera um token novo.",
   user_not_found: "Usuário não encontrado.",
+  invalid_api_key_id: "Chave de API inválida.",
+  api_key_not_found: "Chave de API não encontrada. Ela pode já ter sido revogada.",
+  too_many_api_keys: "Você chegou ao limite de 20 chaves de API. Revogue uma que não usa mais.",
   email_taken: "Este e-mail já está em uso.",
   invalid_application_id: "Aplicação inválida.",
   application_not_found: "Aplicação não encontrada.",
@@ -88,6 +92,23 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
   superadmin: ["manage_apps", "manage_users", "manage_backups"],
   admin: ["manage_apps"]
 };
+
+export const apiKeyScopeOptions: ApiKeyScopeOption[] = [
+  { value: "read", label: "Só leitura", description: "Lista e lê páginas, links, aplicações e dados. Não muda nada." },
+  { value: "write", label: "Leitura e escrita", description: "Também cria e edita páginas, links, aplicações, cargos, tokens e PINs. Não apaga nada." },
+  { value: "full", label: "Total", description: "Também apaga, revoga tokens, troca e mostra PINs. Use só quando precisar." }
+];
+
+export const apiKeyScopeLabels: Record<ApiKeyScope, string> = {
+  read: "Só leitura",
+  write: "Leitura e escrita",
+  full: "Total"
+};
+
+export const mcpClientOptions: McpClientOption[] = [
+  { value: "claudeCode", label: "Claude Code" },
+  { value: "claudeDesktop", label: "Claude Desktop" }
+];
 
 export const roleLabels: Record<UserRole, string> = {
   superadmin: "Superadmin",

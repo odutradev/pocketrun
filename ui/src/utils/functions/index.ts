@@ -1,5 +1,5 @@
 import { adminRoleName, backupCollectionLabels, codeKeywords, codeLiterals, countByOptions, errorMessages, htmlOptionalCloseTags, htmlRawTextTags, htmlVoidTags, kvOperationOptions } from "@assets/data";
-import { backupFormat, expiryWarningDays, linksUrl, pageRuntimeApiVersion } from "@assets/config";
+import { backupFormat, expiryWarningDays, linksUrl, mcpServerName, mcpUrl, pageRuntimeApiVersion } from "@assets/config";
 import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
@@ -598,3 +598,24 @@ export const readBackupHeader = async (file: File): Promise<BackupHeader | null>
 
 export const toBackupRows = (names: string[], documents: Record<string, number>): BackupCountRow[] =>
   names.map((name) => ({ name, label: backupCollectionLabels[name] ?? name, documents: documents[name] ?? 0 }));
+
+export const buildClaudeCodeMcpConfig = (apiKey: string): string =>
+  JSON.stringify({ mcpServers: { [mcpServerName]: { type: "http", url: mcpUrl, headers: { Authorization: `Bearer ${apiKey}` } } } }, null, 2);
+
+export const buildClaudeDesktopMcpConfig = (apiKey: string): string =>
+  JSON.stringify(
+    {
+      mcpServers: {
+        [mcpServerName]: {
+          command: "npx",
+          args: ["-y", "mcp-remote", mcpUrl, "--header", "Authorization:${POCKETRUN_AUTH}"],
+          env: { POCKETRUN_AUTH: `Bearer ${apiKey}` }
+        }
+      }
+    },
+    null,
+    2
+  );
+
+export const buildClaudeCodeMcpCommand = (apiKey: string): string =>
+  `claude mcp add --transport http ${mcpServerName} ${mcpUrl} --header "Authorization: Bearer ${apiKey}"`;

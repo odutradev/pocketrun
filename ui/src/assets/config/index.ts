@@ -6,6 +6,10 @@ export const apiUrl = trimTrailingSlash(runtimeConfig.apiUrl || import.meta.env.
 
 export const adminApiUrl = `${apiUrl}/admin`;
 
+export const mcpUrl = `${apiUrl}/mcp`;
+
+export const mcpServerName = "pocketrun";
+
 export const linksUrl = trimTrailingSlash(runtimeConfig.linksUrl || import.meta.env.VITE_LINKS_URL || "");
 
 export const appVersion = __APP_VERSION__;
