@@ -4,6 +4,11 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+- Aba **JSON** nas aplicações do KV, que exporta e aplica nome, descrição, origens, chamadas fora do navegador, cargos e o cargo de cada token num JSON só, validado enquanto você digita. O formato está no `llms.txt` e na Documentação (`/docs#kv-config`), para uma IA gerar a configuração.
+- Rotas `GET /admin/apps/{id}/config/export` e `POST /admin/apps/{id}/config/apply`.
+
 ## 1.8.4 (2026-11-24)
 
 - As abas **Acesso** e **Dados** das páginas viraram uma só, **Acesso e dados**: cada PIN aparece junto com o cargo dos dados, e os cargos e as regras por coleção são criados, editados e apagados na própria página, sem ir ao KV.

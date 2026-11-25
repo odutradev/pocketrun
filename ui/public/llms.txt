@@ -21,6 +21,7 @@ Notas importantes:
 - [Rotas do KV](/docs#routes): Tabela com todas as rotas públicas.
 - [Listar e filtrar](/docs#list): Paginação, filtros, operadores e ordenação.
 - [Cargos](/docs#roles): Regras por coleção, limite de documentos e só os próprios documentos.
+- [Configuração do KV em JSON](/docs#kv-config): Nome, origens, cargos e cargo dos tokens de uma aplicação num JSON só.
 - [Erros do KV](/docs#errors): Todos os códigos de erro e quando acontecem.
 - [Páginas](/docs#pages): HTML, slug, `window.pocketrun` e versões.
 - [Dados com pocketrun.kv](/docs#page-data): KV dentro da página, sem token.
@@ -136,6 +137,51 @@ Authorization: Bearer pk_live_xxx
   "isOwnDocumentsOnly": false
 }
 ```
+
+## KV: configuração da aplicação em JSON
+
+Nome, descrição, origens, chamadas fora do navegador, cargos e o cargo de cada token de uma aplicação cabem num JSON só. Gere esse JSON e cole na aba **JSON** da aplicação, no KV, e clique em **Aplicar**. Pelo painel, o mesmo JSON vai em `POST {api}/admin/apps/{id}/config/apply` (sessão do gestor dono da aplicação), e `GET {api}/admin/apps/{id}/config/export` devolve a configuração atual no mesmo formato.
+
+```json
+{
+  "version": 1,
+  "projectId": "loja",
+  "name": "Loja",
+  "description": "Pedidos e cardápio da loja",
+  "allowedOrigins": ["https://loja.exemplo.com"],
+  "allowNonBrowserRequests": false,
+  "roles": [
+    { "name": "vitrine", "description": "Só lê o cardápio", "rules": [{ "collection": "cardapio", "operations": ["read"] }] },
+    {
+      "name": "caixa",
+      "isOwnDocumentsOnly": false,
+      "rules": [
+        { "collection": "cardapio", "operations": ["read"] },
+        { "collection": "pedidos", "operations": ["read", "create", "update"], "maxDocuments": 10000 }
+      ]
+    }
+  ],
+  "tokens": [
+    { "id": "3f9c2a1b8e7d6c5f", "name": "Site", "role": "vitrine" },
+    { "id": "a1b2c3d4e5f60718", "name": "Caixa da loja", "role": "caixa" }
+  ]
+}
+```
+
+Campos (todos opcionais: o que ficar de fora não muda):
+
+- `version`: sempre `1`.
+- `projectId` e `tokens[].name`: só informativos. Vêm na exportação e são ignorados ao aplicar.
+- `name`: de 1 a 100 caracteres. `description`: até 500.
+- `allowedOrigins`: sites que podem chamar a API pelo navegador, como `https://loja.exemplo.com`. `["*"]` libera qualquer site.
+- `allowNonBrowserRequests`: aceita chamadas sem o header `Origin`, como servidores, scripts e apps.
+- `roles`: a lista completa de cargos, até 20, no mesmo formato de **KV: cargos**. Um cargo fora da lista é apagado. `admin` é fixo, tem acesso total e não entra na lista. Nome com letras minúsculas, números e hífen, até 40 caracteres; de 1 a 30 regras, cada coleção uma vez.
+- `tokens`: troca o cargo dos tokens listados, pelo `id` da exportação. `role` é `admin` ou um nome de `roles`. Tokens fora da lista ficam como estão; criar e revogar tokens fica na aba Tokens, porque o token puro só aparece uma vez.
+- Para apagar um cargo que um token usa, mova o token para outro cargo em `tokens` no mesmo JSON.
+
+Resposta `200`: a configuração atual, no mesmo formato da exportação.
+
+Antes de gravar, a configuração inteira é conferida. Erros: `400 validation_failed` (campo fora do formato, com `fields`), `400 invalid_body` (JSON malformado), `400 invalid_config` (o mesmo token duas vezes), `400 role_reserved` (cargo chamado `admin`), `400 invalid_role_name`, `400 invalid_rule`, `409 role_taken` (nome repetido), `409 too_many_roles`, `409 role_in_use` (um token ainda usa um cargo apagado), `404 role_not_found` (um token aponta para um cargo que não existe), `404 token_not_found` e `404 application_not_found`.
 
 ## Páginas
 

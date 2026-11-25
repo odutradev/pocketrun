@@ -23,6 +23,7 @@ export const docSections: DocSectionEntry[] = [
   { id: "transfer", label: "Importar e exportar", group: "kv" },
   { id: "expiry", label: "Validade", group: "kv" },
   { id: "roles", label: "Cargos", group: "kv" },
+  { id: "kv-config", label: "Configuração em JSON", group: "kv" },
   { id: "errors", label: "Erros", group: "kv" },
   { id: "security", label: "Segurança", group: "kv" },
   { id: "pages", label: "O que são as páginas", group: "pages" },

@@ -19,6 +19,7 @@ import ErrorsSection from "./sections/errors";
 import EditorSection from "./sections/editor";
 import AccessSection from "./sections/access";
 import BackupSection from "./sections/backup";
+import KvConfigSection from "./sections/kvConfig";
 import RolesSection from "./sections/roles";
 import PanelSection from "./sections/panel";
 import LinksSection from "./sections/links";
@@ -70,6 +71,7 @@ const DocsPage = () => {
           <TransferSection />
           <ExpirySection />
           <RolesSection />
+          <KvConfigSection />
           <ErrorsSection />
           <SecuritySection />
           <PageIntroSection />

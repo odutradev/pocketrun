@@ -1,7 +1,7 @@
 import { Bullets, Code, Paragraph } from "../../styles";
 import DocSection from "../../subcomponents/docSection";
 import { pageConfigDocFields } from "@assets/data";
-import { pageConfigFieldColumns } from "../../table";
+import { configFieldColumns } from "../../table";
 import DataTable from "@components/dataTable";
 import CodeBlock from "@components/codeBlock";
 import Alert from "@components/alert";
@@ -54,7 +54,7 @@ const PageConfigSection = () => (
       <li>A configuração inteira é conferida antes de gravar. Se algo estiver errado, nada muda e o painel mostra o motivo.</li>
     </Bullets>
     <CodeBlock title="Exemplo: cardápio com equipe e gerente" code={example} language="json" isCopyable />
-    <DataTable caption="Campos da configuração de acesso e dados" columns={pageConfigFieldColumns} rows={pageConfigDocFields} getRowKey={(field) => field.path} minWidth="720px" />
+    <DataTable caption="Campos da configuração de acesso e dados" columns={configFieldColumns} rows={pageConfigDocFields} getRowKey={(field) => field.path} minWidth="720px" />
     <Alert tone="neutral" title="Para pedir a uma IA">
       Cole o link do llms.txt (seção llms.txt) e descreva quem abre a página e o que cada um pode fazer. A IA devolve o JSON pronto para colar no
       modo JSON.

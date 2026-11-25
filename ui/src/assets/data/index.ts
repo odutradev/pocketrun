@@ -6,7 +6,7 @@ import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, B
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
-import type { KvDocError, KvDocMethod, KvDocRoute, PageConfigDocField } from "@utils/types/kvDocs";
+import type { KvDocError, KvDocMethod, KvDocRoute, ConfigDocField } from "@utils/types/kvDocs";
 import type { BackupGroup, BackupScope } from "@utils/types/backup";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -1348,7 +1348,7 @@ export const pageConfigJsonSchema: Record<string, unknown> = {
   }
 };
 
-export const pageConfigDocFields: PageConfigDocField[] = [
+export const pageConfigDocFields: ConfigDocField[] = [
   { path: "version", type: "1", description: "Opcional. Versão do formato, hoje sempre 1." },
   { path: "access", type: "objeto", description: "Opcional. Sem ele, o acesso não muda." },
   { path: "access.isEnabled", type: "boolean", description: "Pede PIN para abrir a página. Ligar exige ao menos um PIN. Sem o campo, o primeiro PIN liga a proteção." },
@@ -1400,3 +1400,22 @@ export const appConfigJsonSchema: Record<string, unknown> = {
     }
   }
 };
+
+export const kvConfigDocFields: ConfigDocField[] = [
+  { path: "version", type: "1", description: "Opcional. Versão do formato, hoje sempre 1." },
+  { path: "projectId", type: "texto", description: "Só informativo. O Project ID não muda depois de criado." },
+  { path: "name", type: "1 a 100 caracteres", description: "Nome da aplicação no painel." },
+  { path: "description", type: "até 500 caracteres", description: "Descrição da aplicação." },
+  { path: "allowedOrigins", type: "lista de textos", description: "Sites que podem chamar a API pelo navegador. [\"*\"] libera qualquer site." },
+  { path: "allowNonBrowserRequests", type: "boolean", description: "Aceita chamadas sem Origin, como servidores, scripts e apps." },
+  { path: "roles", type: "lista, até 20", description: "A lista completa de cargos. Cargo fora da lista é apagado. admin é fixo e não entra aqui." },
+  { path: "roles[].name", type: "texto", description: "Minúsculas, números e hífen, até 40 caracteres, diferente de admin." },
+  { path: "roles[].description", type: "texto", description: "Opcional, até 200 caracteres." },
+  { path: "roles[].isOwnDocumentsOnly", type: "boolean", description: "Opcional. O cargo vê, edita e apaga só o que ele mesmo criou." },
+  { path: "roles[].rules[].collection", type: "texto", description: "Nome da coleção ou * para todas sem regra própria. Cada coleção uma vez, de 1 a 30 regras." },
+  { path: "roles[].rules[].operations", type: "lista", description: "De 1 a 4 entre read, create, update e delete." },
+  { path: "roles[].rules[].maxDocuments", type: "número", description: "Opcional. Limite de documentos na coleção, 0 é sem limite." },
+  { path: "tokens[].id", type: "texto", description: "Id do token, como vem na exportação. Tokens fora da lista não mudam." },
+  { path: "tokens[].role", type: "texto", description: "Novo cargo do token: admin ou um nome de roles." },
+  { path: "tokens[].name", type: "texto", description: "Só informativo. Criar e revogar tokens fica na aba Tokens." }
+];

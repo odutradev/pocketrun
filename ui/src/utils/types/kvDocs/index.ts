@@ -7,7 +7,7 @@ export interface KvDocRoute {
   response: string;
 }
 
-export interface PageConfigDocField {
+export interface ConfigDocField {
   path: string;
   type: string;
   description: string;

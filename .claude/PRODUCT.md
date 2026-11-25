@@ -65,7 +65,8 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 
 **Aplicações e tokens**
 
-- Criar, listar, editar e excluir aplicações fica na página do KV (`/kv`, `/kv/new`, `/kv/{id}/edit`), com as abas **Explorador**, **Configuração**, **Cargos**, **Tokens** e **Snippets**. O `projectId` é único na instância.
+- Criar, listar, editar e excluir aplicações fica na página do KV (`/kv`, `/kv/new`, `/kv/{id}/edit`), com as abas **Explorador**, **Configuração**, **Cargos**, **Tokens**, **JSON** e **Snippets**. O `projectId` é único na instância.
+- **Configuração em JSON:** a aba JSON exporta e aplica nome, descrição, origens, `allowNonBrowserRequests`, cargos (lista completa: o que sai é apagado) e o cargo de cada token (pelo `id`; tokens fora da lista não mudam, e criar ou revogar fica na aba Tokens). `projectId` e o nome dos tokens são só informativos. A configuração inteira é conferida antes de gravar, então mover um token e apagar o cargo antigo cabem no mesmo JSON. Os campos estão no `llms.txt` e em `/docs#kv-config`. A aplicação de uma página mostra no topo o caminho Páginas › página › KV › aplicação.
 - Criar uma aplicação já gera um token `admin` de 365 dias. Novos tokens têm nome, validade de 0 a 3.650 dias (0 é sem validade) e cargo. O cargo de um token pode ser trocado, e revogar corta o acesso na hora.
 - O token vai em `Authorization: Bearer`, `X-Pocket-Token` ou `controlAccess`. Token inexistente ou revogado: `401 invalid_access_token`; vencido: `401 expired_access_token`; com cargo apagado: `403 role_not_found`.
 - **Origens:** chamadas de navegador só passam de uma origem da lista (ou `*`). Chamadas sem `Origin` só passam se a aplicação aceitar chamadas fora do navegador. Senão, `403 origin_not_allowed`.
