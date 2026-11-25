@@ -39,6 +39,11 @@ func ManagerIDFromContext(ctx context.Context) (bson.ObjectID, error) {
 func Authenticate(signer *jwt.Signer, sessions SessionChecker, session sessioncookie.Cookie, logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if _, ok := ClaimsFromContext(r.Context()); ok {
+				next.ServeHTTP(w, r)
+				return
+			}
+
 			if !sessioncookie.IsPanelRequest(r) {
 				httpx.WriteError(w, http.StatusForbidden, "invalid_client")
 				return

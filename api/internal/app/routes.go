@@ -12,6 +12,7 @@ import (
 	"pocketrun-api/internal/domains/health"
 	"pocketrun-api/internal/domains/kv"
 	"pocketrun-api/internal/domains/link"
+	"pocketrun-api/internal/domains/mcp"
 	"pocketrun-api/internal/domains/overview"
 	"pocketrun-api/internal/domains/page"
 	"pocketrun-api/internal/domains/user"
@@ -33,7 +34,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 		Logger:       logger,
 	}
 	health.Register(router)
-	user.Register(router, user.Services{Users: s.users, Setup: s.setup, Session: s.session})
+	user.Register(router, user.Services{Users: s.users, Setup: s.setup, Session: s.session, APIKeys: s.apiKeys})
 	kv.Register(router, kv.Services{Applications: s.applications, Documents: s.documents})
 	group.Register(router, group.Services{Groups: s.groups, Links: s.links, Pages: s.pages})
 	pageServer := page.Register(router, page.Services{
@@ -48,6 +49,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	link.Register(router, link.Services{Links: s.links, History: s.linkHistory, Analytics: s.linkAnalytics}, cfg.LinksURL, pageServer)
 	overview.Register(router, s.overview)
 	backup.Register(router, s.backup)
+	mcp.Register(router, mcp.Services{APIKeys: s.apiKeys})
 
 	api := http.NewServeMux()
 	api.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(router.Admin)))

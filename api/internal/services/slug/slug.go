@@ -52,7 +52,7 @@ func Validate(value string) error {
 
 func isReserved(value string) bool {
 	switch value {
-	case "admin", "api", "apps", "auth", "healthz", "kv", "links", "pages", "ping", "setup", "static", "validate":
+	case "admin", "api", "apps", "auth", "healthz", "kv", "links", "mcp", "pages", "ping", "setup", "static", "validate":
 		return true
 	default:
 		return false
