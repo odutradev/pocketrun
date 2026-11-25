@@ -130,3 +130,50 @@ export const Rules = styled.ul`
   line-height: 1.5;
   color: ${({ theme }) => theme.brand.steelMuted};
 `;
+
+export const Toolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing(3)};
+`;
+
+export const ToolbarText = styled.p`
+  margin: 0;
+  max-width: 640px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.brand.steelMuted};
+`;
+
+export const Page = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${({ theme }) => theme.spacing(5)};
+`;
+
+export const Stats = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${({ theme }) => theme.spacing(2)};
+`;
+
+export const Mono = styled.code`
+  font-family: ${({ theme }) => theme.brand.fonts.mono};
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steel};
+  overflow-wrap: anywhere;
+`;
+
+export const Muted = styled.span`
+  font-size: 12px;
+  color: ${({ theme }) => theme.brand.steelMuted};
+`;
+
+export const Actions = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: ${({ theme }) => theme.spacing(2)};
+`;

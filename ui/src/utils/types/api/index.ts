@@ -56,6 +56,7 @@ export type ApiErrorCode =
   | "too_many_roles"
   | "role_in_use"
   | "application_owned_by_page"
+  | "kv_application_not_owned"
   | "kv_not_linked"
   | "kv_application_missing"
   | "invalid_backup"

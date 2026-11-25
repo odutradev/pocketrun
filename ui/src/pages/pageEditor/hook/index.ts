@@ -8,8 +8,10 @@ import usePageEditorStore from "./store";
 import type { HistoryFilter, SitePage, PageEditorTab, PageEvent } from "@utils/types/sitePage";
 import type { UsePageEditorPageReturn } from "./types";
 
+const legacyTabs: Record<string, PageEditorTab> = { data: "access" };
+
 const toTab = (value: string | null, isEditing: boolean): PageEditorTab => {
-  const match = pageEditorTabs.find((tab) => tab.value === value);
+  const match = pageEditorTabs.find((tab) => tab.value === (value && legacyTabs[value] ? legacyTabs[value] : value));
   if (!isEditing) return "settings";
   return match ? match.value : "editor";
 };
@@ -116,6 +118,7 @@ const usePageEditorPage = (): UsePageEditorPageReturn => {
     hasLoadedAccess: store.hasLoadedAccess,
     load: store.load,
     loadAccess: store.loadAccess,
+    reloadAccessData: store.reloadAccessData,
     handleAccessChange: store.setAccess,
     loadHistory: store.loadHistory,
     loadAnalytics: store.loadAnalytics,

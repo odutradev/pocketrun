@@ -33,8 +33,6 @@ const QrCodeTab = lazy(() => import("./tabs/qrCode"));
 
 const AccessTab = lazy(() => import("./tabs/access"));
 
-const DataTab = lazy(() => import("./tabs/data"));
-
 const PageEditorPage = () => {
   const {
     pageId,
@@ -104,13 +102,8 @@ const PageEditorPage = () => {
       </Suspense>
     ),
     access: (
-      <Suspense fallback={<Loader label="Carregando o acesso" isCentered />}>
+      <Suspense fallback={<Loader label="Carregando o acesso e os dados" isCentered />}>
         <AccessTab />
-      </Suspense>
-    ),
-    data: (
-      <Suspense fallback={<Loader label="Carregando os dados" isCentered />}>
-        <DataTab />
       </Suspense>
     ),
     qrcode: (

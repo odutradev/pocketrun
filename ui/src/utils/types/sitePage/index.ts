@@ -11,7 +11,7 @@ import type {
   LinkState
 } from "@utils/types/link";
 import type { pageAccessKeySchema, pageFormSchema } from "@utils/validations/sitePage";
-import type { KvOperation, KvRole } from "@utils/types/application";
+import type { KvOperation, KvRole, KvRoleRule } from "@utils/types/application";
 import type { z } from "zod";
 
 export type {
@@ -104,9 +104,9 @@ export type PageGroupTab = "pages" | "settings";
 
 export type PageTemplate = "blank" | "kvCrud";
 
-export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "data" | "qrcode" | "analytics" | "history";
+export type PageEditorTab = "editor" | "settings" | "versions" | "access" | "qrcode" | "analytics" | "history";
 
-export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "countBy" | "role" | "sessionHours" | "kvApplication" | "kvPublicRole" | "kvRoles";
+export type PageChangeField = "title" | "slug" | "version" | "groupId" | "mode" | "startsAt" | "endsAt" | "maxClicks" | "countBy" | "role" | "sessionHours" | "kvApplication" | "kvPublicRole" | "kvRoles" | "kvRoleRules";
 
 export type PageEventType =
   | LinkEventType
@@ -283,6 +283,48 @@ export interface PageAccessKeyPayload {
   role: string;
   pin: string;
 }
+
+export interface PageConfigPin {
+  role: string;
+  kvRole: string;
+}
+
+export interface PageConfigRole {
+  name: string;
+  description: string;
+  isOwnDocumentsOnly: boolean;
+  rules: KvRoleRule[];
+}
+
+export interface PageConfig {
+  version: number;
+  access: { isEnabled: boolean; sessionHours: number; pins: PageConfigPin[] };
+  kv: { isEnabled: boolean; publicRole: string; roles: PageConfigRole[] };
+}
+
+export interface PageConfigPinInput {
+  role: string;
+  pin?: string;
+  kvRole?: string;
+}
+
+export interface PageConfigPayload {
+  version?: number;
+  access?: { isEnabled?: boolean; sessionHours?: number; pins?: PageConfigPinInput[] };
+  kv?: { isEnabled?: boolean; publicRole?: string; roles?: PageConfigRole[] };
+}
+
+export interface PageConfigIssuedPin {
+  role: string;
+  pin: string;
+}
+
+export interface PageConfigApplied {
+  config: PageConfig;
+  issued: PageConfigIssuedPin[];
+}
+
+export type PageDataView = "visual" | "json";
 
 export type PageAccessKeyValues = z.infer<typeof pageAccessKeySchema>;
 

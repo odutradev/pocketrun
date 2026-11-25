@@ -9,6 +9,9 @@ import type {
   PageAccessIssued,
   PageAccessKeyPayload,
   PageAccessRevealed,
+  PageConfig,
+  PageConfigApplied,
+  PageConfigPayload,
   PageGroup,
   PageHistoryPage,
   PageKvDetails,
@@ -193,5 +196,15 @@ export const removePageAccessKey = async (pageId: string, keyId: string) => {
 export const getPageAnalytics = async (pageId: string, range: AnalyticsRange, signal?: AbortSignal) => {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const response = await api.get<LinkAnalytics>(`/pages/${pageId}/analytics/details`, { params: { range, tz }, signal });
+  return response.data;
+};
+
+export const exportPageConfig = async (pageId: string, signal?: AbortSignal) => {
+  const response = await api.get<PageConfig>(`/pages/${pageId}/config/export`, { signal });
+  return response.data;
+};
+
+export const applyPageConfig = async (pageId: string, data: PageConfigPayload) => {
+  const response = await api.post<PageConfigApplied>(`/pages/${pageId}/config/apply`, data);
   return response.data;
 };

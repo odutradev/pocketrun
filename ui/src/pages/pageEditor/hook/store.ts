@@ -171,6 +171,18 @@ const usePageEditorStore = create<PageEditorStore>()((set, get) => ({
       toast.error(getErrorMessage(error, "Não foi possível carregar o acesso da página"));
     }
   },
+  reloadAccessData: async () => {
+    const { sitePage, requestKey } = get();
+    if (!sitePage) return;
+    try {
+      const [access, kv] = await Promise.all([getPageAccess(sitePage.id), getPageKv(sitePage.id)]);
+      if (get().requestKey !== requestKey) return;
+      set({ access, hasLoadedAccess: true, kv, hasLoadedKv: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false });
+    } catch (error) {
+      logger.error(error);
+      toast.error(getErrorMessage(error, "Não foi possível carregar o acesso e os dados da página"));
+    }
+  },
   setAccess: (access) => set({ access, hasLoadedAccess: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
   setKv: (kv) => set({ kv, hasLoadedKv: true, events: [], historyPage: 1, historyTotal: 0, historyCursors: {}, hasLoadedHistory: false }),
   loadKvRequests: async () => {

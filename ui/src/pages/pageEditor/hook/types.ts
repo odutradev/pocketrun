@@ -51,6 +51,7 @@ export interface PageEditorStore {
   previewAs: string;
   load: (pageId?: string) => Promise<void>;
   loadAccess: () => Promise<void>;
+  reloadAccessData: () => Promise<void>;
   setAccess: (access: PageAccess) => void;
   setKv: (kv: PageKvDetails) => void;
   loadKvRequests: () => Promise<void>;
@@ -124,6 +125,7 @@ export interface UsePageEditorPageReturn {
   previewExtra: PageRuntimeExtra;
   load: (pageId?: string) => Promise<void>;
   loadAccess: () => Promise<void>;
+  reloadAccessData: () => Promise<void>;
   handleAccessChange: (access: PageAccess) => void;
   handleKvChange: (kv: PageKvDetails) => void;
   loadKvRequests: () => Promise<void>;

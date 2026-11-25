@@ -71,7 +71,8 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   invalid_rule: "Confira as regras: cada coleção aparece uma vez, com um nome válido ou *.",
   too_many_roles: "A aplicação chegou ao limite de 20 cargos.",
   role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar.",
-  application_owned_by_page: "Esta aplicação é de uma página. Ela é apagada junto com a página, ou desligada na aba Dados.",
+  application_owned_by_page: "Esta aplicação é de uma página. Ela é apagada junto com a página, ou desligada na aba Acesso e dados.",
+  kv_application_not_owned: "Esta página usa uma aplicação comum do KV. Edite os cargos no KV ou desative e ative os dados de novo.",
   kv_not_linked: "A página ainda não tem dados ativados.",
   kv_application_missing: "A aplicação de dados desta página foi excluída.",
   invalid_backup: "Esse arquivo não é um backup válido do PocketRun.",
@@ -640,8 +641,7 @@ export const pageEditorTabs: { value: PageEditorTab; label: string }[] = [
   { value: "editor", label: "Editor" },
   { value: "settings", label: "Configuração" },
   { value: "versions", label: "Versões" },
-  { value: "access", label: "Acesso" },
-  { value: "data", label: "Dados" },
+  { value: "access", label: "Acesso e dados" },
   { value: "qrcode", label: "QR code" },
   { value: "analytics", label: "Análise" },
   { value: "history", label: "Histórico" }
@@ -777,7 +777,8 @@ export const pageChangeLabels: Record<PageChangeField, string> = {
   sessionHours: "Duração do acesso",
   kvApplication: "Aplicação do KV",
   kvPublicRole: "Cargo de quem abre sem PIN",
-  kvRoles: "Cargos por PIN"
+  kvRoles: "Cargos por PIN",
+  kvRoleRules: "Regras dos cargos"
 };
 
 export const htmlVoidTags = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"]);
@@ -1261,4 +1262,84 @@ export const backupGroupLabels: Record<BackupGroup, string> = {
 export const backupScopeLabels: Record<BackupScope, string> = {
   full: "Completo, com análise e histórico",
   content: "Só o conteúdo"
+};
+
+export const pageConfigFileName = "pocketrun-page-config.json";
+
+export const pageConfigJsonSchema: Record<string, unknown> = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  title: "Acesso e dados de uma página do PocketRun",
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    version: { type: "integer", enum: [1], description: "Versão do formato. Hoje é sempre 1." },
+    access: {
+      type: "object",
+      description: "Proteção por PIN. Sem este bloco, o acesso fica como está.",
+      additionalProperties: false,
+      properties: {
+        isEnabled: { type: "boolean", description: "Pede PIN para abrir a página. Ligar exige ao menos um PIN." },
+        sessionHours: { type: "integer", minimum: 1, maximum: 720, description: "Horas que o acesso dura depois do PIN certo (1 a 720)." },
+        pins: {
+          type: "array",
+          maxItems: 20,
+          description: "A lista completa de PINs. Quem não estiver aqui é apagado. Sem a lista, os PINs ficam como estão.",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["role"],
+            properties: {
+              role: { type: "string", maxLength: 64, pattern: "^([a-z0-9]+(-[a-z0-9]+)*)?$", description: "\"\" é o PIN geral. Outro nome é um PIN de cargo, como equipe." },
+              pin: { type: "string", pattern: "^[0-9]{6}$", description: "6 números sem sequência nem repetição. Sem pin: mantém o atual ou sorteia um novo." },
+              kvRole: { type: "string", maxLength: 40, description: "Cargo dos dados deste PIN: admin, um nome de kv.roles ou \"\" para sem acesso." }
+            }
+          }
+        }
+      }
+    },
+    kv: {
+      type: "object",
+      description: "Dados com pocketrun.kv. Sem este bloco, os dados ficam como estão.",
+      additionalProperties: false,
+      properties: {
+        isEnabled: { type: "boolean", description: "Liga os dados da página. Desligar mantém documentos e cargos." },
+        publicRole: { type: "string", maxLength: 40, description: "Cargo de quem abre sem PIN: admin, um nome de kv.roles ou \"\"." },
+        roles: {
+          type: "array",
+          maxItems: 20,
+          description: "A lista completa de cargos. Cargos fora da lista são apagados. admin é fixo e não entra aqui.",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["name", "rules"],
+            properties: {
+              name: { type: "string", maxLength: 40, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", not: { const: "admin" } },
+              description: { type: "string", maxLength: 200 },
+              isOwnDocumentsOnly: { type: "boolean", description: "O cargo vê, edita e apaga só o que ele mesmo criou." },
+              rules: {
+                type: "array",
+                minItems: 1,
+                maxItems: 30,
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  required: ["collection", "operations"],
+                  properties: {
+                    collection: { type: "string", pattern: "^([*]|[A-Za-z0-9_-]{1,64})$", description: "Nome da coleção ou * para todas." },
+                    operations: {
+                      type: "array",
+                      minItems: 1,
+                      uniqueItems: true,
+                      items: { type: "string", enum: ["read", "create", "update", "delete"] }
+                    },
+                    maxDocuments: { type: "integer", minimum: 0, maximum: 1000000, description: "Limite de documentos na coleção. 0 é sem limite." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };

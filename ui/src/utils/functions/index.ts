@@ -4,7 +4,7 @@ import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { CountedItem, Link, LinkCountBy, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
-import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRoleRule } from "@utils/types/application";
+import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRole, KvRoleRule } from "@utils/types/application";
 import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
 import type { BackupCountRow, BackupHeader } from "@utils/types/backup";
 import type { AttentionItem, KvSummary } from "@utils/types/overview";
@@ -64,6 +64,11 @@ const previewPageRole = (previewAs: string): string | null => {
   if (previewAs === "pin") return "";
   return previewAs.startsWith("role:") ? previewAs.slice("role:".length) : null;
 };
+
+export const kvRoleOptions = (roles: KvRole[]): { value: string; label: string }[] => [
+  { value: adminRoleName, label: "admin · acesso total" },
+  ...roles.map((role) => ({ value: role.name, label: role.description ? `${role.name} · ${role.description}` : role.name }))
+];
 
 export const describeKvRole = (details: PageKvDetails, roleName: string): PageKvRuntime => {
   if (!roleName || !details.application) return { role: "", isOwnDocumentsOnly: false, rules: [] };

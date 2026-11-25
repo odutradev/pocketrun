@@ -1,5 +1,5 @@
 import { formatRelativeTime } from "@utils/functions";
-import { Mono, Muted } from "./styles";
+import { Mono, Muted } from "../../styles";
 import Badge from "@components/badge";
 
 import type { DataTableColumn } from "@components/dataTable/types";
