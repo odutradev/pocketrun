@@ -31,6 +31,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 | **Aplicação** | Um projeto do KV, de um gestor. Tem nome, `projectId` único, descrição, origens permitidas, tokens e cargos. Existe só para o KV: as collections e os documentos pertencem a exatamente uma aplicação e são invisíveis para as outras. |
 | **Aplicação da página** | Aplicação criada pela aba Acesso e dados de uma página, marcada **Da página**. Pertence à página, não pode ser excluída pelo KV e some junto com a página. |
 | **Token de acesso** | Segredo `pk_live_...` que um cliente usa na API pública do KV. Guardado só como hash, exibido uma vez, com validade opcional, cargo, prefixo visível e último uso. |
+| **Chave de API** | Segredo `prk_...` de um gestor para um assistente de IA usar o servidor MCP (`{api}/mcp`). Age em nome do gestor, com a permissão escolhida: só leitura, leitura e escrita ou total. Guardada só como hash, exibida uma vez, com prefixo visível e último uso. |
 | **Cargo do KV** | Permissões de uma aplicação: por collection (ou `*`), as operações ler, criar, editar e apagar, limite opcional de documentos e "só os próprios documentos". `admin` é fixo e tem acesso total. |
 | **Collection** | Grupo nomeado de documentos dentro de uma aplicação. Nasce na primeira escrita, sem schema. |
 | **Documento** | Objeto JSON livre (`data`) numa collection, com id, datas, o cargo que o criou (`createdByRole`) e validade opcional. |
@@ -52,6 +53,8 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 - **Encerrar sessões:** trocar a senha ou o cargo de alguém encerra as sessões dessa pessoa; **Sair de todos os dispositivos** encerra todas; trocar a própria senha mantém só a sessão atual.
 - **Usuários** (só superadmin): listar, criar, editar nome, e-mail, cargo e senha, remover. Ninguém muda o próprio cargo nem remove a própria conta, e um usuário dono de aplicações não pode ser removido.
 - **Perfil:** cada gestor edita o próprio nome e e-mail e troca a senha informando a atual.
+- **Chaves de API para IA** (no Perfil): cada gestor gera até 20 chaves, com nome e permissão. **Só leitura** lista e lê; **Leitura e escrita** também cria e edita páginas, links, grupos, aplicações, cargos, tokens e PINs; **Total** também apaga, revoga, troca e mostra PINs. A chave aparece uma vez, junto com a configuração pronta para o Claude Code e o Claude Desktop. Revogar corta o acesso na hora. A chave não depende da sessão: trocar a senha ou sair de todos os dispositivos não a revoga, e ela deixa de valer se o gestor for removido.
+- **Servidor MCP:** `POST {api}/mcp` fala MCP (Streamable HTTP, JSON-RPC sem sessão) com `Authorization: Bearer prk_...`. Cada ferramenta chama a mesma rota `/admin` do painel, com as mesmas validações e erros, e o histórico registra o gestor da chave. A lista de ferramentas depende da permissão da chave. Usuários, backup, senha e as próprias chaves ficam fora do MCP.
 
 ### 5.2 Painel
 
@@ -59,7 +62,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 - **Geral:** período de 24h, 7, 30, 90 dias ou Tudo (lembrado no navegador, 7 dias de início), números de aplicações (e quantas são de páginas), tokens ativos (e quantos vencem em breve), páginas, links e acessos. O gráfico **Uso dos serviços** junta pedidos ao KV, acessos às páginas e cliques nos links, com comparação ao período anterior e **Exportar CSV**. Os pedidos ao KV somam as rotas públicas (contadas por hora e aplicação, guardadas 400 dias, só das aplicações do gestor) e a ponte das páginas (30 dias). **Pontos de atenção:** tokens vencidos ou vencendo em até 14 dias e aplicações abertas a qualquer site.
 - **Listas** de aplicações, páginas e links: busca, filtros, ordenação, paginação e lista ou cards (lembrado no navegador; no celular, sempre cards). Páginas e links também ligam e desligam direto da lista e copiam a URL pública.
 - **Editores com abas**, com a aba na URL (`?tab=`), para mandar o link direto.
-- **Documentação** (`/docs`): o guia de todo o PocketRun numa página só, com índice por serviço (Geral, KV, Páginas, Links e Painel). As seções seguem a ordem de `ui/src/assets/data/docs`. A seção **llms.txt** dá o link público `{painel}/llms.txt` para colar numa IA. O endereço antigo `/kv/docs` leva para `/docs`.
+- **Documentação** (`/docs`): o guia de todo o PocketRun numa página só, com índice por serviço (Geral, KV, Páginas, Links e Painel). As seções seguem a ordem de `ui/src/assets/data/docs`. A seção **llms.txt** dá o link público `{painel}/llms.txt` para colar numa IA, e a seção **MCP para IA** explica como conectar o Claude ao servidor MCP. O endereço antigo `/kv/docs` leva para `/docs`.
 
 ### 5.3 KV
 
@@ -128,7 +131,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 
 ### 5.6 Slugs e domínios
 
-- **Slug:** letras minúsculas, números e hífen, até 64 caracteres, único na instância e dividido entre links e páginas. Pode ser sorteado (8 caracteres) ou escolhido, e a disponibilidade é conferida enquanto o gestor digita. Nomes reservados: `admin`, `api`, `apps`, `auth`, `healthz`, `kv`, `links`, `pages`, `ping`, `setup`, `static` e `validate`.
+- **Slug:** letras minúsculas, números e hífen, até 64 caracteres, único na instância e dividido entre links e páginas. Pode ser sorteado (8 caracteres) ou escolhido, e a disponibilidade é conferida enquanto o gestor digita. Nomes reservados: `admin`, `api`, `apps`, `auth`, `healthz`, `kv`, `links`, `mcp`, `pages`, `ping`, `setup`, `static` e `validate`.
 - **Domínios:** o painel, a API (`{api}`) e o domínio de links e páginas (`LINKS_URL`, `{dominio}`).
 - `LINKS_URL` é obrigatório, e links e páginas só abrem nele, para o HTML do usuário nunca rodar no domínio da API. Em `{api}/{slug}`, a resposta é `404` com a tela "Link indisponível", e a raiz `/` dos dois domínios mostra a mesma tela. No domínio de links, os caminhos que não são de slug (`/kv`, `/admin`, `/ping`) seguem para a API, então o desenvolvimento local funciona com `LINKS_URL` igual à URL da API.
 - O KV fica sempre em `{api}`, e o painel usa as rotas `/admin` da mesma API, com CORS próprio.
@@ -151,7 +154,7 @@ Um dev solo (ou time pequeno) que constrói muitas coisas pequenas e não quer u
 ### 5.9 Backup
 
 - Só superadmin, na tela **Backup**. **Exportar** baixa a instância inteira num `.jsonl.gz`: cabeçalho com formato, versão, data e contagens, um documento por linha em Extended JSON canônico e uma linha final com a contagem exata.
-- Sempre vão usuários, aplicações e documentos do KV, grupos, slugs, links, páginas com versões, PINs e dados. **Incluir análise e histórico** (ligado de início) junta aberturas, uso do KV, pedidos das páginas, visitantes únicos e histórico. Tentativas de login e de PIN nunca vão.
+- Sempre vão usuários, aplicações e documentos do KV, grupos, slugs, links, páginas com versões, PINs e dados. **Incluir análise e histórico** (ligado de início) junta aberturas, uso do KV, pedidos das páginas, visitantes únicos e histórico. Tentativas de login e de PIN e as chaves de API nunca vão.
 - **Restaurar** recebe o arquivo (até 2 GB, compactado ou não), mostra antes a data, o tipo e as contagens e pede que se digite `restaurar`. Grava em coleções temporárias e troca cada coleção do arquivo só no fim. Arquivo inválido, cortado ou sem superadmin não muda nada. Só as coleções do arquivo são trocadas, e roda uma restauração por vez.
 - O arquivo tem os hashes das senhas e dos tokens e deve ficar fora do servidor. Para os PINs e os visitantes únicos continuarem valendo, o destino precisa dos mesmos `JWT_SECRET` e `PAGE_ACCESS_SECRET`.
 

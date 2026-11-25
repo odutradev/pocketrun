@@ -29,6 +29,7 @@ Notas importantes:
 - [Configuração em JSON](/docs#page-config): PINs, proteção, dados e cargos de uma página num JSON só.
 - [Links](/docs#links): Redirecionamento, parâmetros e QR code.
 - [Ativação e limites](/docs#activation): Período, limite de acessos e contagem por clique ou visitante.
+- [MCP para IA](/docs#mcp): Servidor MCP para um assistente de IA gerenciar páginas, links e o KV com uma chave de API.
 
 ## KV: autenticação
 
@@ -302,6 +303,45 @@ Antes de gravar, a configuração inteira é conferida. Erros: `400 validation_f
 - No modo `clicks`, a contagem é por clique (cada abertura conta) ou por visitante único (cada pessoa conta uma vez).
 - Robôs, prévias de link e `HEAD` nunca gastam o limite. Fora da regra, o endereço responde `404` com a tela "Link indisponível" ou "Página indisponível", e o slug continua reservado.
 - Datas da regra (`startsAt`, `endsAt`) e o limite (`maxClicks`) são definidos no painel. Quem abre o endereço não vê a regra, só o resultado.
+
+## MCP: gerenciar pelo assistente de IA
+
+`{api}/mcp` é um servidor MCP (Streamable HTTP, JSON-RPC 2.0 sem sessão) para um assistente de IA gerenciar a instância em nome de um gestor: páginas, links, grupos, aplicações do KV, cargos, tokens e PINs. Cada ferramenta faz o mesmo que a rota `/admin` do painel, com as mesmas validações e os mesmos códigos de erro.
+
+- Autenticação: `Authorization: Bearer prk_...`, uma chave de API gerada no painel, em **Perfil › Chaves de API para IA**. Sem chave: `401 missing_authorization`. Chave inválida ou revogada: `401 invalid_api_key`. O token `pk_live_` do KV não serve aqui.
+- Só `POST`, com uma mensagem JSON-RPC (ou um lote de até 20) de até 4 MB. Notificações respondem `202`. `GET` e `DELETE` respondem `405`.
+- Métodos: `initialize`, `ping`, `tools/list` e `tools/call`. O resultado de `tools/call` traz em `content[0].text` o JSON da rota do painel; com erro, `isError: true` e o texto `HTTP {status}: {"error":"codigo"}`.
+- A permissão da chave decide as ferramentas: `read` (listar e ler), `write` (também criar e editar) e `full` (também apagar, revogar, trocar e mostrar PINs).
+- Nomes das ferramentas: `pages_*`, `page_groups_*`, `links_*`, `link_groups_*`, `kv_*`, `overview_usage` e `whoami`. Os argumentos de caminho (`id`, `keyId`, `tokenId`, `role`, `collection`, `number`) e de busca vão no nível de cima; o corpo da rota vai em `body`.
+- `pages_update` e `links_update` trocam todos os campos: leia antes com `pages_get` ou `links_get` e mande de volta o que deve continuar. `pages_config_apply` e `kv_app_config_apply` recebem os JSONs das seções de configuração deste arquivo.
+
+Configuração do Claude Code (`.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "pocketrun": {
+      "type": "http",
+      "url": "{api}/mcp",
+      "headers": { "Authorization": "Bearer prk_..." }
+    }
+  }
+}
+```
+
+Configuração do Claude Desktop (`claude_desktop_config.json`, precisa do Node.js):
+
+```json
+{
+  "mcpServers": {
+    "pocketrun": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "{api}/mcp", "--header", "Authorization:${POCKETRUN_AUTH}"],
+      "env": { "POCKETRUN_AUTH": "Bearer prk_..." }
+    }
+  }
+}
+```
 
 ## Optional
 

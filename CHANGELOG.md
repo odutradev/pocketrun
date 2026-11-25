@@ -4,6 +4,14 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+- **Servidor MCP** em `{api}/mcp`: o Claude ou outro assistente de IA gerencia páginas, links, grupos, aplicações do KV, cargos, tokens e PINs conversando, com as mesmas regras do painel.
+- **Chaves de API para IA** no Perfil, com permissão só leitura, leitura e escrita ou total. Ao gerar, o painel mostra a configuração pronta para o Claude Code e o Claude Desktop.
+- Seção **MCP para IA** na Documentação (`/docs#mcp`) e no `llms.txt`, com o JSON para adicionar no Claude.
+- Rotas `GET /admin/auth/api-keys/list`, `POST /admin/auth/api-keys/create` e `DELETE /admin/auth/api-keys/{id}/delete`.
+- `mcp` virou slug reservado.
+
 ## 1.8.5 (2026-11-24)
 
 - Aba **JSON** nas aplicações do KV, que exporta e aplica nome, descrição, origens, chamadas fora do navegador, cargos e o cargo de cada token num JSON só, validado enquanto você digita. O formato está no `llms.txt` e na Documentação (`/docs#kv-config`), para uma IA gerar a configuração.

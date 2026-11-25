@@ -51,6 +51,8 @@ O **painel** junta tudo isso: visão geral do uso, usuários (gestores e superad
 
 > [!TIP]
 > O [`llms.txt`](llms.txt) descreve cada rota, payload e erro dos serviços. Cole o link `{painel}/llms.txt` numa IA junto com o seu pedido, e ela consegue montar o cliente ou a página para você.
+>
+> Para a IA gerenciar a instância direto, gere uma chave em **Perfil › Chaves de API para IA** e conecte o Claude ao servidor MCP em `{api}/mcp`. A tela já mostra o JSON pronto, e a Documentação explica cada passo (`/docs#mcp`).
 
 ## Rodando localmente
 
