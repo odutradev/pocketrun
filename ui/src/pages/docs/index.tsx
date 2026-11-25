@@ -5,6 +5,7 @@ import PageIntroSection from "./sections/pageIntro";
 import DocumentsSection from "./sections/documents";
 import AggregateSection from "./sections/aggregate";
 import AnalyticsSection from "./sections/analytics";
+import PageConfigSection from "./sections/pageConfig";
 import PageDataSection from "./sections/pageData";
 import TransferSection from "./sections/transfer";
 import SecuritySection from "./sections/security";
@@ -75,6 +76,7 @@ const DocsPage = () => {
           <EditorSection />
           <AccessSection />
           <PageDataSection />
+          <PageConfigSection />
           <ExampleSection />
           <LinksSection />
           <ActivationSection />

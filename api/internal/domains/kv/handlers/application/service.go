@@ -32,7 +32,7 @@ func (s *Service) EnsureForPage(ctx context.Context, managerID bson.ObjectID, in
 		PageID:                  &pageID,
 		Name:                    pageName(input.Title),
 		ProjectID:               pageProjectIDTag + pageID.Hex(),
-		Description:             fmt.Sprintf("Dados da página /%s, criada pela aba Dados do Pages.", input.Slug),
+		Description:             fmt.Sprintf("Dados da página /%s, criada pela aba Acesso e dados das Páginas.", input.Slug),
 		AllowedOrigins:          []string{},
 		AllowNonBrowserRequests: false,
 		Tokens:                  []applicationrepository.Token{},

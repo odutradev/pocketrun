@@ -103,7 +103,7 @@ const AppForm = ({ application }: AppFormProps) => {
     <Form onSubmit={handleSubmit} noValidate>
       {application?.pageId && (
         <Alert tone="neutral" title="Aplicação de uma página">
-          Foi criada pela aba Dados de uma página e guarda os dados dela. Os cargos daqui valem para a página. Ela é apagada junto com a página.
+          Foi criada pela aba Acesso e dados de uma página e guarda os dados dela. Os cargos daqui valem para a página e também são editados lá. Ela é apagada junto com a página.
         </Alert>
       )}
       <Section>

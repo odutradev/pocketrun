@@ -6,7 +6,7 @@ import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, B
 import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
-import type { KvDocError, KvDocMethod, KvDocRoute } from "@utils/types/kvDocs";
+import type { KvDocError, KvDocMethod, KvDocRoute, PageConfigDocField } from "@utils/types/kvDocs";
 import type { BackupGroup, BackupScope } from "@utils/types/backup";
 import type { Permission, UserRole } from "@utils/types/user";
 import type { BadgeTone } from "@components/badge/types";
@@ -1095,8 +1095,8 @@ export const kvCrudPageHtml = `<!doctype html>
     elements.form.addEventListener("submit", addTask);
     elements.reload.addEventListener("click", loadTasks);
 
-    if (!tasks) showSetup("Falta configurar: no editor desta página, abra a aba Dados e ligue uma aplicação do KV. Nenhum token vai para este HTML.");
-    else if (!can("read")) showSetup("O seu acesso a esta página não tem cargo com leitura na coleção " + COLLECTION + ". Ajuste o cargo na aba Dados do editor.");
+    if (!tasks) showSetup("Falta configurar: no editor desta página, abra a aba Acesso e dados e ative os dados. Nenhum token vai para este HTML.");
+    else if (!can("read")) showSetup("O seu acesso a esta página não tem cargo com leitura na coleção " + COLLECTION + ". Ajuste o cargo na aba Acesso e dados do editor.");
     else {
       if (!can("create")) disableForm();
       loadTasks();
@@ -1111,7 +1111,7 @@ export const pageTemplateOptions: { value: PageTemplate; label: string; descript
   {
     value: "kvCrud",
     label: "CRUD com KV",
-    description: "Uma lista de tarefas que cria, lista, edita, conclui e apaga documentos na coleção tarefas do KV, com pocketrun.kv. Depois de criar, ligue uma aplicação na aba Dados: nenhum token vai para o HTML.",
+    description: "Uma lista de tarefas que cria, lista, edita, conclui e apaga documentos na coleção tarefas do KV, com pocketrun.kv. Depois de criar, ative os dados na aba Acesso e dados: nenhum token vai para o HTML.",
     html: kvCrudPageHtml
   }
 ];
@@ -1343,3 +1343,24 @@ export const pageConfigJsonSchema: Record<string, unknown> = {
     }
   }
 };
+
+export const pageConfigDocFields: PageConfigDocField[] = [
+  { path: "version", type: "1", description: "Opcional. Versão do formato, hoje sempre 1." },
+  { path: "access", type: "objeto", description: "Opcional. Sem ele, o acesso não muda." },
+  { path: "access.isEnabled", type: "boolean", description: "Pede PIN para abrir a página. Ligar exige ao menos um PIN. Sem o campo, o primeiro PIN liga a proteção." },
+  { path: "access.sessionHours", type: "1 a 720", description: "Horas que o acesso dura depois do PIN certo." },
+  { path: "access.pins", type: "lista, até 20", description: "A lista completa de PINs. Um PIN fora da lista é apagado. Sem a lista, os PINs não mudam." },
+  { path: "access.pins[].role", type: "texto", description: "\"\" é o PIN geral. Outro nome é um PIN de cargo: minúsculas, números e hífen, sem repetir." },
+  { path: "access.pins[].pin", type: "6 números", description: "Opcional. Sem sequência nem repetição. Sem ele, mantém o PIN atual ou sorteia um para PIN novo." },
+  { path: "access.pins[].kvRole", type: "texto", description: "Opcional. Cargo dos dados desse PIN: admin, um cargo de kv.roles ou \"\" para sem acesso." },
+  { path: "kv", type: "objeto", description: "Opcional. Sem ele, os dados não mudam." },
+  { path: "kv.isEnabled", type: "boolean", description: "Liga os dados. A primeira vez cria leitura, escrita e gestao. Desligar mantém documentos e cargos." },
+  { path: "kv.publicRole", type: "texto", description: "Cargo de quem abre sem PIN. Só vale com a proteção desligada." },
+  { path: "kv.roles", type: "lista, até 20", description: "A lista completa de cargos. Cargo fora da lista é apagado e os PINs dele ficam sem acesso. admin é fixo." },
+  { path: "kv.roles[].name", type: "texto", description: "Minúsculas, números e hífen, até 40 caracteres, diferente de admin." },
+  { path: "kv.roles[].description", type: "texto", description: "Opcional, até 200 caracteres." },
+  { path: "kv.roles[].isOwnDocumentsOnly", type: "boolean", description: "Opcional. O cargo vê, edita e apaga só o que ele mesmo criou." },
+  { path: "kv.roles[].rules[].collection", type: "texto", description: "Nome da coleção ou * para todas sem regra própria. Cada coleção uma vez, de 1 a 30 regras." },
+  { path: "kv.roles[].rules[].operations", type: "lista", description: "De 1 a 4 entre read, create, update e delete." },
+  { path: "kv.roles[].rules[].maxDocuments", type: "número", description: "Opcional. Limite de documentos na coleção, 0 é sem limite." }
+];

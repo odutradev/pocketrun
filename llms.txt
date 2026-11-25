@@ -25,6 +25,7 @@ Notas importantes:
 - [Páginas](/docs#pages): HTML, slug, `window.pocketrun` e versões.
 - [Dados com pocketrun.kv](/docs#page-data): KV dentro da página, sem token.
 - [Acesso com PIN](/docs#access): Proteção da página e cargos por PIN.
+- [Configuração em JSON](/docs#page-config): PINs, proteção, dados e cargos de uma página num JSON só.
 - [Links](/docs#links): Redirecionamento, parâmetros e QR code.
 - [Ativação e limites](/docs#activation): Período, limite de acessos e contagem por clique ou visitante.
 
@@ -151,7 +152,7 @@ Authorization: Bearer pk_live_xxx
 }
 ```
 
-- `access.role` é o cargo do PIN usado (`""` no PIN geral e `null` sem proteção). `pocketrun.kv` só existe quando a página tem dados ativados na aba Dados.
+- `access.role` é o cargo do PIN usado (`""` no PIN geral e `null` sem proteção). `pocketrun.kv` só existe quando a página tem dados ativados na aba Acesso e dados.
 - Com PIN, o visitante vê uma tela de PIN antes do HTML. O acesso fica num cookie da página, que o JavaScript não lê, pelo tempo configurado (1 hora a 30 dias).
 - Para sair, `await pocketrun.access.logout()` apaga o acesso deste navegador e depois `location.reload()` mostra a tela de PIN de novo. Por baixo é `POST {dominio}/{slug}/_/access/logout` com o header `X-Pocketrun-Page: 1`, da mesma origem, que responde `{ "message": "Page access ended" }`. Erros viram `Error` com `name: "PocketrunAccessError"`, `code` e `status`: `403 invalid_client` (chamada de outro endereço) e `404 page_not_found`. Na prévia do editor, não faz nada.
 
@@ -183,6 +184,64 @@ if (pocketrun.kv.can("pedidos", "delete")) mostrarBotaoApagar();
 - Pela página só há operações de documento: limpar coleção, importar e exportar ficam de fora. Corpo de até 256 KB.
 - Por baixo, as chamadas vão para `{dominio}/{slug}/_/kv/{colecao}/...` com o header `X-Pocketrun-Page: 1` e só da mesma origem. Não chame esse endereço de outro site.
 - Na prévia do editor, as chamadas passam pelo painel com o cargo escolhido em "Ver como".
+
+## Páginas: configuração de acesso e dados em JSON
+
+Os PINs, a proteção, os dados e os cargos de uma página cabem num JSON só. Gere esse JSON e cole na aba **Acesso e dados** da página, no modo **JSON**, e clique em **Aplicar**. Pelo painel, o mesmo JSON vai em `POST {api}/admin/pages/{id}/config/apply` (sessão do gestor), e `GET {api}/admin/pages/{id}/config/export` devolve a configuração atual no mesmo formato.
+
+```json
+{
+  "version": 1,
+  "access": {
+    "isEnabled": true,
+    "sessionHours": 24,
+    "pins": [
+      { "role": "", "pin": "604918", "kvRole": "leitor" },
+      { "role": "equipe", "kvRole": "equipe" },
+      { "role": "gerente", "kvRole": "admin" }
+    ]
+  },
+  "kv": {
+    "isEnabled": true,
+    "publicRole": "",
+    "roles": [
+      { "name": "leitor", "description": "Só vê o cardápio", "rules": [{ "collection": "*", "operations": ["read"] }] },
+      {
+        "name": "equipe",
+        "description": "Registra pedidos",
+        "isOwnDocumentsOnly": false,
+        "rules": [
+          { "collection": "pedidos", "operations": ["read", "create", "update"], "maxDocuments": 5000 },
+          { "collection": "cardapio", "operations": ["read"] }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Campos:
+
+- `version`: opcional, sempre `1`.
+- `access`: opcional. Sem ele, o acesso não muda.
+  - `isEnabled`: pede PIN para abrir a página. `true` exige ao menos um PIN. Sem o campo, fica como está (e o primeiro PIN liga a proteção).
+  - `sessionHours`: horas que o acesso dura depois do PIN certo, de `1` a `720`.
+  - `pins`: a lista completa de PINs, até 20. Um PIN fora da lista é apagado e quem entrou com ele perde o acesso. Sem a lista, os PINs não mudam.
+  - `pins[].role`: `""` é o PIN geral (no máximo um). Outro valor é um PIN de cargo, com letras minúsculas, números e hífen, até 64 caracteres, sem repetir.
+  - `pins[].pin`: opcional. 6 números, sem sequência (`123456`, `654321`) nem repetição (`111111`, `121212`, `123123`), diferente dos outros PINs da página. Sem `pin`, um PIN que já existe fica com o atual e um PIN novo ganha um sorteado, devolvido em `issued`. Trocar o PIN encerra os acessos dele.
+  - `pins[].kvRole`: opcional. O cargo dos dados de quem abre com esse PIN: `admin`, um `name` de `kv.roles` ou `""` (sem acesso aos dados). Sem o campo, fica o cargo atual.
+- `kv`: opcional. Sem ele, os dados não mudam.
+  - `isEnabled`: liga os dados da página (`pocketrun.kv`). Ligar pela primeira vez cria a aplicação da página com os cargos `leitura`, `escrita` e `gestao`, quem abre sem PIN com `leitura` e cada PIN com `escrita`. `false` desliga e mantém documentos e cargos.
+  - `publicRole`: cargo de quem abre sem PIN, com os mesmos valores de `kvRole`. Só vale com a proteção desligada.
+  - `roles`: a lista completa de cargos, até 20. Um cargo fora da lista é apagado, e os PINs que usavam ele ficam sem acesso aos dados. `admin` é fixo, tem acesso total e não entra na lista.
+  - `roles[].name`: letras minúsculas, números e hífen, até 40 caracteres, sem repetir e diferente de `admin`.
+  - `roles[].description`: opcional, até 200 caracteres.
+  - `roles[].isOwnDocumentsOnly`: opcional. O cargo vê, edita e apaga só o que ele mesmo criou.
+  - `roles[].rules`: de 1 a 30 regras, cada coleção uma vez. `collection` é o nome da coleção (letras, números, `_` e `-`, até 64) ou `*` para todas as coleções sem regra própria. `operations` tem de 1 a 4 entre `read`, `create`, `update` e `delete`. `maxDocuments` é opcional: o limite de documentos na coleção, `0` é sem limite.
+
+Resposta `200`: `{ "config": { ...configuração atual... }, "issued": [{ "role": "equipe", "pin": "517302" }] }`. A exportação nunca traz os PINs.
+
+Antes de gravar, a configuração inteira é conferida. Erros: `400 validation_failed` (campo fora do formato, com `fields`), `400 invalid_body` (JSON malformado), `400 invalid_role` (nome de PIN inválido), `400 invalid_pin`, `400 weak_pin`, `400 no_access_keys` (proteção ligada sem PIN), `400 too_many_access_keys`, `409 role_taken` (nome repetido), `409 pin_in_use` (PIN repetido), `400 role_not_found` (`kvRole` ou `publicRole` que não existe), `400 role_reserved` (cargo chamado `admin`), `400 invalid_role_name`, `400 invalid_rule`, `409 too_many_roles`, `409 role_in_use` (um token do KV usa o cargo apagado), `409 kv_application_not_owned` (a página usa uma aplicação comum do KV: edite os cargos no KV) e `404 kv_application_missing`.
 
 ## Links
 

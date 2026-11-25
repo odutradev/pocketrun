@@ -107,7 +107,7 @@ const TokensTab = () => {
           <Rules>
             <li>O token completo aparece uma vez só, quando é gerado. O servidor guarda apenas um hash, e a lista mostra só o prefixo.</li>
             <li>O cargo do token limita o que ele faz em cada coleção. Um token admin lê, grava e apaga tudo desta aplicação.</li>
-            <li>Um token num site ou app de navegador fica visível no código. Para páginas do PocketRun, ligue a aplicação na aba Dados da página: nenhum token vai para o HTML.</li>
+            <li>Um token num site ou app de navegador fica visível no código. Para páginas do PocketRun, ative os dados na aba Acesso e dados da página: nenhum token vai para o HTML.</li>
             <li>Gere um token por cliente, com validade, para revogar um sem derrubar os outros.</li>
             <li>Revogar corta o acesso na hora. Não dá para desfazer: o cliente precisa de um token novo.</li>
           </Rules>

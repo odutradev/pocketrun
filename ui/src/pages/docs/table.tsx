@@ -3,7 +3,7 @@ import { MutedText, RoutePath } from "./styles";
 import Badge from "@components/badge";
 
 import type { DataTableColumn } from "@components/dataTable/types";
-import type { KvDocError, KvDocRoute } from "@utils/types/kvDocs";
+import type { KvDocError, KvDocRoute, PageConfigDocField } from "@utils/types/kvDocs";
 
 export const routeColumns: DataTableColumn<KvDocRoute>[] = [
   {
@@ -18,6 +18,12 @@ export const routeColumns: DataTableColumn<KvDocRoute>[] = [
   { key: "path", header: "Rota", render: (route) => <RoutePath>{route.path}</RoutePath> },
   { key: "description", header: "O que faz", render: (route) => <MutedText>{route.description}</MutedText> },
   { key: "response", header: "Sucesso", align: "right", render: (route) => <MutedText>{route.response}</MutedText> }
+];
+
+export const pageConfigFieldColumns: DataTableColumn<PageConfigDocField>[] = [
+  { key: "path", header: "Campo", render: (field) => <RoutePath>{field.path}</RoutePath> },
+  { key: "type", header: "Valor", render: (field) => <MutedText>{field.type}</MutedText> },
+  { key: "description", header: "O que faz", render: (field) => <MutedText>{field.description}</MutedText> }
 ];
 
 export const errorColumns: DataTableColumn<KvDocError>[] = [

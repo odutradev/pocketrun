@@ -6,7 +6,7 @@ const SecuritySection = () => (
   <DocSection id="security">
     <Alert tone="warning" title="Token no navegador é público">
       Um token usado num site ou app de navegador aparece no código para quem abrir. Quem copiar consegue tudo o que o cargo dele permite.
-      Para páginas do PocketRun, ligue a aplicação na aba Dados da página: nenhum token vai para o HTML.
+      Para páginas do PocketRun, ative os dados na aba Acesso e dados da página: nenhum token vai para o HTML.
     </Alert>
     <Bullets>
       <li>A lista de origens só segura navegadores. Um script fora deles manda a origem que quiser.</li>

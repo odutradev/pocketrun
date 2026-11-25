@@ -29,6 +29,7 @@ export const docSections: DocSectionEntry[] = [
   { id: "editor", label: "Editor e versões", group: "pages" },
   { id: "access", label: "Acesso com PIN", group: "pages" },
   { id: "page-data", label: "Dados com pocketrun.kv", group: "pages" },
+  { id: "page-config", label: "Configuração em JSON", group: "pages" },
   { id: "example", label: "Página de exemplo", group: "pages" },
   { id: "links", label: "O que são os links", group: "links" },
   { id: "activation", label: "Ativação e limites", group: "links" },

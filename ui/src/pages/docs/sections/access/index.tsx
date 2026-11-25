@@ -6,7 +6,7 @@ const AccessSection = () => (
   <DocSection id="access">
     <Bullets>
       <li>
-        A aba <strong>Acesso</strong> protege a página com PINs de 6 números. Há um PIN geral opcional e PINs por cargo, como{" "}
+        A aba <strong>Acesso e dados</strong> protege a página com PINs de 6 números. Há um PIN geral opcional e PINs por cargo, como{" "}
         <Code>gerente</Code> ou <Code>caixa-1</Code>, até 20 no total.
       </li>
       <li>
