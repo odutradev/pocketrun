@@ -19,6 +19,7 @@ import (
 	pagehistory "pocketrun-api/internal/domains/page/handlers/history"
 	"pocketrun-api/internal/domains/page/handlers/page"
 	"pocketrun-api/internal/domains/page/handlers/version"
+	"pocketrun-api/internal/domains/user/handlers/apikey"
 	"pocketrun-api/internal/domains/user/handlers/setup"
 	"pocketrun-api/internal/domains/user/handlers/user"
 	"pocketrun-api/internal/domains/user/utils/jwt"
@@ -32,6 +33,7 @@ type services struct {
 	signer        *jwt.Signer
 	session       sessioncookie.Cookie
 	users         *user.Service
+	apiKeys       *apikey.Service
 	setup         *setup.Service
 	applications  *application.Service
 	documents     *kvdocument.Service
@@ -118,6 +120,7 @@ func newServices(cfg config.Config, repos repositories, logger *slog.Logger) ser
 		signer:        signer,
 		session:       sessioncookie.New(cfg.AllowsHTTP()),
 		users:         users,
+		apiKeys:       apikey.NewService(apikey.Dependencies{Repository: repos.apiKeys, Users: users, Logger: logger}),
 		setup:         setup.NewService(users, logger),
 		applications:  applications,
 		documents:     documents,

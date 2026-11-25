@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	apikeyrepository "pocketrun-api/internal/repositories/apikey"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	backuprepository "pocketrun-api/internal/repositories/backup"
 	eventrepository "pocketrun-api/internal/repositories/event"
@@ -31,6 +32,7 @@ type Indexer interface {
 
 type repositories struct {
 	users             *userrepository.MongoRepository
+	apiKeys           *apikeyrepository.MongoRepository
 	loginAttempts     *loginattemptrepository.MongoRepository
 	applications      *applicationrepository.MongoRepository
 	documents         *kvdocumentrepository.MongoRepository
@@ -55,6 +57,7 @@ type repositories struct {
 func newRepositories(db *database.Mongo) repositories {
 	return repositories{
 		users:             userrepository.NewMongoRepository(db.Collection("users")),
+		apiKeys:           apikeyrepository.NewMongoRepository(db.Collection("apiKeys")),
 		loginAttempts:     loginattemptrepository.NewMongoRepository(db.Collection("loginAttempts")),
 		applications:      applicationrepository.NewMongoRepository(db.Collection("applications")),
 		documents:         kvdocumentrepository.NewMongoRepository(db.Collection("kvDocuments")),
@@ -79,7 +82,7 @@ func newRepositories(db *database.Mongo) repositories {
 
 func (r repositories) indexers() []Indexer {
 	return []Indexer{
-		r.users, r.loginAttempts, r.applications, r.documents, r.usage, r.uniqueVisitors, r.slugs, r.groups,
+		r.users, r.apiKeys, r.loginAttempts, r.applications, r.documents, r.usage, r.uniqueVisitors, r.slugs, r.groups,
 		r.links, r.linkEvents, r.linkOpens,
 		r.pages, r.pageVersions, r.pageEvents, r.pageOpens, r.pageAccessAttempt,
 		r.pageBindings, r.pageKVRequests,
