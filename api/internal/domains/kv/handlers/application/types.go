@@ -132,3 +132,95 @@ type TokenRoleInput struct {
 func (i *TokenRoleInput) Normalize() {
 	i.Role = strings.ToLower(strings.TrimSpace(i.Role))
 }
+
+const (
+	ConfigVersion   = 1
+	MaxConfigTokens = 200
+)
+
+var ErrInvalidConfig = errors.New("invalid application config")
+
+type TokenConfigInput struct {
+	ID   string `json:"id" validate:"required,max=64"`
+	Role string `json:"role" validate:"required,max=40"`
+}
+
+type ConfigInput struct {
+	Version                 int                `json:"version" validate:"omitempty,eq=1"`
+	Name                    *string            `json:"name" validate:"omitempty,min=1,max=100"`
+	Description             *string            `json:"description" validate:"omitempty,max=500"`
+	AllowedOrigins          []string           `json:"allowedOrigins" validate:"omitempty,dive,required"`
+	AllowNonBrowserRequests *bool              `json:"allowNonBrowserRequests"`
+	Roles                   []RoleInput        `json:"roles" validate:"max=20,dive"`
+	Tokens                  []TokenConfigInput `json:"tokens" validate:"max=200,dive"`
+}
+
+func (i *ConfigInput) Normalize() {
+	if i.Name != nil {
+		name := strings.TrimSpace(*i.Name)
+		i.Name = &name
+	}
+	if i.Description != nil {
+		description := strings.TrimSpace(*i.Description)
+		i.Description = &description
+	}
+	for index := range i.AllowedOrigins {
+		i.AllowedOrigins[index] = strings.TrimSpace(i.AllowedOrigins[index])
+	}
+	for index := range i.Roles {
+		i.Roles[index].Normalize()
+	}
+	for index := range i.Tokens {
+		i.Tokens[index].ID = strings.TrimSpace(i.Tokens[index].ID)
+		i.Tokens[index].Role = strings.ToLower(strings.TrimSpace(i.Tokens[index].Role))
+	}
+}
+
+type RoleConfig struct {
+	Name               string                       `json:"name"`
+	Description        string                       `json:"description"`
+	IsOwnDocumentsOnly bool                         `json:"isOwnDocumentsOnly"`
+	Rules              []applicationrepository.Rule `json:"rules"`
+}
+
+type TokenConfig struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+type Config struct {
+	Version                 int           `json:"version"`
+	ProjectID               string        `json:"projectId"`
+	Name                    string        `json:"name"`
+	Description             string        `json:"description"`
+	AllowedOrigins          []string      `json:"allowedOrigins"`
+	AllowNonBrowserRequests bool          `json:"allowNonBrowserRequests"`
+	Roles                   []RoleConfig  `json:"roles"`
+	Tokens                  []TokenConfig `json:"tokens"`
+}
+
+func NewConfig(app *applicationrepository.Application) Config {
+	roleList := make([]RoleConfig, 0, len(app.Roles))
+	for _, role := range app.Roles {
+		roleList = append(roleList, RoleConfig{Name: role.Name, Description: role.Description, IsOwnDocumentsOnly: role.IsOwnDocumentsOnly, Rules: role.Rules})
+	}
+	tokens := make([]TokenConfig, 0, len(app.Tokens))
+	for _, token := range app.Tokens {
+		tokens = append(tokens, TokenConfig{ID: token.ID, Name: token.Name, Role: token.RoleName()})
+	}
+	origins := app.AllowedOrigins
+	if origins == nil {
+		origins = []string{}
+	}
+	return Config{
+		Version:                 ConfigVersion,
+		ProjectID:               app.ProjectID,
+		Name:                    app.Name,
+		Description:             app.Description,
+		AllowedOrigins:          origins,
+		AllowNonBrowserRequests: app.AllowNonBrowserRequests,
+		Roles:                   roleList,
+		Tokens:                  tokens,
+	}
+}

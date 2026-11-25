@@ -464,3 +464,95 @@ func (s *Service) TouchToken(ctx context.Context, id bson.ObjectID, hash string)
 	}
 	return nil
 }
+
+func (s *Service) ExportConfig(ctx context.Context, managerID, id bson.ObjectID) (Config, error) {
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return Config{}, fmt.Errorf("export config of application %s: %w", id.Hex(), err)
+	}
+	return NewConfig(application), nil
+}
+
+func (s *Service) ApplyConfig(ctx context.Context, managerID, id bson.ObjectID, input ConfigInput) (Config, error) {
+	application, err := s.repository.FindByID(ctx, managerID, id)
+	if err != nil {
+		return Config{}, fmt.Errorf("apply config of application %s: %w", id.Hex(), err)
+	}
+
+	planned := *application
+	planned.Tokens = slices.Clone(application.Tokens)
+	tokenRoles, err := planTokenRoles(&planned, input)
+	if err != nil {
+		return Config{}, err
+	}
+	nextRoles := application.Roles
+	if input.Roles != nil {
+		nextRoles, err = ReplaceRoles(&planned, input.Roles, time.Now())
+		if err != nil {
+			return Config{}, err
+		}
+	}
+
+	settings := applicationrepository.UpdateInput{Name: application.Name, Description: application.Description, AllowedOrigins: application.AllowedOrigins, AllowNonBrowserRequests: application.AllowNonBrowserRequests}
+	if input.Name != nil {
+		settings.Name = *input.Name
+	}
+	if input.Description != nil {
+		settings.Description = *input.Description
+	}
+	if input.AllowedOrigins != nil {
+		settings.AllowedOrigins = input.AllowedOrigins
+	}
+	if input.AllowNonBrowserRequests != nil {
+		settings.AllowNonBrowserRequests = *input.AllowNonBrowserRequests
+	}
+
+	if err := s.repository.Update(ctx, managerID, id, settings); err != nil {
+		return Config{}, fmt.Errorf("apply config of application %s: %w", id.Hex(), err)
+	}
+	for tokenID, role := range tokenRoles {
+		if err := s.repository.SetTokenRole(ctx, managerID, id, tokenID, role); err != nil {
+			return Config{}, fmt.Errorf("apply config of application %s: %w", id.Hex(), err)
+		}
+	}
+	if input.Roles != nil {
+		if err := s.repository.SetRoles(ctx, managerID, id, nextRoles); err != nil {
+			return Config{}, fmt.Errorf("apply config of application %s: %w", id.Hex(), err)
+		}
+	}
+	return s.ExportConfig(ctx, managerID, id)
+}
+
+func planTokenRoles(planned *applicationrepository.Application, input ConfigInput) (map[string]string, error) {
+	names := map[string]bool{applicationrepository.AdminRole: true}
+	for _, role := range planned.Roles {
+		names[role.Name] = true
+	}
+	if input.Roles != nil {
+		names = map[string]bool{applicationrepository.AdminRole: true}
+		for _, role := range input.Roles {
+			names[role.Name] = true
+		}
+	}
+
+	changes := map[string]string{}
+	for _, wanted := range input.Tokens {
+		if _, seen := changes[wanted.ID]; seen {
+			return nil, ErrInvalidConfig
+		}
+		if !names[wanted.Role] {
+			return nil, ErrRoleNotFound
+		}
+		index := slices.IndexFunc(planned.Tokens, func(token applicationrepository.Token) bool { return token.ID == wanted.ID })
+		if index < 0 {
+			return nil, ErrTokenNotFound
+		}
+		stored := wanted.Role
+		if stored == applicationrepository.AdminRole {
+			stored = ""
+		}
+		changes[wanted.ID] = stored
+		planned.Tokens[index].Role = stored
+	}
+	return changes, nil
+}

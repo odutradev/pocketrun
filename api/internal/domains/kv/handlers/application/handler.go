@@ -38,6 +38,8 @@ func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handl
 	mux.Handle("POST /apps/{id}/roles/create", authenticate(http.HandlerFunc(h.createRole)))
 	mux.Handle("PATCH /apps/{id}/roles/{role}/update", authenticate(http.HandlerFunc(h.updateRole)))
 	mux.Handle("DELETE /apps/{id}/roles/{role}/delete", authenticate(http.HandlerFunc(h.deleteRole)))
+	mux.Handle("GET /apps/{id}/config/export", authenticate(http.HandlerFunc(h.exportConfig)))
+	mux.Handle("POST /apps/{id}/config/apply", authenticate(http.HandlerFunc(h.applyConfig)))
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
@@ -258,6 +260,42 @@ func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) exportConfig(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "export application config", err)
+		return
+	}
+
+	exported, err := h.service.ExportConfig(r.Context(), managerID, id)
+	if err != nil {
+		h.writeError(w, r, "export application config", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, exported)
+}
+
+func (h *Handler) applyConfig(w http.ResponseWriter, r *http.Request) {
+	managerID, id, err := parseIDs(r)
+	if err != nil {
+		h.writeError(w, r, "apply application config", err)
+		return
+	}
+
+	var input ConfigInput
+	if err := httpx.Decode(w, r, h.validate, &input); err != nil {
+		httpx.WriteDecodeError(w, err)
+		return
+	}
+
+	applied, err := h.service.ApplyConfig(r.Context(), managerID, id, input)
+	if err != nil {
+		h.writeError(w, r, "apply application config", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, applied)
+}
+
 func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {
 	if errors.Is(err, user.ErrInvalidToken) {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
@@ -297,6 +335,8 @@ func ErrorStatus(err error) (int, string, bool) {
 		return http.StatusConflict, "application_owned_by_page", true
 	case errors.Is(err, ErrRoleInUse):
 		return http.StatusConflict, "role_in_use", true
+	case errors.Is(err, ErrInvalidConfig):
+		return http.StatusBadRequest, "invalid_config", true
 	}
 	return 0, "", false
 }
