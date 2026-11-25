@@ -11,8 +11,8 @@ type Services struct {
 	APIKeys *apikey.Service
 }
 
-func Register(router httpx.Router, services Services) {
-	service := rpc.NewService(rpc.Dependencies{Admin: router.Admin, Logger: router.Logger})
+func Register(router httpx.Router, services Services, pagesURL string) {
+	service := rpc.NewService(rpc.Dependencies{Admin: router.Admin, PagesURL: pagesURL, Logger: router.Logger})
 	authenticate := apikeyauth.Authenticate(services.APIKeys, apikey.ErrInvalidKey, router.Logger)
 	handler := rpc.NewHandler(service, router.Logger)
 	handler.Register(router.Public, authenticate)

@@ -18,8 +18,12 @@ const (
 	MethodNotFound  = -32601
 	InvalidParams   = -32602
 	InternalError   = -32603
-	Instructions    = "PocketRun hosts HTML pages, short links and KV data. Tools mirror the panel: pages_* manage pages (HTML, activation, PIN access, data), links_* manage short links, kv_* manage KV applications, roles and tokens. Read before you update: updates replace every field. The JSON config tools follow the formats in /llms.txt of the panel."
+	Instructions    = "PocketRun hosts HTML pages, short links and KV data. Call the docs tool first: it returns the complete guide (in Portuguese) with this instance's addresses, the window.pocketrun.kv API for page HTML, KV roles and filters, the PIN and data config JSON, links, activation, errors and step-by-step recipes for these tools. Tools mirror the panel: pages_* manage pages (HTML, activation, PIN access, data), links_* manage short links, kv_* manage KV applications, roles and tokens. Read before you update: updates replace every field."
 	successfulReply = "ok"
+
+	DocsToolName        = "docs"
+	DocsToolTitle       = "PocketRun guide"
+	DocsToolDescription = "Returns the complete PocketRun guide for AI agents, in Portuguese: how pages, the page runtime (window.pocketrun.kv), KV applications, roles, PIN access, links and activation work, every config JSON format, error codes and recipes for these tools, opened by this instance's API and pages addresses. Read it before building a page with data or changing roles and PINs. Pass section to get only one part."
 )
 
 var ErrInvalidBatch = errors.New("invalid batch size")
@@ -91,6 +95,10 @@ type ToolsList struct {
 type CallParams struct {
 	Name      string          `json:"name"`
 	Arguments json.RawMessage `json:"arguments"`
+}
+
+type DocsArguments struct {
+	Section string `json:"section"`
 }
 
 type CallResult struct {

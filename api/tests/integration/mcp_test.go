@@ -3,6 +3,7 @@ package integration
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"pocketrun-api/tests/testenv"
@@ -167,6 +168,45 @@ func TestMCPToolCall(t *testing.T) {
 	}
 
 	env.Expect(env.Admin(http.MethodGet, "/pages/"+page.ID+"/details", nil), http.StatusOK, "panel sees page created by mcp")
+}
+
+func TestMCPDocsTool(t *testing.T) {
+	env := testenv.Start(t)
+	env.Setup()
+	key := createAPIKey(t, env, "read")
+
+	response, reply := callMCP(t, env, key, "tools/list", map[string]any{})
+	env.Expect(response, http.StatusOK, "list tools")
+	if !toolNames(t, reply)["docs"] {
+		t.Fatal("docs tool missing for read key")
+	}
+
+	tests := []struct {
+		name      string
+		arguments map[string]any
+		wantError bool
+		contains  string
+	}{
+		{name: "whole guide", arguments: map[string]any{}, contains: "pocketrun.kv.collection"},
+		{name: "one section", arguments: map[string]any{"section": "kv-cargos"}, contains: "isOwnDocumentsOnly"},
+		{name: "unknown section", arguments: map[string]any{"section": "nada"}, wantError: true, contains: "kv-cargos"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			response, reply := callMCP(t, env, key, "tools/call", map[string]any{"name": "docs", "arguments": tt.arguments})
+			env.Expect(response, http.StatusOK, tt.name)
+			var result toolCallResult
+			if err := json.Unmarshal(reply.Result, &result); err != nil || len(result.Content) == 0 {
+				t.Fatalf("docs result: %s", reply.Result)
+			}
+			if result.IsError != tt.wantError {
+				t.Fatalf("isError = %v, want %v", result.IsError, tt.wantError)
+			}
+			if !strings.Contains(result.Content[0].Text, tt.contains) {
+				t.Fatalf("docs text misses %q", tt.contains)
+			}
+		})
+	}
 }
 
 func TestMCPRevokedKey(t *testing.T) {

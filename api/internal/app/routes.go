@@ -49,7 +49,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	link.Register(router, link.Services{Links: s.links, History: s.linkHistory, Analytics: s.linkAnalytics}, cfg.LinksURL, pageServer)
 	overview.Register(router, s.overview)
 	backup.Register(router, s.backup)
-	mcp.Register(router, mcp.Services{APIKeys: s.apiKeys})
+	mcp.Register(router, mcp.Services{APIKeys: s.apiKeys}, cfg.LinksURL)
 
 	api := http.NewServeMux()
 	api.Handle(adminPrefix+"/", http.StripPrefix(adminPrefix, httpx.CORS(cfg.AdminCORSAllowedOrigins, true)(router.Admin)))

@@ -1,0 +1,395 @@
+# PocketRun
+
+> PocketRun é uma plataforma self-hosted com três serviços: **KV** (banco de documentos JSON por aplicação, acessado por uma API HTTP com token), **Páginas** (HTML publicado em `{dominio}/{slug}`, que lê e grava no KV pelo objeto `window.pocketrun.kv`, sem token) e **Links** (links curtos em `{dominio}/{slug}` que redirecionam com `302`). Este arquivo explica como usar cada serviço: o que mandar, o que volta e os erros. Os links abaixo levam às seções da documentação do painel.
+
+Notas importantes:
+
+- A URL da API (`{api}`) e o domínio das páginas e links (`{dominio}`) são da instância de quem usa. Peça esses valores, o token e os nomes das coleções antes de escrever código.
+- Páginas e links só abrem em `{dominio}`. Em `{api}/{slug}` e na raiz `/` dos dois domínios, a resposta é `404` com a tela "Link indisponível". O KV fica sempre em `{api}`.
+- KV por HTTP: todo pedido leva o token da aplicação em `Authorization: Bearer pk_live_...` (também aceitos: `X-Pocket-Token` e `controlAccess`). Corpo sempre JSON com `Content-Type: application/json`, até 1 MB.
+- Dentro de uma página do PocketRun, nunca use token nem URL da API: use `pocketrun.kv.collection("nome")`. O cargo vem do PIN de quem abriu.
+- Todo documento tem a forma `{ id, appId, projectId, collectionName, data, createdByRole, createdAt, updatedAt, expiresAt? }`. Os seus campos ficam sempre dentro de `data`.
+- Erros respondem `{ "error": "codigo", "fields": { ... } }` com status HTTP. Na página, viram um `Error` com `code`, `status` e `fields`.
+- O cargo de cada token ou PIN decide, por coleção, as operações `read`, `create`, `update` e `delete`. Fora do cargo: `403 forbidden_operation`.
+- Nome de coleção: letras, números, `_` e `-`, até 64 caracteres. `project` é reservado. A coleção nasce no primeiro documento gravado.
+- Datas em ISO 8601 (`2026-11-20T15:00:00Z` ou `2026-11-20`). Ids são strings de 24 caracteres hexadecimais.
+
+## Documentação
+
+- [Visão geral](/docs#overview): Os três serviços e como eles se ligam.
+- [Autenticação do KV](/docs#auth): Token, origens permitidas e chamadas fora do navegador.
+- [Rotas do KV](/docs#routes): Tabela com todas as rotas públicas.
+- [Listar e filtrar](/docs#list): Paginação, filtros, operadores e ordenação.
+- [Cargos](/docs#roles): Regras por coleção, limite de documentos e só os próprios documentos.
+- [Configuração do KV em JSON](/docs#kv-config): Nome, origens, cargos e cargo dos tokens de uma aplicação num JSON só.
+- [Erros do KV](/docs#errors): Todos os códigos de erro e quando acontecem.
+- [Páginas](/docs#pages): HTML, slug, `window.pocketrun` e versões.
+- [Dados com pocketrun.kv](/docs#page-data): KV dentro da página, sem token.
+- [Acesso com PIN](/docs#access): Proteção da página e cargos por PIN.
+- [Configuração em JSON](/docs#page-config): PINs, proteção, dados e cargos de uma página num JSON só.
+- [Links](/docs#links): Redirecionamento, parâmetros e QR code.
+- [Ativação e limites](/docs#activation): Período, limite de acessos e contagem por clique ou visitante.
+- [MCP para IA](/docs#mcp): Servidor MCP para um assistente de IA gerenciar páginas, links e o KV com uma chave de API.
+
+## KV: autenticação
+
+`GET {api}/validate/control-access` confere o token e a origem.
+
+```http
+GET /validate/control-access
+Authorization: Bearer pk_live_xxx
+```
+
+```json
+{ "status": "valid", "message": "Access token and origin are valid", "projectId": "loja", "appName": "Loja", "role": "caixa" }
+```
+
+- Chamadas de navegador só passam se o site estiver nas origens permitidas da aplicação. Chamadas sem `Origin` (scripts, servidores) só passam se a aplicação aceitar chamadas fora do navegador. Senão: `403 origin_not_allowed`.
+- Toda resposta autenticada traz o header `projectID`.
+- Erros: `401 missing_access_token`, `401 invalid_access_token` (não existe ou foi revogado), `401 expired_access_token`, `403 role_not_found`.
+- `GET {api}/ping` confere se a API está no ar, sem token.
+
+## KV: gravar
+
+`POST {api}/kv/{colecao}/create` responde `201` com o documento criado.
+
+```json
+{ "data": { "cliente": "Maria", "valor": 150, "status": "pago" }, "expiresInDays": 30 }
+```
+
+```json
+{
+  "id": "6afe329a1fde5580a00218f4",
+  "appId": "6afe329a1fde5580a00218f1",
+  "projectId": "loja",
+  "collectionName": "pedidos",
+  "data": { "cliente": "Maria", "valor": 150, "status": "pago" },
+  "expiresAt": "2026-12-20T20:19:43Z",
+  "createdAt": "2026-11-20T20:19:43Z",
+  "updatedAt": "2026-11-20T20:19:43Z"
+}
+```
+
+- `data` é obrigatório e é um objeto livre, sem esquema.
+- Validade opcional: `expiresInDays` (0 a 3650, 0 é sem validade) ou `expiresAt` (data ISO). O documento some sozinho depois, com até cerca de 1 minuto de atraso.
+- Erros: `400 validation_failed` (com `fields`), `400 invalid_body` (JSON inválido ou acima de 1 MB), `400 invalid_collection`, `400 reserved_collection`, `403 forbidden_operation`, `409 collection_full` (limite do cargo).
+- Qualquer rota pode responder `500 internal_error`: tente de novo depois.
+
+## KV: listar e filtrar
+
+`GET {api}/kv/{colecao}/get-all` lista do mais novo ao mais antigo.
+
+- Sem paginação, responde um array de documentos. Com `page`, `limit` ou `pagination=true`, responde `{ "data": [...], "total": 42, "page": 1, "limit": 20, "totalPages": 3 }`. `limit` vai de 1 a 500 (padrão 50).
+- Qualquer outro parâmetro filtra por igualdade sobre `data`: `?status=pago`. Campos aninhados usam ponto: `?cliente.cidade=Recife`.
+- Tipos dos valores: `true`/`false` viram booleano, números viram número, `null` vira nulo e o resto é texto. Entre aspas é sempre texto: `?codigo="010"` busca o texto, `?codigo=010` busca o número 10.
+- Operadores no fim do campo: `__gt`, `__gte`, `__lt`, `__lte`, `__ne`, `__contains` (trecho de texto sem diferenciar maiúsculas, até 100 caracteres) e `__exists=true`. Exemplo: `?valor__gte=100&valor__lt=500`.
+- Recorte pela criação: `createdAfter` e `createdBefore` (ISO).
+- Ordem: `sortBy` (`createdAt`, `updatedAt`, `expiresAt` ou um campo de `data`) e `sortOrder` (`asc` ou `desc`, padrão `desc`).
+- Vários filtros valem juntos (E). Erros: `400 invalid_filter`, `400 invalid_sort`.
+
+## KV: ler, atualizar e apagar
+
+- `GET {api}/kv/{colecao}/get/{id}`: responde o documento, ou `404 document_not_found`. Id mal formado: `400 invalid_document_id`.
+- `PATCH {api}/kv/{colecao}/update/{id}` com `{ "data": { "status": "entregue" } }`: junta os campos enviados ao `data` (o resto fica) e responde o documento atualizado. Um campo com `null` grava nulo.
+- `PUT {api}/kv/{colecao}/replace/{id}` com `{ "data": { ... } }`: troca o `data` inteiro e responde o documento.
+- `update` e `replace` aceitam `expiresInDays` ou `expiresAt`. `expiresInDays: 0` tira a validade, e sem nenhum dos dois a validade atual fica.
+- `DELETE {api}/kv/{colecao}/delete/{id}`: responde `{ "message": "Document deleted successfully" }`.
+- `DELETE {api}/kv/{colecao}/delete-all`: só o cargo `admin`, e responde `{ "message": "Collection cleared successfully", "deletedCount": 12 }`. Não tem volta.
+
+## KV: contar e calcular
+
+- `GET {api}/kv/{colecao}/count` com os mesmos filtros do `get-all` responde `{ "count": 12 }`.
+- `POST {api}/kv/{colecao}/eval` aceita filtros na URL e no corpo:
+
+```json
+{ "operation": "sum", "field": "valor", "filters": { "status": "pago" } }
+```
+
+```json
+{ "operation": "sum", "field": "valor", "result": 4180.5 }
+```
+
+- `operation`: `sum`, `avg`, `min`, `max`, `count` ou `distinct`. Sem documentos, `sum` e `count` dão 0, e `avg`, `min` e `max` dão `null`.
+- `distinct` responde `"result": [{ "value": "pago", "count": 31 }, ...]`, até 1.000 valores, do mais frequente ao menos.
+- Campo inválido: `400 invalid_field`.
+
+## KV: importar e exportar
+
+- `GET {api}/kv/{colecao}/export` baixa um array JSON de documentos. Com `?format=csv`, cada campo de `data` vira uma coluna. Outro formato: `400 invalid_format`.
+- `POST {api}/kv/{colecao}/import` com `{ "data": [ ... ] }`, até 5.000 itens e 8 MB, responde `201 { "imported": true, "count": 42 }`. Cada item pode ser um objeto puro ou um documento exportado (mantém `data`, `createdAt` e a validade). Cada item vira um documento novo, com id novo. Erros: `413 too_many_items`, `400 invalid_import`.
+- `GET {api}/kv/project/export` e `POST {api}/kv/project/import` (`{ "data": { "pedidos": [...], "clientes": [...] } }`) fazem o mesmo com todas as coleções e respondem `{ "imported": true, "totalCount": 57, "collections": { "pedidos": 42, "clientes": 15 } }`. Só o cargo `admin`.
+- `DELETE {api}/kv/project/delete-all` apaga todas as coleções. Só o cargo `admin`.
+
+## KV: cargos
+
+- Um cargo tem regras por coleção (ou `*` para as coleções sem regra própria; a regra com o nome sempre vence), cada uma com as operações `read`, `create`, `update` e `delete`.
+- `read` cobre `get-all`, `get`, `count`, `eval` e `export`. `create` cobre `create` e `import`. `update` cobre `update` e `replace`. `delete` cobre `delete`.
+- `maxDocuments` numa regra limita quantos documentos a coleção pode ter: passar disso dá `409 collection_full`.
+- `isOwnDocumentsOnly: true` faz o cargo ver, editar e apagar só o que ele mesmo criou. Cada documento guarda quem o criou em `createdByRole`. Documento de outro cargo responde `404 document_not_found`.
+- `admin` tem acesso total e é o único que limpa coleções e usa as rotas de projeto.
+
+```json
+{
+  "name": "caixa",
+  "rules": [
+    { "collection": "produtos", "operations": ["read"] },
+    { "collection": "vendas", "operations": ["read", "create"], "maxDocuments": 10000 }
+  ],
+  "isOwnDocumentsOnly": false
+}
+```
+
+## KV: configuração da aplicação em JSON
+
+Nome, descrição, origens, chamadas fora do navegador, cargos e o cargo de cada token de uma aplicação cabem num JSON só. Gere esse JSON e cole na aba **JSON** da aplicação, no KV, e clique em **Aplicar**. Pelo painel, o mesmo JSON vai em `POST {api}/admin/apps/{id}/config/apply` (sessão do gestor dono da aplicação), e `GET {api}/admin/apps/{id}/config/export` devolve a configuração atual no mesmo formato.
+
+```json
+{
+  "version": 1,
+  "projectId": "loja",
+  "name": "Loja",
+  "description": "Pedidos e cardápio da loja",
+  "allowedOrigins": ["https://loja.exemplo.com"],
+  "allowNonBrowserRequests": false,
+  "roles": [
+    { "name": "vitrine", "description": "Só lê o cardápio", "rules": [{ "collection": "cardapio", "operations": ["read"] }] },
+    {
+      "name": "caixa",
+      "isOwnDocumentsOnly": false,
+      "rules": [
+        { "collection": "cardapio", "operations": ["read"] },
+        { "collection": "pedidos", "operations": ["read", "create", "update"], "maxDocuments": 10000 }
+      ]
+    }
+  ],
+  "tokens": [
+    { "id": "3f9c2a1b8e7d6c5f", "name": "Site", "role": "vitrine" },
+    { "id": "a1b2c3d4e5f60718", "name": "Caixa da loja", "role": "caixa" }
+  ]
+}
+```
+
+Campos (todos opcionais: o que ficar de fora não muda):
+
+- `version`: sempre `1`.
+- `projectId` e `tokens[].name`: só informativos. Vêm na exportação e são ignorados ao aplicar.
+- `name`: de 1 a 100 caracteres. `description`: até 500.
+- `allowedOrigins`: sites que podem chamar a API pelo navegador, como `https://loja.exemplo.com`. `["*"]` libera qualquer site.
+- `allowNonBrowserRequests`: aceita chamadas sem o header `Origin`, como servidores, scripts e apps.
+- `roles`: a lista completa de cargos, até 20, no mesmo formato de **KV: cargos**. Um cargo fora da lista é apagado. `admin` é fixo, tem acesso total e não entra na lista. Nome com letras minúsculas, números e hífen, até 40 caracteres; de 1 a 30 regras, cada coleção uma vez.
+- `tokens`: troca o cargo dos tokens listados, pelo `id` da exportação. `role` é `admin` ou um nome de `roles`. Tokens fora da lista ficam como estão; criar e revogar tokens fica na aba Tokens, porque o token puro só aparece uma vez.
+- Para apagar um cargo que um token usa, mova o token para outro cargo em `tokens` no mesmo JSON.
+
+Resposta `200`: a configuração atual, no mesmo formato da exportação.
+
+Antes de gravar, a configuração inteira é conferida. Erros: `400 validation_failed` (campo fora do formato, com `fields`), `400 invalid_body` (JSON malformado), `400 invalid_config` (o mesmo token duas vezes), `400 role_reserved` (cargo chamado `admin`), `400 invalid_role_name`, `400 invalid_rule`, `409 role_taken` (nome repetido), `409 too_many_roles`, `409 role_in_use` (um token ainda usa um cargo apagado), `404 role_not_found` (um token aponta para um cargo que não existe), `404 token_not_found` e `404 application_not_found`.
+
+## Páginas
+
+- Uma página é um único HTML (o CSS e o JS vão dentro dele), de até 512 KB, servido em `{dominio}/{slug}` sem cache. Um trecho solto de HTML ganha `<!doctype>`, `charset`, `viewport` e `<title>`.
+- O slug é único na instância e dividido com os links: só letras minúsculas, números e hífen.
+- Toda página recebe, no início do `<head>`, um objeto congelado `window.pocketrun`:
+
+```json
+{
+  "apiVersion": 1,
+  "page": { "slug": "pedidos", "title": "Pedidos", "version": "1.3", "updatedAt": "2026-11-20T15:00:00Z", "isPreview": false },
+  "access": { "isProtected": true, "role": "gerente" },
+  "kv": { "role": "escrita", "isOwnDocumentsOnly": false, "rules": [{ "collection": "*", "operations": ["read", "create", "update"] }] }
+}
+```
+
+- `access.role` é o cargo do PIN usado (`""` no PIN geral e `null` sem proteção). `pocketrun.kv` só existe quando a página tem dados ativados na aba Acesso e dados.
+- Com PIN, o visitante vê uma tela de PIN antes do HTML. O acesso fica num cookie da página, que o JavaScript não lê, pelo tempo configurado (1 hora a 30 dias).
+- Para sair, `await pocketrun.access.logout()` apaga o acesso deste navegador e depois `location.reload()` mostra a tela de PIN de novo. Por baixo é `POST {dominio}/{slug}/_/access/logout` com o header `X-Pocketrun-Page: 1`, da mesma origem, que responde `{ "message": "Page access ended" }`. Erros viram `Error` com `name: "PocketrunAccessError"`, `code` e `status`: `403 invalid_client` (chamada de outro endereço) e `404 page_not_found`. Na prévia do editor, não faz nada.
+
+## Páginas: dados com pocketrun.kv
+
+Na página, use o KV sem token e sem URL:
+
+```js
+const pedidos = pocketrun.kv.collection("pedidos");
+
+const todos = await pedidos.list();
+const pagina = await pedidos.list({ status: "pago", sortBy: "valor", sortOrder: "asc", page: 1, limit: 20 });
+const um = await pedidos.get(id);
+const total = await pedidos.count({ status: "pago" });
+const soma = await pedidos.eval("sum", "valor", { status: "pago" });
+const novo = await pedidos.create({ cliente: "Maria", valor: 150 }, { expiresInDays: 30 });
+await pedidos.update(novo.id, { status: "entregue" });
+await pedidos.replace(novo.id, { cliente: "Maria", valor: 180 });
+await pedidos.remove(novo.id);
+
+if (pocketrun.kv.can("pedidos", "delete")) mostrarBotaoApagar();
+```
+
+- Cada método devolve uma Promise com a mesma resposta da API HTTP: `list` dá um array, ou `{ data, total, page, limit, totalPages }` com paginação. `get`, `create`, `update` e `replace` dão o documento, `count` dá `{ count }` e `eval` dá `{ operation, field, result }`.
+- `list` e `count` recebem os filtros como objeto, com os mesmos operadores (`{ valor__gte: 100 }`). Textos vão sempre como texto: `{ codigo: "010" }` procura o texto "010".
+- `pocketrun.kv.collection(nome).can(operacao)` e `pocketrun.kv.can(colecao, operacao)` dizem o que o cargo permite, para esconder botões. Quem decide é sempre o servidor.
+- Erros viram `Error` com `name: "PocketrunKVError"`, `code`, `status` e `fields`: `401 page_locked` (o PIN expirou ou o acesso foi encerrado: recarregue a página), `403 forbidden_operation` (o cargo não permite), `403 kv_access_denied` (quem abriu não tem cargo nos dados), `403 invalid_client` (chamada de outro endereço), `404 kv_not_linked` (dados desativados), `404 kv_application_missing` (a aplicação ligada sumiu), `404 route_not_found` (operação que não existe pela página), `404 page_not_found` (página fora do ar), `404 document_not_found`, `429 too_many_requests` (mais de 120 pedidos por minuto por visitante ou 1.200 pela página) e os erros de documento do KV (`400 validation_failed`, `400 invalid_filter`, `409 collection_full` e afins).
+- Só os próprios documentos: com um cargo `isOwnDocumentsOnly`, a página vê, edita e apaga só o que foi criado com o mesmo cargo.
+- Pela página só há operações de documento: limpar coleção, importar e exportar ficam de fora. Corpo de até 256 KB.
+- Por baixo, as chamadas vão para `{dominio}/{slug}/_/kv/{colecao}/...` com o header `X-Pocketrun-Page: 1` e só da mesma origem. Não chame esse endereço de outro site.
+- Na prévia do editor, as chamadas passam pelo painel com o cargo escolhido em "Ver como".
+
+## Páginas: configuração de acesso e dados em JSON
+
+Os PINs, a proteção, os dados e os cargos de uma página cabem num JSON só. Gere esse JSON e cole na aba **Acesso e dados** da página, no modo **JSON**, e clique em **Aplicar**. Pelo painel, o mesmo JSON vai em `POST {api}/admin/pages/{id}/config/apply` (sessão do gestor), e `GET {api}/admin/pages/{id}/config/export` devolve a configuração atual no mesmo formato.
+
+```json
+{
+  "version": 1,
+  "access": {
+    "isEnabled": true,
+    "sessionHours": 24,
+    "pins": [
+      { "role": "", "pin": "604918", "kvRole": "leitor" },
+      { "role": "equipe", "kvRole": "equipe" },
+      { "role": "gerente", "kvRole": "admin" }
+    ]
+  },
+  "kv": {
+    "isEnabled": true,
+    "publicRole": "",
+    "roles": [
+      { "name": "leitor", "description": "Só vê o cardápio", "rules": [{ "collection": "*", "operations": ["read"] }] },
+      {
+        "name": "equipe",
+        "description": "Registra pedidos",
+        "isOwnDocumentsOnly": false,
+        "rules": [
+          { "collection": "pedidos", "operations": ["read", "create", "update"], "maxDocuments": 5000 },
+          { "collection": "cardapio", "operations": ["read"] }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Campos:
+
+- `version`: opcional, sempre `1`.
+- `access`: opcional. Sem ele, o acesso não muda.
+  - `isEnabled`: pede PIN para abrir a página. `true` exige ao menos um PIN. Sem o campo, fica como está (e o primeiro PIN liga a proteção).
+  - `sessionHours`: horas que o acesso dura depois do PIN certo, de `1` a `720`.
+  - `pins`: a lista completa de PINs, até 20. Um PIN fora da lista é apagado e quem entrou com ele perde o acesso. Sem a lista, os PINs não mudam.
+  - `pins[].role`: `""` é o PIN geral (no máximo um). Outro valor é um PIN de cargo, com letras minúsculas, números e hífen, até 64 caracteres, sem repetir.
+  - `pins[].pin`: opcional. 6 números, sem sequência (`123456`, `654321`) nem repetição (`111111`, `121212`, `123123`), diferente dos outros PINs da página. Sem `pin`, um PIN que já existe fica com o atual e um PIN novo ganha um sorteado, devolvido em `issued`. Trocar o PIN encerra os acessos dele.
+  - `pins[].kvRole`: opcional. O cargo dos dados de quem abre com esse PIN: `admin`, um `name` de `kv.roles` ou `""` (sem acesso aos dados). Sem o campo, fica o cargo atual.
+- `kv`: opcional. Sem ele, os dados não mudam.
+  - `isEnabled`: liga os dados da página (`pocketrun.kv`). Ligar pela primeira vez cria a aplicação da página com os cargos `leitura`, `escrita` e `gestao`, quem abre sem PIN com `leitura` e cada PIN com `escrita`. `false` desliga e mantém documentos e cargos.
+  - `publicRole`: cargo de quem abre sem PIN, com os mesmos valores de `kvRole`. Só vale com a proteção desligada.
+  - `roles`: a lista completa de cargos, até 20. Um cargo fora da lista é apagado, e os PINs que usavam ele ficam sem acesso aos dados. `admin` é fixo, tem acesso total e não entra na lista.
+  - `roles[].name`: letras minúsculas, números e hífen, até 40 caracteres, sem repetir e diferente de `admin`.
+  - `roles[].description`: opcional, até 200 caracteres.
+  - `roles[].isOwnDocumentsOnly`: opcional. O cargo vê, edita e apaga só o que ele mesmo criou.
+  - `roles[].rules`: de 1 a 30 regras, cada coleção uma vez. `collection` é o nome da coleção (letras, números, `_` e `-`, até 64) ou `*` para todas as coleções sem regra própria. `operations` tem de 1 a 4 entre `read`, `create`, `update` e `delete`. `maxDocuments` é opcional: o limite de documentos na coleção, `0` é sem limite.
+
+Resposta `200`: `{ "config": { ...configuração atual... }, "issued": [{ "role": "equipe", "pin": "517302" }] }`. A exportação nunca traz os PINs.
+
+Antes de gravar, a configuração inteira é conferida. Erros: `400 validation_failed` (campo fora do formato, com `fields`), `400 invalid_body` (JSON malformado), `400 invalid_role` (nome de PIN inválido), `400 invalid_pin`, `400 weak_pin`, `400 no_access_keys` (proteção ligada sem PIN), `400 too_many_access_keys`, `409 role_taken` (nome repetido), `409 pin_in_use` (PIN repetido), `400 role_not_found` (`kvRole` ou `publicRole` que não existe), `400 role_reserved` (cargo chamado `admin`), `400 invalid_role_name`, `400 invalid_rule`, `409 too_many_roles`, `409 role_in_use` (um token do KV usa o cargo apagado), `409 kv_application_not_owned` (a página usa uma aplicação comum do KV: edite os cargos no KV) e `404 kv_application_missing`.
+
+## Links
+
+- `GET {dominio}/{slug}` responde `302` com `Location` igual ao destino. Robôs, prévias de link e `HEAD` também são redirecionados.
+- Os parâmetros da URL vão junto para o destino: `{dominio}/promo?utm_source=insta`. Um parâmetro com o mesmo nome de um do destino troca o valor dele.
+- O slug aceita maiúsculas e barra no final: `/Promo/` abre `promo`.
+- Link fora da regra de ativação responde `404` com a tela "Link indisponível".
+
+## Ativação de páginas e links
+
+- `active`: no ar. `inactive`: fora do ar. `period`: no ar até a data de fim (o início é opcional). `clicks`: no ar até o limite de acessos.
+- No modo `clicks`, a contagem é por clique (cada abertura conta) ou por visitante único (cada pessoa conta uma vez).
+- Robôs, prévias de link e `HEAD` nunca gastam o limite. Fora da regra, o endereço responde `404` com a tela "Link indisponível" ou "Página indisponível", e o slug continua reservado.
+- Datas da regra (`startsAt`, `endsAt`) e o limite (`maxClicks`) são definidos no painel. Quem abre o endereço não vê a regra, só o resultado.
+
+## MCP: gerenciar pelo assistente de IA
+
+`{api}/mcp` é um servidor MCP (Streamable HTTP, JSON-RPC 2.0 sem sessão) para um assistente de IA gerenciar a instância em nome de um gestor: páginas, links, grupos, aplicações do KV, cargos, tokens e PINs. Cada ferramenta faz o mesmo que a rota `/admin` do painel, com as mesmas validações e os mesmos códigos de erro.
+
+- Autenticação: `Authorization: Bearer prk_...`, uma chave de API gerada no painel, em **Perfil › Chaves de API para IA**. Sem chave: `401 missing_authorization`. Chave inválida ou revogada: `401 invalid_api_key`. O token `pk_live_` do KV não serve aqui.
+- Só `POST`, com uma mensagem JSON-RPC (ou um lote de até 20) de até 4 MB. Notificações respondem `202`. `GET` e `DELETE` respondem `405`.
+- Métodos: `initialize`, `ping`, `tools/list` e `tools/call`. O resultado de `tools/call` traz em `content[0].text` o JSON da rota do painel; com erro, `isError: true` e o texto `HTTP {status}: {"error":"codigo"}`.
+- A permissão da chave decide as ferramentas: `read` (listar e ler), `write` (também criar e editar) e `full` (também apagar, revogar, trocar e mostrar PINs).
+- Nomes das ferramentas: `pages_*`, `page_groups_*`, `links_*`, `link_groups_*`, `kv_*`, `overview_usage` e `whoami`. Os argumentos de caminho (`id`, `keyId`, `tokenId`, `role`, `collection`, `number`) e de busca vão no nível de cima; o corpo da rota vai em `body`.
+- `pages_update` e `links_update` trocam todos os campos: leia antes com `pages_get` ou `links_get` e mande de volta o que deve continuar. `pages_config_apply` e `kv_app_config_apply` recebem os JSONs das seções de configuração deste arquivo.
+
+Configuração do Claude Code (`.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "pocketrun": {
+      "type": "http",
+      "url": "{api}/mcp",
+      "headers": { "Authorization": "Bearer prk_..." }
+    }
+  }
+}
+```
+
+Configuração do Claude Desktop (`claude_desktop_config.json`, precisa do Node.js):
+
+```json
+{
+  "mcpServers": {
+    "pocketrun": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "{api}/mcp", "--header", "Authorization:${POCKETRUN_AUTH}"],
+      "env": { "POCKETRUN_AUTH": "Bearer prk_..." }
+    }
+  }
+}
+```
+
+## MCP: como montar com as ferramentas
+
+A ferramenta `docs` devolve este guia inteiro, ou uma seção com `section`, e abre com os endereços reais de `{api}` e `{dominio}` da instância. Leia antes de criar páginas com dados, cargos ou PINs.
+
+Receitas:
+
+- **Página com dados e cargos por PIN:** `pages_slug_check` → `pages_create` (`title` até 20 caracteres, `mode: "active"`, `slug`, `html`) → `pages_config_apply` com `access` (PINs com `kvRole`) e `kv` (`isEnabled: true` e `roles`). A resposta traz em `issued` os PINs sorteados: entregue ao usuário, porque a exportação nunca mostra PINs. A página fica em `{dominio}/{slug}`.
+- **Editar uma página:** `pages_get` → `pages_update` com todos os campos que devem continuar (`title`, `slug`, `mode`, `html`, `groupId`, regra de ativação) e uma `message` curta para a versão. Trocar o HTML cria uma versão nova; `pages_versions_list` e `pages_version_get` mostram as anteriores.
+- **Dados de um site ou app externo:** `kv_app_create` → `kv_app_config_apply` (`allowedOrigins`, `allowNonBrowserRequests`, `roles`) → `kv_app_token_create` com o cargo. O token puro só aparece nessa resposta. O cliente chama `{api}/kv/{colecao}/...` com `Authorization: Bearer pk_live_...`.
+- **Ver os dados de uma página:** `pages_kv_get` mostra a aplicação ligada; `kv_collections_list` e `kv_documents_list` com o id dela listam coleções e documentos.
+- **Link curto:** `links_slug_check` → `links_create` com `url` de destino e a regra de ativação.
+
+HTML de uma página com dados:
+
+- Um arquivo só, com CSS e JS dentro, até 512 KB. Sem token e sem URL da API: tudo por `pocketrun.kv.collection("nome")`.
+- `pocketrun.kv` só existe com os dados ativados e um cargo. Sem ele, mostre um aviso em vez de quebrar.
+- `pocketrun.kv.role` é o cargo dos dados (`"admin"` para o admin fixo) e `pocketrun.access.role` é o nome do PIN usado. Use para trocar a tela entre perfis.
+- Esconda botões com `can(colecao, operacao)`, mas lembre que o servidor só confere a operação por coleção, não por campo: um cargo com `update` pode mudar qualquer campo do documento.
+- Todo mundo que entra com o mesmo PIN é o mesmo cargo. `isOwnDocumentsOnly` separa por cargo, não por pessoa.
+- Trate `page_locked` recarregando a página e ofereça sair com `pocketrun.access.logout()` seguido de `location.reload()`.
+- Escape todo texto vindo do KV antes de pôr no HTML.
+
+```html
+<main id="app"></main>
+<script>
+  const kv = window.pocketrun && window.pocketrun.kv;
+  const app = document.getElementById("app");
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => "&#" + c.charCodeAt(0) + ";");
+  if (!kv) {
+    app.textContent = "Entre com um PIN que tenha acesso aos dados.";
+  } else {
+    const tarefas = kv.collection("tarefas");
+    const render = async () => {
+      const docs = await tarefas.list({ sortBy: "createdAt", sortOrder: "desc" });
+      app.innerHTML = docs.map((d) => `<p>${esc(d.data.titulo)} ${tarefas.can("delete") ? `<button data-id="${d.id}">Apagar</button>` : ""}</p>`).join("");
+    };
+    app.addEventListener("click", async (e) => {
+      if (e.target.dataset.id) { await tarefas.remove(e.target.dataset.id); render(); }
+    });
+    render().catch((err) => { if (err.code === "page_locked") location.reload(); });
+  }
+</script>
+```
+
+## Optional
+
+- [Validade dos documentos](/docs#expiry): Como `expiresInDays` e `expiresAt` funcionam na gravação, na edição e na importação.
+- [Segurança](/docs#security): Cuidados com o token no navegador e cargos mínimos.
+- [Página de exemplo](/docs#example): O modelo CRUD com KV, com uma lista de tarefas pronta.
+- [Análise de acessos](/docs#analytics): O que é medido nas aberturas de páginas e links.

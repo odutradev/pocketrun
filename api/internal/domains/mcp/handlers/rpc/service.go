@@ -8,23 +8,27 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
+	"pocketrun-api/internal/domains/mcp/utils/mcpdocs"
 	"pocketrun-api/internal/domains/mcp/utils/mcptools"
 	apikeyrepository "pocketrun-api/internal/repositories/apikey"
 )
 
 type Dependencies struct {
-	Admin  http.Handler
-	Logger *slog.Logger
+	Admin    http.Handler
+	PagesURL string
+	Logger   *slog.Logger
 }
 
 type Service struct {
-	admin  http.Handler
-	logger *slog.Logger
+	admin    http.Handler
+	pagesURL string
+	logger   *slog.Logger
 }
 
 func NewService(deps Dependencies) *Service {
-	return &Service{admin: deps.Admin, logger: deps.Logger}
+	return &Service{admin: deps.Admin, pagesURL: strings.TrimRight(deps.PagesURL, "/"), logger: deps.Logger}
 }
 
 func (s *Service) Handle(ctx context.Context, scope apikeyrepository.Scope, message Message, source *http.Request) *Response {
@@ -59,7 +63,8 @@ func (s *Service) initialize(message Message) *Response {
 
 func (s *Service) tools(scope apikeyrepository.Scope) ToolsList {
 	allowed := mcptools.Allowed(scope)
-	descriptions := make([]ToolDescription, 0, len(allowed))
+	descriptions := make([]ToolDescription, 0, len(allowed)+1)
+	descriptions = append(descriptions, docsTool())
 	for _, tool := range allowed {
 		descriptions = append(descriptions, ToolDescription{
 			Name:        tool.Name,
@@ -76,6 +81,9 @@ func (s *Service) call(ctx context.Context, scope apikeyrepository.Scope, messag
 	var params CallParams
 	if err := json.Unmarshal(message.Params, &params); err != nil || params.Name == "" {
 		return NewError(message.ID, InvalidParams, "invalid tools/call params")
+	}
+	if params.Name == DocsToolName {
+		return NewResult(message.ID, s.docs(params.Arguments, source))
 	}
 
 	tool, err := mcptools.Find(scope, params.Name)
@@ -116,6 +124,49 @@ func (s *Service) dispatch(ctx context.Context, request mcptools.Request, source
 	recorder := newRecorder()
 	s.admin.ServeHTTP(recorder, inner)
 	return recorder.status, recorder.body.Bytes(), nil
+}
+
+func (s *Service) docs(raw json.RawMessage, source *http.Request) CallResult {
+	var args DocsArguments
+	if len(raw) > 0 && string(raw) != "null" {
+		if err := json.Unmarshal(raw, &args); err != nil {
+			return NewTextResult("invalid arguments: "+err.Error(), true)
+		}
+	}
+	text, err := mcpdocs.Text(args.Section, mcpdocs.Instance{APIURL: apiURL(source), PagesURL: s.pagesURL})
+	if err != nil {
+		return NewTextResult(err.Error()+"; sections: "+strings.Join(mcpdocs.Slugs(), ", "), true)
+	}
+	return NewTextResult(text, false)
+}
+
+func docsTool() ToolDescription {
+	return ToolDescription{
+		Name:        DocsToolName,
+		Title:       DocsToolTitle,
+		Description: DocsToolDescription,
+		InputSchema: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"section": map[string]any{"type": "string", "enum": mcpdocs.Slugs(), "description": "One section of the guide; leave it out to get the whole guide"},
+			},
+			"required":             []string{},
+			"additionalProperties": false,
+		},
+		Annotations: map[string]any{"title": DocsToolTitle, "readOnlyHint": true, "destructiveHint": false, "idempotentHint": true, "openWorldHint": false},
+	}
+}
+
+func apiURL(source *http.Request) string {
+	scheme := "http"
+	if source.TLS != nil || strings.EqualFold(source.Header.Get("X-Forwarded-Proto"), "https") {
+		scheme = "https"
+	}
+	host := source.Host
+	if forwarded := source.Header.Get("X-Forwarded-Host"); forwarded != "" {
+		host = strings.TrimSpace(strings.Split(forwarded, ",")[0])
+	}
+	return scheme + "://" + host
 }
 
 func toolResult(status int, body []byte) CallResult {
