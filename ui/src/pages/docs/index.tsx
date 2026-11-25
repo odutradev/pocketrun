@@ -27,6 +27,7 @@ import UsersSection from "./sections/users";
 import AuthSection from "./sections/auth";
 import ListSection from "./sections/list";
 import LlmsSection from "./sections/llms";
+import McpSection from "./sections/mcp";
 import useDocsPage from "./hook";
 
 import type { MouseEvent } from "react";
@@ -43,7 +44,7 @@ const DocsPage = () => {
     <Container>
       <ContentNavbar
         title="Documentação"
-        info="Como usar todo o PocketRun: o painel, a API pública do KV, páginas com PIN e dados, links curtos, ativação, análise, usuários, backup e o llms.txt para assistentes de IA."
+        info="Como usar todo o PocketRun: o painel, a API pública do KV, páginas com PIN e dados, links curtos, ativação, análise, usuários, backup, o llms.txt e o servidor MCP para assistentes de IA."
       />
       <Layout>
         <Toc aria-label="Seções da documentação">
@@ -86,6 +87,7 @@ const DocsPage = () => {
           <UsersSection />
           <BackupSection />
           <LlmsSection />
+          <McpSection />
         </Content>
       </Layout>
     </Container>

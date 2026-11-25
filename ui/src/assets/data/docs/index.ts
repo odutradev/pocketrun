@@ -37,5 +37,6 @@ export const docSections: DocSectionEntry[] = [
   { id: "analytics", label: "Análise de acessos", group: "links" },
   { id: "users", label: "Usuários e sessões", group: "admin" },
   { id: "backup", label: "Backup", group: "admin" },
-  { id: "llms", label: "llms.txt", group: "admin" }
+  { id: "llms", label: "llms.txt", group: "admin" },
+  { id: "mcp", label: "MCP para IA", group: "admin" }
 ];
