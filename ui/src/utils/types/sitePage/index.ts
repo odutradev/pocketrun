@@ -302,18 +302,6 @@ export interface PageConfig {
   kv: { isEnabled: boolean; publicRole: string; roles: PageConfigRole[] };
 }
 
-export interface PageConfigPinInput {
-  role: string;
-  pin?: string;
-  kvRole?: string;
-}
-
-export interface PageConfigPayload {
-  version?: number;
-  access?: { isEnabled?: boolean; sessionHours?: number; pins?: PageConfigPinInput[] };
-  kv?: { isEnabled?: boolean; publicRole?: string; roles?: PageConfigRole[] };
-}
-
 export interface PageConfigIssuedPin {
   role: string;
   pin: string;

@@ -1,102 +1,38 @@
 import { CheckIcon, CopyIcon, ReloadIcon, UploadIcon } from "@radix-ui/react-icons";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTheme } from "styled-components";
-import Editor from "@monaco-editor/react";
-import { toast } from "react-toastify";
+import { useState } from "react";
 
 import { Actions, Column, Container, Hint, Mono, Panel, PanelHeader, PanelTitle } from "../../styles";
-import { defineEditorTheme, editorThemeName } from "../../../../subcomponents/codeEditor/setup";
-import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { pageConfigFileName, pageConfigJsonSchema } from "@assets/data";
-import { EditorBox, FieldList, IssuedItem, IssuedList } from "./styles";
 import { applyPageConfig, exportPageConfig } from "@actions/sitePages";
+import { FieldList, IssuedItem, IssuedList, LoaderBox } from "./styles";
 import usePageEditorPage from "../../../../hook";
+import useJsonConfig from "@hooks/useJsonConfig";
 import useClipboard from "@hooks/useClipboard";
 import LinkButton from "@components/linkButton";
 import IconButton from "@components/iconButton";
-import useAction from "@hooks/useAction";
+import JsonEditor from "@components/jsonEditor";
 import Loader from "@components/loader";
 import Button from "@components/button";
 import Alert from "@components/alert";
 
-import type { PageConfigIssuedPin, PageConfigPayload } from "@utils/types/sitePage";
-import type { Monaco } from "@monaco-editor/react";
-
-const logger = createLocalLogger("pageConfigEditor");
-
-const format = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
-
-const parseConfig = (text: string): PageConfigPayload | null => {
-  try {
-    const parsed: unknown = JSON.parse(text);
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("not an object");
-    return parsed as PageConfigPayload;
-  } catch (error) {
-    logger.warn(error);
-    toast.error("O JSON está malformado. Confira vírgulas, aspas e chaves antes de aplicar.");
-    return null;
-  }
-};
+import type { PageConfigIssuedPin } from "@utils/types/sitePage";
 
 const ConfigEditor = () => {
-  const { brand } = useTheme();
   const { sitePage, reloadAccessData } = usePageEditorPage();
-  const [loaded, setLoaded] = useState<string | null>(null);
-  const [text, setText] = useState("");
   const [issued, setIssued] = useState<PageConfigIssuedPin[]>([]);
   const { copy, isCopied } = useClipboard();
   const pageId = sitePage?.id ?? "";
-  const isDirty = loaded !== null && text !== loaded;
 
-  const show = useCallback((value: unknown) => {
-    setLoaded(format(value));
-    setText(format(value));
-  }, []);
-
-  const load = useCallback(
-    () =>
-      exportPageConfig(pageId)
-        .then(show)
-        .catch((error: unknown) => {
-          logger.error(error);
-          toast.error(getErrorMessage(error, "Não foi possível carregar a configuração"));
-        }),
-    [pageId, show]
-  );
-
-  useEffect(() => {
-    if (pageId) load();
-  }, [pageId, load]);
-
-  const apply = useAction({
-    action: (payload: PageConfigPayload) => applyPageConfig(pageId, payload),
-    toastMessages: { pending: "Aplicando a configuração…", success: "Configuração aplicada", error: "Não foi possível aplicar a configuração" },
-    callback: (result) => {
-      show(result.config);
+  const config = useJsonConfig({
+    isEnabled: Boolean(pageId),
+    exportConfig: () => exportPageConfig(pageId),
+    applyConfig: (payload) => applyPageConfig(pageId, payload),
+    toConfig: (result) => result.config,
+    onApplied: (result) => {
       setIssued(result.issued);
       reloadAccessData();
     }
   });
-
-  const handleApply = () => {
-    const payload = parseConfig(text);
-    if (payload) apply.execute(payload);
-  };
-
-  const applyRef = useRef(handleApply);
-
-  useEffect(() => {
-    applyRef.current = handleApply;
-  });
-
-  const prepare = (instance: Monaco) => {
-    defineEditorTheme(instance, brand);
-    instance.languages.json.jsonDefaults.setDiagnosticsOptions({
-      validate: true,
-      allowComments: false,
-      schemas: [{ uri: "https://pocketrun.local/page-config.schema.json", fileMatch: [pageConfigFileName], schema: pageConfigJsonSchema }]
-    });
-  };
 
   return (
     <Container>
@@ -105,11 +41,11 @@ const ConfigEditor = () => {
           <PanelHeader>
             <PanelTitle id="page-config-title">Configuração em JSON</PanelTitle>
             <Actions>
-              <IconButton label={isCopied("config") ? "JSON copiado" : "Copiar o JSON"} icon={isCopied("config") ? <CheckIcon /> : <CopyIcon />} size="sm" onClick={() => copy(text, "config")} />
-              <Button size="sm" variant="secondary" leftIcon={<ReloadIcon />} onClick={load} disabled={apply.isPending}>
-                {isDirty ? "Descartar" : "Recarregar"}
+              <IconButton label={isCopied("config") ? "JSON copiado" : "Copiar o JSON"} icon={isCopied("config") ? <CheckIcon /> : <CopyIcon />} size="sm" onClick={() => copy(config.text, "config")} />
+              <Button size="sm" variant="secondary" leftIcon={<ReloadIcon />} onClick={config.reload} disabled={config.isApplying}>
+                {config.isDirty ? "Descartar" : "Recarregar"}
               </Button>
-              <Button size="sm" leftIcon={<UploadIcon />} onClick={handleApply} isLoading={apply.isPending} loadingLabel="Aplicando…" disabled={loaded === null}>
+              <Button size="sm" leftIcon={<UploadIcon />} onClick={config.apply} isLoading={config.isApplying} loadingLabel="Aplicando…" disabled={!config.isLoaded}>
                 Aplicar
               </Button>
             </Actions>
@@ -136,32 +72,20 @@ const ConfigEditor = () => {
               </IssuedList>
             </Alert>
           )}
-          <EditorBox>
-            {loaded === null ? (
+          {config.isLoaded ? (
+            <JsonEditor
+              value={config.text}
+              label="Configuração de acesso e dados em JSON"
+              fileName={pageConfigFileName}
+              schema={pageConfigJsonSchema}
+              onChange={config.setText}
+              onSave={config.apply}
+            />
+          ) : (
+            <LoaderBox>
               <Loader label="Carregando a configuração" isCentered />
-            ) : (
-              <Editor
-                value={text}
-                path={pageConfigFileName}
-                language="json"
-                theme={editorThemeName}
-                loading={<Loader label="Carregando o editor" isCentered />}
-                beforeMount={prepare}
-                onMount={(mounted, instance) => mounted.addCommand(instance.KeyMod.CtrlCmd | instance.KeyCode.KeyS, () => applyRef.current())}
-                onChange={(next) => setText(next ?? "")}
-                options={{
-                  ariaLabel: "Configuração de acesso e dados em JSON",
-                  automaticLayout: true,
-                  fontFamily: brand.fonts.mono,
-                  fontSize: 13,
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  tabSize: 2,
-                  wordWrap: "on"
-                }}
-              />
-            )}
-          </EditorBox>
+            </LoaderBox>
+          )}
         </Panel>
       </Column>
       <Column>

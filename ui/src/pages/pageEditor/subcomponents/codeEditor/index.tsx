@@ -2,7 +2,7 @@ import { useEffect, useImperativeHandle, useRef } from "react";
 import { useTheme } from "styled-components";
 import Editor from "@monaco-editor/react";
 
-import { defineEditorTheme, editorThemeName, issuesOwner } from "./setup";
+import { defineEditorTheme, editorThemeName, issuesOwner } from "@utils/monaco";
 import { findHtmlIssues } from "@utils/functions";
 import { pageLintDelay } from "@assets/config";
 import Loader from "@components/loader";

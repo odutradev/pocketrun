@@ -11,7 +11,6 @@ import type {
   PageAccessRevealed,
   PageConfig,
   PageConfigApplied,
-  PageConfigPayload,
   PageGroup,
   PageHistoryPage,
   PageKvDetails,
@@ -204,7 +203,7 @@ export const exportPageConfig = async (pageId: string, signal?: AbortSignal) => 
   return response.data;
 };
 
-export const applyPageConfig = async (pageId: string, data: PageConfigPayload) => {
+export const applyPageConfig = async (pageId: string, data: Record<string, unknown>) => {
   const response = await api.post<PageConfigApplied>(`/pages/${pageId}/config/apply`, data);
   return response.data;
 };

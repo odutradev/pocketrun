@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const EditorBox = styled.div`
+export const LoaderBox = styled.div`
   height: 420px;
   overflow: hidden;
   border: 1px solid ${({ theme }) => theme.brand.border};

@@ -2,7 +2,7 @@ import { DiffEditor } from "@monaco-editor/react";
 import { useTheme } from "styled-components";
 import { useEffect, useRef } from "react";
 
-import { defineEditorTheme, editorThemeName } from "../codeEditor/setup";
+import { defineEditorTheme, editorThemeName } from "@utils/monaco";
 import Loader from "@components/loader";
 import { Container } from "./styles";
 
