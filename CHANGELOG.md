@@ -4,7 +4,7 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
-## Não publicado
+## 1.8.6 (2026-11-25)
 
 - **Servidor MCP** em `{api}/mcp`: o Claude ou outro assistente de IA gerencia páginas, links, grupos, aplicações do KV, cargos, tokens e PINs conversando, com as mesmas regras do painel.
 - **Chaves de API para IA** no Perfil, com permissão só leitura, leitura e escrita ou total. Ao gerar, o painel mostra a configuração pronta para o Claude Code e o Claude Desktop.
