@@ -43,6 +43,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 		Analytics: s.pageAnalytics,
 		Access:    s.access,
 		Bindings:  s.bindings,
+		Config:    s.pageConfig,
 	}, cfg.LinksURL)
 	link.Register(router, link.Services{Links: s.links, History: s.linkHistory, Analytics: s.linkAnalytics}, cfg.LinksURL, pageServer)
 	overview.Register(router, s.overview)

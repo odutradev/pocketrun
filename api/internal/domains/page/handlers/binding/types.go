@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
@@ -31,7 +32,16 @@ var (
 	ErrInvalidSubject  = errors.New("invalid preview subject")
 	ErrInvalidMapping  = errors.New("invalid role mapping")
 	ErrApplicationGone = errors.New("linked application no longer exists")
+	ErrNotPageApp      = errors.New("linked application does not belong to the page")
 )
+
+type ConfigInput struct {
+	IsEnabled  *bool
+	PublicRole *string
+	Roles      []application.RoleInput
+	Mappings   map[string]string
+	PageRoles  []string
+}
 
 type ApplicationSummary struct {
 	ID        bson.ObjectID                `json:"id"`
@@ -133,4 +143,5 @@ const (
 	applicationField  = "kvApplication"
 	publicRoleField   = "kvPublicRole"
 	roleMappingsField = "kvRoles"
+	roleRulesField    = "kvRoleRules"
 )

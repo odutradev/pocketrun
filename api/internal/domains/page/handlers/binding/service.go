@@ -44,6 +44,8 @@ type RequestRepository interface {
 type ApplicationFinder interface {
 	Find(ctx context.Context, id bson.ObjectID) (*applicationrepository.Application, error)
 	EnsureForPage(ctx context.Context, managerID bson.ObjectID, input application.PageInput) (*applicationrepository.Application, bool, error)
+	FindForPage(ctx context.Context, pageID bson.ObjectID) (*applicationrepository.Application, error)
+	SetPageRoles(ctx context.Context, pageID bson.ObjectID, inputs []application.RoleInput) (*applicationrepository.Application, error)
 	DeleteForPage(ctx context.Context, pageID bson.ObjectID) error
 }
 
@@ -184,6 +186,139 @@ func (s *Service) Set(ctx context.Context, pageID bson.ObjectID, input SetInput)
 		s.record(ctx, pageID, history.EventKVChanged, changes)
 	}
 	return Details{Binding: next, Application: summarize(app)}, nil
+}
+
+func (s *Service) Check(ctx context.Context, pageID bson.ObjectID, input ConfigInput) error {
+	current, err := s.repository.Find(ctx, pageID)
+	isLinked := err == nil
+	if err != nil && !errors.Is(err, ErrNotLinked) {
+		return fmt.Errorf("check page kv config %s: %w", pageID.Hex(), err)
+	}
+	if input.Roles != nil {
+		if err := application.CheckRoleInputs(input.Roles); err != nil {
+			return err
+		}
+	}
+	if !isEnabled(isLinked, input) {
+		return nil
+	}
+
+	app, err := s.configuredApplication(ctx, pageID, current)
+	if err != nil {
+		return err
+	}
+	names := roleNames(app)
+	if input.Roles != nil {
+		if app != nil && app.PageID == nil {
+			return ErrNotPageApp
+		}
+		if app != nil {
+			if _, err := application.ReplaceRoles(app, input.Roles, time.Now()); err != nil {
+				return err
+			}
+		}
+		names = map[string]bool{applicationrepository.AdminRole: true}
+		for _, role := range input.Roles {
+			names[role.Name] = true
+		}
+	}
+
+	if input.PublicRole != nil && *input.PublicRole != "" && !names[*input.PublicRole] {
+		return application.ErrRoleNotFound
+	}
+	for _, kvRole := range input.Mappings {
+		if kvRole != "" && !names[kvRole] {
+			return application.ErrRoleNotFound
+		}
+	}
+	return nil
+}
+
+func (s *Service) Configure(ctx context.Context, page application.PageInput, input ConfigInput) (Details, error) {
+	if err := s.Check(ctx, page.PageID, input); err != nil {
+		return Details{}, err
+	}
+	_, err := s.repository.Find(ctx, page.PageID)
+	isLinked := err == nil
+	if err != nil && !errors.Is(err, ErrNotLinked) {
+		return Details{}, fmt.Errorf("configure page kv %s: %w", page.PageID.Hex(), err)
+	}
+	if !isEnabled(isLinked, input) {
+		if isLinked {
+			if err := s.Remove(ctx, page.PageID); err != nil {
+				return Details{}, err
+			}
+		}
+		return Details{}, nil
+	}
+
+	details, err := s.Enable(ctx, page)
+	if err != nil {
+		return Details{}, err
+	}
+	if details.Application == nil {
+		return Details{}, ErrApplicationGone
+	}
+	app, err := s.applications.Find(ctx, details.Binding.ApplicationID)
+	if err != nil {
+		return Details{}, fmt.Errorf("configure page kv %s: %w", page.PageID.Hex(), err)
+	}
+
+	changes := []eventrepository.Change{}
+	if input.Roles != nil {
+		before := describeRoles(app.Roles)
+		updated, err := s.applications.SetPageRoles(ctx, page.PageID, input.Roles)
+		if err != nil {
+			return Details{}, fmt.Errorf("configure page kv %s: %w", page.PageID.Hex(), err)
+		}
+		app = updated
+		if after := describeRoles(app.Roles); before != after {
+			changes = append(changes, eventrepository.Change{Field: roleRulesField, From: before, To: after})
+		}
+	}
+
+	previous := details.Binding
+	next := &pagebindingrepository.Binding{
+		PageID:        page.PageID,
+		ApplicationID: app.ID,
+		PublicRole:    keptRole(app, previous.PublicRole),
+		Roles:         plannedMappings(app, previous, input),
+		Revision:      previous.Revision + 1,
+		UpdatedAt:     time.Now(),
+	}
+	if input.PublicRole != nil {
+		next.PublicRole = *input.PublicRole
+	}
+	changes = append(changes, bindingChanges(previous, next, app.Name, app.Name)...)
+	if len(changes) == 0 {
+		return Details{Binding: previous, Application: summarize(app)}, nil
+	}
+	if err := s.repository.Save(ctx, next); err != nil {
+		return Details{}, fmt.Errorf("configure page kv %s: %w", page.PageID.Hex(), err)
+	}
+	s.record(ctx, page.PageID, history.EventKVChanged, changes)
+	return Details{Binding: next, Application: summarize(app)}, nil
+}
+
+func (s *Service) configuredApplication(ctx context.Context, pageID bson.ObjectID, current *pagebindingrepository.Binding) (*applicationrepository.Application, error) {
+	if current != nil {
+		app, err := s.applications.Find(ctx, current.ApplicationID)
+		if errors.Is(err, application.ErrApplicationNotFound) {
+			return nil, ErrApplicationGone
+		}
+		if err != nil {
+			return nil, fmt.Errorf("find page kv application %s: %w", pageID.Hex(), err)
+		}
+		return app, nil
+	}
+	app, err := s.applications.FindForPage(ctx, pageID)
+	if errors.Is(err, application.ErrApplicationNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("find page kv application %s: %w", pageID.Hex(), err)
+	}
+	return app, nil
 }
 
 func (s *Service) Remove(ctx context.Context, pageID bson.ObjectID) error {
@@ -499,6 +634,11 @@ func ErrorStatus(err error) (int, string) {
 		return http.StatusBadRequest, "invalid_application_id"
 	case errors.Is(err, application.ErrApplicationNotFound):
 		return http.StatusNotFound, "application_not_found"
+	case errors.Is(err, ErrNotPageApp):
+		return http.StatusConflict, "kv_application_not_owned"
+	}
+	if status, code, ok := application.ErrorStatus(err); ok {
+		return status, code
 	}
 	return http.StatusInternalServerError, "internal_error"
 }
@@ -525,4 +665,78 @@ func role(b *pagebindingrepository.Binding, subject Subject) string {
 		}
 	}
 	return ""
+}
+
+func isEnabled(isLinked bool, input ConfigInput) bool {
+	if input.IsEnabled != nil {
+		return *input.IsEnabled
+	}
+	return isLinked
+}
+
+func roleNames(app *applicationrepository.Application) map[string]bool {
+	names := map[string]bool{applicationrepository.AdminRole: true}
+	list := roles.ForPage(time.Now())
+	if app != nil {
+		list = app.Roles
+	}
+	for _, role := range list {
+		names[role.Name] = true
+	}
+	return names
+}
+
+func keptRole(app *applicationrepository.Application, name string) string {
+	if name == "" || !app.HasRole(name) {
+		return ""
+	}
+	return name
+}
+
+func plannedMappings(app *applicationrepository.Application, previous *pagebindingrepository.Binding, input ConfigInput) []pagebindingrepository.RoleMapping {
+	pageRoles := input.PageRoles
+	if pageRoles == nil {
+		pageRoles = []string{}
+		for _, mapping := range previous.Roles {
+			pageRoles = append(pageRoles, mapping.PageRole)
+		}
+	}
+	if !slices.Contains(pageRoles, "") {
+		pageRoles = append([]string{""}, pageRoles...)
+	}
+
+	mappings := make([]pagebindingrepository.RoleMapping, 0, len(pageRoles))
+	for _, pageRole := range pageRoles {
+		kvRole, isExplicit := input.Mappings[pageRole]
+		if !isExplicit {
+			kvRole = keptRole(app, mappedRole(previous, pageRole))
+		}
+		mappings = append(mappings, pagebindingrepository.RoleMapping{PageRole: pageRole, KVRole: kvRole})
+	}
+	return mappings
+}
+
+func mappedRole(b *pagebindingrepository.Binding, pageRole string) string {
+	for _, mapping := range b.Roles {
+		if mapping.PageRole == pageRole {
+			return mapping.KVRole
+		}
+	}
+	return ""
+}
+
+func describeRoles(list []applicationrepository.Role) string {
+	described := make([]string, 0, len(list))
+	for _, role := range list {
+		rules := make([]string, 0, len(role.Rules))
+		for _, rule := range role.Rules {
+			operations := make([]string, 0, len(rule.Operations))
+			for _, operation := range rule.Operations {
+				operations = append(operations, string(operation))
+			}
+			rules = append(rules, rule.Collection+" ("+strings.Join(operations, ", ")+")")
+		}
+		described = append(described, role.Name+": "+strings.Join(rules, "; "))
+	}
+	return strings.Join(described, " | ")
 }

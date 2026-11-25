@@ -15,6 +15,7 @@ import (
 	"pocketrun-api/internal/domains/page/handlers/access"
 	pageanalytics "pocketrun-api/internal/domains/page/handlers/analytics"
 	"pocketrun-api/internal/domains/page/handlers/binding"
+	pageconfig "pocketrun-api/internal/domains/page/handlers/config"
 	pagehistory "pocketrun-api/internal/domains/page/handlers/history"
 	"pocketrun-api/internal/domains/page/handlers/page"
 	"pocketrun-api/internal/domains/page/handlers/version"
@@ -44,6 +45,7 @@ type services struct {
 	pageAnalytics *pageanalytics.Service
 	access        *access.Service
 	bindings      *binding.Service
+	pageConfig    *pageconfig.Service
 	overview      *overview.Service
 	backup        *backup.Service
 }
@@ -129,6 +131,7 @@ func newServices(cfg config.Config, repos repositories, logger *slog.Logger) ser
 		pageAnalytics: pageAnalytics,
 		access:        pageAccess,
 		bindings:      bindings,
+		pageConfig:    pageconfig.NewService(pageconfig.Dependencies{Access: pageAccess, Bindings: bindings, Applications: applications}),
 		overview:      overview.NewService(overview.Dependencies{Pages: pageAnalytics, Links: linkAnalytics, KV: documents, PageKV: bindings}),
 		backup:        backup.NewService(repos.backup, users, migrations, logger),
 	}

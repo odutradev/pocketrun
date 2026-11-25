@@ -303,6 +303,156 @@ func (s *Service) RevokeSessions(ctx context.Context, pageID bson.ObjectID) (*pa
 	return access, nil
 }
 
+func (s *Service) Configure(ctx context.Context, pageID bson.ObjectID, input ConfigInput) (Configured, error) {
+	access, err := s.load(ctx, pageID)
+	if err != nil {
+		return Configured{}, fmt.Errorf("configure page access %s: %w", pageID.Hex(), err)
+	}
+
+	pending := []eventPending{}
+	issued := []IssuedPIN{}
+	wasEnabled := access.IsEnabled
+	hadKeys := len(access.Keys) > 0
+	if input.Keys != nil {
+		keys, keyEvents, generated, err := s.planKeys(access, input.Keys)
+		if err != nil {
+			return Configured{}, fmt.Errorf("configure page access %s: %w", pageID.Hex(), err)
+		}
+		access.Keys = keys
+		pending = append(pending, keyEvents...)
+		issued = generated
+	}
+
+	if input.SessionHours != nil && *input.SessionHours != access.SessionHours {
+		pending = append(pending, eventPending{eventType: history.EventAccessSessionChanged, changes: []eventrepository.Change{{Field: sessionField, From: access.SessionHours, To: *input.SessionHours}}})
+		access.SessionHours = *input.SessionHours
+	}
+
+	isEnabled := access.IsEnabled || (!hadKeys && len(access.Keys) > 0)
+	if input.IsEnabled != nil {
+		isEnabled = *input.IsEnabled
+	}
+	if isEnabled && len(access.Keys) == 0 {
+		return Configured{}, fmt.Errorf("configure page access %s: %w", pageID.Hex(), ErrNoKeys)
+	}
+	access.IsEnabled = isEnabled
+	if wasEnabled != isEnabled {
+		eventType := history.EventAccessDisabled
+		if isEnabled {
+			eventType = history.EventAccessEnabled
+		} else {
+			access.Revision++
+		}
+		pending = append(pending, eventPending{eventType: eventType})
+	}
+
+	if len(pending) == 0 {
+		return Configured{Access: access, Issued: issued}, nil
+	}
+	if err := s.save(ctx, access); err != nil {
+		return Configured{}, fmt.Errorf("configure page access %s: %w", pageID.Hex(), err)
+	}
+	actor := s.actor(ctx)
+	for _, current := range pending {
+		s.record(ctx, pageID, current.eventType, actor, current.changes)
+	}
+	return Configured{Access: access, Issued: issued}, nil
+}
+
+func (s *Service) planKeys(access *pageaccessrepository.Access, wanted []ConfigKey) ([]pageaccessrepository.Key, []eventPending, []IssuedPIN, error) {
+	if len(wanted) > MaxKeys {
+		return nil, nil, nil, ErrTooManyKeys
+	}
+	seen := map[string]bool{}
+	for _, key := range wanted {
+		if err := checkRole(key.Role); err != nil {
+			return nil, nil, nil, err
+		}
+		if seen[key.Role] {
+			return nil, nil, nil, ErrRoleTaken
+		}
+		seen[key.Role] = true
+		if key.PIN != "" {
+			if err := pinsecret.CheckPIN(key.PIN); err != nil {
+				return nil, nil, nil, err
+			}
+		}
+	}
+
+	now := time.Now()
+	planned := &pageaccessrepository.Access{PageID: access.PageID, Keys: make([]pageaccessrepository.Key, 0, len(wanted))}
+	pending := []eventPending{}
+	toGenerate := []int{}
+	for index, wantedKey := range wanted {
+		previous := keyByRole(access, wantedKey.Role)
+		if previous != nil && (wantedKey.PIN == "" || s.secrets.HashPIN(access.PageID, wantedKey.PIN) == previous.PINHash) {
+			planned.Keys = append(planned.Keys, *previous)
+			continue
+		}
+		if wantedKey.PIN == "" {
+			planned.Keys = append(planned.Keys, pageaccessrepository.Key{Role: wantedKey.Role})
+			toGenerate = append(toGenerate, index)
+			continue
+		}
+		key, err := s.sealKey(access.PageID, previous, wantedKey.Role, wantedKey.PIN, now)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		planned.Keys = append(planned.Keys, key)
+	}
+	if err := ensureDistinctPINs(planned); err != nil {
+		return nil, nil, nil, err
+	}
+
+	issued := []IssuedPIN{}
+	for _, index := range toGenerate {
+		pin, _, err := s.resolvePIN(planned, "", nil)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		key, err := s.sealKey(access.PageID, nil, wanted[index].Role, pin, now)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		planned.Keys[index] = key
+		issued = append(issued, IssuedPIN{Role: key.Role, PIN: pin})
+	}
+
+	for _, key := range planned.Keys {
+		previous := keyByRole(access, key.Role)
+		switch {
+		case previous == nil:
+			pending = append(pending, eventPending{eventType: history.EventAccessKeyCreated, changes: []eventrepository.Change{{Field: roleField, From: nil, To: key.Role}}})
+		case previous.PINHash != key.PINHash:
+			pending = append(pending, eventPending{eventType: history.EventAccessPINReset, changes: []eventrepository.Change{{Field: roleField, From: nil, To: key.Role}}})
+		}
+	}
+	for _, key := range access.Keys {
+		if !seen[key.Role] {
+			pending = append(pending, eventPending{eventType: history.EventAccessKeyRemoved, changes: []eventrepository.Change{{Field: roleField, From: key.Role, To: nil}}})
+		}
+	}
+	return planned.Keys, pending, issued, nil
+}
+
+func (s *Service) sealKey(pageID bson.ObjectID, previous *pageaccessrepository.Key, role, pin string, now time.Time) (pageaccessrepository.Key, error) {
+	secret, err := pinsecret.NewKeySecret()
+	if err != nil {
+		return pageaccessrepository.Key{}, err
+	}
+	keyID := bson.NewObjectID()
+	createdAt := now
+	if previous != nil {
+		keyID = previous.ID
+		createdAt = previous.CreatedAt
+	}
+	sealed, err := s.secrets.EncryptPIN(pageID, keyID, pin)
+	if err != nil {
+		return pageaccessrepository.Key{}, err
+	}
+	return pageaccessrepository.Key{ID: keyID, Role: role, PINHash: s.secrets.HashPIN(pageID, pin), PINCipher: sealed, IsRevealable: true, Secret: secret, CreatedAt: createdAt, PINUpdatedAt: now}, nil
+}
+
 func (s *Service) DeleteAll(ctx context.Context, pageID bson.ObjectID) error {
 	if err := s.repository.Delete(ctx, pageID); err != nil {
 		return fmt.Errorf("delete page access %s: %w", pageID.Hex(), err)
@@ -518,6 +668,29 @@ func ensurePINFree(a *pageaccessrepository.Access, hash string, ownerID *bson.Ob
 		if key.PINHash == hash && (ownerID == nil || key.ID != *ownerID) {
 			return ErrPINInUse
 		}
+	}
+	return nil
+}
+
+func keyByRole(a *pageaccessrepository.Access, role string) *pageaccessrepository.Key {
+	for index := range a.Keys {
+		if a.Keys[index].Role == role {
+			return &a.Keys[index]
+		}
+	}
+	return nil
+}
+
+func ensureDistinctPINs(a *pageaccessrepository.Access) error {
+	seen := map[string]bool{}
+	for _, key := range a.Keys {
+		if key.PINHash == "" {
+			continue
+		}
+		if seen[key.PINHash] {
+			return ErrPINInUse
+		}
+		seen[key.PINHash] = true
 	}
 	return nil
 }

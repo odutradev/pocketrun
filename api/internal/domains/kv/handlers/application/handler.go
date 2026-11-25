@@ -259,37 +259,46 @@ func (h *Handler) validateAccess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {
-	switch {
-	case errors.Is(err, user.ErrInvalidToken):
+	if errors.Is(err, user.ErrInvalidToken) {
 		httpx.WriteError(w, http.StatusUnauthorized, "invalid_token")
-	case errors.Is(err, ErrInvalidApplicationID):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_application_id")
-	case errors.Is(err, ErrApplicationNotFound):
-		httpx.WriteError(w, http.StatusNotFound, "application_not_found")
-	case errors.Is(err, ErrTokenNotFound):
-		httpx.WriteError(w, http.StatusNotFound, "token_not_found")
-	case errors.Is(err, ErrProjectIDTaken):
-		httpx.WriteError(w, http.StatusConflict, "project_id_taken")
-	case errors.Is(err, ErrRoleNotFound):
-		httpx.WriteError(w, http.StatusNotFound, "role_not_found")
-	case errors.Is(err, ErrRoleTaken):
-		httpx.WriteError(w, http.StatusConflict, "role_taken")
-	case errors.Is(err, ErrRoleReserved):
-		httpx.WriteError(w, http.StatusBadRequest, "role_reserved")
-	case errors.Is(err, ErrInvalidRoleName):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_role_name")
-	case errors.Is(err, ErrInvalidRule):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_rule")
-	case errors.Is(err, ErrTooManyRoles):
-		httpx.WriteError(w, http.StatusConflict, "too_many_roles")
-	case errors.Is(err, ErrOwnedByPage):
-		httpx.WriteError(w, http.StatusConflict, "application_owned_by_page")
-	case errors.Is(err, ErrRoleInUse):
-		httpx.WriteError(w, http.StatusConflict, "role_in_use")
-	default:
-		h.logger.ErrorContext(r.Context(), operation, "error", err)
-		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+		return
 	}
+	if status, code, ok := ErrorStatus(err); ok {
+		httpx.WriteError(w, status, code)
+		return
+	}
+	h.logger.ErrorContext(r.Context(), operation, "error", err)
+	httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+}
+
+func ErrorStatus(err error) (int, string, bool) {
+	switch {
+	case errors.Is(err, ErrInvalidApplicationID):
+		return http.StatusBadRequest, "invalid_application_id", true
+	case errors.Is(err, ErrApplicationNotFound):
+		return http.StatusNotFound, "application_not_found", true
+	case errors.Is(err, ErrTokenNotFound):
+		return http.StatusNotFound, "token_not_found", true
+	case errors.Is(err, ErrProjectIDTaken):
+		return http.StatusConflict, "project_id_taken", true
+	case errors.Is(err, ErrRoleNotFound):
+		return http.StatusNotFound, "role_not_found", true
+	case errors.Is(err, ErrRoleTaken):
+		return http.StatusConflict, "role_taken", true
+	case errors.Is(err, ErrRoleReserved):
+		return http.StatusBadRequest, "role_reserved", true
+	case errors.Is(err, ErrInvalidRoleName):
+		return http.StatusBadRequest, "invalid_role_name", true
+	case errors.Is(err, ErrInvalidRule):
+		return http.StatusBadRequest, "invalid_rule", true
+	case errors.Is(err, ErrTooManyRoles):
+		return http.StatusConflict, "too_many_roles", true
+	case errors.Is(err, ErrOwnedByPage):
+		return http.StatusConflict, "application_owned_by_page", true
+	case errors.Is(err, ErrRoleInUse):
+		return http.StatusConflict, "role_in_use", true
+	}
+	return 0, "", false
 }
 
 func parseIDs(r *http.Request) (bson.ObjectID, bson.ObjectID, error) {

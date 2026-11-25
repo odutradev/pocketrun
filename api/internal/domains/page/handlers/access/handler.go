@@ -233,33 +233,40 @@ func (h *Handler) keyIDs(w http.ResponseWriter, r *http.Request) (bson.ObjectID,
 }
 
 func (h *Handler) writeError(w http.ResponseWriter, r *http.Request, operation string, err error) {
+	if status, code, ok := ErrorStatus(err); ok {
+		httpx.WriteError(w, status, code)
+		return
+	}
+	h.logger.ErrorContext(r.Context(), operation, "error", err)
+	httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+}
+
+func ErrorStatus(err error) (int, string, bool) {
 	switch {
 	case errors.Is(err, ErrInvalidKeyID):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_key_id")
+		return http.StatusBadRequest, "invalid_key_id", true
 	case errors.Is(err, pinsecret.ErrInvalidPIN):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_pin")
+		return http.StatusBadRequest, "invalid_pin", true
 	case errors.Is(err, pinsecret.ErrWeakPIN):
-		httpx.WriteError(w, http.StatusBadRequest, "weak_pin")
+		return http.StatusBadRequest, "weak_pin", true
 	case errors.Is(err, ErrInvalidRole):
-		httpx.WriteError(w, http.StatusBadRequest, "invalid_role")
+		return http.StatusBadRequest, "invalid_role", true
 	case errors.Is(err, ErrNoKeys):
-		httpx.WriteError(w, http.StatusBadRequest, "no_access_keys")
+		return http.StatusBadRequest, "no_access_keys", true
 	case errors.Is(err, ErrLastKey):
-		httpx.WriteError(w, http.StatusBadRequest, "last_access_key")
+		return http.StatusBadRequest, "last_access_key", true
 	case errors.Is(err, ErrTooManyKeys):
-		httpx.WriteError(w, http.StatusBadRequest, "too_many_access_keys")
+		return http.StatusBadRequest, "too_many_access_keys", true
 	case errors.Is(err, ErrKeyNotFound):
-		httpx.WriteError(w, http.StatusNotFound, "access_key_not_found")
+		return http.StatusNotFound, "access_key_not_found", true
 	case errors.Is(err, ErrPINInUse):
-		httpx.WriteError(w, http.StatusConflict, "pin_in_use")
+		return http.StatusConflict, "pin_in_use", true
 	case errors.Is(err, pinsecret.ErrPINUnavailable):
-		httpx.WriteError(w, http.StatusConflict, "pin_unavailable")
+		return http.StatusConflict, "pin_unavailable", true
 	case errors.Is(err, ErrRoleTaken):
-		httpx.WriteError(w, http.StatusConflict, "role_taken")
+		return http.StatusConflict, "role_taken", true
 	case errors.Is(err, ErrAccessConflict):
-		httpx.WriteError(w, http.StatusConflict, "access_conflict")
-	default:
-		h.logger.ErrorContext(r.Context(), operation, "error", err)
-		httpx.WriteError(w, http.StatusInternalServerError, "internal_error")
+		return http.StatusConflict, "access_conflict", true
 	}
+	return 0, "", false
 }

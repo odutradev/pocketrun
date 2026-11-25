@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 
+	eventrepository "pocketrun-api/internal/repositories/event"
 	pageaccessrepository "pocketrun-api/internal/repositories/pageaccess"
 )
 
@@ -89,6 +90,27 @@ type Issued struct {
 	PIN    string                       `json:"pin"`
 }
 
+type ConfigKey struct {
+	Role string
+	PIN  string
+}
+
+type ConfigInput struct {
+	IsEnabled    *bool
+	SessionHours *int
+	Keys         []ConfigKey
+}
+
+type IssuedPIN struct {
+	Role string `json:"role"`
+	PIN  string `json:"pin"`
+}
+
+type Configured struct {
+	Access *pageaccessrepository.Access
+	Issued []IssuedPIN
+}
+
 func ParseKeyID(value string) (bson.ObjectID, error) {
 	id, err := bson.ObjectIDFromHex(value)
 	if err != nil {
@@ -103,6 +125,11 @@ const (
 	roleField        = "role"
 	sessionField     = "sessionHours"
 )
+
+type eventPending struct {
+	eventType eventrepository.Type
+	changes   []eventrepository.Change
+}
 
 type limit struct {
 	window time.Duration

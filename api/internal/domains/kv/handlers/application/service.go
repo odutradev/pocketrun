@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 	"unicode/utf8"
 
@@ -74,6 +75,84 @@ func (s *Service) DeleteForPage(ctx context.Context, pageID bson.ObjectID) error
 		return fmt.Errorf("delete documents of page application %s: %w", deleted.ID.Hex(), err)
 	}
 	return nil
+}
+
+func (s *Service) SetPageRoles(ctx context.Context, pageID bson.ObjectID, inputs []RoleInput) (*applicationrepository.Application, error) {
+	current, err := s.repository.FindByPageID(ctx, pageID)
+	if err != nil {
+		return nil, fmt.Errorf("find application of page %s: %w", pageID.Hex(), err)
+	}
+	next, err := ReplaceRoles(current, inputs, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	if err := s.repository.SetRoles(ctx, current.ManagerID, current.ID, next); err != nil {
+		return nil, fmt.Errorf("set roles of page application %s: %w", current.ID.Hex(), err)
+	}
+	current.Roles = next
+	return current, nil
+}
+
+func CheckRoleInputs(inputs []RoleInput) error {
+	if len(inputs) > MaxRoles {
+		return ErrTooManyRoles
+	}
+	seen := map[string]bool{}
+	for _, input := range inputs {
+		if err := roles.CheckName(input.Name); err != nil {
+			return err
+		}
+		if seen[input.Name] {
+			return ErrRoleTaken
+		}
+		seen[input.Name] = true
+		if len(input.Rules) == 0 || len(input.Rules) > MaxRules {
+			return ErrInvalidRule
+		}
+		if err := roles.CheckRules(input.Rules); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func ReplaceRoles(current *applicationrepository.Application, inputs []RoleInput, now time.Time) ([]applicationrepository.Role, error) {
+	if err := CheckRoleInputs(inputs); err != nil {
+		return nil, err
+	}
+
+	kept := map[string]bool{}
+	next := make([]applicationrepository.Role, 0, len(inputs))
+	for _, input := range inputs {
+		kept[input.Name] = true
+		role := applicationrepository.Role{Name: input.Name, Description: input.Description, Rules: input.Rules, IsOwnDocumentsOnly: input.IsOwnDocumentsOnly, CreatedAt: now, UpdatedAt: now}
+		if previous, found := current.Role(input.Name); found {
+			role.CreatedAt = previous.CreatedAt
+			role.UpdatedAt = previous.UpdatedAt
+			if !sameRole(*previous, role) {
+				role.UpdatedAt = now
+			}
+		}
+		next = append(next, role)
+	}
+	for _, token := range current.Tokens {
+		if token.Role != "" && !kept[token.Role] {
+			return nil, ErrRoleInUse
+		}
+	}
+	return next, nil
+}
+
+func sameRole(first, second applicationrepository.Role) bool {
+	if first.Description != second.Description || first.IsOwnDocumentsOnly != second.IsOwnDocumentsOnly || len(first.Rules) != len(second.Rules) {
+		return false
+	}
+	for index := range first.Rules {
+		if first.Rules[index].Collection != second.Rules[index].Collection || first.Rules[index].MaxDocuments != second.Rules[index].MaxDocuments || !slices.Equal(first.Rules[index].Operations, second.Rules[index].Operations) {
+			return false
+		}
+	}
+	return true
 }
 
 func pageName(title string) string {
