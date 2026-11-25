@@ -4,7 +4,7 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
-## Não publicado
+## 1.8.4 (2026-11-24)
 
 - As abas **Acesso** e **Dados** das páginas viraram uma só, **Acesso e dados**: cada PIN aparece junto com o cargo dos dados, e os cargos e as regras por coleção são criados, editados e apagados na própria página, sem ir ao KV.
 - Modo **JSON** na aba Acesso e dados, que exporta e aplica PINs, proteção, dados e cargos num JSON só, validado enquanto você digita. O formato está no `llms.txt` e na Documentação (`/docs#page-config`), para uma IA gerar a configuração.
