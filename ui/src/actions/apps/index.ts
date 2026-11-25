@@ -1,6 +1,6 @@
 import api from "@utils/api";
 
-import type { Application, CreateApplicationPayload, CreatedApplication, CreatedToken, CreateTokenPayload, KvRole, RolePayload, RoleUpdatePayload, UpdateApplicationPayload } from "@utils/types/application";
+import type { Application, ApplicationConfig, CreateApplicationPayload, CreatedApplication, CreatedToken, CreateTokenPayload, KvRole, RolePayload, RoleUpdatePayload, UpdateApplicationPayload } from "@utils/types/application";
 import type { MessageResponse } from "@utils/types/api";
 
 export const listApplications = async (signal?: AbortSignal) => {
@@ -55,5 +55,15 @@ export const updateRole = async (applicationId: string, role: string, data: Role
 
 export const deleteRole = async (applicationId: string, role: string) => {
   const response = await api.delete<MessageResponse>(`/apps/${applicationId}/roles/${role}/delete`);
+  return response.data;
+};
+
+export const exportApplicationConfig = async (applicationId: string, signal?: AbortSignal) => {
+  const response = await api.get<ApplicationConfig>(`/apps/${applicationId}/config/export`, { signal });
+  return response.data;
+};
+
+export const applyApplicationConfig = async (applicationId: string, data: Record<string, unknown>) => {
+  const response = await api.post<ApplicationConfig>(`/apps/${applicationId}/config/apply`, data);
   return response.data;
 };

@@ -73,6 +73,7 @@ export const errorMessages: Record<ApiErrorCode, string> = {
   role_in_use: "Algum token ainda usa este cargo. Troque o cargo desses tokens antes de apagar.",
   application_owned_by_page: "Esta aplicação é de uma página. Ela é apagada junto com a página, ou desligada na aba Acesso e dados.",
   kv_application_not_owned: "Esta página usa uma aplicação comum do KV. Edite os cargos no KV ou desative e ative os dados de novo.",
+  invalid_config: "O mesmo token aparece mais de uma vez na lista de tokens.",
   kv_not_linked: "A página ainda não tem dados ativados.",
   kv_application_missing: "A aplicação de dados desta página foi excluída.",
   invalid_backup: "Esse arquivo não é um backup válido do PocketRun.",
@@ -652,6 +653,7 @@ export const appEditorTabs: { value: AppEditorTab; label: string }[] = [
   { value: "settings", label: "Configuração" },
   { value: "roles", label: "Cargos" },
   { value: "tokens", label: "Tokens" },
+  { value: "json", label: "JSON" },
   { value: "snippets", label: "Snippets" }
 ];
 
@@ -1264,6 +1266,37 @@ export const backupScopeLabels: Record<BackupScope, string> = {
   content: "Só o conteúdo"
 };
 
+export const kvRoleJsonSchema: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["name", "rules"],
+  properties: {
+    name: { type: "string", maxLength: 40, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", not: { const: "admin" } },
+    description: { type: "string", maxLength: 200 },
+    isOwnDocumentsOnly: { type: "boolean", description: "O cargo vê, edita e apaga só o que ele mesmo criou." },
+    rules: {
+      type: "array",
+      minItems: 1,
+      maxItems: 30,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["collection", "operations"],
+        properties: {
+          collection: { type: "string", pattern: "^([*]|[A-Za-z0-9_-]{1,64})$", description: "Nome da coleção ou * para todas." },
+          operations: {
+            type: "array",
+            minItems: 1,
+            uniqueItems: true,
+            items: { type: "string", enum: ["read", "create", "update", "delete"] }
+          },
+          maxDocuments: { type: "integer", minimum: 0, maximum: 1000000, description: "Limite de documentos na coleção. 0 é sem limite." }
+        }
+      }
+    }
+  }
+};
+
 export const pageConfigFileName = "pocketrun-page-config.json";
 
 export const pageConfigJsonSchema: Record<string, unknown> = {
@@ -1308,36 +1341,7 @@ export const pageConfigJsonSchema: Record<string, unknown> = {
           type: "array",
           maxItems: 20,
           description: "A lista completa de cargos. Cargos fora da lista são apagados. admin é fixo e não entra aqui.",
-          items: {
-            type: "object",
-            additionalProperties: false,
-            required: ["name", "rules"],
-            properties: {
-              name: { type: "string", maxLength: 40, pattern: "^[a-z0-9]+(-[a-z0-9]+)*$", not: { const: "admin" } },
-              description: { type: "string", maxLength: 200 },
-              isOwnDocumentsOnly: { type: "boolean", description: "O cargo vê, edita e apaga só o que ele mesmo criou." },
-              rules: {
-                type: "array",
-                minItems: 1,
-                maxItems: 30,
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: ["collection", "operations"],
-                  properties: {
-                    collection: { type: "string", pattern: "^([*]|[A-Za-z0-9_-]{1,64})$", description: "Nome da coleção ou * para todas." },
-                    operations: {
-                      type: "array",
-                      minItems: 1,
-                      uniqueItems: true,
-                      items: { type: "string", enum: ["read", "create", "update", "delete"] }
-                    },
-                    maxDocuments: { type: "integer", minimum: 0, maximum: 1000000, description: "Limite de documentos na coleção. 0 é sem limite." }
-                  }
-                }
-              }
-            }
-          }
+          items: kvRoleJsonSchema
         }
       }
     }
@@ -1364,3 +1368,35 @@ export const pageConfigDocFields: PageConfigDocField[] = [
   { path: "kv.roles[].rules[].operations", type: "lista", description: "De 1 a 4 entre read, create, update e delete." },
   { path: "kv.roles[].rules[].maxDocuments", type: "número", description: "Opcional. Limite de documentos na coleção, 0 é sem limite." }
 ];
+
+export const appConfigFileName = "pocketrun-kv-config.json";
+
+export const appConfigJsonSchema: Record<string, unknown> = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  title: "Aplicação do KV no PocketRun",
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    version: { type: "integer", enum: [1], description: "Versão do formato. Hoje é sempre 1." },
+    projectId: { type: "string", description: "Só informativo: o Project ID não muda depois de criado." },
+    name: { type: "string", minLength: 1, maxLength: 100, description: "Nome da aplicação no painel." },
+    description: { type: "string", maxLength: 500 },
+    allowedOrigins: { type: "array", items: { type: "string", minLength: 1 }, description: "Sites que podem chamar a API pelo navegador. * libera qualquer site." },
+    allowNonBrowserRequests: { type: "boolean", description: "Aceita chamadas sem Origin, como servidores, scripts e apps." },
+    roles: { type: "array", maxItems: 20, description: "A lista completa de cargos. Cargo fora da lista é apagado. admin é fixo e não entra aqui.", items: kvRoleJsonSchema },
+    tokens: {
+      type: "array",
+      maxItems: 200,
+      description: "Troca o cargo dos tokens listados. Tokens fora da lista ficam como estão. Criar e revogar fica na aba Tokens.",
+      items: {
+        type: "object",
+        required: ["id", "role"],
+        properties: {
+          id: { type: "string", description: "Id do token, como aparece na exportação." },
+          name: { type: "string", description: "Só informativo." },
+          role: { type: "string", maxLength: 40, description: "admin ou um nome de roles." }
+        }
+      }
+    }
+  }
+};

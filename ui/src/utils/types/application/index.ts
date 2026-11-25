@@ -87,8 +87,32 @@ export type ApplicationSort = "recent" | "name" | "tokens";
 
 export type ApplicationFilter = "all" | "open" | "restricted" | "noTokens";
 
-export type AppEditorTab = "explorer" | "settings" | "roles" | "tokens" | "snippets";
+export type AppEditorTab = "explorer" | "settings" | "roles" | "tokens" | "json" | "snippets";
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 export type CreateTokenValues = z.infer<typeof createTokenSchema>;
 export type RoleFormValues = z.infer<typeof roleFormSchema>;
+
+export interface ApplicationConfigRole {
+  name: string;
+  description: string;
+  isOwnDocumentsOnly: boolean;
+  rules: KvRoleRule[];
+}
+
+export interface ApplicationConfigToken {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export interface ApplicationConfig {
+  version: number;
+  projectId: string;
+  name: string;
+  description: string;
+  allowedOrigins: string[];
+  allowNonBrowserRequests: boolean;
+  roles: ApplicationConfigRole[];
+  tokens: ApplicationConfigToken[];
+}

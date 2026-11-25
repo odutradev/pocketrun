@@ -15,6 +15,7 @@ import Loader from "@components/loader";
 import TabNav from "@components/tabNav";
 import useAppEditorPage from "./hook";
 import TokensTab from "./tabs/tokens";
+import JsonTab from "./tabs/json";
 import RolesTab from "./tabs/roles";
 
 import type { ContentNavbarCrumb } from "@components/contentNavbar/types";
@@ -45,6 +46,7 @@ const AppEditorPage = () => {
     settings: form,
     roles: <RolesTab />,
     tokens: <TokensTab />,
+    json: <JsonTab />,
     snippets: <SnippetsTab />
   };
   const tabCounts: Partial<Record<AppEditorTab, number>> = { tokens: application?.tokens?.length ?? 0, roles: (application?.roles?.length ?? 0) + 1 };

@@ -57,6 +57,7 @@ export type ApiErrorCode =
   | "role_in_use"
   | "application_owned_by_page"
   | "kv_application_not_owned"
+  | "invalid_config"
   | "kv_not_linked"
   | "kv_application_missing"
   | "invalid_backup"
