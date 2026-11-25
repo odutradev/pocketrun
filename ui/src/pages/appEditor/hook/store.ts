@@ -3,13 +3,27 @@ import { create } from "zustand";
 
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { getApplication } from "@actions/apps";
+import { getPage } from "@actions/sitePages";
 
-import type { AppEditorStore } from "./types";
+import type { Application } from "@utils/types/application";
+import type { AppEditorStore, OwnerPage } from "./types";
 
 const logger = createLocalLogger("appEditorPage");
 
+const findOwnerPage = async (application: Application, signal?: AbortSignal): Promise<OwnerPage | null> => {
+  if (!application.pageId) return null;
+  try {
+    const page = await getPage(application.pageId, signal);
+    return { id: page.id, title: page.title };
+  } catch (error) {
+    logger.warn(error);
+    return null;
+  }
+};
+
 const initialState = {
   application: null,
+  ownerPage: null,
   isLoading: true,
   isRefreshing: false,
   hasFailed: false,
@@ -28,7 +42,9 @@ const useAppEditorStore = create<AppEditorStore>()((set, get) => ({
     }
     set({ isLoading: true, hasFailed: false });
     try {
-      set({ application: await getApplication(applicationId, signal), isLoading: false });
+      const application = await getApplication(applicationId, signal);
+      const ownerPage = await findOwnerPage(application, signal);
+      set({ application, ownerPage, isLoading: false });
     } catch (error) {
       if (signal?.aborted) return;
       logger.error(error);

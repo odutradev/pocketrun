@@ -9,6 +9,7 @@ As versões seguem o `version` do `package.json`, e cada uma vira as imagens `od
 - As abas **Acesso** e **Dados** das páginas viraram uma só, **Acesso e dados**: cada PIN aparece junto com o cargo dos dados, e os cargos e as regras por coleção são criados, editados e apagados na própria página, sem ir ao KV.
 - Modo **JSON** na aba Acesso e dados, que exporta e aplica PINs, proteção, dados e cargos num JSON só, validado enquanto você digita. O formato está no `llms.txt` e na Documentação (`/docs#page-config`), para uma IA gerar a configuração.
 - Rotas `GET /admin/pages/{id}/config/export` e `POST /admin/pages/{id}/config/apply`.
+- A aplicação do KV de uma página mostra o caminho **Páginas › página › KV › aplicação** no topo, com link de volta para a aba Acesso e dados da página.
 
 ## 1.8.3 (2026-11-24)
 

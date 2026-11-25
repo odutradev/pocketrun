@@ -21,6 +21,7 @@ const useAppEditorPage = (): UseAppEditorPageReturn => {
   return {
     applicationId,
     application: store.application,
+    ownerPage: store.ownerPage,
     isEditing,
     isLoading: store.isLoading,
     isRefreshing: store.isRefreshing,

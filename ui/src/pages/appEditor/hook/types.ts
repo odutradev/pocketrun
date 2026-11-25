@@ -1,8 +1,14 @@
 import type { AppEditorTab, Application, KvRole } from "@utils/types/application";
 
+export interface OwnerPage {
+  id: string;
+  title: string;
+}
+
 export interface UseAppEditorPageReturn {
   applicationId: string;
   application: Application | null;
+  ownerPage: OwnerPage | null;
   isEditing: boolean;
   isLoading: boolean;
   isRefreshing: boolean;
@@ -26,6 +32,7 @@ export interface UseAppEditorPageReturn {
 
 export interface AppEditorStore {
   application: Application | null;
+  ownerPage: OwnerPage | null;
   isLoading: boolean;
   isRefreshing: boolean;
   hasFailed: boolean;

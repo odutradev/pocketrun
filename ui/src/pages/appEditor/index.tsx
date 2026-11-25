@@ -24,10 +24,10 @@ import type { ReactNode } from "react";
 
 const tabIdPrefix = "app-editor";
 
-const parents: ContentNavbarCrumb[] = [{ label: "KV", to: "/kv" }];
+const kvCrumb: ContentNavbarCrumb = { label: "KV", to: "/kv" };
 
 const AppEditorPage = () => {
-  const { applicationId, application, isEditing, isLoading, isRefreshing, hasFailed, tab, load, reset, handleRefresh, handleTabChange } =
+  const { applicationId, application, ownerPage, isEditing, isLoading, isRefreshing, hasFailed, tab, load, reset, handleRefresh, handleTabChange } =
     useAppEditorPage();
 
   useEffect(() => {
@@ -76,7 +76,11 @@ const AppEditorPage = () => {
     <Container>
       <ContentNavbar
         title={isEditing ? (application?.name ?? "Aplicação") : "Nova aplicação"}
-        parents={parents}
+        parents={
+          ownerPage
+            ? [{ label: "Páginas", to: "/pages" }, { label: ownerPage.title, to: `/pages/${ownerPage.id}/edit?tab=access` }, kvCrumb]
+            : [kvCrumb]
+        }
         info="A aplicação guarda as coleções de JSON de um projeto, isoladas das outras. Os clientes chamam a API pública com um token desta aplicação; o explorador mostra o que já foi gravado."
         onReload={isEditing && application ? handleRefresh : undefined}
         isReloading={isRefreshing}
