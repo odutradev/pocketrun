@@ -69,4 +69,8 @@ export const RowActions = styled.div`
   flex-shrink: 0;
   justify-content: flex-end;
   gap: ${({ theme }) => theme.spacing(1)};
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+    min-width: 136px;
+  }
 `;
