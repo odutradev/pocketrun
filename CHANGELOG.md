@@ -4,6 +4,11 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+- Ferramenta **`docs`** no servidor MCP: devolve à IA o guia completo do PocketRun (o `llms.txt`) ou uma seção, já com os endereços da API e das páginas da instância. As instruções do MCP pedem para a IA ler antes de montar páginas com dados, cargos e PINs.
+- Seção **MCP: como montar com as ferramentas** no `llms.txt`, com receitas passo a passo e as regras para o HTML de uma página com dados.
+
 ## 1.8.6 (2026-11-25)
 
 - **Servidor MCP** em `{api}/mcp`: o Claude ou outro assistente de IA gerencia páginas, links, grupos, aplicações do KV, cargos, tokens e PINs conversando, com as mesmas regras do painel.

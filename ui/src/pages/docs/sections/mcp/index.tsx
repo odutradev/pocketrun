@@ -28,6 +28,10 @@ const McpSection = () => (
         prefixo.
       </li>
       <li>Revogar a chave no Perfil corta o acesso da IA na hora.</li>
+      <li>
+        A ferramenta <Code>docs</Code> entrega à IA este guia completo, com os endereços da sua instância. Ela é lida antes de montar páginas com
+        dados, cargos e PINs.
+      </li>
     </Bullets>
     <Bullets>
       {apiKeyScopeOptions.map((option) => (
