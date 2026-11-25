@@ -2,19 +2,16 @@ import { PlusIcon, TrashIcon } from "@radix-ui/react-icons";
 
 import { Actions, Form, OperationChip, Operations, RuleCard, RuleFields, RuleHeader, RuleList, RuleTitle, RulesLegend } from "./styles";
 import { roleFormSchema } from "@utils/validations/application";
-import { createRole, updateRole } from "@actions/apps";
 import SwitchField from "@components/switchField";
 import { kvOperationOptions } from "@assets/data";
 import IconButton from "@components/iconButton";
-import useAppEditorPage from "../../hook";
-import useAction from "@hooks/useAction";
 import Button from "@components/button";
 import Alert from "@components/alert";
 import Input from "@components/input";
 import useForm from "@hooks/useForm";
 
 import type { KvOperation, KvRole, KvRoleRule, RoleFormValues } from "@utils/types/application";
-import type { RoleFormProps } from "./types";
+import type { KvRoleFormProps } from "./types";
 
 const emptyRule: KvRoleRule = { collection: "", operations: ["read"], maxDocuments: 0 };
 
@@ -25,27 +22,11 @@ const toFormValues = (role: KvRole | null): RoleFormValues => ({
   rules: role?.rules.map((rule) => ({ ...rule, operations: [...rule.operations] })) ?? [emptyRule]
 });
 
-const RoleForm = ({ role }: RoleFormProps) => {
-  const { applicationId, handleCloseRoleModal, handleRefresh } = useAppEditorPage();
-
-  const { execute } = useAction({
-    action: ({ name, description, rules, isOwnDocumentsOnly }: RoleFormValues) =>
-      role ? updateRole(applicationId, role.name, { description, rules, isOwnDocumentsOnly }) : createRole(applicationId, { name, description, rules, isOwnDocumentsOnly }),
-    toastMessages: {
-      pending: role ? "Salvando o cargo…" : "Criando o cargo…",
-      success: role ? "Cargo atualizado" : "Cargo criado",
-      error: role ? "Não foi possível salvar o cargo" : "Não foi possível criar o cargo"
-    },
-    callback: () => {
-      handleCloseRoleModal();
-      handleRefresh();
-    }
-  });
-
+const KvRoleForm = ({ role, onSubmit, onCancel }: KvRoleFormProps) => {
   const { values, errors, isSubmitting, setFieldValue, handleChange, handleSubmit } = useForm({
     schema: roleFormSchema,
     initialValues: toFormValues(role),
-    onSubmit: execute
+    onSubmit
   });
 
   const updateRule = (index: number, changes: Partial<KvRoleRule>) =>
@@ -140,7 +121,7 @@ const RoleForm = ({ role }: RoleFormProps) => {
         Adicionar regra
       </Button>
       <Actions>
-        <Button variant="secondary" onClick={handleCloseRoleModal}>
+        <Button variant="secondary" onClick={onCancel}>
           Cancelar
         </Button>
         <Button type="submit" isLoading={isSubmitting} loadingLabel="Salvando…">
@@ -151,4 +132,4 @@ const RoleForm = ({ role }: RoleFormProps) => {
   );
 };
 
-export default RoleForm;
+export default KvRoleForm;
