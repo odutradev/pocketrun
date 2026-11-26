@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
+import { downloadKvUsageCsv } from "@utils/functions";
 import { appEditorTabs } from "@assets/data";
 import useAppEditorStore from "./store";
 
@@ -31,12 +32,21 @@ const useAppEditorPage = (): UseAppEditorPageReturn => {
     isTokenModalOpen: store.isTokenModalOpen,
     isRoleModalOpen: store.isRoleModalOpen,
     editingRole: store.editingRole,
+    analytics: store.analytics,
+    analyticsRange: store.analyticsRange,
+    isAnalyticsLoading: store.isAnalyticsLoading,
     load: store.load,
+    loadAnalytics: store.loadAnalytics,
     reset: store.reset,
     handleOpenRoleModal: store.openRoleModal,
     handleCloseRoleModal: store.closeRoleModal,
     handleRefresh: store.refresh,
     handleTabChange: (next) => setSearchParams(next === "explorer" ? {} : { tab: next }, { replace: true }),
+    handleAnalyticsRangeChange: store.setAnalyticsRange,
+    handleExportAnalytics: () => {
+      if (!store.analytics || !store.application) return;
+      downloadKvUsageCsv(`${store.application.projectId}-${store.analytics.range}.csv`, store.analytics);
+    },
     handleCreated: (application) => navigate(`/kv/${application.id}/edit`, { replace: true }),
     handleRemoved: () => navigate("/kv", { replace: true }),
     handleOpenTokenModal: () => store.setTokenModalOpen(true),

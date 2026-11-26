@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { create } from "zustand";
 
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
-import { getApplication } from "@actions/apps";
+import { getApplication, getApplicationAnalytics } from "@actions/apps";
 import { getPage } from "@actions/sitePages";
 
 import type { Application } from "@utils/types/application";
@@ -30,11 +30,15 @@ const initialState = {
   refreshKey: 0,
   isTokenModalOpen: false,
   isRoleModalOpen: false,
-  editingRole: null
+  editingRole: null,
+  analytics: null,
+  isAnalyticsLoading: false
 };
 
 const useAppEditorStore = create<AppEditorStore>()((set, get) => ({
   ...initialState,
+  analyticsRange: "30d",
+  analyticsRequestId: 0,
   load: async (applicationId, signal) => {
     if (!applicationId) {
       set({ ...initialState, isLoading: false });
@@ -64,6 +68,24 @@ const useAppEditorStore = create<AppEditorStore>()((set, get) => ({
       set({ isRefreshing: false });
     }
   },
+  loadAnalytics: async () => {
+    const { application, analyticsRange, analyticsRequestId: previousRequestId } = get();
+    if (!application) return;
+    const analyticsRequestId = previousRequestId + 1;
+    set({ isAnalyticsLoading: true, analyticsRequestId });
+    try {
+      const analytics = await getApplicationAnalytics(application.id, analyticsRange);
+      if (get().analyticsRequestId !== analyticsRequestId) return;
+      set({ analytics });
+    } catch (error) {
+      if (get().analyticsRequestId !== analyticsRequestId) return;
+      logger.error(error);
+      toast.error(getErrorMessage(error, "Não foi possível carregar a análise da aplicação"));
+    } finally {
+      if (get().analyticsRequestId === analyticsRequestId) set({ isAnalyticsLoading: false });
+    }
+  },
+  setAnalyticsRange: (analyticsRange) => set({ analyticsRange }),
   setTokenModalOpen: (isTokenModalOpen) => set({ isTokenModalOpen }),
   openRoleModal: (editingRole) => set({ isRoleModalOpen: true, editingRole }),
   closeRoleModal: () => set({ isRoleModalOpen: false, editingRole: null }),

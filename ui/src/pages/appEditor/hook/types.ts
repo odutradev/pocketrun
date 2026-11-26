@@ -1,4 +1,5 @@
-import type { AppEditorTab, Application, KvRole } from "@utils/types/application";
+import type { AppEditorTab, Application, KvAnalytics, KvRole } from "@utils/types/application";
+import type { AnalyticsRange } from "@utils/types/link";
 
 export interface OwnerPage {
   id: string;
@@ -18,12 +19,18 @@ export interface UseAppEditorPageReturn {
   isTokenModalOpen: boolean;
   isRoleModalOpen: boolean;
   editingRole: KvRole | null;
+  analytics: KvAnalytics | null;
+  analyticsRange: AnalyticsRange;
+  isAnalyticsLoading: boolean;
   load: (applicationId: string | undefined, signal?: AbortSignal) => Promise<void>;
+  loadAnalytics: () => Promise<void>;
   reset: () => void;
   handleOpenRoleModal: (role: KvRole | null) => void;
   handleCloseRoleModal: () => void;
   handleRefresh: () => Promise<void>;
   handleTabChange: (tab: AppEditorTab) => void;
+  handleAnalyticsRangeChange: (range: AnalyticsRange) => void;
+  handleExportAnalytics: () => void;
   handleCreated: (application: Application) => void;
   handleRemoved: () => void;
   handleOpenTokenModal: () => void;
@@ -40,7 +47,13 @@ export interface AppEditorStore {
   isTokenModalOpen: boolean;
   isRoleModalOpen: boolean;
   editingRole: KvRole | null;
+  analytics: KvAnalytics | null;
+  analyticsRange: AnalyticsRange;
+  isAnalyticsLoading: boolean;
+  analyticsRequestId: number;
   load: (applicationId: string | undefined, signal?: AbortSignal) => Promise<void>;
+  loadAnalytics: () => Promise<void>;
+  setAnalyticsRange: (range: AnalyticsRange) => void;
   refresh: () => Promise<void>;
   setTokenModalOpen: (isOpen: boolean) => void;
   openRoleModal: (role: KvRole | null) => void;

@@ -9,6 +9,7 @@ import AppForm from "./subcomponents/appForm";
 import { Container, TabArea } from "./styles";
 import { appEditorTabs } from "@assets/data";
 import TabPanel from "@components/tabPanel";
+import AnalyticsTab from "./tabs/analytics";
 import ExplorerTab from "./tabs/explorer";
 import SnippetsTab from "./tabs/snippets";
 import Loader from "@components/loader";
@@ -46,6 +47,7 @@ const AppEditorPage = () => {
     settings: form,
     roles: <RolesTab />,
     tokens: <TokensTab />,
+    analytics: <AnalyticsTab />,
     json: <JsonTab />,
     snippets: <SnippetsTab />
   };
