@@ -1,5 +1,5 @@
 import { Cell, Grid, HourLabel, Peak, RowLabel, Scale, ScaleStep, Wrapper } from "./styles";
-import { weekdayShortLabels } from "@assets/data";
+import { clickUnit, weekdayShortLabels } from "@assets/data";
 import { pluralize } from "@utils/functions";
 
 import type { ActivityHeatmapProps } from "./types";
@@ -10,7 +10,7 @@ const hours = Array.from({ length: 24 }, (_, hour) => hour);
 
 const levels = [0.12, 0.3, 0.5, 0.72, 1];
 
-const ActivityHeatmap = ({ cells }: ActivityHeatmapProps) => {
+const ActivityHeatmap = ({ cells, unit = clickUnit }: ActivityHeatmapProps) => {
   const counts = new Map(cells.map((cell) => [`${cell.weekday}-${cell.hour}`, cell.clicks]));
   const max = Math.max(0, ...cells.map((cell) => cell.clicks));
   const peak = cells.reduce((best, cell) => (cell.clicks > best.clicks ? cell : best), { weekday: 0, hour: 0, clicks: 0 });
@@ -21,10 +21,10 @@ const ActivityHeatmap = ({ cells }: ActivityHeatmapProps) => {
       {peak.clicks > 0 && (
         <Peak>
           Pico: <strong>{weekdayShortLabels[peak.weekday]}, {String(peak.hour).padStart(2, "0")}h</strong> com{" "}
-          {pluralize(peak.clicks, "clique", "cliques")}
+          {pluralize(peak.clicks, unit.singular, unit.plural)}
         </Peak>
       )}
-      <Grid role="img" aria-label="Cliques por dia da semana e hora do dia">
+      <Grid role="img" aria-label={`${unit.plural[0].toUpperCase()}${unit.plural.slice(1)} por dia da semana e hora do dia`}>
         <span />
         {hours.map((hour) => (
           <HourLabel key={hour} aria-hidden="true">
@@ -41,7 +41,7 @@ const ActivityHeatmap = ({ cells }: ActivityHeatmapProps) => {
               <Cell
                 key={`${weekday}-${hour}`}
                 $level={levelOf(clicks)}
-                title={`${weekdayShortLabels[weekday]}, ${String(hour).padStart(2, "0")}h: ${pluralize(clicks, "clique", "cliques")}`}
+                title={`${weekdayShortLabels[weekday]}, ${String(hour).padStart(2, "0")}h: ${pluralize(clicks, unit.singular, unit.plural)}`}
               />
             );
           })

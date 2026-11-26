@@ -3,7 +3,7 @@ import { ArchiveIcon, BackpackIcon, BookmarkIcon, CalendarIcon, ChatBubbleIcon, 
 import theme from "@styles/theme";
 
 import type { BrandColor, BrandContext, BrandOption, BrandSection, BrandToken, BrandToolInfo, BrandTypeStep, FaviconItem, IconPaletteInfo, LogoAspect, LogoBackground, LogoConfig, LogoKind, LogoPalette, MotionDemo, MotionToken, OpticalSize, QuickKitItem, RasterFormat, RasterSize, SymbolPart, TypeFamily } from "@utils/types/brand";
-import type { AnalyticsRange, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
+import type { AnalyticsRange, AnalyticsSeriesLabels, AnalyticsUnit, GroupColorOption, GroupIconOption, HistoryFilter, LinkChangeField, LinkEditorTab, LinkEventType, LinkGroupTab, LinkMode, LinkSort, LinkState, LinkStateFilter, PeriodPresetOption, QrLevel, QrMargin, QrSize, SlugUnavailableReason, UrlProtocolOption, LinkCountBy } from "@utils/types/link";
 import type { PageChangeField, PageEditorTab, PageEventType, PageGroupTab, PageTemplate } from "@utils/types/sitePage";
 import type { AppEditorTab, ApplicationFilter, ApplicationSort, KvOperation } from "@utils/types/application";
 import type { KvDocError, KvDocMethod, KvDocRoute, ConfigDocField } from "@utils/types/kvDocs";
@@ -674,6 +674,7 @@ export const appEditorTabs: { value: AppEditorTab; label: string }[] = [
   { value: "settings", label: "Configuração" },
   { value: "roles", label: "Cargos" },
   { value: "tokens", label: "Tokens" },
+  { value: "analytics", label: "Análise" },
   { value: "json", label: "JSON" },
   { value: "snippets", label: "Snippets" }
 ];
@@ -1249,6 +1250,31 @@ export const deviceLabels: Record<string, string> = {
   desktop: "Computador",
   mobile: "Celular",
   tablet: "Tablet"
+};
+
+export const clickUnit: AnalyticsUnit = { singular: "clique", plural: "cliques" };
+
+export const requestUnit: AnalyticsUnit = { singular: "pedido", plural: "pedidos" };
+
+export const clickSeriesLabels: AnalyticsSeriesLabels = { clicks: "Cliques", visitors: "Visitantes únicos", visitorsShort: "Visitantes" };
+
+export const requestSeriesLabels: AnalyticsSeriesLabels = { clicks: "Pedidos", visitors: "Com erro", visitorsShort: "Com erro" };
+
+export const kvUsageOperationLabels: Record<string, string> = {
+  "get-all": "Listar",
+  count: "Contar",
+  eval: "Calcular",
+  get: "Ler",
+  create: "Criar",
+  update: "Editar",
+  replace: "Trocar",
+  delete: "Apagar",
+  "delete-all": "Limpar coleção",
+  export: "Exportar coleção",
+  import: "Importar coleção",
+  "project-export": "Exportar projeto",
+  "project-import": "Importar projeto",
+  "project-delete-all": "Apagar tudo"
 };
 
 export const weekdayShortLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

@@ -1,6 +1,7 @@
 import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTheme } from "styled-components";
 
+import { clickSeriesLabels } from "@assets/data";
 import { Legend, LegendItem, Swatch, TooltipBox, TooltipRow, TooltipTitle, Wrapper } from "./styles";
 
 import type { ChartPoint, ClicksChartProps } from "./types";
@@ -19,7 +20,7 @@ const formatTooltipTitle = (time: number, bucket: AnalyticsBucket) => {
   return date.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
 };
 
-const ClicksChart = ({ series, bucket, markers }: ClicksChartProps) => {
+const ClicksChart = ({ series, bucket, markers, labels = clickSeriesLabels }: ClicksChartProps) => {
   const theme = useTheme();
   const data: ChartPoint[] = series.map((point) => ({ time: new Date(point.at).getTime(), clicks: point.clicks, visitors: point.visitors }));
   const firstTime = data[0]?.time ?? 0;
@@ -34,11 +35,11 @@ const ClicksChart = ({ series, bucket, markers }: ClicksChartProps) => {
       <Legend>
         <LegendItem>
           <Swatch $color={theme.brand.chart.clicks} />
-          Cliques
+          {labels.clicks}
         </LegendItem>
         <LegendItem>
           <Swatch $color={theme.brand.chart.visitors} />
-          Visitantes únicos
+          {labels.visitors}
         </LegendItem>
         {visibleMarkers.length > 0 && (
           <LegendItem>
@@ -84,11 +85,11 @@ const ClicksChart = ({ series, bucket, markers }: ClicksChartProps) => {
                   <TooltipTitle>{formatTooltipTitle(point.time, bucket)}</TooltipTitle>
                   <TooltipRow>
                     <Swatch $color={theme.brand.chart.clicks} />
-                    Cliques <strong>{point.clicks.toLocaleString("pt-BR")}</strong>
+                    {labels.clicks} <strong>{point.clicks.toLocaleString("pt-BR")}</strong>
                   </TooltipRow>
                   <TooltipRow>
                     <Swatch $color={theme.brand.chart.visitors} />
-                    Visitantes <strong>{point.visitors.toLocaleString("pt-BR")}</strong>
+                    {labels.visitorsShort} <strong>{point.visitors.toLocaleString("pt-BR")}</strong>
                   </TooltipRow>
                 </TooltipBox>
               );
@@ -106,7 +107,7 @@ const ClicksChart = ({ series, bucket, markers }: ClicksChartProps) => {
           <Area
             type="monotone"
             dataKey="clicks"
-            name="Cliques"
+            name={labels.clicks}
             stroke={theme.brand.chart.clicks}
             strokeWidth={2}
             fill="url(#clicksFill)"
@@ -116,7 +117,7 @@ const ClicksChart = ({ series, bucket, markers }: ClicksChartProps) => {
           <Area
             type="monotone"
             dataKey="visitors"
-            name="Visitantes únicos"
+            name={labels.visitors}
             stroke={theme.brand.chart.visitors}
             strokeWidth={2}
             fill="transparent"

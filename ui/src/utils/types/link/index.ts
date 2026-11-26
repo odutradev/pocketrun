@@ -187,6 +187,17 @@ export interface AnalyticsHeatCell {
   clicks: number;
 }
 
+export interface AnalyticsUnit {
+  singular: string;
+  plural: string;
+}
+
+export interface AnalyticsSeriesLabels {
+  clicks: string;
+  visitors: string;
+  visitorsShort: string;
+}
+
 export interface AnalyticsShare {
   name: string;
   clicks: number;

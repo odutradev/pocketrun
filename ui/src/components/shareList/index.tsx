@@ -1,8 +1,11 @@
 import { Bar, Empty, Item, List, Name, Row, Title, Track, Value, Wrapper } from "./styles";
 
+import { pluralize } from "@utils/functions";
+import { clickUnit } from "@assets/data";
+
 import type { ShareListProps } from "./types";
 
-const ShareList = ({ title, items, emptyLabel = "Direto", labels = {} }: ShareListProps) => {
+const ShareList = ({ title, items, emptyLabel = "Direto", labels = {}, unit = clickUnit }: ShareListProps) => {
   const total = items.reduce((sum, item) => sum + item.clicks, 0);
   const max = Math.max(1, ...items.map((item) => item.clicks));
 
@@ -17,7 +20,7 @@ const ShareList = ({ title, items, emptyLabel = "Direto", labels = {} }: ShareLi
             const name = item.name === "" ? emptyLabel : labels[item.name] ?? item.name;
             const share = total === 0 ? 0 : Math.round((item.clicks / total) * 100);
             return (
-              <Item key={item.name || emptyLabel} title={`${name}: ${item.clicks.toLocaleString("pt-BR")} cliques (${share}%)`}>
+              <Item key={item.name || emptyLabel} title={`${name}: ${pluralize(item.clicks, unit.singular, unit.plural)} (${share}%)`}>
                 <Row>
                   <Name>{name}</Name>
                   <Value>

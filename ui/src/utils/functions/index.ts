@@ -4,7 +4,7 @@ import { isApiError } from "@utils/api";
 
 import type { HtmlIssue, PageAccess, PageKvBridgeRequest, PageKvDetails, PageKvPreviewCall, PageKvRuntime, PageRuntimeExtra, PageRuntimeInfo, SitePage } from "@utils/types/sitePage";
 import type { CountedItem, Link, LinkCountBy, ListItem, LinkSort, LinkStateFilter, RuleItem } from "@utils/types/link";
-import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvRole, KvRoleRule } from "@utils/types/application";
+import type { ApiToken, Application, ApplicationFilter, ApplicationSort, KvAnalytics, KvRole, KvRoleRule } from "@utils/types/application";
 import type { CodeLanguage, CodeLine, CodeToken, CodeTokenKind } from "@utils/types/code";
 import type { BackupCountRow, BackupHeader } from "@utils/types/backup";
 import type { AttentionItem, KvSummary } from "@utils/types/overview";
@@ -338,9 +338,9 @@ export const getInitials = (name: string): string =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 
-export const formatPercentChange = (current: number, previous: number | null): string | null => {
+export const formatPercentChange = (current: number, previous: number | null, emptyPreviousLabel = "Sem acessos no período anterior"): string | null => {
   if (previous === null) return null;
-  if (previous === 0) return current === 0 ? "Igual ao período anterior" : "Sem acessos no período anterior";
+  if (previous === 0) return current === 0 ? "Igual ao período anterior" : emptyPreviousLabel;
   const change = Math.round(((current - previous) / previous) * 100);
   if (change === 0) return "Igual ao período anterior";
   return `${change > 0 ? "+" : ""}${change}% vs. período anterior`;
@@ -355,6 +355,12 @@ export const downloadCsv = (fileName: string, rows: (string | number)[][]): void
   anchor.click();
   URL.revokeObjectURL(url);
 };
+
+export const downloadKvUsageCsv = (fileName: string, analytics: KvAnalytics): void =>
+  downloadCsv(fileName, [
+    ["Início do intervalo", "Pedidos", "Com erro"],
+    ...analytics.series.map((point) => [new Date(point.at).toLocaleString("pt-BR"), point.requests, point.failed])
+  ]);
 
 export const parseOrigins = (value: string): string[] => {
   const origins = value

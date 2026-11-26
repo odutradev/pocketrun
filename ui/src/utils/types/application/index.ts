@@ -1,4 +1,5 @@
 import type { applicationFormSchema, createTokenSchema, roleFormSchema } from "@utils/validations/application";
+import type { AnalyticsBucket, AnalyticsRange } from "@utils/types/link";
 import type { z } from "zod";
 
 export interface ApiToken {
@@ -87,7 +88,7 @@ export type ApplicationSort = "recent" | "name" | "tokens";
 
 export type ApplicationFilter = "all" | "open" | "restricted" | "noTokens";
 
-export type AppEditorTab = "explorer" | "settings" | "roles" | "tokens" | "json" | "snippets";
+export type AppEditorTab = "explorer" | "settings" | "roles" | "tokens" | "analytics" | "json" | "snippets";
 
 export type ApplicationFormValues = z.infer<typeof applicationFormSchema>;
 export type CreateTokenValues = z.infer<typeof createTokenSchema>;
@@ -115,4 +116,56 @@ export interface ApplicationConfig {
   allowNonBrowserRequests: boolean;
   roles: ApplicationConfigRole[];
   tokens: ApplicationConfigToken[];
+}
+
+export interface KvAnalyticsPoint {
+  at: string;
+  requests: number;
+  failed: number;
+}
+
+export interface KvAnalyticsHeatCell {
+  weekday: number;
+  hour: number;
+  requests: number;
+}
+
+export interface KvAnalyticsShare {
+  name: string;
+  requests: number;
+}
+
+export interface KvAnalyticsTotals {
+  requests: number;
+  failed: number;
+  applications: number;
+  collections: number;
+  previousRequests: number | null;
+  previousFailed: number | null;
+}
+
+export interface KvAnalytics {
+  range: AnalyticsRange;
+  bucket: AnalyticsBucket;
+  from: string;
+  to: string;
+  totals: KvAnalyticsTotals;
+  lastActiveAt: string | null;
+  series: KvAnalyticsPoint[];
+  heatmap: KvAnalyticsHeatCell[];
+  operations: KvAnalyticsShare[];
+  collections: KvAnalyticsShare[];
+}
+
+export interface RankedApplication {
+  id: string;
+  name: string;
+  projectId: string;
+  isPageApplication: boolean;
+  requests: number;
+  failed: number;
+}
+
+export interface KvOverview extends KvAnalytics {
+  topApplications: RankedApplication[];
 }

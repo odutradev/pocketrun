@@ -1,7 +1,8 @@
 import api from "@utils/api";
 
-import type { Application, ApplicationConfig, CreateApplicationPayload, CreatedApplication, CreatedToken, CreateTokenPayload, KvRole, RolePayload, RoleUpdatePayload, UpdateApplicationPayload } from "@utils/types/application";
+import type { Application, ApplicationConfig, KvAnalytics, KvOverview, CreateApplicationPayload, CreatedApplication, CreatedToken, CreateTokenPayload, KvRole, RolePayload, RoleUpdatePayload, UpdateApplicationPayload } from "@utils/types/application";
 import type { MessageResponse } from "@utils/types/api";
+import type { AnalyticsRange } from "@utils/types/link";
 
 export const listApplications = async (signal?: AbortSignal) => {
   const response = await api.get<Application[]>("/apps/list", { signal });
@@ -65,5 +66,17 @@ export const exportApplicationConfig = async (applicationId: string, signal?: Ab
 
 export const applyApplicationConfig = async (applicationId: string, data: Record<string, unknown>) => {
   const response = await api.post<ApplicationConfig>(`/apps/${applicationId}/config/apply`, data);
+  return response.data;
+};
+
+export const getKvOverview = async (range: AnalyticsRange, signal?: AbortSignal) => {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await api.get<KvOverview>("/apps/analytics/details", { params: { range, tz }, signal });
+  return response.data;
+};
+
+export const getApplicationAnalytics = async (applicationId: string, range: AnalyticsRange, signal?: AbortSignal) => {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const response = await api.get<KvAnalytics>(`/apps/${applicationId}/analytics/details`, { params: { range, tz }, signal });
   return response.data;
 };
