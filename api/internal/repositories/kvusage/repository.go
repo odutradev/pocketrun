@@ -30,10 +30,20 @@ func (r *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	return nil
 }
 
-func (r *MongoRepository) Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error {
+func (r *MongoRepository) Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time, request Request) error {
+	increments := bson.M{"requests": 1}
+	if request.IsFailed {
+		increments["failed"] = 1
+	}
+	if request.Operation != "" {
+		increments["operations."+string(request.Operation)] = 1
+	}
+	if request.Collection != "" {
+		increments["collections."+request.Collection] = 1
+	}
 	_, err := r.collection.UpdateOne(ctx,
 		bson.M{"applicationId": applicationID, "hour": hour},
-		bson.M{"$inc": bson.M{"requests": 1}, "$setOnInsert": bson.M{"managerId": managerID}},
+		bson.M{"$inc": increments, "$setOnInsert": bson.M{"managerId": managerID}},
 		options.UpdateOne().SetUpsert(true),
 	)
 	if err != nil {
@@ -43,10 +53,16 @@ func (r *MongoRepository) Increment(ctx context.Context, applicationID, managerI
 }
 
 func (r *MongoRepository) Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]Hour, error) {
-	cursor, err := r.collection.Find(ctx,
-		bson.M{"managerId": managerID, "hour": bson.M{"$gte": from.UTC().Truncate(time.Hour), "$lt": to}},
-		options.Find().SetSort(bson.D{{Key: "hour", Value: 1}}),
-	)
+	return r.find(ctx, bson.M{"managerId": managerID}, from, to)
+}
+
+func (r *MongoRepository) ForApplication(ctx context.Context, applicationID bson.ObjectID, from, to time.Time) ([]Hour, error) {
+	return r.find(ctx, bson.M{"applicationId": applicationID}, from, to)
+}
+
+func (r *MongoRepository) find(ctx context.Context, filter bson.M, from, to time.Time) ([]Hour, error) {
+	filter["hour"] = bson.M{"$gte": from.UTC().Truncate(time.Hour), "$lt": to}
+	cursor, err := r.collection.Find(ctx, filter, options.Find().SetSort(bson.D{{Key: "hour", Value: 1}}))
 	if err != nil {
 		return nil, fmt.Errorf("find kv usage: %w", err)
 	}

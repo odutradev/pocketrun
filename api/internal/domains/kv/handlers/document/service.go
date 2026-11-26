@@ -31,7 +31,7 @@ type Repository interface {
 }
 
 type UsageRepository interface {
-	Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time) error
+	Increment(ctx context.Context, applicationID, managerID bson.ObjectID, hour time.Time, request kvusagerepository.Request) error
 	Between(ctx context.Context, managerID bson.ObjectID, from, to time.Time) ([]kvusagerepository.Hour, error)
 }
 
@@ -45,12 +45,15 @@ func NewService(repository Repository, usage UsageRepository, logger *slog.Logge
 	return &Service{repository: repository, usage: usage, logger: logger}
 }
 
-func (s *Service) RecordUsage(ctx context.Context, applicationID, managerID bson.ObjectID) {
+func (s *Service) RecordUsage(ctx context.Context, applicationID, managerID bson.ObjectID, request kvusagerepository.Request) {
 	hour := time.Now().UTC().Truncate(time.Hour)
+	if kvquery.CheckCollection(request.Collection) != nil {
+		request.Collection = ""
+	}
 	recordContext, cancel := context.WithTimeout(context.WithoutCancel(ctx), usageRecordWindow)
 	go func() {
 		defer cancel()
-		if err := s.usage.Increment(recordContext, applicationID, managerID, hour); err != nil {
+		if err := s.usage.Increment(recordContext, applicationID, managerID, hour, request); err != nil {
 			s.logger.WarnContext(recordContext, "record kv usage", "applicationId", applicationID.Hex(), "error", err)
 		}
 	}()

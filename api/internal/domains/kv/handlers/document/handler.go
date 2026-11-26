@@ -19,6 +19,7 @@ import (
 	"pocketrun-api/internal/domains/user/middlewares/managerauth"
 	applicationrepository "pocketrun-api/internal/repositories/application"
 	kvdocumentrepository "pocketrun-api/internal/repositories/kvdocument"
+	kvusagerepository "pocketrun-api/internal/repositories/kvusage"
 	"pocketrun-api/internal/services/httpx"
 )
 
@@ -38,32 +39,62 @@ func NewHandler(service *Service, applications ApplicationFinder, validate *vali
 }
 
 func (h *Handler) RegisterPublic(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
-	route := func(pattern string, handle http.HandlerFunc) {
-		mux.Handle(pattern, authenticate(h.counted(handle)))
+	route := func(pattern string, operation kvusagerepository.Operation, handle http.HandlerFunc) {
+		mux.Handle(pattern, authenticate(h.counted(operation, handle)))
 	}
-	route("GET /kv/project/export", h.exportProject)
-	route("POST /kv/project/import", h.importProject)
-	route("DELETE /kv/project/delete-all", h.deleteProject)
-	route("POST /kv/{collection}/create", h.create)
-	route("GET /kv/{collection}/get-all", h.list)
-	route("GET /kv/{collection}/count", h.count)
-	route("POST /kv/{collection}/eval", h.eval)
-	route("GET /kv/{collection}/get/{id}", h.get)
-	route("PATCH /kv/{collection}/update/{id}", h.update)
-	route("PUT /kv/{collection}/replace/{id}", h.replace)
-	route("DELETE /kv/{collection}/delete/{id}", h.delete)
-	route("DELETE /kv/{collection}/delete-all", h.deleteCollection)
-	route("GET /kv/{collection}/export", h.export)
-	route("POST /kv/{collection}/import", h.importCollection)
+	route("GET /kv/project/export", kvusagerepository.OperationProjectExport, h.exportProject)
+	route("POST /kv/project/import", kvusagerepository.OperationProjectImport, h.importProject)
+	route("DELETE /kv/project/delete-all", kvusagerepository.OperationProjectDelete, h.deleteProject)
+	route("POST /kv/{collection}/create", kvusagerepository.OperationCreate, h.create)
+	route("GET /kv/{collection}/get-all", kvusagerepository.OperationList, h.list)
+	route("GET /kv/{collection}/count", kvusagerepository.OperationCount, h.count)
+	route("POST /kv/{collection}/eval", kvusagerepository.OperationEval, h.eval)
+	route("GET /kv/{collection}/get/{id}", kvusagerepository.OperationGet, h.get)
+	route("PATCH /kv/{collection}/update/{id}", kvusagerepository.OperationUpdate, h.update)
+	route("PUT /kv/{collection}/replace/{id}", kvusagerepository.OperationReplace, h.replace)
+	route("DELETE /kv/{collection}/delete/{id}", kvusagerepository.OperationDelete, h.delete)
+	route("DELETE /kv/{collection}/delete-all", kvusagerepository.OperationClear, h.deleteCollection)
+	route("GET /kv/{collection}/export", kvusagerepository.OperationExport, h.export)
+	route("POST /kv/{collection}/import", kvusagerepository.OperationImport, h.importCollection)
 }
 
-func (h *Handler) counted(next http.Handler) http.Handler {
+func (h *Handler) counted(operation kvusagerepository.Operation, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app, ok := appauth.FromContext(r.Context()); ok {
-			h.service.RecordUsage(r.Context(), app.ID, app.ManagerID)
+		app, ok := appauth.FromContext(r.Context())
+		if !ok {
+			next.ServeHTTP(w, r)
+			return
 		}
-		next.ServeHTTP(w, r)
+		recorder := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
+		next.ServeHTTP(recorder, r)
+		h.service.RecordUsage(r.Context(), app.ID, app.ManagerID, kvusagerepository.Request{
+			Operation:  operation,
+			Collection: r.PathValue("collection"),
+			IsFailed:   recorder.status >= http.StatusBadRequest,
+		})
 	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status      int
+	wroteHeader bool
+}
+
+func (s *statusRecorder) WriteHeader(status int) {
+	if !s.wroteHeader {
+		s.status, s.wroteHeader = status, true
+	}
+	s.ResponseWriter.WriteHeader(status)
+}
+
+func (s *statusRecorder) Write(body []byte) (int, error) {
+	s.wroteHeader = true
+	return s.ResponseWriter.Write(body)
+}
+
+func (s *statusRecorder) Unwrap() http.ResponseWriter {
+	return s.ResponseWriter
 }
 
 func (h *Handler) RegisterAdmin(mux *http.ServeMux, authenticate func(http.Handler) http.Handler) {
