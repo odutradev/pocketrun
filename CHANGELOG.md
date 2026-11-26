@@ -4,7 +4,7 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
-## Não publicado
+## 1.8.8 (2026-11-26)
 
 - **Análise do KV**, como já existia nas páginas e nos links: aba **Análise** em cada aplicação, página **Análise** na lista do KV (`/kv/analytics`) e painel do KV na página **Geral**, com pedidos, erros, média por dia, gráfico, mapa de calor, operações, coleções, aplicações mais usadas e CSV.
 - Cada pedido à API pública do KV passa a guardar a operação, a coleção e se deu erro. Os pedidos de antes desta versão continuam no total, sem esse detalhe.
