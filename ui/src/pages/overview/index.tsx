@@ -10,6 +10,7 @@ import ContentNavbar from "@components/contentNavbar";
 import { analyticsRangeOptions } from "@assets/data";
 import UsageChart from "./subcomponents/usageChart";
 import { pluralize } from "@utils/functions";
+import KvPanel from "./subcomponents/kvPanel";
 import StatCard from "@components/statCard";
 import OverviewSkeleton from "./skeleton";
 import Button from "@components/button";
@@ -51,6 +52,7 @@ const OverviewPage = () => {
         <UsageChart />
         <ServiceCards />
         <Row>
+          <KvPanel traffic={overview.kvTraffic} rangeLabel={rangeLabel} emptyText={`Nenhum pedido ao KV: ${periodText}.`} />
           <TrafficPanel
             title="Páginas"
             traffic={overview.pagesTraffic}

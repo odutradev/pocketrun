@@ -14,6 +14,7 @@ const OverviewSkeleton = () => (
     <Row>
       <Skeleton height="320px" radius="panel" />
       <Skeleton height="320px" radius="panel" />
+      <Skeleton height="320px" radius="panel" />
     </Row>
   </Content>
 );

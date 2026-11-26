@@ -1,6 +1,6 @@
 import type { AnalyticsBucket, AnalyticsRange, LinkSummary, LinksOverview } from "@utils/types/link";
 import type { PageSummary, PagesOverview } from "@utils/types/sitePage";
-import type { Application } from "@utils/types/application";
+import type { Application, KvOverview } from "@utils/types/application";
 import type { BrandTool } from "@utils/types/brand";
 
 export interface UsagePoint {
@@ -34,6 +34,7 @@ export interface EnvironmentOverview {
   linkSummary: LinkSummary;
   pagesTraffic: PagesOverview;
   linksTraffic: LinksOverview;
+  kvTraffic: KvOverview;
   usage: EnvironmentUsage;
 }
 

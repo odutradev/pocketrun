@@ -6,7 +6,7 @@ import { getPageSummary, getPagesOverview } from "@actions/sitePages";
 import { createLocalLogger, getErrorMessage } from "@utils/functions";
 import { getLinkSummary, getLinksOverview } from "@actions/links";
 import { getEnvironmentUsage } from "@actions/overview";
-import { listApplications } from "@actions/apps";
+import { getKvOverview, listApplications } from "@actions/apps";
 
 import type { OverviewStore } from "./types";
 
@@ -24,16 +24,17 @@ const useOverviewStore = create<OverviewStore>()(
         const requestId = previousRequestId + 1;
         set({ isLoading: true, requestId });
         try {
-          const [applications, pageSummary, linkSummary, pagesTraffic, linksTraffic, usage] = await Promise.all([
+          const [applications, pageSummary, linkSummary, pagesTraffic, linksTraffic, kvTraffic, usage] = await Promise.all([
             listApplications(),
             getPageSummary(),
             getLinkSummary(),
             getPagesOverview(range),
             getLinksOverview(range),
+            getKvOverview(range),
             getEnvironmentUsage(range)
           ]);
           if (get().requestId !== requestId) return;
-          set({ overview: { applications, pageSummary, linkSummary, pagesTraffic, linksTraffic, usage } });
+          set({ overview: { applications, pageSummary, linkSummary, pagesTraffic, linksTraffic, kvTraffic, usage } });
         } catch (error) {
           if (get().requestId !== requestId) return;
           logger.error(error);

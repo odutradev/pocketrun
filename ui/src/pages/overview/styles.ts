@@ -35,6 +35,18 @@ export const Row = styled.div`
 
   @media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > :first-child:nth-last-child(3) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: ${({ theme }) => theme.breakpoints.xl}) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    > :first-child:nth-last-child(3) {
+      grid-column: auto;
+    }
   }
 `;
 
