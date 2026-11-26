@@ -35,7 +35,7 @@ func newRouter(cfg config.Config, s services, validate *validator.Validate, logg
 	}
 	health.Register(router)
 	user.Register(router, user.Services{Users: s.users, Setup: s.setup, Session: s.session, APIKeys: s.apiKeys})
-	kv.Register(router, kv.Services{Applications: s.applications, Documents: s.documents})
+	kv.Register(router, kv.Services{Applications: s.applications, Documents: s.documents, Analytics: s.kvAnalytics})
 	group.Register(router, group.Services{Groups: s.groups, Links: s.links, Pages: s.pages})
 	pageServer := page.Register(router, page.Services{
 		Pages:     s.pages,

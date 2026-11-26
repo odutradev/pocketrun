@@ -6,6 +6,7 @@ import (
 	"pocketrun-api/internal/config"
 	"pocketrun-api/internal/domains/backup/handlers/backup"
 	"pocketrun-api/internal/domains/group/handlers/group"
+	kvanalytics "pocketrun-api/internal/domains/kv/handlers/analytics"
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	kvdocument "pocketrun-api/internal/domains/kv/handlers/document"
 	linkanalytics "pocketrun-api/internal/domains/link/handlers/analytics"
@@ -37,6 +38,7 @@ type services struct {
 	setup         *setup.Service
 	applications  *application.Service
 	documents     *kvdocument.Service
+	kvAnalytics   *kvanalytics.Service
 	groups        *group.Service
 	links         *link.Service
 	linkHistory   *historyservice.Service
@@ -124,6 +126,7 @@ func newServices(cfg config.Config, repos repositories, logger *slog.Logger) ser
 		setup:         setup.NewService(users, logger),
 		applications:  applications,
 		documents:     documents,
+		kvAnalytics:   kvanalytics.NewService(repos.usage, applications),
 		groups:        groups,
 		links:         links,
 		linkHistory:   linkHistory,

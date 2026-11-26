@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"pocketrun-api/internal/domains/kv/handlers/analytics"
 	"pocketrun-api/internal/domains/kv/handlers/application"
 	"pocketrun-api/internal/domains/kv/handlers/document"
 	"pocketrun-api/internal/domains/kv/middlewares/appauth"
@@ -10,6 +11,7 @@ import (
 type Services struct {
 	Applications *application.Service
 	Documents    *document.Service
+	Analytics    *analytics.Service
 }
 
 func Register(router httpx.Router, services Services) {
@@ -19,6 +21,7 @@ func Register(router httpx.Router, services Services) {
 
 	applicationHandler.RegisterAdmin(router.Admin, router.Authenticate)
 	documentHandler.RegisterAdmin(router.Admin, router.Authenticate)
+	analytics.NewHandler(services.Analytics, router.Validate, router.Logger).Register(router.Admin, router.Authenticate)
 	applicationHandler.RegisterPublic(router.Public, authenticateApplication)
 	documentHandler.RegisterPublic(router.Public, authenticateApplication)
 }
