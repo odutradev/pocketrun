@@ -1,4 +1,4 @@
-import { DashboardIcon, ListBulletIcon, PlusIcon } from "@radix-ui/react-icons";
+import { BarChartIcon, DashboardIcon, ListBulletIcon, PlusIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "styled-components";
 import { useEffect, useRef } from "react";
@@ -138,6 +138,7 @@ const KvPage = () => {
         info="Coleções de JSON livre, isoladas por aplicação. Cada aplicação tem dados, tokens e origens próprios. Abra uma para ver os documentos no explorador, gerar tokens e mudar as origens permitidas."
         onReload={loadApplications}
         isReloading={isLoading || isRefreshing}
+        actions={[{ label: "Análise", icon: <BarChartIcon />, to: "/kv/analytics" }]}
         action={{ label: "Nova aplicação", icon: <PlusIcon />, to: "/kv/new" }}
       />
       {renderContent()}

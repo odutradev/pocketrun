@@ -3,6 +3,7 @@ import { lazy } from "react";
 
 import pagesAnalyticsMetadata from "@pages/pagesAnalytics/metadata";
 import linksAnalyticsMetadata from "@pages/linksAnalytics/metadata";
+import kvAnalyticsMetadata from "@pages/kvAnalytics/metadata";
 import pageEditorMetadata from "@pages/pageEditor/metadata";
 import linkEditorMetadata from "@pages/linkEditor/metadata";
 import appEditorMetadata from "@pages/appEditor/metadata";
@@ -32,6 +33,7 @@ const ProfilePage = lazy(() => import("@pages/profile"));
 const OverviewPage = lazy(() => import("@pages/overview"));
 const KvPage = lazy(() => import("@pages/kv"));
 const AppEditorPage = lazy(() => import("@pages/appEditor"));
+const KvAnalyticsPage = lazy(() => import("@pages/kvAnalytics"));
 const DocsPage = lazy(() => import("@pages/docs"));
 const PagesPage = lazy(() => import("@pages/pages"));
 const LinksPage = lazy(() => import("@pages/links"));
@@ -60,6 +62,7 @@ const router = createBrowserRouter([
       pageRoute("/setup", SetupPage, setupMetadata),
       pageRoute("/kv", KvPage, kvMetadata),
       { path: "/kv/docs", element: <Navigate to="/docs" replace /> },
+      pageRoute("/kv/analytics", KvAnalyticsPage, kvAnalyticsMetadata),
       pageRoute("/kv/new", AppEditorPage, appEditorMetadata),
       pageRoute("/kv/:applicationId/edit", AppEditorPage, appEditorMetadata),
       pageRoute("/pages", PagesPage, pagesMetadata),
