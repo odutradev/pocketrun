@@ -4,6 +4,12 @@ Tudo o que muda entre as versões do PocketRun. Leia antes de atualizar uma inst
 
 As versões seguem o `version` do `package.json`, e cada uma vira as imagens `odutradev/pocketrun-api` e `odutradev/pocketrun-ui` no Docker Hub.
 
+## Não publicado
+
+- **Análise do KV**, como já existia nas páginas e nos links: aba **Análise** em cada aplicação, página **Análise** na lista do KV (`/kv/analytics`) e painel do KV na página **Geral**, com pedidos, erros, média por dia, gráfico, mapa de calor, operações, coleções, aplicações mais usadas e CSV.
+- Cada pedido à API pública do KV passa a guardar a operação, a coleção e se deu erro. Os pedidos de antes desta versão continuam no total, sem esse detalhe.
+- Rotas `GET /admin/apps/analytics/details` e `GET /admin/apps/{id}/analytics/details`, e as ferramentas `kv_analytics_overview` e `kv_analytics_get` no servidor MCP.
+
 ## 1.8.7 (2026-11-25)
 
 - Ferramenta **`docs`** no servidor MCP: devolve à IA o guia completo do PocketRun (o `llms.txt`) ou uma seção, já com os endereços da API e das páginas da instância. As instruções do MCP pedem para a IA ler antes de montar páginas com dados, cargos e PINs.
